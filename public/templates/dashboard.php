@@ -5,8 +5,9 @@
  * @var array{applications: int, amount: int, workingDaysLeft: int} $targets
  * @var string $headerYesterday
  * @var string $headerMtdRange
- * @var string $generatedDate
  * @var string $generatedAt
+ * @var array<string, array{A: array, B: array}>|null $monthlyStats
+ * @var array<string, array{A: array, B: array}>|null $dailyStats
  */
 
 declare(strict_types=1);
@@ -109,75 +110,6 @@ body {
 /* section titles */
 .section-title { font-size: 13px; font-weight: 650; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-secondary); margin: 0; }
 
-/* KPI row */
-.kpi-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
-.kpi {
-  background: var(--surface-1); border: 1px solid var(--border); border-radius: 10px;
-  padding: 14px 16px; display: flex; flex-direction: column; gap: 4px;
-}
-.kpi .label { font-size: 11.5px; color: var(--text-secondary); }
-.kpi .value { font-size: 24px; font-weight: 650; font-variant-numeric: proportional-nums; }
-.kpi .delta { font-size: 11.5px; color: var(--text-muted); display: flex; gap: 6px; }
-.kpi .delta b { color: var(--text-secondary); font-weight: 600; }
-
-/* period toggle */
-.toggle { display: inline-flex; background: var(--surface-1); border: 1px solid var(--border); border-radius: 8px; padding: 3px; gap: 2px; }
-.toggle button {
-  border: none; background: transparent; color: var(--text-secondary); font: inherit; font-size: 12.5px; font-weight: 600;
-  padding: 6px 14px; border-radius: 6px; cursor: pointer;
-}
-.toggle button.active { background: var(--text-primary); color: var(--surface-1); }
-
-/* funnel cards */
-.funnels { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-@media (max-width: 760px) { .funnels { grid-template-columns: 1fr; } }
-.funnel-card { background: var(--surface-1); border: 1px solid var(--border); border-radius: 12px; padding: 18px 20px; }
-.funnel-card .fc-head { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
-.funnel-card .fc-dot { width: 10px; height: 10px; border-radius: 3px; flex: none; }
-.funnel-card h3 { font-size: 14.5px; font-weight: 650; margin: 0; }
-.funnel-card .fc-desc { font-size: 12px; color: var(--text-muted); margin: 0 0 16px; }
-.stage { margin-bottom: 12px; }
-.stage:last-child { margin-bottom: 0; }
-.stage-top { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 5px; }
-.stage-name { font-size: 12.5px; color: var(--text-secondary); }
-.stage-val { font-size: 14px; font-weight: 650; font-variant-numeric: tabular-nums; }
-.stage-bar-track { height: 20px; background: var(--grid); border-radius: 4px; overflow: hidden; }
-.stage-bar-fill { height: 100%; border-radius: 4px 0 0 4px; }
-.stage-conv { font-size: 11px; color: var(--text-muted); margin-top: 4px; text-align: right; }
-
-/* pacing */
-.pacing { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-@media (max-width: 760px) { .pacing { grid-template-columns: 1fr; } }
-.meter-card { background: var(--surface-1); border: 1px solid var(--border); border-radius: 12px; padding: 18px 20px; }
-.meter-card .mc-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; gap: 10px; }
-.meter-card h3 { font-size: 14.5px; font-weight: 650; margin: 0 0 2px; }
-.meter-card .mc-desc { font-size: 12px; color: var(--text-muted); margin: 0; }
-.status-pill { display: inline-flex; align-items: center; gap: 5px; font-size: 11.5px; font-weight: 650; padding: 3px 9px; border-radius: 999px; white-space: nowrap; }
-.status-pill.good { color: var(--good); background: color-mix(in srgb, var(--good) 14%, transparent); }
-.status-pill.warning { color: #9a6a00; background: color-mix(in srgb, var(--warning) 22%, transparent); }
-:root[data-theme="dark"] .status-pill.warning { color: var(--warning); }
-@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .status-pill.warning { color: var(--warning); } }
-.status-pill.critical { color: var(--critical); background: color-mix(in srgb, var(--critical) 14%, transparent); }
-.meter-track { height: 12px; background: var(--grid); border-radius: 999px; overflow: hidden; margin-bottom: 8px; }
-.meter-fill { height: 100%; border-radius: 999px; }
-.meter-nums { display: flex; justify-content: space-between; font-size: 12.5px; }
-.meter-nums .actual { font-weight: 650; font-variant-numeric: tabular-nums; }
-.meter-nums .target { color: var(--text-muted); font-variant-numeric: tabular-nums; }
-.mc-foot { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--grid); display: flex; gap: 18px; flex-wrap: wrap; }
-.mc-foot .f-item .f-label { font-size: 11px; color: var(--text-muted); }
-.mc-foot .f-item .f-val { font-size: 13.5px; font-weight: 650; font-variant-numeric: tabular-nums; }
-
-/* table */
-.table-card { background: var(--surface-1); border: 1px solid var(--border); border-radius: 12px; padding: 18px 20px; overflow-x: auto; }
-.table-card table { width: 100%; border-collapse: collapse; font-size: 12.5px; min-width: 640px; }
-.table-card th, .table-card td { text-align: right; padding: 7px 10px; border-bottom: 1px solid var(--grid); font-variant-numeric: tabular-nums; white-space: nowrap; }
-.table-card th:first-child, .table-card td:first-child { text-align: left; font-variant-numeric: normal; }
-.table-card th { color: var(--text-secondary); font-weight: 650; font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.03em; }
-.table-card tbody tr:hover { background: color-mix(in srgb, var(--text-primary) 4%, transparent); }
-.seg-label { display: inline-flex; align-items: center; gap: 6px; }
-.seg-dot { width: 8px; height: 8px; border-radius: 2px; flex: none; }
-tr.total td { font-weight: 650; border-top: 2px solid var(--baseline); border-bottom: none; }
-
 .note { font-size: 11.5px; color: var(--text-muted); line-height: 1.5; }
 
 /* page nav */
@@ -233,6 +165,26 @@ table.rpt td.dash { color: var(--rpt-muted); text-align: right; }
 table.rpt .rpt-note { background: var(--rpt-note-bg); }
 table.rpt tr.rpt-footer td { background: var(--rpt-plain-bg); color: var(--rpt-muted); font-size: 11px; line-height: 1.5; font-variant-numeric: normal; }
 
+/* pivot variant: dynamic column count (one pair per month/day) instead of a fixed 2-period
+   layout, so columns size to content and the metric column stays pinned while scrolling */
+table.rpt-pivot { table-layout: auto; font-size: 10.5px; width: auto; }
+table.rpt-pivot td, table.rpt-pivot th { padding: 4px 5px; white-space: nowrap; overflow-wrap: normal; }
+table.rpt-pivot td:first-child, table.rpt-pivot th:first-child { position: sticky; left: 0; z-index: 2; box-shadow: 1px 0 0 var(--rpt-border); }
+table.rpt-pivot tr.rpt-title td:first-child { z-index: 3; }
+/* MTD Statistics only: few enough columns that the whole table should fit without scrolling,
+   so its metric column wraps onto 2 lines instead of forcing one long unbroken line. Daily
+   Statistics keeps the plain nowrap label column (it always needs to scroll — 80+ days — so
+   there's no width to save, and wrapping there just made rows unnecessarily tall). */
+table.rpt-pivot-compact td:first-child, table.rpt-pivot-compact th:first-child { white-space: normal; max-width: 150px; }
+table.rpt-pivot tr.rpt-colhead td:not(:first-child) { text-align: center; }
+table.rpt-pivot td.col-collapsed { display: none; }
+table.rpt-pivot td.rpt-group-toggle { cursor: pointer; user-select: none; text-align: center; }
+
+/* duplicate top scrollbar for the two pivot tables (many columns — the bottom scrollbar can be
+   far below the viewport), kept in sync with the real horizontal scroll via JS */
+.report-scroll-top { overflow-x: auto; overflow-y: hidden; height: 14px; margin-bottom: -1px; }
+.report-scroll-top > div { height: 1px; }
+
 .db-error { background: color-mix(in srgb, var(--critical) 10%, var(--surface-1)); border: 1px solid var(--critical); border-radius: 12px; padding: 16px 20px; color: var(--text-primary); }
 .db-error strong { color: var(--critical); }
 </style>
@@ -262,33 +214,9 @@ table.rpt tr.rpt-footer td { background: var(--rpt-plain-bg); color: var(--rpt-m
   </div>
 
   <div class="page-nav" id="pageNav">
-    <button data-page="report" class="active">Report</button>
-    <button data-page="dashboard">Dashboard</button>
-  </div>
-
-  <div class="page" id="page-dashboard">
-    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
-      <p class="section-title">Overview</p>
-      <div class="toggle" id="periodToggle">
-        <button data-period="mtd" class="active">MTD</button>
-        <button data-period="yest">Yesterday</button>
-      </div>
-    </div>
-
-    <div class="kpi-row" id="kpiRow"></div>
-
-    <p class="section-title">Funnel by segment</p>
-    <div class="funnels" id="funnelRow"></div>
-
-    <p class="section-title">Budget &amp; pacing (MTD actual vs. monthly target)</p>
-    <div class="pacing" id="pacingRow"></div>
-
-    <p class="section-title">Detail</p>
-    <div class="table-card">
-      <table id="detailTable"></table>
-    </div>
-
-    <p class="note">Segment A = TV, Phone, or any single product with full price &gt; 2,500 GEL (requires downpayment). Segment B = all other products (standard terms). Applications exclude unassigned "lead" placeholder rows. Underwriting Approved and Deals Closed reflect current status as of report generation (<?= htmlspecialchars($generatedDate, ENT_QUOTES, 'UTF-8') ?>), not a same-day cohort, and are keyed to Application Date. Amount Sold is keyed to Order Date (the disbursement/issue date) instead, so a loan applied for on one day but issued the next counts toward the day it was issued. Downpayment Collected counts every first payment received in the period regardless of whether the deal later went active, was rejected, or is still pending &mdash; collected money is not refunded. Budget &amp; pacing monthly targets are carried over from config.php &mdash; confirm with the team; Remaining Working Days is a live calendar calculation, not fixed.</p>
+    <button data-page="report" class="active">Daily Report</button>
+    <button data-page="mtdstats">MTD Statistics</button>
+    <button data-page="dailystats">Daily Statistics</button>
   </div>
 
   <div class="page active" id="page-report">
@@ -303,147 +231,40 @@ table.rpt tr.rpt-footer td { background: var(--rpt-plain-bg); color: var(--rpt-m
       </div>
     </div>
   </div>
+
+  <div class="page" id="page-mtdstats">
+    <p class="section-title">MTD Statistics &mdash; same report, one column per month</p>
+    <p class="note" style="margin:-8px 0 0;">Same Section A/B/C layout as the Report tab, but pivoted: each column pair is one calendar month of <?= htmlspecialchars($now->format('Y'), ENT_QUOTES, 'UTF-8') ?> instead of Yesterday/MTD. A completed month shows its final total; the current month shows MTD-to-date. Scroll right for more months. Tap a section header to collapse it.</p>
+    <div class="report-card">
+      <div class="report-scroll-top" id="mtdStatsScrollTop"><div></div></div>
+      <div class="report-scroll" id="mtdStatsScrollBody">
+        <table class="rpt rpt-pivot rpt-pivot-compact" id="mtdStatsTable"><tbody></tbody></table>
+      </div>
+    </div>
+  </div>
+
+  <div class="page" id="page-dailystats">
+    <p class="section-title">Daily Statistics &mdash; same report, one column per day</p>
+    <p class="note" style="margin:-8px 0 0;">Same Section A/B/C layout as the Report tab, but pivoted: each column pair is one calendar day from June 1, <?= htmlspecialchars($now->format('Y'), ENT_QUOTES, 'UTF-8') ?> through yesterday, instead of Yesterday/MTD. Today is excluded (not yet finished). Recent days are undercounted and will keep rising on refresh, because Active/Order Date can be set several days after Application Date. Scroll right for more days. Tap a section header to collapse it.</p>
+    <div class="report-card">
+      <div class="report-scroll-top" id="dailyStatsScrollTop"><div></div></div>
+      <div class="report-scroll" id="dailyStatsScrollBody">
+        <table class="rpt rpt-pivot" id="dailyStatsTable"><tbody></tbody></table>
+      </div>
+    </div>
+  </div>
 </div>
 
 <script>
 const data = <?= json_encode($data, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) ?>;
 const targets = <?= json_encode($targets, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>;
 const generatedAt = <?= json_encode($generatedAt, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>;
+const monthlyStats = <?= json_encode($monthlyStats, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>;
+const dailyStats = <?= json_encode($dailyStats, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>;
 
 const fmt = n => Math.round(n).toLocaleString('en-US');
 const fmt1 = n => n.toLocaleString('en-US', { maximumFractionDigits: 1 });
 const pct = n => (n*100).toLocaleString('en-US', { maximumFractionDigits: 1 }) + '%';
-
-function totalOf(period, key) {
-  const d = data[period];
-  return d.A[key] + d.B[key];
-}
-
-function renderKPIs(period) {
-  const apps = totalOf(period, 'applications');
-  const closed = totalOf(period, 'closed');
-  const amount = totalOf(period, 'amount');
-  const dp = totalOf(period, 'dp');
-  const convRate = apps ? closed / apps : 0;
-  document.getElementById('kpiRow').innerHTML = `
-    <div class="kpi"><div class="label">Applications</div><div class="value">${fmt(apps)}</div><div class="delta">A <b>${fmt(data[period].A.applications)}</b> &middot; B <b>${fmt(data[period].B.applications)}</b></div></div>
-    <div class="kpi"><div class="label">Deals Closed</div><div class="value">${fmt(closed)}</div><div class="delta">${pct(convRate)} of applications</div></div>
-    <div class="kpi"><div class="label">Amount Sold (GEL)</div><div class="value">${fmt(amount)}</div><div class="delta">A <b>${fmt(data[period].A.amount)}</b> &middot; B <b>${fmt(data[period].B.amount)}</b></div></div>
-    <div class="kpi"><div class="label">Downpayment Collected (GEL)</div><div class="value">${fmt(dp)}</div><div class="delta">${amount ? pct(dp/amount) : '0%'} of amount sold</div></div>
-  `;
-}
-
-function funnelCard(segName, segKey, color, colorSoft, desc, seg) {
-  const stages = [
-    { name: 'Applications', val: seg.applications, base: seg.applications },
-    { name: 'Terms Approved by Customer', val: seg.terms, base: seg.applications },
-    { name: 'Underwriting Approved', val: seg.uw, base: seg.applications },
-    { name: 'Deals Closed', val: seg.closed, base: seg.applications },
-  ];
-  let stagesHTML = '';
-  stages.forEach((s, i) => {
-    const width = seg.applications ? Math.max((s.val / seg.applications) * 100, s.val > 0 ? 2 : 0) : 0;
-    let convNote = '';
-    if (i > 0) {
-      const prev = stages[i-1].val;
-      const stepConv = prev ? s.val / prev : 0;
-      convNote = `<div class="stage-conv">${pct(stepConv)} of "${stages[i-1].name}"</div>`;
-    }
-    stagesHTML += `
-      <div class="stage">
-        <div class="stage-top"><span class="stage-name">${s.name}</span><span class="stage-val">${fmt(s.val)}</span></div>
-        <div class="stage-bar-track"><div class="stage-bar-fill" style="width:${width}%; background:${color}"></div></div>
-        ${convNote}
-      </div>`;
-  });
-  return `
-    <div class="funnel-card">
-      <div class="fc-head"><span class="fc-dot" style="background:${color}"></span><h3>Segment ${segKey} &mdash; ${segName}</h3></div>
-      <p class="fc-desc">${desc}</p>
-      ${stagesHTML}
-    </div>`;
-}
-
-function renderFunnels(period) {
-  const d = data[period];
-  document.getElementById('funnelRow').innerHTML =
-    funnelCard('High-Downpayment', 'A', 'var(--series-a)', 'var(--series-a-soft)', 'TV, Phone, or a single product priced over 2,500 GEL', d.A) +
-    funnelCard('Standard', 'B', 'var(--series-b)', 'var(--series-b-soft)', 'All other products &mdash; standard terms, no product-driven downpayment', d.B);
-}
-
-function meterCard(title, desc, actual, target, unit, footItems) {
-  const ratio = target ? actual / target : 0;
-  let status = 'good', statusLabel = 'On pace';
-  if (ratio < 0.5) { status = 'critical'; statusLabel = 'Behind pace'; }
-  else if (ratio < 0.85) { status = 'warning'; statusLabel = 'Watch'; }
-  const fillColor = status === 'good' ? 'var(--good)' : status === 'warning' ? 'var(--warning)' : 'var(--critical)';
-  const fillWidth = Math.min(ratio, 1) * 100;
-  let footHTML = footItems.map(f => `<div class="f-item"><div class="f-label">${f.label}</div><div class="f-val">${f.val}</div></div>`).join('');
-  return `
-    <div class="meter-card">
-      <div class="mc-top">
-        <div><h3>${title}</h3><p class="mc-desc">${desc}</p></div>
-        <span class="status-pill ${status}">${statusLabel}</span>
-      </div>
-      <div class="meter-track"><div class="meter-fill" style="width:${fillWidth}%; background:${fillColor}"></div></div>
-      <div class="meter-nums"><span class="actual">${unit}${fmt(actual)}</span><span class="target">of ${unit}${fmt(target)} target &middot; ${pct(ratio)}</span></div>
-      <div class="mc-foot">${footHTML}</div>
-    </div>`;
-}
-
-function renderPacing() {
-  const apps = totalOf('mtd', 'applications');
-  const amount = totalOf('mtd', 'amount');
-  const remaining = targets.amount - amount;
-  const requiredDaily = targets.workingDaysLeft ? remaining / targets.workingDaysLeft : 0;
-
-  document.getElementById('pacingRow').innerHTML =
-    meterCard('Applications (MTD vs. target)', 'Actual applications this month vs. the monthly target', apps, targets.applications, '', [
-      { label: 'Remaining', val: fmt(Math.max(targets.applications - apps, 0)) },
-    ]) +
-    meterCard('Amount Sold (MTD vs. target)', 'Actual GEL disbursed this month vs. the monthly target', amount, targets.amount, 'GEL ', [
-      { label: 'Remaining to target', val: fmt(remaining) + ' GEL' },
-      { label: 'Required daily sales', val: fmt(requiredDaily) + ' GEL' },
-      { label: 'Working days left', val: targets.workingDaysLeft },
-    ]);
-}
-
-function renderTable() {
-  const rows = [
-    ['A', 'Applications', 'applications'], ['A', 'Terms Approved', 'terms'], ['A', 'UW Approved', 'uw'], ['A', 'Deals Closed', 'closed'], ['A', 'Amount Sold (GEL)', 'amount'], ['A', 'DP Collected (GEL)', 'dp'],
-    ['B', 'Applications', 'applications'], ['B', 'Terms Approved', 'terms'], ['B', 'UW Approved', 'uw'], ['B', 'Deals Closed', 'closed'], ['B', 'Amount Sold (GEL)', 'amount'], ['B', 'DP Collected (GEL)', 'dp'],
-  ];
-  const colorFor = seg => seg === 'A' ? 'var(--series-a)' : 'var(--series-b)';
-  let thead = '<thead><tr><th>Metric</th><th>Yesterday</th><th>MTD</th></tr></thead>';
-  let tbody = '<tbody>' + rows.map(([seg, name, key]) => {
-    const yv = data.yest[seg][key], mv = data.mtd[seg][key];
-    return `<tr><td><span class="seg-label"><span class="seg-dot" style="background:${colorFor(seg)}"></span>${seg} &middot; ${name}</span></td><td>${fmt(yv)}</td><td>${fmt(mv)}</td></tr>`;
-  }).join('') + '</tbody>';
-  let tfoot = `<tfoot>
-    <tr class="total"><td>Total Applications</td><td>${fmt(totalOf('yest','applications'))}</td><td>${fmt(totalOf('mtd','applications'))}</td></tr>
-    <tr class="total"><td>Total Deals Closed</td><td>${fmt(totalOf('yest','closed'))}</td><td>${fmt(totalOf('mtd','closed'))}</td></tr>
-    <tr class="total"><td>Total Amount Sold (GEL)</td><td>${fmt(totalOf('yest','amount'))}</td><td>${fmt(totalOf('mtd','amount'))}</td></tr>
-  </tfoot>`;
-  document.getElementById('detailTable').innerHTML = thead + tbody + tfoot;
-}
-
-let currentPeriod = 'mtd';
-function renderAll() {
-  renderKPIs(currentPeriod);
-  renderFunnels(currentPeriod);
-}
-renderAll();
-renderPacing();
-renderTable();
-
-document.querySelectorAll('#periodToggle button').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('#periodToggle button').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    currentPeriod = btn.getAttribute('data-period');
-    renderAll();
-  });
-});
 
 /* ---------- Report page: compact replica of the original "Volta Daily Report - Sales & Product-Terms Funnel" spreadsheet ---------- */
 
@@ -560,6 +381,184 @@ function renderReport() {
 
 renderReport();
 
+/* ---------- MTD/Daily Statistics: same Section A/B/C report layout as the Report tab,
+   pivoted so each column pair is one period (a month or a day) instead of Yesterday/MTD ---------- */
+
+function rptPivotColHead(labels) {
+  // Two stacked header rows rather than a rowspan cell — a rowspan on the metric column
+  // would make the second row's real first <td> (a "Qty" cell) become the CSS `:first-child`
+  // sticky column, misaligning it with the metric column below.
+  const periodCells = labels.map((l, i) => `<td colspan="2" class="pc-${i}">${l}</td>`).join('');
+  const subCells = labels.map((l, i) => `<td class="pc-${i}">Qty</td><td class="pct-cell pc-${i}">%</td>`).join('');
+  return `<tr class="rpt-colhead"><td>Funnel Stage / Metric</td>${periodCells}</tr><tr class="rpt-colhead"><td></td>${subCells}</tr>`;
+}
+function rptPivotGroupRow(periods, groupKeyFn, groupLabelFn) {
+  // Groups adjacent periods (e.g. all days in one month) under one clickable header cell,
+  // so whole groups of columns can be hidden at once. Only meaningful when periods share a
+  // coarser grouping (days -> months); the caller omits this row when it wouldn't help
+  // (e.g. MTD Statistics, where each period already IS a month).
+  const groups = [];
+  periods.forEach((p, idx) => {
+    const key = groupKeyFn(p.key);
+    const last = groups[groups.length - 1];
+    if (last && last.key === key) last.count++;
+    else groups.push({ key, startIdx: idx, count: 1 });
+  });
+  let cells = '<td></td>';
+  groups.forEach(g => {
+    cells += `<td colspan="${g.count * 2}" class="rpt-group-toggle" data-group-start="${g.startIdx}" data-group-count="${g.count}"><span class="rpt-chevron">&#9662;</span>${groupLabelFn(g.key)}</td>`;
+  });
+  return `<tr class="rpt-colhead rpt-group-row">${cells}</tr>`;
+}
+function rptPivotRow(sec, cls, label, periods, valueFn) {
+  const tds = periods.map((p, i) => {
+    const [v, pv] = valueFn(p, i);
+    return cellOrDash(v, `pc-${i}`) + cellOrDash(pv, `pct-cell pc-${i}`);
+  }).join('');
+  return `<tr class="${cls}" data-sec="${sec}"><td>${label}</td>${tds}</tr>`;
+}
+function rptPivotSpan(cls, text, colspan) {
+  const id = 'sec' + (++secCounter);
+  return { id, row: `<tr class="${cls}" data-toggle="${id}"><td colspan="${colspan}"><span class="rpt-chevron">&#9662;</span>${text}</td></tr>` };
+}
+function rptPivotPlainSpan(cls, text, colspan) {
+  return `<tr class="${cls}"><td colspan="${colspan}">${text}</td></tr>`;
+}
+
+function pivotSegBlock(colspan, title, periods, segKey) {
+  const { id, row } = rptPivotSpan('rpt-section', title, colspan);
+  let html = row;
+  html += rptPivotRow(id, 'rpt-plain', 'Applications', periods, p => [fmt(p[segKey].applications), pct(pctSafe(p[segKey].applications, p[segKey].applications))]);
+  html += rptPivotRow(id, 'rpt-plain', 'Product Terms Approved by Customer', periods, p => [fmt(p[segKey].terms), pct(pctSafe(p[segKey].terms, p[segKey].applications))]);
+  html += rptPivotRow(id, 'rpt-plain', 'Underwriting Approved', periods, p => [fmt(p[segKey].uw), pct(pctSafe(p[segKey].uw, p[segKey].applications))]);
+  html += rptPivotRow(id, 'rpt-peach', 'Deals Closed (Clients)', periods, p => [fmt(p[segKey].closed), pct(pctSafe(p[segKey].closed, p[segKey].applications))]);
+  html += rptPivotRow(id, 'rpt-peach', 'Amount Sold (GEL)', periods, p => [fmt(p[segKey].amount), pct(pctSafe(p[segKey].amount, p.A.amount + p.B.amount))]);
+  html += rptPivotRow(id, 'rpt-green', 'Downpayment Collected (GEL)', periods, p => [fmt(p[segKey].dp), pct(pctSafe(p[segKey].dp, p.A.dp + p.B.dp))]);
+  html += rptPivotRow(id, 'rpt-green', 'Downpayment Rate (% of amount)', periods, p => [null, pct(pctSafe(p[segKey].dp, p[segKey].amount))]);
+  return html;
+}
+
+function pivotSectionC(colspan, periods) {
+  const tot = (p, key) => p.A[key] + p.B[key];
+  const { id, row } = rptPivotSpan('rpt-section-strong', 'C. TOTAL FUNNEL (A + B &mdash; auto-calculated)', colspan);
+  let html = row;
+  html += rptPivotRow(id, 'rpt-peach', 'Applications', periods, p => [fmt(tot(p, 'applications')), pct(pctSafe(tot(p, 'applications'), tot(p, 'applications')))]);
+  html += rptPivotRow(id, 'rpt-peach', 'Product Terms Approved by Customer', periods, p => [fmt(tot(p, 'terms')), pct(pctSafe(tot(p, 'terms'), tot(p, 'applications')))]);
+  html += rptPivotRow(id, 'rpt-peach', 'Underwriting Approved', periods, p => [fmt(tot(p, 'uw')), pct(pctSafe(tot(p, 'uw'), tot(p, 'applications')))]);
+  html += rptPivotRow(id, 'rpt-peach-strong', 'Deals Closed (Clients)', periods, p => [fmt(tot(p, 'closed')), pct(pctSafe(tot(p, 'closed'), tot(p, 'applications')))]);
+  html += rptPivotRow(id, 'rpt-peach-strong', 'Amount Sold (GEL)', periods, p => [fmt(tot(p, 'amount')), '100.0%']);
+  html += rptPivotRow(id, 'rpt-green', 'Downpayment Collected (GEL)', periods, p => [fmt(tot(p, 'dp')), '100.0%']);
+  html += rptPivotRow(id, 'rpt-green', 'Downpayment Rate (% of amount)', periods, p => [null, pct(pctSafe(tot(p, 'dp'), tot(p, 'amount')))]);
+  return html;
+}
+
+// Keeps a table's own bottom scrollbar (native, inside .report-scroll) and a duplicate strip
+// above the header (.report-scroll-top) moving together, so users don't have to scroll all
+// the way down to the bottom of a tall table just to move it sideways.
+function setupTopScrollSync(topId, bodyId) {
+  const top = document.getElementById(topId);
+  const body = document.getElementById(bodyId);
+  const spacer = top.firstElementChild;
+  function updateWidth() {
+    const table = body.querySelector('table');
+    spacer.style.width = table.scrollWidth + 'px';
+  }
+  let fromTop = false, fromBody = false;
+  top.addEventListener('scroll', () => {
+    if (fromBody) return;
+    fromTop = true; body.scrollLeft = top.scrollLeft; fromTop = false;
+  });
+  body.addEventListener('scroll', () => {
+    if (fromTop) return;
+    fromBody = true; top.scrollLeft = body.scrollLeft; fromBody = false;
+  });
+  window.addEventListener('resize', updateWidth);
+  updateWidth();
+  return updateWidth;
+}
+
+function renderPivotReport(tableId, statsObj, labelFn, subtitle, footerText, groupBy, onRendered) {
+  const table = document.getElementById(tableId);
+  if (!statsObj || !Object.keys(statsObj).length) {
+    table.querySelector('tbody').innerHTML = `<tr><td>No data.</td></tr>`;
+    return;
+  }
+  const periods = Object.keys(statsObj).map(key => ({ key, label: labelFn(key), A: statsObj[key].A, B: statsObj[key].B }));
+  const colspan = 1 + periods.length * 2;
+
+  let html = '';
+  html += rptPivotPlainSpan('rpt-title', 'Volta Daily Report &mdash; Sales &amp; Product-Terms Funnel', colspan);
+  html += rptPivotPlainSpan('rpt-title', subtitle, colspan);
+  if (groupBy) html += rptPivotGroupRow(periods, groupBy.keyFn, groupBy.labelFn);
+  html += rptPivotColHead(periods.map(p => p.label));
+  html += pivotSegBlock(colspan, 'A. Requires Downpayment (TV / Phone / &gt;2,500 GEL)', periods, 'A');
+  html += pivotSegBlock(colspan, 'B. Standard Terms (no product-driven downpayment)', periods, 'B');
+  html += pivotSectionC(colspan, periods);
+  html += `<tr class="rpt-footer"><td colspan="${colspan}">${footerText}</td></tr>`;
+
+  table.querySelector('tbody').innerHTML = html;
+
+  table.querySelectorAll('tr[data-toggle]').forEach(header => {
+    header.addEventListener('click', () => {
+      const id = header.getAttribute('data-toggle');
+      const chevron = header.querySelector('.rpt-chevron');
+      const rows = table.querySelectorAll(`tr[data-sec="${id}"]`);
+      const collapsing = rows.length && !rows[0].classList.contains('is-collapsed');
+      rows.forEach(r => r.classList.toggle('is-collapsed', collapsing));
+      if (chevron) chevron.style.transform = collapsing ? 'rotate(-90deg)' : 'rotate(0deg)';
+    });
+  });
+
+  table.querySelectorAll('td.rpt-group-toggle').forEach(cell => {
+    cell.addEventListener('click', () => {
+      const start = parseInt(cell.dataset.groupStart, 10);
+      const count = parseInt(cell.dataset.groupCount, 10);
+      const chevron = cell.querySelector('.rpt-chevron');
+      const firstCell = table.querySelector(`.pc-${start}`);
+      const collapsing = firstCell && !firstCell.classList.contains('col-collapsed');
+      for (let i = start; i < start + count; i++) {
+        table.querySelectorAll(`.pc-${i}`).forEach(el => el.classList.toggle('col-collapsed', collapsing));
+      }
+      if (chevron) chevron.style.transform = collapsing ? 'rotate(-90deg)' : 'rotate(0deg)';
+      if (onRendered) onRendered();
+    });
+  });
+
+  if (onRendered) onRendered();
+}
+
+const MONTH_NAMES = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+function monthLabel(ym) {
+  const [y, m] = ym.split('-').map(Number);
+  const now = new Date();
+  const isCurrent = y === now.getFullYear() && m === (now.getMonth() + 1);
+  return `${MONTH_NAMES[m - 1]} ${y}` + (isCurrent ? ' (MTD)' : '');
+}
+function dayLabel(ymd) {
+  const [, m, d] = ymd.split('-').map(Number);
+  return `${MONTH_NAMES[m - 1]} ${d}`;
+}
+
+const PIVOT_FOOTER = 'Segment A = TV, Phone, or any single product &gt; 2,500 GEL. Segment B = everything else. Excludes unassigned "lead" placeholder rows. Applications, Terms Approved, and Underwriting Approved are keyed to Application Date. Deals Closed is keyed to Application Date and counts active/disbursed instalments. Amount Sold is keyed to Order Date (the disbursement/issue date) and equals Full Cost (Initial Amount + First Payment), the full sale price &mdash; not just the financed principal. Downpayment Collected = sum of the first payment on every application in the period, regardless of underwriting/active status; it is already included inside Amount Sold, not additive to it. Source: myvolta8_voltadb, table instalments. Generated ' + generatedAt + '.';
+
+const mtdScrollUpdate = setupTopScrollSync('mtdStatsScrollTop', 'mtdStatsScrollBody');
+renderPivotReport(
+  'mtdStatsTable', monthlyStats, monthLabel,
+  'One column pair per calendar month',
+  PIVOT_FOOTER + ' A completed month shows its final total; the current month shows MTD-to-date.',
+  null,
+  mtdScrollUpdate
+);
+
+const dailyScrollUpdate = setupTopScrollSync('dailyStatsScrollTop', 'dailyStatsScrollBody');
+renderPivotReport(
+  'dailyStatsTable', dailyStats, dayLabel,
+  'One column pair per calendar day, from June 1. Click a month header below to collapse its days.',
+  PIVOT_FOOTER + ' Today is excluded (not yet finished). Recent days are undercounted and will keep rising on refresh, because Active/Order Date can be set several days after Application Date.',
+  { keyFn: ymd => ymd.slice(0, 7), labelFn: ym => monthLabel(ym).replace(' (MTD)', '') },
+  dailyScrollUpdate
+);
+
 document.querySelectorAll('#pageNav button').forEach(btn => {
   btn.addEventListener('click', () => {
     document.querySelectorAll('#pageNav button').forEach(b => b.classList.remove('active'));
@@ -567,6 +566,10 @@ document.querySelectorAll('#pageNav button').forEach(btn => {
     const page = btn.getAttribute('data-page');
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
     document.getElementById('page-' + page).classList.add('active');
+    // A hidden (display:none) table reports scrollWidth 0, so the top-scroll spacer only
+    // gets its real width once the tab holding it is actually visible.
+    if (page === 'mtdstats') mtdScrollUpdate();
+    if (page === 'dailystats') dailyScrollUpdate();
   });
 });
 </script>

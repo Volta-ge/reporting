@@ -37,9 +37,22 @@ try {
             'B' => $repository->segmentMetrics($yesterdayFrom, $yesterdayTo, Segment::B)->toArray(),
         ],
     ];
+
+    // MTD Statistics tab: one column-pair per calendar month, Jan through the current month
+    // (which naturally comes out as MTD-to-date since it's still in progress).
+    $monthlyFrom = new \DateTimeImmutable($now->format('Y') . '-01-01');
+    $monthlyStats = $repository->monthlySegmentStats($monthlyFrom, $mtdTo);
+
+    // Daily Statistics tab: every day from June 1 through yesterday (today is excluded —
+    // not yet finished — same convention as everywhere else in this project).
+    $dailyFrom = new \DateTimeImmutable($now->format('Y') . '-06-01');
+    $dailyStats = $repository->dailySegmentStats($dailyFrom, $yesterdayTo);
+
     $connectionError = null;
 } catch (\Throwable $e) {
     $data = null;
+    $monthlyStats = null;
+    $dailyStats = null;
     $connectionError = $e->getMessage();
 }
 
@@ -51,7 +64,6 @@ $targets = [
 
 $headerYesterday = $yesterdayFrom->format('M j, Y');
 $headerMtdRange = $mtdFrom->format('M j') . '–' . $yesterdayFrom->format('j, Y');
-$generatedDate = $now->format('Y-m-d');
 $generatedAt = $now->format(\DateTimeInterface::ATOM);
 
 require __DIR__ . '/templates/dashboard.php';

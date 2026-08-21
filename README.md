@@ -65,7 +65,7 @@ everything else. See `Segment::sqlCondition()`.
 | Terms Approved | `Aplication_Date` | `UnderWriter_Status_ID != 0` — case has entered underwriting review (the report's own definition of "customer approved terms") |
 | Underwriting Approved | `Aplication_Date` | `UnderWriter_Status_ID = 16` (Approved) |
 | Deals Closed | `Aplication_Date` | `Active = 1` — instalment currently active/disbursed |
-| **Amount Sold** | **`Order_Date`** | `SUM(Initial_Amount)` for `Active = 1` rows — keyed to the *disbursement* date, not application date, so a loan applied for on one day but issued the next counts toward the day it was issued |
+| **Amount Sold** | **`Order_Date`** | `SUM(Full_Cost)` — i.e. `Initial_Amount + First_Payment`, the full sale price of the product, not just the financed principal — for `Active = 1` rows, keyed to the *disbursement* date, not application date, so a loan applied for on one day but issued the next counts toward the day it was issued. Downpayment Collected is reported separately but is already included inside this figure — don't add the two together. |
 | Downpayment Collected | `Aplication_Date` | `SUM(First_Payment)` for **every** row, regardless of status — once collected it isn't refunded, so it counts even on a rejected or still-pending deal |
 
 Two dates matter for every query: **Yesterday** (the calendar day before "now") and
@@ -81,13 +81,38 @@ it's one lower, with Required Daily Sales recalculated accordingly.
 **Budget targets** (2,500 applications / 1,900,000 GEL per month) are a business goal,
 not derived from the database — edit `config.php` when they change.
 
+## Pages
+
+- **Report** — the original spreadsheet replica (Yesterday + MTD side by side).
+- **MTD Statistics** and **Daily Statistics** — both reuse the *exact* Section A/B/C
+  report layout from the Report tab (same row labels, same colored bands, collapsible
+  section headers), but pivoted: instead of two fixed columns (Yesterday | MTD), each
+  column pair is one period — one calendar **month** (Jan through the current month) for
+  MTD Statistics, one calendar **day** (from June 1 through yesterday) for Daily
+  Statistics. A completed month/day shows its final total; the current, still-in-progress
+  period shows figures to-date. This format was specified directly by the business (an
+  example workbook with the same pivot idea, built by hand with a few placeholder
+  months), replacing an earlier flat-comparison-table design.
+  - The metric column stays pinned (`position: sticky`) while scrolling horizontally.
+  - A duplicate scrollbar strip (`.report-scroll-top`) sits above the table header and
+    stays in sync with the real one at the bottom (`setupTopScrollSync()`), since with
+    many columns the bottom scrollbar can be far below the fold.
+  - Daily Statistics has an extra header row grouping days by month, each clickable to
+    hide/show every day in that month at once (`rptPivotGroupRow()` + a `pc-<index>`
+    class on every cell in a given column, toggled via `.col-collapsed { display:none }`).
+    MTD Statistics skips this row since each column there already IS a month.
+
 ## If you want to extend it
 
-- All SQL lives in `FunnelRepository::segmentMetrics()` — one method, two queries (one
-  keyed to Aplication_Date, one to Order_Date), called four times (2 segments × 2
-  periods) by `public/index.php`.
+- All SQL lives in `FunnelRepository.php` — `segmentMetrics()` (one method, two queries,
+  called four times: 2 segments × 2 periods) for the Report tab, and
+  `monthlySegmentStats()` / `dailySegmentStats()` (both wrap a shared private
+  `periodSegmentStats()` — two queries total per call, using `CASE WHEN` to compute both
+  segments in one pass, grouped by `DATE_FORMAT(..., '%Y-%m')` or `'%Y-%m-%d'`) for the
+  MTD/Daily Statistics tabs.
 - The HTML/CSS/client-side JS in `templates/dashboard.php` is otherwise unchanged from
   the Claude Artifact version — if you update one, consider updating the other so they
   don't drift apart.
-- No caching layer exists on purpose (each of the ~8 underlying queries is cheap and this
-  is an internal low-traffic tool) — add one only if load ever becomes a real concern.
+- No caching layer exists on purpose (each of the ~10 underlying queries is cheap and
+  this is an internal low-traffic tool) — add one only if load ever becomes a real
+  concern.
