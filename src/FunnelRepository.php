@@ -12,15 +12,24 @@ use PDO;
  * Volta Funnel Dashboard. See README.md for the full explanation of each metric.
  *
  * Two different date fields are used on purpose:
- *  - Applications / Terms Approved / Underwriting Approved / Deals Closed / Downpayment
- *    Collected are keyed to Aplication_Date (when the client applied).
- *  - Amount Sold is keyed to Order_Date (when the loan was actually issued/disbursed) —
- *    a loan applied for on one day but issued the next counts toward the day it was issued.
+ *  - Applications / Terms Approved / Underwriting Approved / Downpayment Collected are keyed
+ *    to Aplication_Date (when the client applied).
+ *  - Deals Closed and Amount Sold are keyed to Order_Date (when the loan was actually
+ *    issued/disbursed) — a loan applied for on one day but issued the next counts toward the
+ *    day it was issued, for both figures.
  *
  * Amount Sold = SUM(Full_Cost), i.e. Initial_Amount + First_Payment — the full sale price of
  * the product, not just the financed principal. Downpayment Collected is still reported
  * separately (it's cash collected upfront), so it's already included inside Amount Sold —
  * the two are not meant to be added together.
+ *
+ * Deals Closed changed from Aplication_Date to Order_Date on 2026-08-25, per a business
+ * decision (Shai, in reply to a report explaining the original logic): counting by
+ * disbursement date "aligns the number of closed deals with the daily sales amount (GEL),
+ * which is already reported based on the date of sale" — and "in the long run, these timing
+ * differences should naturally balance out" (i.e. a deal applied for on one day and closed
+ * the next was previously "missing" from that day's Deals Closed and only appeared on its
+ * application day, undercounting same-day-close activity relative to Amount Sold).
  */
 final class FunnelRepository
 {
@@ -36,7 +45,7 @@ final class FunnelRepository
             'to' => $to->format('Y-m-d H:i:s'),
         ];
 
-        // Applications / Terms Approved / Underwriting Approved / Deals Closed / Downpayment Collected.
+        // Applications / Terms Approved / Underwriting Approved / Downpayment Collected.
         // Excludes unassigned "lead" placeholder rows (Product_ID = 1, no real product chosen yet).
         // Downpayment Collected counts every First_Payment regardless of underwriting/active status —
         // once collected it is not refunded, so it counts even on a rejected or still-pending deal.
@@ -45,7 +54,6 @@ final class FunnelRepository
                 COUNT(*) AS applications,
                 SUM(i.UnderWriter_Status_ID != 0) AS terms_approved,
                 SUM(i.UnderWriter_Status_ID = 16) AS uw_approved,
-                SUM(i.Active = 1) AS deals_closed,
                 SUM(i.First_Payment) AS dp_collected
             FROM instalments i
             LEFT JOIN products p ON p.Product_ID = i.Product_ID
@@ -56,10 +64,11 @@ final class FunnelRepository
         $stmt->execute($params);
         $row = $stmt->fetch();
 
-        // Amount Sold: full product price (Initial_Amount + First_Payment) for active/disbursed
-        // deals, keyed to Order_Date — the actual sale value, not just the financed principal.
+        // Deals Closed / Amount Sold: both keyed to Order_Date (the disbursement/issue date),
+        // both restricted to Active = 1 — a deal counts toward the day it actually closed, not
+        // the day it was originally applied for.
         $stmtAmount = $this->pdo->prepare(<<<SQL
-            SELECT SUM(i.Full_Cost) AS amount_sold
+            SELECT COUNT(*) AS deals_closed, SUM(i.Full_Cost) AS amount_sold
             FROM instalments i
             LEFT JOIN products p ON p.Product_ID = i.Product_ID
             WHERE i.Order_Date >= :from AND i.Order_Date < :to
@@ -74,7 +83,7 @@ final class FunnelRepository
             applications: (int) $row['applications'],
             termsApproved: (int) $row['terms_approved'],
             underwritingApproved: (int) $row['uw_approved'],
-            dealsClosed: (int) $row['deals_closed'],
+            dealsClosed: (int) ($amountRow['deals_closed'] ?? 0),
             amountSold: round((float) ($amountRow['amount_sold'] ?? 0.0), 2),
             downpaymentCollected: round((float) ($row['dp_collected'] ?? 0.0), 2),
         );
@@ -108,7 +117,7 @@ final class FunnelRepository
 
     /**
      * Shared implementation: one CASE-WHEN pass per date field (Aplication_Date for
-     * applications/terms/uw/closed/dp, Order_Date for amount) computes both segments' figures
+     * applications/terms/uw/dp, Order_Date for closed/amount) computes both segments' figures
      * together, grouped by the given DATE_FORMAT pattern — two queries total regardless of how
      * many periods come out, rather than one query per period.
      */
@@ -126,12 +135,10 @@ final class FunnelRepository
                 SUM(CASE WHEN {$segA} THEN 1 ELSE 0 END) AS a_applications,
                 SUM(CASE WHEN {$segA} THEN (i.UnderWriter_Status_ID != 0) ELSE 0 END) AS a_terms,
                 SUM(CASE WHEN {$segA} THEN (i.UnderWriter_Status_ID = 16) ELSE 0 END) AS a_uw,
-                SUM(CASE WHEN {$segA} THEN (i.Active = 1) ELSE 0 END) AS a_closed,
                 SUM(CASE WHEN {$segA} THEN i.First_Payment ELSE 0 END) AS a_dp,
                 SUM(CASE WHEN NOT ({$segA}) THEN 1 ELSE 0 END) AS b_applications,
                 SUM(CASE WHEN NOT ({$segA}) THEN (i.UnderWriter_Status_ID != 0) ELSE 0 END) AS b_terms,
                 SUM(CASE WHEN NOT ({$segA}) THEN (i.UnderWriter_Status_ID = 16) ELSE 0 END) AS b_uw,
-                SUM(CASE WHEN NOT ({$segA}) THEN (i.Active = 1) ELSE 0 END) AS b_closed,
                 SUM(CASE WHEN NOT ({$segA}) THEN i.First_Payment ELSE 0 END) AS b_dp
             FROM instalments i
             LEFT JOIN products p ON p.Product_ID = i.Product_ID
@@ -145,10 +152,15 @@ final class FunnelRepository
             $byApplicationDate[$row['period']] = $row;
         }
 
+        // Deals Closed and Amount Sold both keyed to Order_Date, both restricted to Active = 1 —
+        // see the class docblock for why (2026-08-25 business decision to align Deals Closed
+        // with how Amount Sold already counts by disbursement date, not application date).
         $stmtAmount = $this->pdo->prepare(<<<SQL
             SELECT
                 DATE_FORMAT(i.Order_Date, '{$dateFormat}') AS period,
+                SUM(CASE WHEN {$segA} THEN 1 ELSE 0 END) AS a_closed,
                 SUM(CASE WHEN {$segA} THEN i.Full_Cost ELSE 0 END) AS a_amount,
+                SUM(CASE WHEN NOT ({$segA}) THEN 1 ELSE 0 END) AS b_closed,
                 SUM(CASE WHEN NOT ({$segA}) THEN i.Full_Cost ELSE 0 END) AS b_amount
             FROM instalments i
             LEFT JOIN products p ON p.Product_ID = i.Product_ID
@@ -174,7 +186,7 @@ final class FunnelRepository
                     'applications' => (int) ($appRow['a_applications'] ?? 0),
                     'terms' => (int) ($appRow['a_terms'] ?? 0),
                     'uw' => (int) ($appRow['a_uw'] ?? 0),
-                    'closed' => (int) ($appRow['a_closed'] ?? 0),
+                    'closed' => (int) ($amtRow['a_closed'] ?? 0),
                     'amount' => round((float) ($amtRow['a_amount'] ?? 0.0), 2),
                     'dp' => round((float) ($appRow['a_dp'] ?? 0.0), 2),
                 ],
@@ -182,7 +194,7 @@ final class FunnelRepository
                     'applications' => (int) ($appRow['b_applications'] ?? 0),
                     'terms' => (int) ($appRow['b_terms'] ?? 0),
                     'uw' => (int) ($appRow['b_uw'] ?? 0),
-                    'closed' => (int) ($appRow['b_closed'] ?? 0),
+                    'closed' => (int) ($amtRow['b_closed'] ?? 0),
                     'amount' => round((float) ($amtRow['b_amount'] ?? 0.0), 2),
                     'dp' => round((float) ($appRow['b_dp'] ?? 0.0), 2),
                 ],
@@ -255,13 +267,26 @@ final class FunnelRepository
         return $report;
     }
 
+    /** @var array<string, array> */
+    private array $rawGroupedSalesCache = [];
+
     /**
      * Shared raw query for the three *MonthlyStats() methods above — one row per
      * (calendar month, raw grouping value), Order_Status = 5 filter, Sales/Cogs/Qty summed.
      * $groupExpr is a trusted SQL expression (column reference), never user input.
+     *
+     * Memoized — Sales Monthly and Subcategory Analyze both group by the identical
+     * `pc.Category_Name` expression (they only differ in how the raw value gets classified
+     * afterward in PHP), so this avoids running the exact same query against a slow remote DB
+     * twice on one page load.
      */
     private function rawGroupedSales(DateTimeImmutable $from, DateTimeImmutable $to, string $groupExpr, string $extraJoin = ''): array
     {
+        $cacheKey = $from->format('Y-m-d H:i:s') . '|' . $to->format('Y-m-d H:i:s') . '|' . $groupExpr . '|' . $extraJoin;
+        if (isset($this->rawGroupedSalesCache[$cacheKey])) {
+            return $this->rawGroupedSalesCache[$cacheKey];
+        }
+
         $params = [
             'from' => $from->format('Y-m-d H:i:s'),
             'to' => $to->format('Y-m-d H:i:s'),
@@ -283,7 +308,9 @@ final class FunnelRepository
             GROUP BY period, {$groupExpr}
             SQL);
         $stmt->execute($params);
-        return $stmt->fetchAll();
+        $rows = $stmt->fetchAll();
+        $this->rawGroupedSalesCache[$cacheKey] = $rows;
+        return $rows;
     }
 
     /**
@@ -407,8 +434,20 @@ final class FunnelRepository
      *
      * @return array{count: int, salesAffected: float, total: int}
      */
+    /** @var array<string, array{count: int, salesAffected: float, total: int}> */
+    private array $garbageStatsCache = [];
+
     private function cogsGarbageStats(DateTimeImmutable $from, DateTimeImmutable $to): array
     {
+        // Memoized — Sales Monthly / Brand Analyze / Subcategory Analyze all call this for the
+        // same window on the same request, and the underlying query pulls every line item in
+        // the window (tens of thousands of rows over a slow link to myvolta.info); running it
+        // three times pushed a single page load past PHP's default 30s execution limit.
+        $cacheKey = $from->format('Y-m-d H:i:s') . '|' . $to->format('Y-m-d H:i:s');
+        if (isset($this->garbageStatsCache[$cacheKey])) {
+            return $this->garbageStatsCache[$cacheKey];
+        }
+
         $params = [
             'from' => $from->format('Y-m-d H:i:s'),
             'to' => $to->format('Y-m-d H:i:s'),
@@ -452,6 +491,8 @@ final class FunnelRepository
             }
         }
 
-        return ['count' => $garbageCount, 'salesAffected' => round($garbageSales, 2), 'total' => count($lines)];
+        $result = ['count' => $garbageCount, 'salesAffected' => round($garbageSales, 2), 'total' => count($lines)];
+        $this->garbageStatsCache[$cacheKey] = $result;
+        return $result;
     }
 }

@@ -11,6 +11,7 @@
  * @var array|null $salesMonthlyStats
  * @var array|null $brandStats
  * @var array|null $subcategoryStats
+ * @var array<string, array{count: int, capturedAt: string}> $pendingStatusLog
  */
 
 declare(strict_types=1);
@@ -365,7 +366,7 @@ table.rpt-pivot td.rpt-group-toggle { cursor: pointer; user-select: none; text-a
         <table class="logi-table" id="logisticsSalesTable"><tbody></tbody></table>
       </div>
     </div>
-    <p class="note">Sales &ndash; Pending Status = customers not yet contacted, by how long the case has been open (measured from the same Status/date basis as the sheet itself). Only "Up to 1 day" has ever had data in the source; "1 to 5 days" / "&gt;5 days" are blank for every date shown, transferred unchanged.</p>
+    <p class="note">Sales &ndash; Pending Status = customers not yet contacted, by how long the case has been open (measured from the same Status/date basis as the sheet itself). Only "Up to 1 day" has ever had data in the source; "1 to 5 days" / "&gt;5 days" are blank for every date shown, transferred unchanged. History through 21 Aug is from the Google Sheet as before; from 22 Aug onward, "Up to 1 day" switches source to a live daily count of <code>instalments.Order_Status = 4</code> ("Pending" loan applications, a different underlying process that happens to have landed on similar numbers) captured once a day by a server cron job &mdash; not backfillable for any date that wasn't actually captured that day, same as everywhere else on this tab.</p>
 
     <p class="note" style="margin:-8px 0 0;">Source: Google Sheet "Volta Order Managment" (&#x10E8;&#x10D4;&#x10D9;&#x10D5;&#x10D4;&#x10D7;&#x10D4;&#x10D1;&#x10D8; / "orders" sheet). History through 20 Aug is carried over unchanged from the business's own tracking sheet; the 21 Aug column is freshly computed from the same raw order data. "Not Delivered" / age-bucket / "On Hold" figures are a snapshot valid only for the date in that column; "Delivered" and "Average Delivery Time" are reconstructed from each order's actual Delivery/Pickup Date, so those two are reliable history, not snapshots.</p>
     <div class="report-card">
@@ -405,6 +406,7 @@ const dailyStats = <?= json_encode($dailyStats, JSON_HEX_TAG | JSON_HEX_APOS | J
 const salesMonthlyStats = <?= json_encode($salesMonthlyStats, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) ?>;
 const brandStats = <?= json_encode($brandStats, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) ?>;
 const subcategoryStats = <?= json_encode($subcategoryStats, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) ?>;
+const pendingStatusLog = <?= json_encode($pendingStatusLog, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) ?>;
 
 const fmt = n => Math.round(n).toLocaleString('en-US');
 const fmt1 = n => n.toLocaleString('en-US', { maximumFractionDigits: 1 });
@@ -813,8 +815,24 @@ const salesPendingHistory = {
   over5:  new Array(23).fill(null),
 };
 
-function renderSalesPendingTable() {
+// Extends the Google-Sheet-sourced history with any date captured by
+// bin/capture_pending_status.php (Order_Status=4 "Pending" loan applications) that isn't
+// already in the frozen history — 22 Aug onward grows automatically as the daily cron
+// captures more days, with no code change needed here. See the note under this table on
+// the page for the full disclosure that this is a different underlying metric.
+function extendedSalesPendingHistory() {
   const h = salesPendingHistory;
+  const known = new Set(h.dates);
+  const newDates = Object.keys(pendingStatusLog).filter(d => !known.has(d)).sort();
+  return {
+    dates: [...h.dates, ...newDates],
+    upTo1: [...h.upTo1, ...newDates.map(d => pendingStatusLog[d].count)],
+    oneTo5: [...h.oneTo5, ...newDates.map(() => null)],
+    over5: [...h.over5, ...newDates.map(() => null)],
+  };
+}
+function renderSalesPendingTable() {
+  const h = extendedSalesPendingHistory();
   const n = h.dates.length;
   function cell(v) { return (v === null || v === undefined) ? '<td>&ndash;</td>' : `<td>${fmt(v)}</td>`; }
   function rowHtml(cls, label, vals) {

@@ -77,4 +77,17 @@ $headerYesterday = $yesterdayFrom->format('M j, Y');
 $headerMtdRange = $mtdFrom->format('M j') . '–' . $yesterdayFrom->format('j, Y');
 $generatedAt = $now->format(\DateTimeInterface::ATOM);
 
+// Loan Applications — Pending (Order_Status=4) tab: written daily by bin/capture_pending_status.php
+// (run via cron on the server, since it's a point-in-time snapshot that can't be reconstructed
+// after the fact). A plain file read, independent of the DB try/catch above — a missing/corrupt
+// log just means "no snapshots yet," not a page-breaking error.
+$pendingStatusLogPath = __DIR__ . '/../data/pending_status_log.json';
+$pendingStatusLog = [];
+if (is_file($pendingStatusLogPath)) {
+    $decoded = json_decode((string) file_get_contents($pendingStatusLogPath), true);
+    if (is_array($decoded)) {
+        $pendingStatusLog = $decoded;
+    }
+}
+
 require __DIR__ . '/templates/dashboard.php';

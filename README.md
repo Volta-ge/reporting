@@ -64,7 +64,7 @@ everything else. See `Segment::sqlCondition()`.
 | Applications | `Aplication_Date` | Count of applications with a real product selected |
 | Terms Approved | `Aplication_Date` | `UnderWriter_Status_ID != 0` — case has entered underwriting review (the report's own definition of "customer approved terms") |
 | Underwriting Approved | `Aplication_Date` | `UnderWriter_Status_ID = 16` (Approved) |
-| Deals Closed | `Aplication_Date` | `Active = 1` — instalment currently active/disbursed |
+| **Deals Closed** | **`Order_Date`** | `Active = 1`, keyed to the *disbursement* date (changed from `Aplication_Date` on 2026-08-25 — see below) |
 | **Amount Sold** | **`Order_Date`** | `SUM(Full_Cost)` — i.e. `Initial_Amount + First_Payment`, the full sale price of the product, not just the financed principal — for `Active = 1` rows, keyed to the *disbursement* date, not application date, so a loan applied for on one day but issued the next counts toward the day it was issued. Downpayment Collected is reported separately but is already included inside this figure — don't add the two together. |
 | Downpayment Collected | `Aplication_Date` | `SUM(First_Payment)` for **every** row, regardless of status — once collected it isn't refunded, so it counts even on a rejected or still-pending deal |
 
@@ -80,6 +80,16 @@ it's one lower, with Required Daily Sales recalculated accordingly.
 
 **Budget targets** (2,500 applications / 1,900,000 GEL per month) are a business goal,
 not derived from the database — edit `config.php` when they change.
+
+**Deals Closed, changed 2026-08-25**: originally keyed to `Aplication_Date` like the other
+funnel-stage metrics. Changed to `Order_Date` (same date field and `Active = 1` filter as
+Amount Sold, now computed in the same query) after a business decision — a report explaining
+the original per-metric logic was sent out, and the reply favored counting by disbursement
+date instead: "these timing differences should naturally balance out" over time, and it
+"align[s] the number of closed deals with the daily sales amount (GEL), which is already
+reported based on the date of sale." Concretely this means a deal applied for on one day and
+disbursed the next now counts toward the disbursement day for *both* Deals Closed and Amount
+Sold, instead of Deals Closed counting it a day earlier than Amount Sold did.
 
 ## Pages
 
@@ -101,6 +111,44 @@ not derived from the database — edit `config.php` when they change.
     hide/show every day in that month at once (`rptPivotGroupRow()` + a `pc-<index>`
     class on every cell in a given column, toggled via `.col-collapsed { display:none }`).
     MTD Statistics skips this row since each column there already IS a month.
+- **Logistics Daily** — order fulfillment data (PO/pickup/warehouse/delivery status),
+  sourced from a separate Google Sheet ("Volta Order Managment", not `myvolta8_voltadb`).
+  Two tables: a **Not Delivered Orders** snapshot (age buckets &le;1 / 1&ndash;5 / &gt;5
+  days + On Hold, as of the date shown) and a **Delivered Orders & Average Delivery
+  Time** trend (last 21 days). The snapshot numbers are only valid for the specific date
+  they were pulled — this server has no Google Sheets credentials, so `logisticsSnapshot`
+  in `dashboard.php` is a **hardcoded static JS literal**, not a live query; it needs
+  manual refresh the same way the whole dashboard did before the live-DB PHP version
+  existed. The Delivered/Avg-Delivery-Time trend, by contrast, is reconstructed from each
+  order's real Delivery/Pickup Date, so those two rows are trustworthy for any past day
+  even though the snapshot isn't. Real automation (refresh at 20:00 daily, values
+  persisted since "not delivered as of a past day" can't be recomputed later once orders
+  ship) needs two things this project doesn't have yet: a Google Sheets API service
+  account for the PHP server to read the sheet unattended, and a cron entry on the host
+  server — both deliberately deferred pending the user's decision on how to set them up.
+
+## Cron setup — Loan Applications Pending snapshot
+
+The "Loan Applications — Pending" table on the Logistics Daily tab (count of
+`instalments.Order_Status = 4`) is a point-in-time snapshot, not something the app can
+compute retroactively for a past day — it needs to be captured live, once a day, by a
+scheduled job on whatever server actually runs this app:
+
+```
+0 20 * * * /usr/bin/php /full/path/to/volta-funnel-php/bin/capture_pending_status.php >> /full/path/to/volta-funnel-php/data/capture.log 2>&1
+```
+
+Add that line via `crontab -e` on the server. Two things to double-check before relying on it:
+- **Timezone**: cron uses the server's own system clock. Run `date` on the server first —
+  if it's not already Asia/Tbilisi, adjust the `20` in the cron line to whatever hour
+  corresponds to 20:00 there (or prefix the line with `TZ=Asia/Tbilisi`, if your cron
+  supports per-line `TZ=`).
+- **Write permission**: the script writes to `data/pending_status_log.json` — make sure
+  the user cron runs as (often `www-data` or similar) can write to the `data/` directory.
+
+You can test it manually any time with `php bin/capture_pending_status.php` — it prints
+the captured count and is safe to re-run (it overwrites *today's* entry rather than
+creating a duplicate).
 
 ## If you want to extend it
 
