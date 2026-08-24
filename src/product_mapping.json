@@ -1,0 +1,3670 @@
+{
+ "აეროგრილი": {
+  "categoryGe": "წვრილი ტექნიკა",
+  "subcategoryGe": "სამზარეულოს წვრილი ტექნიკა",
+  "categoryEn": "Small Appliances",
+  "subcategoryEn": "Small Kitchen Appliances",
+  "productEn": "Air Fryer"
+ },
+ "ავეჯი": {
+  "categoryGe": "ავეჯი",
+  "subcategoryGe": "გარე ავეჯი",
+  "categoryEn": "Furniture",
+  "subcategoryEn": "Outdoor Furniture",
+  "productEn": "Outdoor Table"
+ },
+ "ავეჯი,გარე ავეჯი,ბაღის საქანელები": {
+  "categoryGe": "ავეჯი",
+  "subcategoryGe": "გარე ავეჯი",
+  "categoryEn": "Furniture",
+  "subcategoryEn": "Outdoor Furniture",
+  "productEn": "Garden Swings"
+ },
+ "ავეჯი,გარე ავეჯი,გარე ავეჯის კომპლექტი": {
+  "categoryGe": "ავეჯი",
+  "subcategoryGe": "გარე ავეჯი",
+  "categoryEn": "Furniture",
+  "subcategoryEn": "Outdoor Furniture",
+  "productEn": "Outdoor Furniture Set"
+ },
+ "ავეჯი,გარე ავეჯი,გარე სკამი": {
+  "categoryGe": "ავეჯი",
+  "subcategoryGe": "გარე ავეჯი",
+  "categoryEn": "Furniture",
+  "subcategoryEn": "Outdoor Furniture",
+  "productEn": "Outdoor Chair"
+ },
+ "ავეჯი,გარე ავეჯი,პავილიონი & ტენტი": {
+  "categoryGe": "ავეჯი",
+  "subcategoryGe": "გარე ავეჯი",
+  "categoryEn": "Furniture",
+  "subcategoryEn": "Outdoor Furniture",
+  "productEn": "Gazebo & Tent"
+ },
+ "ავეჯი,დივანი": {
+  "categoryGe": "ავეჯი",
+  "subcategoryGe": "რბილი ავეჯი",
+  "categoryEn": "Furniture",
+  "subcategoryEn": "Upholstered Furniture",
+  "productEn": "Sofa"
+ },
+ "ავეჯი,მატრასი": {
+  "categoryGe": "ავეჯი",
+  "subcategoryGe": "საძინებელი",
+  "categoryEn": "Furniture",
+  "subcategoryEn": "Bedroom",
+  "productEn": "Mattress"
+ },
+ "ავეჯი,საწოლი": {
+  "categoryGe": "ავეჯი",
+  "subcategoryGe": "საძინებელი",
+  "categoryEn": "Furniture",
+  "subcategoryEn": "Bedroom",
+  "productEn": "Bad"
+ },
+ "აკუმულატორი": {
+  "categoryGe": "ავტო აქსესუარები",
+  "subcategoryGe": "აკუმულატორი",
+  "categoryEn": "Auto Accessories",
+  "subcategoryEn": "Car Battery",
+  "productEn": "Car Battery"
+ },
+ "აქსესუარები,საათები,მამაკაცის საათები": {
+  "categoryGe": "აქსესუარები",
+  "subcategoryGe": "საათები",
+  "categoryEn": "Accessories",
+  "subcategoryEn": "Watches",
+  "productEn": "Men's Watches"
+ },
+ "აქსესუარები,საათები,უნისექსი": {
+  "categoryGe": "აქსესუარები",
+  "subcategoryGe": "საათები",
+  "categoryEn": "Accessories",
+  "subcategoryEn": "Watches",
+  "productEn": "Unisex Watches"
+ },
+ "აქსესუარები,საათები,ქალის საათები": {
+  "categoryGe": "აქსესუარები",
+  "subcategoryGe": "საათები",
+  "categoryEn": "Accessories",
+  "subcategoryEn": "Watches",
+  "productEn": "Women's Watches"
+ },
+ "აქსესუარები,სამაჯური,ქალის სამაჯური": {
+  "categoryGe": "აქსესუარები",
+  "subcategoryGe": "სამაჯური",
+  "categoryEn": "Accessories",
+  "subcategoryEn": "Bracelet",
+  "productEn": "Bracelet"
+ },
+ "ბალახის სათიბი": {
+  "categoryGe": "ხელსაწყოები",
+  "subcategoryGe": "ბაღის ხელსაწყოები",
+  "categoryEn": "Tools",
+  "subcategoryEn": "Garden Tools",
+  "productEn": "Garden Motor & Electric Tools"
+ },
+ "ბატუტი": {
+  "categoryGe": "სახლი & ეზო",
+  "subcategoryGe": "ბატუტი",
+  "categoryEn": "Home & Garden",
+  "subcategoryEn": "Trampoline",
+  "productEn": "Trampoline"
+ },
+ "ბაღის ავეჯი": {
+  "categoryGe": "სახლი & ეზო",
+  "subcategoryGe": "აუზი & აქსესუარები",
+  "categoryEn": "Home & Garden",
+  "subcategoryEn": "Pool & Accessories",
+  "productEn": "Pool"
+ },
+ "ბაღის ავეჯის კომპლექტი": {
+  "categoryGe": "ავეჯი",
+  "subcategoryGe": "გარე ავეჯი",
+  "categoryEn": "Furniture",
+  "subcategoryEn": "Outdoor Furniture",
+  "productEn": "Outdoor Furniture Set"
+ },
+ "ბაღის საქანელა": {
+  "categoryGe": "ავეჯი",
+  "subcategoryGe": "გარე ავეჯი",
+  "categoryEn": "Furniture",
+  "subcategoryEn": "Outdoor Furniture",
+  "productEn": "Garden Swings"
+ },
+ "ბენზოხერხი": {
+  "categoryGe": "ხელსაწყოები",
+  "subcategoryGe": "ბაღის ხელსაწყოები",
+  "categoryEn": "Tools",
+  "subcategoryEn": "Garden Tools",
+  "productEn": "Garden Motor & Electric Tools"
+ },
+ "ბლენდერი": {
+  "categoryGe": "წვრილი ტექნიკა",
+  "subcategoryGe": "სამზარეულოს წვრილი ტექნიკა",
+  "categoryEn": "Small Appliances",
+  "subcategoryEn": "Small Kitchen Appliances",
+  "productEn": "Blender"
+ },
+ "ბლინის ტაფა": {
+  "categoryGe": "სახლი & ეზო",
+  "subcategoryGe": "სამზარეულო & სერვირება",
+  "categoryEn": "Home & Garden",
+  "subcategoryEn": "Kitchen & Serving",
+  "productEn": "Frying Pan"
+ },
+ "ბუდე საქანელა": {
+  "categoryGe": "ავეჯი",
+  "subcategoryGe": "გარე ავეჯი",
+  "categoryEn": "Furniture",
+  "subcategoryEn": "Outdoor Furniture",
+  "productEn": "Garden Swings"
+ },
+ "გაზის გამათბობელი": {
+  "categoryGe": "მსხვილი ტექნიკა",
+  "subcategoryGe": "კლიმატური ტექნიკა",
+  "categoryEn": "Large Appliances",
+  "subcategoryEn": "Climate Appliances",
+  "productEn": "Gas Heater"
+ },
+ "გაზის წყლის გამაცხელებელი": {
+  "categoryGe": "მსხვილი ტექნიკა",
+  "subcategoryGe": "კლიმატური ტექნიკა",
+  "categoryEn": "Large Appliances",
+  "subcategoryEn": "Climate Appliances",
+  "productEn": "Gas Water Heater"
+ },
+ "გაზქურა": {
+  "categoryGe": "მსხვილი ტექნიკა",
+  "subcategoryGe": "გაზქურა",
+  "categoryEn": "Large Appliances",
+  "subcategoryEn": "Gas Stove",
+  "productEn": "Gas Stove"
+ },
+ "გამწოვი": {
+  "categoryGe": "მსხვილი ტექნიკა",
+  "subcategoryGe": "ჩასაშენებელი ტექნიკა",
+  "categoryEn": "Large Appliances",
+  "subcategoryEn": "Built-in Appliances",
+  "productEn": "Built-in Hood"
+ },
+ "გარე ავეჯი,ბაღის საქანელები": {
+  "categoryGe": "ავეჯი",
+  "subcategoryGe": "გარე ავეჯი",
+  "categoryEn": "Furniture",
+  "subcategoryEn": "Outdoor Furniture",
+  "productEn": "Garden Swings"
+ },
+ "დანების ნაკრები": {
+  "categoryGe": "სახლი & ეზო",
+  "subcategoryGe": "სამზარეულო & სერვირება",
+  "categoryEn": "Home & Garden",
+  "subcategoryEn": "Kitchen & Serving",
+  "productEn": "Knife Set"
+ },
+ "დენის წყლის გამაცხელებელი": {
+  "categoryGe": "მსხვილი ტექნიკა",
+  "subcategoryGe": "კლიმატური ტექნიკა",
+  "categoryEn": "Large Appliances",
+  "subcategoryEn": "Climate Appliances",
+  "productEn": "Electric Water Heater"
+ },
+ "დინამიკი": {
+  "categoryGe": "ტელევიზორები & აუდიო",
+  "subcategoryGe": "დინამიკი",
+  "categoryEn": "Televisions & Audio",
+  "subcategoryEn": "Speaker",
+  "productEn": "Speaker"
+ },
+ "დრელი": {
+  "categoryGe": "ხელსაწყოები",
+  "subcategoryGe": "დრელები",
+  "categoryEn": "Tools",
+  "subcategoryEn": "Drills",
+  "productEn": "Drills"
+ },
+ "ელექტრო გამათბობელი": {
+  "categoryGe": "მსხვილი ტექნიკა",
+  "subcategoryGe": "კლიმატური ტექნიკა",
+  "categoryEn": "Large Appliances",
+  "subcategoryEn": "Climate Appliances",
+  "productEn": "Electric Heater"
+ },
+ "ელექტრო სავარცხელი": {
+  "categoryGe": "სილამაზე",
+  "subcategoryGe": "თავის მოვლა",
+  "categoryEn": "Beauty",
+  "subcategoryEn": "Hair Care",
+  "productEn": "Electric Comb"
+ },
+ "ელექტრო სკუტერი": {
+  "categoryGe": "სპორტი & ფიტნესი",
+  "subcategoryGe": "სპორტი",
+  "categoryEn": "Sport & Fitness",
+  "subcategoryEn": "Sport",
+  "productEn": "Cycling"
+ },
+ "ელექტრო ღუმელი": {
+  "categoryGe": "წვრილი ტექნიკა",
+  "subcategoryGe": "სამზარეულოს წვრილი ტექნიკა",
+  "categoryEn": "Small Appliances",
+  "subcategoryEn": "Small Kitchen Appliances",
+  "productEn": "Electric Oven"
+ },
+ "ელექტრო ჩაიდანი": {
+  "categoryGe": "წვრილი ტექნიკა",
+  "subcategoryGe": "სამზარეულოს წვრილი ტექნიკა",
+  "categoryEn": "Small Appliances",
+  "subcategoryEn": "Small Kitchen Appliances",
+  "productEn": "Electric Kettle"
+ },
+ "ეპილატორი": {
+  "categoryGe": "სილამაზე",
+  "subcategoryGe": "თავის მოვლა",
+  "categoryEn": "Beauty",
+  "subcategoryEn": "Hair Care",
+  "productEn": "Epilator"
+ },
+ "ესპრესოს აპარატი": {
+  "categoryGe": "წვრილი ტექნიკა",
+  "subcategoryGe": "ყავის აპარატი",
+  "categoryEn": "Small Appliances",
+  "subcategoryEn": "Coffee Machine",
+  "productEn": "Coffee Machine"
+ },
+ "ვაფლის აპარატი": {
+  "categoryGe": "წვრილი ტექნიკა",
+  "subcategoryGe": "სამზარეულოს წვრილი ტექნიკა",
+  "categoryEn": "Small Appliances",
+  "subcategoryEn": "Small Kitchen Appliances",
+  "productEn": "Waffle Maker"
+ },
+ "ველოსიპედი": {
+  "categoryGe": "სპორტი & ფიტნესი",
+  "subcategoryGe": "სპორტი",
+  "categoryEn": "Sport & Fitness",
+  "subcategoryEn": "Sport",
+  "productEn": "Cycling"
+ },
+ "ვენტილატორი": {
+  "categoryGe": "მსხვილი ტექნიკა",
+  "subcategoryGe": "კლიმატური ტექნიკა",
+  "categoryEn": "Large Appliances",
+  "subcategoryEn": "Climate Appliances",
+  "productEn": "Fan"
+ },
+ "თმის და წვერის საჭრელი": {
+  "categoryGe": "სილამაზე",
+  "subcategoryGe": "თავის მოვლა",
+  "categoryEn": "Beauty",
+  "subcategoryEn": "Hair Care",
+  "productEn": "Hair & Beard Trimmer"
+ },
+ "თმის საკრეჭი": {
+  "categoryGe": "სილამაზე",
+  "subcategoryGe": "თავის მოვლა",
+  "categoryEn": "Beauty",
+  "subcategoryEn": "Hair Care",
+  "productEn": "Trimmer"
+ },
+ "თმის საშრობი": {
+  "categoryGe": "სილამაზე",
+  "subcategoryGe": "თავის მოვლა",
+  "categoryEn": "Beauty",
+  "subcategoryEn": "Hair Care",
+  "productEn": "Hair Dryer"
+ },
+ "თმის სტაილერი": {
+  "categoryGe": "სილამაზე",
+  "subcategoryGe": "თავის მოვლა",
+  "categoryEn": "Beauty",
+  "subcategoryEn": "Hair Care",
+  "productEn": "Hair Styler"
+ },
+ "თმის უთო": {
+  "categoryGe": "სილამაზე",
+  "subcategoryGe": "თავის მოვლა",
+  "categoryEn": "Beauty",
+  "subcategoryEn": "Hair Care",
+  "productEn": "Hair Straightener"
+ },
+ "იატაკი & საფარები,ლამინირებული იატაკი": {
+  "categoryGe": "იატაკი & საფარები",
+  "subcategoryGe": "ლამინირებული იატაკი",
+  "categoryEn": "Flooring & Coverings",
+  "subcategoryEn": "Laminate Flooring",
+  "productEn": "Laminate Flooring"
+ },
+ "კაპუჩინატორი": {
+  "categoryGe": "წვრილი ტექნიკა",
+  "subcategoryGe": "სამზარეულოს წვრილი ტექნიკა",
+  "categoryEn": "Small Appliances",
+  "subcategoryEn": "Small Kitchen Appliances",
+  "productEn": "Milk Frother"
+ },
+ "კარავი": {
+  "categoryGe": "სპორტი & ფიტნესი",
+  "subcategoryGe": "სპორტი",
+  "categoryEn": "Sport & Fitness",
+  "subcategoryEn": "Sport",
+  "productEn": "Hiking"
+ },
+ "კარკასული აუზი": {
+  "categoryGe": "სახლი & ეზო",
+  "subcategoryGe": "აუზი & აქსესუარები",
+  "categoryEn": "Home & Garden",
+  "subcategoryEn": "Pool & Accessories",
+  "productEn": "Pool"
+ },
+ "კარ-ფანჯარა & ფურნიტურა,შიდა კარები": {
+  "categoryGe": "კარ-ფანჯარა & ფურნიტურა",
+  "subcategoryGe": "შიდა კარები",
+  "categoryEn": "Doors-Windows & Fittings",
+  "subcategoryEn": "Interior Doors",
+  "productEn": "Interior Doors"
+ },
+ "კომპრესორი": {
+  "categoryGe": "ხელსაწყოები",
+  "subcategoryGe": "კომპრესორი",
+  "categoryEn": "Tools",
+  "subcategoryEn": "Compressor",
+  "productEn": "Compressor"
+ },
+ "კონდიციონერი": {
+  "categoryGe": "მსხვილი ტექნიკა",
+  "subcategoryGe": "კლიმატური ტექნიკა",
+  "categoryEn": "Large Appliances",
+  "subcategoryEn": "Climate Appliances",
+  "productEn": "Air Conditioner"
+ },
+ "მატრასები": {
+  "categoryGe": "ავეჯი",
+  "subcategoryGe": "საძინებელი",
+  "categoryEn": "Furniture",
+  "subcategoryEn": "Bedroom",
+  "productEn": "Mattress"
+ },
+ "მაღალი წნევით რეცხვის აპარატი": {
+  "categoryGe": "სახლი & ეზო",
+  "subcategoryGe": "სახლის მოვლა",
+  "categoryEn": "Home & Garden",
+  "subcategoryEn": "Home Care",
+  "productEn": "Pressure Washer"
+ },
+ "მაცივარი": {
+  "categoryGe": "მსხვილი ტექნიკა",
+  "subcategoryGe": "მაცივარი",
+  "categoryEn": "Large Appliances",
+  "subcategoryEn": "Refrigerator",
+  "productEn": "Refrigerator"
+ },
+ "მიკროტალღური ღუმელი": {
+  "categoryGe": "წვრილი ტექნიკა",
+  "subcategoryGe": "სამზარეულოს წვრილი ტექნიკა",
+  "categoryEn": "Small Appliances",
+  "subcategoryEn": "Small Kitchen Appliances",
+  "productEn": "Microwave Oven"
+ },
+ "მინის საწმენდი": {
+  "categoryGe": "სახლი & ეზო",
+  "subcategoryGe": "სახლის მოვლა",
+  "categoryEn": "Home & Garden",
+  "subcategoryEn": "Home Care",
+  "productEn": "Glass Cleaners"
+ },
+ "მიქსერი": {
+  "categoryGe": "წვრილი ტექნიკა",
+  "subcategoryGe": "სამზარეულოს წვრილი ტექნიკა",
+  "categoryEn": "Small Appliances",
+  "subcategoryEn": "Small Kitchen Appliances",
+  "productEn": "Mixer"
+ },
+ "მობილურები & აქსესუარები,სმარტფონები": {
+  "categoryGe": "მობილურები & აქსესუარები",
+  "subcategoryGe": "სმარტფონები",
+  "categoryEn": "Mobiles & Accessories",
+  "subcategoryEn": "Smartphones",
+  "productEn": "Smartphones"
+ },
+ "მტვერსასრუტი": {
+  "categoryGe": "წვრილი ტექნიკა",
+  "subcategoryGe": "მტვერსასრუტი",
+  "categoryEn": "Small Appliances",
+  "subcategoryEn": "Vacuum Cleaner",
+  "productEn": "Vacuum Cleaner"
+ },
+ "ნაყინის აპარატი": {
+  "categoryGe": "წვრილი ტექნიკა",
+  "subcategoryGe": "სამზარეულოს წვრილი ტექნიკა",
+  "categoryEn": "Small Appliances",
+  "subcategoryEn": "Small Kitchen Appliances",
+  "productEn": "Ice Cream Maker"
+ },
+ "ორთქლით საწმენდი": {
+  "categoryGe": "სახლი & ეზო",
+  "subcategoryGe": "სახლის მოვლა",
+  "categoryEn": "Home & Garden",
+  "subcategoryEn": "Home Care",
+  "productEn": "Steam Cleaner"
+ },
+ "ორთქლის აპარატი": {
+  "categoryGe": "სახლი & ეზო",
+  "subcategoryGe": "სახლის მოვლა",
+  "categoryEn": "Home & Garden",
+  "subcategoryEn": "Home Care",
+  "productEn": "Steam Cleaner"
+ },
+ "ორთქლის გენერატორი": {
+  "categoryGe": "წვრილი ტექნიკა",
+  "subcategoryGe": "უთო",
+  "categoryEn": "Small Appliances",
+  "subcategoryEn": "Iron",
+  "productEn": "Steam Iron"
+ },
+ "პავილიონი": {
+  "categoryGe": "ავეჯი",
+  "subcategoryGe": "გარე ავეჯი",
+  "categoryEn": "Furniture",
+  "subcategoryEn": "Outdoor Furniture",
+  "productEn": "Gazebo & Tent"
+ },
+ "პლინტუსების კოლექცია": {
+  "categoryGe": "იატაკი & საფარები",
+  "subcategoryGe": "პლინტუსი და მაკომპლექტებლები",
+  "categoryEn": "Flooring & Coverings",
+  "subcategoryEn": "Skirting & Accessories",
+  "productEn": "Skirting Board"
+ },
+ "პოპკორნის აპარატი": {
+  "categoryGe": "წვრილი ტექნიკა",
+  "subcategoryGe": "სამზარეულოს წვრილი ტექნიკა",
+  "categoryEn": "Small Appliances",
+  "subcategoryEn": "Small Kitchen Appliances",
+  "productEn": "Popcorn Maker"
+ },
+ "პურის საცხობი": {
+  "categoryGe": "წვრილი ტექნიკა",
+  "subcategoryGe": "სამზარეულოს წვრილი ტექნიკა",
+  "categoryEn": "Small Appliances",
+  "subcategoryEn": "Small Kitchen Appliances",
+  "productEn": "Bread Maker"
+ },
+ "პურის შესანახი": {
+  "categoryGe": "სახლი & ეზო",
+  "subcategoryGe": "სამზარეულო & სერვირება",
+  "categoryEn": "Home & Garden",
+  "subcategoryEn": "Kitchen & Serving",
+  "productEn": "Bread Box"
+ },
+ "რობოტი მტვერსასრუტი": {
+  "categoryGe": "წვრილი ტექნიკა",
+  "subcategoryGe": "რობოტი მტვერსასრუტი",
+  "categoryEn": "Small Appliances",
+  "subcategoryEn": "Robot Vacuum Cleaner",
+  "productEn": "Robot Vacuum Cleaner"
+ },
+ "როლიკი": {
+  "categoryGe": "სპორტი & ფიტნესი",
+  "subcategoryGe": "სპორტი",
+  "categoryEn": "Sport & Fitness",
+  "subcategoryEn": "Sport",
+  "productEn": "Cycling"
+ },
+ "საათი": {
+  "categoryGe": "აქსესუარები",
+  "subcategoryGe": "საათები",
+  "categoryEn": "Accessories",
+  "subcategoryEn": "Watches",
+  "productEn": "Unisex Watches"
+ },
+ "საბურავები": {
+  "categoryGe": "ავტო აქსესუარები",
+  "subcategoryGe": "საბურავი",
+  "categoryEn": "Auto Accessories",
+  "subcategoryEn": "Tire",
+  "productEn": "Tire"
+ },
+ "საბურავი": {
+  "categoryGe": "ავტო აქსესუარები",
+  "subcategoryGe": "საბურავი",
+  "categoryEn": "Auto Accessories",
+  "subcategoryEn": "Tire",
+  "productEn": "Tire"
+ },
+ "საკერავი მანქანა": {
+  "categoryGe": "სახლი & ეზო",
+  "subcategoryGe": "საკერავი მანქანა",
+  "categoryEn": "Home & Garden",
+  "subcategoryEn": "Sewing Machine",
+  "productEn": "Sewing Machine"
+ },
+ "სამზარეულოს კომბაინი": {
+  "categoryGe": "წვრილი ტექნიკა",
+  "subcategoryGe": "სამზარეულოს წვრილი ტექნიკა",
+  "categoryEn": "Small Appliances",
+  "subcategoryEn": "Small Kitchen Appliances",
+  "productEn": "Food Processor"
+ },
+ "სარეცხი მანქანა": {
+  "categoryGe": "მსხვილი ტექნიკა",
+  "subcategoryGe": "სარეცხი მანქანა",
+  "categoryEn": "Large Appliances",
+  "subcategoryEn": "Washing Machine",
+  "productEn": "Washing Machine"
+ },
+ "სარეცხი მანქანა საშრობით": {
+  "categoryGe": "მსხვილი ტექნიკა",
+  "subcategoryGe": "სარეცხი მანქანა",
+  "categoryEn": "Large Appliances",
+  "subcategoryEn": "Washing Machine",
+  "productEn": "Tumble Dryer"
+ },
+ "სარეცხის საშრობი": {
+  "categoryGe": "მსხვილი ტექნიკა",
+  "subcategoryGe": "სარეცხი მანქანა",
+  "categoryEn": "Large Appliances",
+  "subcategoryEn": "Washing Machine",
+  "productEn": "Tumble Dryer"
+ },
+ "სარკე": {
+  "categoryGe": "სახლი & ეზო",
+  "subcategoryGe": "აბაზანა",
+  "categoryEn": "Home & Garden",
+  "subcategoryEn": "Bathroom",
+  "productEn": "Bathroom Furniture"
+ },
+ "სასწორი": {
+  "categoryGe": "სილამაზე",
+  "subcategoryGe": "თავის მოვლა",
+  "categoryEn": "Beauty",
+  "subcategoryEn": "Hair Care",
+  "productEn": "Scale"
+ },
+ "საქანელა": {
+  "categoryGe": "ავეჯი",
+  "subcategoryGe": "გარე ავეჯი",
+  "categoryEn": "Furniture",
+  "subcategoryEn": "Outdoor Furniture",
+  "productEn": "Garden Swings"
+ },
+ "საღებავი": {
+  "categoryGe": "საღებავები და ლაქები",
+  "subcategoryGe": "ინტერიერის საღებავები",
+  "categoryEn": "Paints & Varnishes",
+  "subcategoryEn": "Interior Paints",
+  "productEn": "Ceiling Paints"
+ },
+ "საყინულე": {
+  "categoryGe": "მსხვილი ტექნიკა",
+  "subcategoryGe": "საყინულე",
+  "categoryEn": "Large Appliances",
+  "subcategoryEn": "Freezer",
+  "productEn": "Freezer"
+ },
+ "სახლი & ეზო,ბატუტი": {
+  "categoryGe": "სახლი & ეზო",
+  "subcategoryGe": "ბატუტი",
+  "categoryEn": "Home & Garden",
+  "subcategoryEn": "Trampoline",
+  "productEn": "Trampoline"
+ },
+ "სახლი & ეზო,განათება,ჭაღები": {
+  "categoryGe": "სახლი & ეზო",
+  "subcategoryGe": "განათება",
+  "categoryEn": "Home & Garden",
+  "subcategoryEn": "Lighting",
+  "productEn": "Chandeliers"
+ },
+ "სახლი & ეზო,მაღალი წნევით რეცხვის აპარატი": {
+  "categoryGe": "სახლი & ეზო",
+  "subcategoryGe": "სახლის მოვლა",
+  "categoryEn": "Home & Garden",
+  "subcategoryEn": "Home Care",
+  "productEn": "Pressure Washer"
+ },
+ "სენდვიჩის აპარატი": {
+  "categoryGe": "წვრილი ტექნიკა",
+  "subcategoryGe": "სამზარეულოს წვრილი ტექნიკა",
+  "categoryEn": "Small Appliances",
+  "subcategoryEn": "Small Kitchen Appliances",
+  "productEn": "Toaster"
+ },
+ "სკუტერი": {
+  "categoryGe": "სპორტი & ფიტნესი",
+  "subcategoryGe": "სპორტი",
+  "categoryEn": "Sport & Fitness",
+  "subcategoryEn": "Sport",
+  "productEn": "Cycling"
+ },
+ "ტაფა": {
+  "categoryGe": "სახლი & ეზო",
+  "subcategoryGe": "სამზარეულო & სერვირება",
+  "categoryEn": "Home & Garden",
+  "subcategoryEn": "Kitchen & Serving",
+  "productEn": "Frying Pan"
+ },
+ "ტაფა-ქვაბი": {
+  "categoryGe": "სახლი & ეზო",
+  "subcategoryGe": "სამზარეულო & სერვირება",
+  "categoryEn": "Home & Garden",
+  "subcategoryEn": "Kitchen & Serving",
+  "productEn": "Pot"
+ },
+ "ტელევიზორი": {
+  "categoryGe": "ტელევიზორები & აუდიო",
+  "subcategoryGe": "ტელევიზორები",
+  "categoryEn": "Televisions & Audio",
+  "subcategoryEn": "Televisions",
+  "productEn": "Televisions"
+ },
+ "ტელეფონი": {
+  "categoryGe": "მობილურები & აქსესუარები",
+  "subcategoryGe": "სმარტფონები",
+  "categoryEn": "Mobiles & Accessories",
+  "subcategoryEn": "Smartphones",
+  "productEn": "Smartphones"
+ },
+ "ტენის ამომშრობი": {
+  "categoryGe": "მსხვილი ტექნიკა",
+  "subcategoryGe": "კლიმატური ტექნიკა",
+  "categoryEn": "Large Appliances",
+  "subcategoryEn": "Climate Appliances",
+  "productEn": "Dehumidifier"
+ },
+ "ტოსტერი": {
+  "categoryGe": "წვრილი ტექნიკა",
+  "subcategoryGe": "სამზარეულოს წვრილი ტექნიკა",
+  "categoryEn": "Small Appliances",
+  "subcategoryEn": "Small Kitchen Appliances",
+  "productEn": "Toaster"
+ },
+ "ტრიმერი": {
+  "categoryGe": "სილამაზე",
+  "subcategoryGe": "თავის მოვლა",
+  "categoryEn": "Beauty",
+  "subcategoryEn": "Hair Care",
+  "productEn": "Electric Comb"
+ },
+ "უთო": {
+  "categoryGe": "წვრილი ტექნიკა",
+  "subcategoryGe": "უთო",
+  "categoryEn": "Small Appliances",
+  "subcategoryEn": "Iron",
+  "productEn": "Iron"
+ },
+ "ფლეისთეიშენი": {
+  "categoryGe": "გეიმინგი",
+  "subcategoryGe": "ფლეისთეიშენი",
+  "categoryEn": "Gaming",
+  "subcategoryEn": "PlayStation",
+  "productEn": "PlayStation"
+ },
+ "ქვაბების ნაკრები": {
+  "categoryGe": "სახლი & ეზო",
+  "subcategoryGe": "სამზარეულო & სერვირება",
+  "categoryEn": "Home & Garden",
+  "subcategoryEn": "Kitchen & Serving",
+  "productEn": "Cookware Set"
+ },
+ "ქიმწმენდის აპარატი": {
+  "categoryGe": "სახლი & ეზო",
+  "subcategoryGe": "სახლის მოვლა",
+  "categoryEn": "Home & Garden",
+  "subcategoryEn": "Home Care",
+  "productEn": "Dry Cleaning Machine"
+ },
+ "ყავის აპარატი": {
+  "categoryGe": "წვრილი ტექნიკა",
+  "subcategoryGe": "ყავის აპარატი",
+  "categoryEn": "Small Appliances",
+  "subcategoryEn": "Coffee Machine",
+  "productEn": "Coffee Machine"
+ },
+ "ყინულის აპარატი": {
+  "categoryGe": "წვრილი ტექნიკა",
+  "subcategoryGe": "სამზარეულოს წვრილი ტექნიკა",
+  "categoryEn": "Small Appliances",
+  "subcategoryEn": "Small Kitchen Appliances",
+  "productEn": "Ice Maker"
+ },
+ "ყურსასმენი": {
+  "categoryGe": "მობილურები & აქსესუარები",
+  "subcategoryGe": "ყურსასმენები",
+  "categoryEn": "Mobiles & Accessories",
+  "subcategoryEn": "Headphones",
+  "productEn": "Headphones"
+ },
+ "შედუღების აპარატი": {
+  "categoryGe": "ხელსაწყოები",
+  "subcategoryGe": "შედუღების მოწყობილობა & აპარატი",
+  "categoryEn": "Tools",
+  "subcategoryEn": "Welding Equipment & Machine",
+  "productEn": "Welding Equipment & Machine"
+ },
+ "შპალერი": {
+  "categoryGe": "სახლი & ეზო",
+  "subcategoryGe": "შპალერი",
+  "categoryEn": "Home & Garden",
+  "subcategoryEn": "Wallpaper",
+  "productEn": "Wallpaper"
+ },
+ "ჩაიდანი": {
+  "categoryGe": "წვრილი ტექნიკა",
+  "subcategoryGe": "სამზარეულოს წვრილი ტექნიკა",
+  "categoryEn": "Small Appliances",
+  "subcategoryEn": "Small Kitchen Appliances",
+  "productEn": "Electric Kettle"
+ },
+ "ჩასაშენებელი ზედაპირი": {
+  "categoryGe": "მსხვილი ტექნიკა",
+  "subcategoryGe": "ჩასაშენებელი ტექნიკა",
+  "categoryEn": "Large Appliances",
+  "subcategoryEn": "Built-in Appliances",
+  "productEn": "Built-in Cooktop"
+ },
+ "ჩასაშენებელი ღუმელი": {
+  "categoryGe": "მსხვილი ტექნიკა",
+  "subcategoryGe": "ჩასაშენებელი ტექნიკა",
+  "categoryEn": "Large Appliances",
+  "subcategoryEn": "Built-in Appliances",
+  "productEn": "Built-in Oven"
+ },
+ "ჩირის აპარატი": {
+  "categoryGe": "წვრილი ტექნიკა",
+  "subcategoryGe": "სამზარეულოს წვრილი ტექნიკა",
+  "categoryEn": "Small Appliances",
+  "subcategoryEn": "Small Kitchen Appliances",
+  "productEn": "Food Dehydrator"
+ },
+ "ჩოფერი": {
+  "categoryGe": "წვრილი ტექნიკა",
+  "subcategoryGe": "სამზარეულოს წვრილი ტექნიკა",
+  "categoryEn": "Small Appliances",
+  "subcategoryEn": "Small Kitchen Appliances",
+  "productEn": "Chopper"
+ },
+ "ცენტრალური გათბობის ქვაბი": {
+  "categoryGe": "მსხვილი ტექნიკა",
+  "subcategoryGe": "კლიმატური ტექნიკა",
+  "categoryEn": "Large Appliances",
+  "subcategoryEn": "Climate Appliances",
+  "productEn": "Central Heating Boiler"
+ },
+ "წვენსაწური": {
+  "categoryGe": "წვრილი ტექნიკა",
+  "subcategoryGe": "სამზარეულოს წვრილი ტექნიკა",
+  "categoryEn": "Small Appliances",
+  "subcategoryEn": "Small Kitchen Appliances",
+  "productEn": "Juicer"
+ },
+ "წვრილი ტექნიკა,სამზარეულოს აქსესუარების ნაკრები,დანა-ჩანგლის ნაკრები": {
+  "categoryGe": "სახლი & ეზო",
+  "subcategoryGe": "სამზარეულო & სერვირება",
+  "categoryEn": "Home & Garden",
+  "subcategoryEn": "Kitchen & Serving",
+  "productEn": "Kitchen Accessories Set"
+ },
+ "წვრილი ტექნიკა,სამზარეულოს წვრილი ტექნიკა,აეროგრილი": {
+  "categoryGe": "წვრილი ტექნიკა",
+  "subcategoryGe": "სამზარეულოს წვრილი ტექნიკა",
+  "categoryEn": "Small Appliances",
+  "subcategoryEn": "Small Kitchen Appliances",
+  "productEn": "Air Fryer"
+ },
+ "წყლის გამაცხელებელი": {
+  "categoryGe": "მსხვილი ტექნიკა",
+  "subcategoryGe": "კლიმატური ტექნიკა",
+  "categoryEn": "Large Appliances",
+  "subcategoryEn": "Climate Appliances",
+  "productEn": "Water Heater"
+ },
+ "წყლის დისპენსერი": {
+  "categoryGe": "მსხვილი ტექნიკა",
+  "subcategoryGe": "წყლის დისპენსერი",
+  "categoryEn": "Large Appliances",
+  "subcategoryEn": "Water Dispenser",
+  "productEn": "Water Dispenser"
+ },
+ "ჭურჭლის სარეცხი მანქანა": {
+  "categoryGe": "მსხვილი ტექნიკა",
+  "subcategoryGe": "ჭურჭლის სარეცხი მანქანა",
+  "categoryEn": "Large Appliances",
+  "subcategoryEn": "Dishwasher",
+  "productEn": "Dishwasher"
+ },
+ "ხელის ბლენდერი": {
+  "categoryGe": "წვრილი ტექნიკა",
+  "subcategoryGe": "სამზარეულოს წვრილი ტექნიკა",
+  "categoryEn": "Small Appliances",
+  "subcategoryEn": "Small Kitchen Appliances",
+  "productEn": "Blender"
+ },
+ "ხელის მოტობლოკი": {
+  "categoryGe": "ხელსაწყოები",
+  "subcategoryGe": "ხელის მოტობლოკი",
+  "categoryEn": "Tools",
+  "subcategoryEn": "Power Tiller",
+  "productEn": "Power Tiller"
+ },
+ "ხელსაწყოები,ბაღის ხელსაწყოები,ხელის მოტობლოკი": {
+  "categoryGe": "ხელსაწყოები",
+  "subcategoryGe": "ხელის მოტობლოკი",
+  "categoryEn": "Tools",
+  "subcategoryEn": "Power Tiller",
+  "productEn": "Power Tiller"
+ },
+ "ხორცსაკეპი": {
+  "categoryGe": "წვრილი ტექნიკა",
+  "subcategoryGe": "სამზარეულოს წვრილი ტექნიკა",
+  "categoryEn": "Small Appliances",
+  "subcategoryEn": "Small Kitchen Appliances",
+  "productEn": "Meat Grinder Machine"
+ },
+ "ხორცსაკეპი მანქანა": {
+  "categoryGe": "წვრილი ტექნიკა",
+  "subcategoryGe": "სამზარეულოს წვრილი ტექნიკა",
+  "categoryEn": "Small Appliances",
+  "subcategoryEn": "Small Kitchen Appliances",
+  "productEn": "Meat Grinder"
+ },
+ "ჰაერის გამწმენდი": {
+  "categoryGe": "მსხვილი ტექნიკა",
+  "subcategoryGe": "კლიმატური ტექნიკა",
+  "categoryEn": "Large Appliances",
+  "subcategoryEn": "Climate Appliances",
+  "productEn": "Air Purifier"
+ },
+ "ორთქლის უთო": {
+  "categoryGe": "წვრილი ტექნიკა",
+  "subcategoryGe": "უთო",
+  "categoryEn": "Small Appliances",
+  "subcategoryEn": "Iron",
+  "productEn": "Steam Iron"
+ },
+ "ქანჩსახრახნი": {
+  "categoryGe": "ხელსაწყოები",
+  "subcategoryGe": "ხელის მოტობლოკი",
+  "categoryEn": "Tools",
+  "subcategoryEn": "Power Tiller",
+  "productEn": "Screwdriver"
+ },
+ "ავეჯი,სკამი": {
+  "categoryGe": "ავეჯი,სკამი",
+  "subcategoryGe": "გარე ავეჯი",
+  "categoryEn": "Furniture",
+  "subcategoryEn": "Outdoor Furniture",
+  "productEn": "Outdoor Chair"
+ },
+ "ქვაბი": {
+  "categoryGe": "სახლი & ეზო",
+  "subcategoryGe": "სამზარეულო & სერვირება",
+  "categoryEn": "Home & Garden",
+  "subcategoryEn": "Kitchen & Serving",
+  "productEn": "Pot"
+ },
+ "კომპიუტერები & აქსესუარები,მონიტორები": {
+  "categoryGe": "ტელევიზორები & აუდიო",
+  "subcategoryGe": "ტელევიზორები",
+  "categoryEn": "Televisions & Audio",
+  "subcategoryEn": "PC accessories",
+  "productEn": "PC Monitors"
+ },
+ "აქსესუარები,საყურე": {
+  "categoryGe": "აქსესუარები",
+  "subcategoryGe": "სამაჯური",
+  "categoryEn": "Accessories",
+  "subcategoryEn": "Bracelet",
+  "productEn": "Earring"
+ },
+ "აუზი": {
+  "categoryGe": "სახლი & ეზო",
+  "subcategoryGe": "აუზი & აქსესუარები",
+  "categoryEn": "Home & Garden",
+  "subcategoryEn": "Pool & Accessories",
+  "productEn": "Pool"
+ },
+ "ავეჯი,მაგიდა": {
+  "categoryGe": "ავეჯი",
+  "subcategoryGe": "საძინებელი",
+  "categoryEn": "Furniture",
+  "subcategoryEn": "Bedroom",
+  "productEn": "Table"
+ },
+ "სახლი & ეზო,აუზი,აუზი & აქსესუარები": {
+  "categoryGe": "სახლი & ეზო",
+  "subcategoryGe": "აუზი & აქსესუარები",
+  "categoryEn": "Home & Garden",
+  "subcategoryEn": "Pool & Accessories",
+  "productEn": "Pool"
+ },
+ "საძინებელი": {
+  "categoryGe": "ავეჯი",
+  "subcategoryGe": "საძინებელი",
+  "categoryEn": "Furniture",
+  "subcategoryEn": "Bedroom",
+  "productEn": "Bad"
+ },
+ "პანელური რადიატორი": {
+  "categoryGe": "მსხვილი ტექნიკა",
+  "subcategoryGe": "კლიმატური ტექნიკა",
+  "categoryEn": "Large Appliances",
+  "subcategoryEn": "Climate Appliances",
+  "productEn": "Central Heating radiator"
+ },
+ "სილამაზე,თავის მოვლა,თმის სტაილერი": {
+  "categoryGe": "სილამაზე",
+  "subcategoryGe": "თავის მოვლა",
+  "categoryEn": "Beauty",
+  "subcategoryEn": "Hair Care",
+  "productEn": "Hair Styler"
+ },
+ "წვრილი ტექნიკა,მტვერსასრუტი": {
+  "categoryGe": "წვრილი ტექნიკა",
+  "subcategoryGe": "მტვერსასრუტი",
+  "categoryEn": "Small Appliances",
+  "subcategoryEn": "Vacuum Cleaner",
+  "productEn": "Vacuum Cleaner"
+ },
+ "მსხვილი ტექნიკა,კლიმატური ტექნიკა,კონდიციონერი": {
+  "categoryGe": "მსხვილი ტექნიკა",
+  "subcategoryGe": "კლიმატური ტექნიკა",
+  "categoryEn": "Large Appliances",
+  "subcategoryEn": "Climate Appliances",
+  "productEn": "Air Conditioner"
+ },
+ "მსხვილი ტექნიკა,მაცივარი": {
+  "categoryGe": "მსხვილი ტექნიკა",
+  "subcategoryGe": "მაცივარი",
+  "categoryEn": "Large Appliances",
+  "subcategoryEn": "Refrigerator",
+  "productEn": "Refrigerator"
+ },
+ "მსხვილი ტექნიკა,სარეცხი მანქანა": {
+  "categoryGe": "მსხვილი ტექნიკა",
+  "subcategoryGe": "სარეცხი მანქანა",
+  "categoryEn": "Large Appliances",
+  "subcategoryEn": "Washing Machine",
+  "productEn": "Washing Machine"
+ },
+ "სპორტი & ფიტნესი,სპორტი,ველოსპორტი,სკუტერი": {
+  "categoryGe": "სპორტი & ფიტნესი",
+  "subcategoryGe": "სპორტი",
+  "categoryEn": "Sport & Fitness",
+  "subcategoryEn": "Sport",
+  "productEn": "Cycling"
+ },
+ "მსხვილი ტექნიკა,სარეცხი მანქანა საშრობით,სარეცხი მანქანა": {
+  "categoryGe": "მსხვილი ტექნიკა",
+  "subcategoryGe": "სარეცხი მანქანა",
+  "categoryEn": "Large Appliances",
+  "subcategoryEn": "Washing Machine",
+  "productEn": "Washing Machine"
+ },
+ "გეიმინგი,ფლეისთეიშენი": {
+  "categoryGe": "გეიმინგი",
+  "subcategoryGe": "ფლეისთეიშენი",
+  "categoryEn": "Gaming",
+  "subcategoryEn": "PlayStation",
+  "productEn": "PlayStation"
+ },
+ "წვრილი ტექნიკა,სამზარეულოს წვრილი ტექნიკა,ელექტრო ჩაიდანი": {
+  "categoryGe": "წვრილი ტექნიკა",
+  "subcategoryGe": "სამზარეულოს წვრილი ტექნიკა",
+  "categoryEn": "Small Appliances",
+  "subcategoryEn": "Small Kitchen Appliances",
+  "productEn": "Electric Kettle"
+ },
+ "წვრილი ტექნიკა,სამზარეულოს წვრილი ტექნიკა,მიკროტალღური ღუმელი": {
+  "categoryGe": "წვრილი ტექნიკა",
+  "subcategoryGe": "სამზარეულოს წვრილი ტექნიკა",
+  "categoryEn": "Small Appliances",
+  "subcategoryEn": "Small Kitchen Appliances",
+  "productEn": "Microwave Oven"
+ },
+ "წვრილი ტექნიკა,სამზარეულოს წვრილი ტექნიკა,ბლენდერი": {
+  "categoryGe": "წვრილი ტექნიკა",
+  "subcategoryGe": "სამზარეულოს წვრილი ტექნიკა",
+  "categoryEn": "Small Appliances",
+  "subcategoryEn": "Small Kitchen Appliances",
+  "productEn": "Blender"
+ },
+ "სილამაზე,თავის მოვლა,თმის და წვერის საჭრელი": {
+  "categoryGe": "სილამაზე",
+  "subcategoryGe": "თავის მოვლა",
+  "categoryEn": "Beauty",
+  "subcategoryEn": "Hair Care",
+  "productEn": "Hair & Beard Trimmer"
+ },
+ "წვრილი ტექნიკა,რობოტი მტვერსასრუტი": {
+  "categoryGe": "წვრილი ტექნიკა",
+  "subcategoryGe": "რობოტი მტვერსასრუტი",
+  "categoryEn": "Small Appliances",
+  "subcategoryEn": "Robot Vacuum Cleaner",
+  "productEn": "Robot Vacuum Cleaner"
+ },
+ "ავტო აქსესუარები,საბურავი": {
+  "categoryGe": "ავტო აქსესუარები",
+  "subcategoryGe": "საბურავი",
+  "categoryEn": "Auto Accessories",
+  "subcategoryEn": "Tire",
+  "productEn": "Tire"
+ },
+ "სპორტი & ფიტნესი,სპორტი,სკუტერი": {
+  "categoryGe": "სპორტი & ფიტნესი",
+  "subcategoryGe": "სპორტი",
+  "categoryEn": "Sport & Fitness",
+  "subcategoryEn": "Sport",
+  "productEn": "Cycling"
+ },
+ "მსხვილი ტექნიკა,კლიმატური ტექნიკა,ცენტრალური გათბობის ქვაბი": {
+  "categoryGe": "მსხვილი ტექნიკა",
+  "subcategoryGe": "კლიმატური ტექნიკა",
+  "categoryEn": "Large Appliances",
+  "subcategoryEn": "Climate Appliances",
+  "productEn": "Central Heating Boiler"
+ },
+ "მსხვილი ტექნიკა,გაზქურა": {
+  "categoryGe": "მსხვილი ტექნიკა",
+  "subcategoryGe": "გაზქურა",
+  "categoryEn": "Large Appliances",
+  "subcategoryEn": "Gas Stove",
+  "productEn": "Gas Stove"
+ },
+ "მსხვილი ტექნიკა,საყინულე": {
+  "categoryGe": "მსხვილი ტექნიკა",
+  "subcategoryGe": "საყინულე",
+  "categoryEn": "Large Appliances",
+  "subcategoryEn": "Freezer",
+  "productEn": "Freezer"
+ },
+ "წვრილი ტექნიკა,სამზარეულოს წვრილი ტექნიკა,პოპკორნის აპარატი": {
+  "categoryGe": "წვრილი ტექნიკა",
+  "subcategoryGe": "სამზარეულოს წვრილი ტექნიკა",
+  "categoryEn": "Small Appliances",
+  "subcategoryEn": "Small Kitchen Appliances",
+  "productEn": "Popcorn Maker"
+ },
+ "წვრილი ტექნიკა,ყავის აპარატი": {
+  "categoryGe": "წვრილი ტექნიკა",
+  "subcategoryGe": "ყავის აპარატი",
+  "categoryEn": "Small Appliances",
+  "subcategoryEn": "Coffee Machine",
+  "productEn": "Coffee Machine"
+ },
+ "სპორტი & ფიტნესი,სპორტი,ველოსპორტი,ველოსიპედი": {
+  "categoryGe": "სპორტი & ფიტნესი",
+  "subcategoryGe": "სპორტი",
+  "categoryEn": "Sport & Fitness",
+  "subcategoryEn": "Sport",
+  "productEn": "Cycling"
+ },
+ "წვრილი ტექნიკა,სამზარეულოს წვრილი ტექნიკა,მიქსერი": {
+  "categoryGe": "წვრილი ტექნიკა",
+  "subcategoryGe": "სამზარეულოს წვრილი ტექნიკა",
+  "categoryEn": "Small Appliances",
+  "subcategoryEn": "Small Kitchen Appliances",
+  "productEn": "Mixer"
+ },
+ "სილამაზე,თავის მოვლა,თმის საშრობი": {
+  "categoryGe": "სილამაზე",
+  "subcategoryGe": "თავის მოვლა",
+  "categoryEn": "Beauty",
+  "subcategoryEn": "Hair Care",
+  "productEn": "Hair Dryer"
+ },
+ "სილამაზე,თავის მოვლა,თმის უთო": {
+  "categoryGe": "სილამაზე",
+  "subcategoryGe": "თავის მოვლა",
+  "categoryEn": "Beauty",
+  "subcategoryEn": "Hair Care",
+  "productEn": "Hair Straightener"
+ },
+ "მსხვილი ტექნიკა,კლიმატური ტექნიკა,წყლის გამაცხელებელი": {
+  "categoryGe": "მსხვილი ტექნიკა",
+  "subcategoryGe": "კლიმატური ტექნიკა",
+  "categoryEn": "Large Appliances",
+  "subcategoryEn": "Climate Appliances",
+  "productEn": "Water Heater"
+ },
+ "ავტო აქსესუარები,აკუმულატორი": {
+  "categoryGe": "ავტო აქსესუარები",
+  "subcategoryGe": "აკუმულატორი",
+  "categoryEn": "Auto Accessories",
+  "subcategoryEn": "Car Battery",
+  "productEn": "Car Battery"
+ },
+ "მსხვილი ტექნიკა,კლიმატური ტექნიკა,ვენტილატორი": {
+  "categoryGe": "მსხვილი ტექნიკა",
+  "subcategoryGe": "კლიმატური ტექნიკა",
+  "categoryEn": "Large Appliances",
+  "subcategoryEn": "Climate Appliances",
+  "productEn": "Fan"
+ },
+ "მსხვილი ტექნიკა,გამწოვი": {
+  "categoryGe": "მსხვილი ტექნიკა",
+  "subcategoryGe": "ჩასაშენებელი ტექნიკა",
+  "categoryEn": "Large Appliances",
+  "subcategoryEn": "Built-in Appliances",
+  "productEn": "Built-in Hood"
+ },
+ "მსხვილი ტექნიკა,ჭურჭლის სარეცხი მანქანა": {
+  "categoryGe": "მსხვილი ტექნიკა",
+  "subcategoryGe": "ჭურჭლის სარეცხი მანქანა",
+  "categoryEn": "Large Appliances",
+  "subcategoryEn": "Dishwasher",
+  "productEn": "Dishwasher"
+ },
+ "მსხვილი ტექნიკა,კლიმატური ტექნიკა,დენის წყლის გამაცხელებელი": {
+  "categoryGe": "მსხვილი ტექნიკა",
+  "subcategoryGe": "კლიმატური ტექნიკა",
+  "categoryEn": "Large Appliances",
+  "subcategoryEn": "Climate Appliances",
+  "productEn": "Electric Water Heater"
+ },
+ "სილამაზე,თავის მოვლა,სასწორი": {
+  "categoryGe": "სილამაზე",
+  "subcategoryGe": "თავის მოვლა",
+  "categoryEn": "Beauty",
+  "subcategoryEn": "Hair Care",
+  "productEn": "Scale"
+ },
+ "სილამაზე,თავის მოვლა,ტრიმერი": {
+  "categoryGe": "სილამაზე",
+  "subcategoryGe": "თავის მოვლა",
+  "categoryEn": "Beauty",
+  "subcategoryEn": "Hair Care",
+  "productEn": "Electric Comb"
+ },
+ "წვრილი ტექნიკა,სამზარეულოს წვრილი ტექნიკა,ჩოფერი": {
+  "categoryGe": "წვრილი ტექნიკა",
+  "subcategoryGe": "სამზარეულოს წვრილი ტექნიკა",
+  "categoryEn": "Small Appliances",
+  "subcategoryEn": "Small Kitchen Appliances",
+  "productEn": "Chopper"
+ },
+ "მსხვილი ტექნიკა,წყლის დისპენსერი": {
+  "categoryGe": "მსხვილი ტექნიკა",
+  "subcategoryGe": "წყლის დისპენსერი",
+  "categoryEn": "Large Appliances",
+  "subcategoryEn": "Water Dispenser",
+  "productEn": "Water Dispenser"
+ },
+ "წვრილი ტექნიკა,სამზარეულოს წვრილი ტექნიკა,ელექტრო ღუმელი": {
+  "categoryGe": "წვრილი ტექნიკა",
+  "subcategoryGe": "სამზარეულოს წვრილი ტექნიკა",
+  "categoryEn": "Small Appliances",
+  "subcategoryEn": "Small Kitchen Appliances",
+  "productEn": "Electric Oven"
+ },
+ "სახლი & ეზო,საკერავი მანქანა": {
+  "categoryGe": "სახლი & ეზო",
+  "subcategoryGe": "საკერავი მანქანა",
+  "categoryEn": "Home & Garden",
+  "subcategoryEn": "Sewing Machine",
+  "productEn": "Sewing Machine"
+ },
+ "წვრილი ტექნიკა,პურის საცხობი": {
+  "categoryGe": "წვრილი ტექნიკა",
+  "subcategoryGe": "სამზარეულოს წვრილი ტექნიკა",
+  "categoryEn": "Small Appliances",
+  "subcategoryEn": "Small Kitchen Appliances",
+  "productEn": "Bread Maker"
+ },
+ "წვრილი ტექნიკა,სამზარეულოს წვრილი ტექნიკა,მტვერსასრუტი": {
+  "categoryGe": "წვრილი ტექნიკა",
+  "subcategoryGe": "მტვერსასრუტი",
+  "categoryEn": "Small Appliances",
+  "subcategoryEn": "Vacuum Cleaner",
+  "productEn": "Vacuum Cleaner"
+ },
+ "ხელსაწყოები,კომპრესორი": {
+  "categoryGe": "ხელსაწყოები",
+  "subcategoryGe": "კომპრესორი",
+  "categoryEn": "Tools",
+  "subcategoryEn": "Compressor",
+  "productEn": "Compressor"
+ },
+ "წვრილი ტექნიკა,სამზარეულოს წვრილი ტექნიკა,ბლენდერი,ხელის ბლენდერი": {
+  "categoryGe": "წვრილი ტექნიკა",
+  "subcategoryGe": "სამზარეულოს წვრილი ტექნიკა",
+  "categoryEn": "Small Appliances",
+  "subcategoryEn": "Small Kitchen Appliances",
+  "productEn": "Blender"
+ },
+ "წვრილი ტექნიკა,სამზარეულოს წვრილი ტექნიკა,ყინულის აპარატი": {
+  "categoryGe": "წვრილი ტექნიკა",
+  "subcategoryGe": "სამზარეულოს წვრილი ტექნიკა",
+  "categoryEn": "Small Appliances",
+  "subcategoryEn": "Small Kitchen Appliances",
+  "productEn": "Ice Maker"
+ },
+ "წვრილი ტექნიკა,სამზარეულოს წვრილი ტექნიკა,ნაყინის აპარატი": {
+  "categoryGe": "წვრილი ტექნიკა",
+  "subcategoryGe": "სამზარეულოს წვრილი ტექნიკა",
+  "categoryEn": "Small Appliances",
+  "subcategoryEn": "Small Kitchen Appliances",
+  "productEn": "Ice Cream Maker"
+ },
+ "წვრილი ტექნიკა,წვენსაწური": {
+  "categoryGe": "წვრილი ტექნიკა",
+  "subcategoryGe": "სამზარეულოს წვრილი ტექნიკა",
+  "categoryEn": "Small Appliances",
+  "subcategoryEn": "Small Kitchen Appliances",
+  "productEn": "Juicer"
+ },
+ "უთო,ორთქლის უთო": {
+  "categoryGe": "წვრილი ტექნიკა",
+  "subcategoryGe": "უთო",
+  "categoryEn": "Small Appliances",
+  "subcategoryEn": "Iron",
+  "productEn": "Steam Iron"
+ },
+ "წვრილი ტექნიკა,უთო,ორთქლის უთო": {
+  "categoryGe": "წვრილი ტექნიკა",
+  "subcategoryGe": "უთო",
+  "categoryEn": "Small Appliances",
+  "subcategoryEn": "Iron",
+  "productEn": "Steam Iron"
+ },
+ "წვრილი ტექნიკა,სამზარეულოს წვრილი ტექნიკა,ხორცსაკეპი": {
+  "categoryGe": "წვრილი ტექნიკა",
+  "subcategoryGe": "სამზარეულოს წვრილი ტექნიკა",
+  "categoryEn": "Small Appliances",
+  "subcategoryEn": "Small Kitchen Appliances",
+  "productEn": "Meat Grinder Machine"
+ },
+ "მსხვილი ტექნიკა,ჩასაშენებელი მიკროტალღური,ჩასაშენებელი ზედაპირი": {
+  "categoryGe": "მსხვილი ტექნიკა",
+  "subcategoryGe": "ჩასაშენებელი ტექნიკა",
+  "categoryEn": "Large Appliances",
+  "subcategoryEn": "Built-in Appliances",
+  "productEn": "Built-in Cooktop"
+ },
+ "წვრილი ტექნიკა,სამზარეულოს წვრილი ტექნიკა,ყავის აპარატი": {
+  "categoryGe": "წვრილი ტექნიკა",
+  "subcategoryGe": "ყავის აპარატი",
+  "categoryEn": "Small Appliances",
+  "subcategoryEn": "Coffee Machine",
+  "productEn": "Coffee Machine"
+ },
+ "ტელევიზორები & აუდიო,ტელევიზორები": {
+  "categoryGe": "ტელევიზორები & აუდიო",
+  "subcategoryGe": "ტელევიზორები",
+  "categoryEn": "Televisions & Audio",
+  "subcategoryEn": "Televisions",
+  "productEn": "Televisions"
+ },
+ "პლანშეტი": {
+  "categoryGe": "მობილურები & აქსესუარები",
+  "subcategoryGe": "პლანშეტები",
+  "categoryEn": "Mobiles & Accessories",
+  "subcategoryEn": "Tablets",
+  "productEn": "Tablet"
+ },
+ "რადიატორი": {
+  "categoryGe": "მსხვილი ტექნიკა",
+  "subcategoryGe": "კლიმატური ტექნიკა",
+  "categoryEn": "Large Appliances",
+  "subcategoryEn": "Climate Appliances",
+  "productEn": "Central Heating Boiler"
+ },
+ "მოტოცელი": {
+  "categoryGe": "სპორტი & ფიტნესი",
+  "subcategoryGe": "სპორტი",
+  "categoryEn": "Sport & Fitness",
+  "subcategoryEn": "Sport",
+  "productEn": "Cycling"
+ },
+ "მსხვილი ტექნიკა,ჩასაშენებელი ტექნიკა,ჩასაშენებელი ელექტრო ღუმელი": {
+  "categoryGe": "მსხვილი ტექნიკა",
+  "subcategoryGe": "ჩასაშენებელი ტექნიკა",
+  "categoryEn": "Large Appliances",
+  "subcategoryEn": "Built-in Appliances",
+  "productEn": "Built-in Oven"
+ },
+ "ქვაბების ნაკრები,სახლი & ეზო,სამზარეულო & სერვირება": {
+  "categoryGe": "სახლი & ეზო",
+  "subcategoryGe": "სამზარეულო & სერვირება",
+  "categoryEn": "Home & Garden",
+  "subcategoryEn": "Kitchen & Serving",
+  "productEn": "Cookware Set"
+ },
+ "კონდინციონერი": {
+  "categoryGe": "მსხვილი ტექნიკა",
+  "subcategoryGe": "კლიმატური ტექნიკა",
+  "categoryEn": "Large Appliances",
+  "subcategoryEn": "Climate Appliances",
+  "productEn": "Air Conditioner"
+ },
+ "ჭკვიანი სახლი,ჭკვიანი საკეტები": {
+  "categoryGe": "ჭკვიანი სახლი",
+  "subcategoryGe": "ჭკვიანი საკეტები",
+  "categoryEn": "Smart Home",
+  "subcategoryEn": "Smart Locks",
+  "productEn": "Smart Lock"
+ },
+ "სახლი & ეზო,ორთქლით საწმენდი აპარატი,სახლის მოვლა": {
+  "categoryGe": "სახლი & ეზო",
+  "subcategoryGe": "სახლის მოვლა",
+  "categoryEn": "Home & Garden",
+  "subcategoryEn": "Home Care",
+  "productEn": "Steam Cleaner"
+ },
+ "ხელსაწყოები,სამშენებლო მტვერსასრუტები": {
+  "categoryGe": "წვრილი ტექნიკა",
+  "subcategoryGe": "მტვერსასრუტი",
+  "categoryEn": "Small Appliances",
+  "subcategoryEn": "Vacuum Cleaner",
+  "productEn": "Vacuum Cleaner"
+ },
+ "მსხვილი ტექნიკა,ჩასაშენებელი ტექნიკა,გაზქურის ზედაპირი": {
+  "categoryGe": "მსხვილი ტექნიკა",
+  "subcategoryGe": "ჩასაშენებელი ტექნიკა",
+  "categoryEn": "Large Appliances",
+  "subcategoryEn": "Built-in Appliances",
+  "productEn": "Built-in Cooktop"
+ },
+ "მობილურები & აქსესუარები,ყურსასმენები,Buds": {
+  "categoryGe": "მობილურები & აქსესუარები",
+  "subcategoryGe": "ყურსასმენები",
+  "categoryEn": "Mobiles & Accessories",
+  "subcategoryEn": "Headphones",
+  "productEn": "Headphones"
+ },
+ "საყურე": {
+  "categoryGe": "აქსესუარები",
+  "subcategoryGe": "საყურე",
+  "categoryEn": "Accessories",
+  "subcategoryEn": "Earrings",
+  "productEn": "Earring"
+ },
+ "წვრილი ტექნიკა,ქვაბი,სამზარეულო & სერვირება": {
+  "categoryGe": "სახლი & ეზო",
+  "subcategoryGe": "სამზარეულო & სერვირება",
+  "categoryEn": "Home & Garden",
+  "subcategoryEn": "Kitchen & Serving",
+  "productEn": "Pot"
+ },
+ "თმის დასახვევი": {
+  "categoryGe": "სილამაზე",
+  "subcategoryGe": "თავის მოვლა",
+  "categoryEn": "Beauty",
+  "subcategoryEn": "Hair Care",
+  "productEn": "Hair Styler"
+ },
+ "ავეჯი,ყავის მაგიდა,რბილი ავეჯი,მისაღები,მაგიდა პუფებით": {
+  "categoryGe": "ავეჯი",
+  "subcategoryGe": "რბილი ავეჯი",
+  "categoryEn": "Furniture",
+  "subcategoryEn": "Upholstered Furniture",
+  "productEn": "Table with Poufs"
+ },
+ "ჭკვიანი სახლი,ჭკვიანი კამერები": {
+  "categoryGe": "ჭკვიანი სახლი",
+  "subcategoryGe": "ჭკვიანი კამერები",
+  "categoryEn": "Smart Home",
+  "subcategoryEn": "Smart Cameras",
+  "productEn": "Smart Camera"
+ },
+ "ავეჯი,პუფი,რბილი ავეჯი": {
+  "categoryGe": "ავეჯი",
+  "subcategoryGe": "რბილი ავეჯი",
+  "categoryEn": "Furniture",
+  "subcategoryEn": "Upholstered Furniture",
+  "productEn": "Pouf"
+ },
+ "ფოტო & ვიდეო,დრონი": {
+  "categoryGe": "ფოტო & ვიდეო",
+  "subcategoryGe": "დრონი",
+  "categoryEn": "Photo & Video",
+  "subcategoryEn": "Drone",
+  "productEn": "Drone"
+ },
+ "პირსახოცის საშრობი": {
+  "categoryGe": "მსხვილი ტექნიკა",
+  "subcategoryGe": "კლიმატური ტექნიკა",
+  "categoryEn": "Large Appliances",
+  "subcategoryEn": "Climate Appliances",
+  "productEn": "Towel Warmer"
+ },
+ "სარწყავი მილი": {
+  "categoryGe": "სახლი & ეზო",
+  "subcategoryGe": "ბაღი",
+  "categoryEn": "Home & Garden",
+  "subcategoryEn": "Garden",
+  "productEn": "Garden Hose"
+ },
+ "გეიმინგი,გეიმინგ სავარძელი": {
+  "categoryGe": "გეიმინგი",
+  "subcategoryGe": "გეიმინგ სავარძელი",
+  "categoryEn": "Gaming",
+  "subcategoryEn": "Gaming Chair",
+  "productEn": "Gaming Chair"
+ },
+ "ხელსაწყოები,ბაღის ხელსაწყოები,ბაღის მოტო და ელექტრო ინსტრუმენტები": {
+  "categoryGe": "ხელსაწყოები",
+  "subcategoryGe": "ბაღის ხელსაწყოები",
+  "categoryEn": "Tools",
+  "subcategoryEn": "Garden Tools",
+  "productEn": "Garden Motor & Electric Tools"
+ },
+ "აუზის კიბე": {
+  "categoryGe": "სახლი & ეზო",
+  "subcategoryGe": "აუზი & აქსესუარები",
+  "categoryEn": "Home & Garden",
+  "subcategoryEn": "Pool & Accessories",
+  "productEn": "Pool Ladder"
+ },
+ "ტელევიზორები & აუდიო,აუდიო სისტემები": {
+  "categoryGe": "ტელევიზორები & აუდიო",
+  "subcategoryGe": "დინამიკი",
+  "categoryEn": "Televisions & Audio",
+  "subcategoryEn": "Speaker",
+  "productEn": "Speaker"
+ },
+ "სლაშის აპარატი": {
+  "categoryGe": "წვრილი ტექნიკა",
+  "subcategoryGe": "სამზარეულოს წვრილი ტექნიკა",
+  "categoryEn": "Small Appliances",
+  "subcategoryEn": "Small Kitchen Appliances",
+  "productEn": "Slush Machine"
+ },
+ "მსხვილი ტექნიკა,ჩასაშენებელი ტექნიკა,ჩასაშენებელი მიკროტალღური": {
+  "categoryGe": "წვრილი ტექნიკა",
+  "subcategoryGe": "სამზარეულოს წვრილი ტექნიკა",
+  "categoryEn": "Small Appliances",
+  "subcategoryEn": "Small Kitchen Appliances",
+  "productEn": "Microwave Oven"
+ },
+ "ხელსაწყოები,შედუღების მოწყობილობა & აპარატი": {
+  "categoryGe": "ხელსაწყოები",
+  "subcategoryGe": "შედუღების მოწყობილობა & აპარატი",
+  "categoryEn": "Tools",
+  "subcategoryEn": "Welding Equipment & Machine",
+  "productEn": "Welding Equipment & Machine"
+ },
+ "სამზარეულო კომბაინი": {
+  "categoryGe": "წვრილი ტექნიკა",
+  "subcategoryGe": "სამზარეულოს წვრილი ტექნიკა",
+  "categoryEn": "Small Appliances",
+  "subcategoryEn": "Small Kitchen Appliances",
+  "productEn": "Food Processor"
+ },
+ "ფენი": {
+  "categoryGe": "სილამაზე",
+  "subcategoryGe": "თავის მოვლა",
+  "categoryEn": "Beauty",
+  "subcategoryEn": "Hair Care",
+  "productEn": "Hair Dryer"
+ },
+ "საღებავსაფრქვეველი": {
+  "categoryGe": "საღებავები და ლაქები",
+  "subcategoryGe": "ინტერიერის საღებავები",
+  "categoryEn": "Paints & Varnishes",
+  "subcategoryEn": "Interior Paints",
+  "productEn": "Ceiling Paints"
+ },
+ "წვრილი ტექნიკა,ყავის აპარატი,ყავის საფქვავი": {
+  "categoryGe": "წვრილი ტექნიკა",
+  "subcategoryGe": "ყავის აპარატი",
+  "categoryEn": "Small Appliances",
+  "subcategoryEn": "Coffee Machine",
+  "productEn": "Coffee Machine"
+ },
+ "ავეჯი,მატრასი,საძინებელი": {
+  "categoryGe": "ავეჯი",
+  "subcategoryGe": "საძინებელი",
+  "categoryEn": "Furniture",
+  "subcategoryEn": "Bedroom",
+  "productEn": "Mattress"
+ },
+ "ხელსაწყოები,მულტიინსტრუმენტები": {
+  "categoryGe": "ხელსაწყოები",
+  "subcategoryGe": "მულტიინსტრუმენტები",
+  "categoryEn": "Tools",
+  "subcategoryEn": "Multi-tools",
+  "productEn": "Multi-tool"
+ },
+ "ხელსაწყოები,შალაშინი": {
+  "categoryGe": "ხელსაწყოები",
+  "subcategoryGe": "შალაშინი",
+  "categoryEn": "Tools",
+  "subcategoryEn": "Planers",
+  "productEn": "Planer"
+ },
+ "ხელსაწყოები,ფრეზერები": {
+  "categoryGe": "ხელსაწყოები",
+  "subcategoryGe": "ფრეზერები",
+  "categoryEn": "Tools",
+  "subcategoryEn": "Routers",
+  "productEn": "Router"
+ },
+ "ხელსაწყოები,სახეხი მანქანები": {
+  "categoryGe": "ხელსაწყოები",
+  "subcategoryGe": "სახეხი მანქანები",
+  "categoryEn": "Tools",
+  "subcategoryEn": "Sanders",
+  "productEn": "Sander"
+ },
+ "ფილტრი": {
+  "categoryGe": "მსხვილი ტექნიკა",
+  "subcategoryGe": "წყლის ფილტრი",
+  "categoryEn": "Large Appliances",
+  "subcategoryEn": "Water Filter",
+  "productEn": "Filter"
+ },
+ "სათამაშო კონსოლი": {
+  "categoryGe": "გეიმინგი",
+  "subcategoryGe": "ფლეისთეიშენი",
+  "categoryEn": "Gaming",
+  "subcategoryEn": "PlayStation",
+  "productEn": "PlayStation"
+ },
+ "კამერა": {
+  "categoryGe": "ფოტო & ვიდეო",
+  "subcategoryGe": "კამერა",
+  "categoryEn": "Photo & Video",
+  "subcategoryEn": "Camera",
+  "productEn": "Camera"
+ },
+ "ბალიში": {
+  "categoryGe": "ავეჯი",
+  "subcategoryGe": "საძინებელი",
+  "categoryEn": "Furniture",
+  "subcategoryEn": "Bedroom",
+  "productEn": "Pillow"
+ },
+ "მონიტორი": {
+  "categoryGe": "კომპიუტერები & აქსესუარები",
+  "subcategoryGe": "მონიტორები",
+  "categoryEn": "Computers & Accessories",
+  "subcategoryEn": "Monitors",
+  "productEn": "Monitor"
+ },
+ "მრგვალი კარკასული აუზი": {
+  "categoryGe": "სახლი & ეზო",
+  "subcategoryGe": "აუზი & აქსესუარები",
+  "categoryEn": "Home & Garden",
+  "subcategoryEn": "Pool & Accessories",
+  "productEn": "Pool"
+ },
+ "მაგიდა 6 სკამით (ღია ყავისფერი)": {
+  "categoryGe": "ავეჯი",
+  "subcategoryGe": "სასადილო ავეჯი",
+  "categoryEn": "Furniture",
+  "subcategoryEn": "Dining Furniture",
+  "productEn": "Table with Chairs"
+ },
+ "ხელსაწყოები,ინსტრუმენტების ნაკრები": {
+  "categoryGe": "ხელსაწყოები",
+  "subcategoryGe": "ინსტრუმენტების ნაკრები",
+  "categoryEn": "Tools",
+  "subcategoryEn": "Tool Set",
+  "productEn": "Tool Set"
+ },
+ "თმის ელექტრო სავარცხელი": {
+  "categoryGe": "სილამაზე",
+  "subcategoryGe": "თავის მოვლა",
+  "categoryEn": "Beauty",
+  "subcategoryEn": "Hair Care",
+  "productEn": "Electric Comb"
+ },
+ "მანქანის ხელის უსადენო მტვერსასრუტი": {
+  "categoryGe": "წვრილი ტექნიკა",
+  "subcategoryGe": "მტვერსასრუტი",
+  "categoryEn": "Small Appliances",
+  "subcategoryEn": "Vacuum Cleaner",
+  "productEn": "Vacuum Cleaner"
+ },
+ "ჩასაშენებელი ჭურჭლის სარეცხი მანქანა": {
+  "categoryGe": "მსხვილი ტექნიკა",
+  "subcategoryGe": "ჭურჭლის სარეცხი მანქანა",
+  "categoryEn": "Large Appliances",
+  "subcategoryEn": "Dishwasher",
+  "productEn": "Dishwasher"
+ },
+ "წვრილი ტექნიკა,სამზარეულოს წვრილი ტექნიკა,დანების კომპლექტი,სამზარეულო & სერვირება": {
+  "categoryGe": "სახლი & ეზო",
+  "subcategoryGe": "სამზარეულო & სერვირება",
+  "categoryEn": "Home & Garden",
+  "subcategoryEn": "Kitchen & Serving",
+  "productEn": "Knife Set"
+ },
+ "წვრილი ტექნიკა,სამზარეულოს წვრილი ტექნიკა,სამზარეულოს აქსესუარების ნაკრები,სამზარეულო & სერვირება": {
+  "categoryGe": "სახლი & ეზო",
+  "subcategoryGe": "სამზარეულო & სერვირება",
+  "categoryEn": "Home & Garden",
+  "subcategoryEn": "Kitchen & Serving",
+  "productEn": "Kitchen Accessories Set"
+ },
+ "მსხვილი ტექნიკა,ჩასაშენებელი ტექნიკა,ჩასაშენებელი გამწოვი": {
+  "categoryGe": "მსხვილი ტექნიკა",
+  "subcategoryGe": "ჩასაშენებელი ტექნიკა",
+  "categoryEn": "Large Appliances",
+  "subcategoryEn": "Built-in Appliances",
+  "productEn": "Built-in Hood"
+ },
+ "მსხვილი ტექნიკა": {
+  "categoryGe": "მსხვილი ტექნიკა",
+  "subcategoryGe": "მსხვილი ტექნიკა",
+  "categoryEn": "Large Appliances",
+  "subcategoryEn": "Large Appliances",
+  "productEn": "Large Appliances"
+ },
+ "სარბენი ბილიკი": {
+  "categoryGe": "სპორტი & ფიტნესი",
+  "subcategoryGe": "ფიტნესი",
+  "categoryEn": "Sport & Fitness",
+  "subcategoryEn": "Fitness",
+  "productEn": "Treadmill"
+ },
+ "ჭაღი": {
+  "categoryGe": "სახლი & ეზო",
+  "subcategoryGe": "განათება",
+  "categoryEn": "Home & Garden",
+  "subcategoryEn": "Lighting",
+  "productEn": "Chandeliers"
+ },
+ "ავეჯი,სეიფი": {
+  "categoryGe": "ავეჯი",
+  "subcategoryGe": "სეიფი",
+  "categoryEn": "Furniture",
+  "subcategoryEn": "Safe",
+  "productEn": "Safe"
+ },
+ "ტენტი": {
+  "categoryGe": "ავეჯი",
+  "subcategoryGe": "გარე ავეჯი",
+  "categoryEn": "Furniture",
+  "subcategoryEn": "Outdoor Furniture",
+  "productEn": "Gazebo & Tent"
+ },
+ "ავეჯი,საოფისე ავეჯი": {
+  "categoryGe": "ავეჯი",
+  "subcategoryGe": "საოფისე ავეჯი",
+  "categoryEn": "Furniture",
+  "subcategoryEn": "Office Furniture",
+  "productEn": "Office Furniture"
+ },
+ "ხელსაწყოები,ბაღის ხელსაწყოები,ბაღის მტვერსასრუტი": {
+  "categoryGe": "წვრილი ტექნიკა",
+  "subcategoryGe": "მტვერსასრუტი",
+  "categoryEn": "Small Appliances",
+  "subcategoryEn": "Vacuum Cleaner",
+  "productEn": "Vacuum Cleaner"
+ },
+ "საბავშვო ხალიჩა": {
+  "categoryGe": "სახლი & ეზო",
+  "subcategoryGe": "ხალიჩა",
+  "categoryEn": "Home & Garden",
+  "subcategoryEn": "Carpet",
+  "productEn": "Kids Rug"
+ },
+ "სარეცხი მანქანა+შრობა": {
+  "categoryGe": "მსხვილი ტექნიკა",
+  "subcategoryGe": "სარეცხი მანქანა",
+  "categoryEn": "Large Appliances",
+  "subcategoryEn": "Washing Machine",
+  "productEn": "Tumble Dryer"
+ },
+ "მსხვილი ტექნიკა,სარეცხი მანქანა,სარეცხი მანქანები": {
+  "categoryGe": "მსხვილი ტექნიკა",
+  "subcategoryGe": "სარეცხი მანქანა",
+  "categoryEn": "Large Appliances",
+  "subcategoryEn": "Washing Machine",
+  "productEn": "Washing Machine"
+ },
+ "ხელსაწყოები,დაზგები და მანქანები": {
+  "categoryGe": "ხელსაწყოები",
+  "subcategoryGe": "დაზგები და მანქანები",
+  "categoryEn": "Tools",
+  "subcategoryEn": "Benches & Machines",
+  "productEn": "Workbench"
+ },
+ "ხელსაწყოები,ბეწვა ხერხები": {
+  "categoryGe": "ხელსაწყოები",
+  "subcategoryGe": "ბეწვა ხერხები",
+  "categoryEn": "Tools",
+  "subcategoryEn": "Jigsaws",
+  "productEn": "Jigsaw"
+ },
+ "გეიმინგი,სათამაშო კონსოლი": {
+  "categoryGe": "გეიმინგი",
+  "subcategoryGe": "ფლეისთეიშენი",
+  "categoryEn": "Gaming",
+  "subcategoryEn": "PlayStation",
+  "productEn": "PlayStation"
+ },
+ "წვერსაპარსი": {
+  "categoryGe": "სილამაზე",
+  "subcategoryGe": "თავის მოვლა",
+  "categoryEn": "Beauty",
+  "subcategoryEn": "Hair Care",
+  "productEn": "Hair & Beard Trimmer"
+ },
+ "none": {
+  "categoryGe": "Do not have on web",
+  "subcategoryGe": "none",
+  "categoryEn": "Do not have on web",
+  "subcategoryEn": "none",
+  "productEn": "none"
+ },
+ "Root": {
+  "categoryGe": "Do not have on web",
+  "subcategoryGe": "Root",
+  "categoryEn": "Do not have on web",
+  "subcategoryEn": "Root",
+  "productEn": "Root"
+ },
+ "წვრილი ტექნიკა,უთო,ორთქლის გენერატორი": {
+  "categoryGe": "წვრილი ტექნიკა",
+  "subcategoryGe": "უთო",
+  "categoryEn": "Small Appliances",
+  "subcategoryEn": "Iron",
+  "productEn": "Steam Generator"
+ },
+ "ავეჯი/სკამი": {
+  "categoryGe": "ავეჯი",
+  "subcategoryGe": "სკამი",
+  "categoryEn": "Furniture",
+  "subcategoryEn": "Chair",
+  "productEn": "Chair"
+ },
+ "სპორტი & ფიტნესი/სპორტი/როლიკები": {
+  "categoryGe": "სპორტი & ფიტნესი",
+  "subcategoryGe": "სპორტი",
+  "categoryEn": "Sport & Fitness",
+  "subcategoryEn": "Sport",
+  "productEn": "Roller Skates"
+ },
+ "ავეჯი/საძინებელი/საძინებლის კარადა": {
+  "categoryGe": "ავეჯი",
+  "subcategoryGe": "საძინებელი",
+  "categoryEn": "Furniture",
+  "subcategoryEn": "Bedroom",
+  "productEn": "Wardrobe"
+ },
+ "წვრილი ტექნიკა/სამზარეულოს წვრილი ტექნიკა/დანების კომპლექტი/სამზარეულო & სერვირება": {
+  "categoryGe": "წვრილი ტექნიკა",
+  "subcategoryGe": "სამზარეულოს წვრილი ტექნიკა",
+  "categoryEn": "Small Appliances",
+  "subcategoryEn": "Small Kitchen Appliances",
+  "productEn": "Knife Set"
+ },
+ "ხელსაწყოები/ბაღის ხელსაწყოები/ბაღის მტვერსასრუტი": {
+  "categoryGe": "ხელსაწყოები",
+  "subcategoryGe": "ბაღის ხელსაწყოები",
+  "categoryEn": "Tools",
+  "subcategoryEn": "Garden Tools",
+  "productEn": "Garden Vacuum Cleaner"
+ },
+ "სახლი & ეზო/აბაზანა/აბაზანის ავეჯი": {
+  "categoryGe": "სახლი & ეზო",
+  "subcategoryGe": "აბაზანა",
+  "categoryEn": "Home & Garden",
+  "subcategoryEn": "Bathroom",
+  "productEn": "Bathroom Furniture"
+ },
+ "სათამაშოები/ელექტრო მანქანები": {
+  "categoryGe": "სათამაშოები",
+  "subcategoryGe": "ელექტრო მანქანები",
+  "categoryEn": "Toys",
+  "subcategoryEn": "Electric Cars",
+  "productEn": "Electric Cars"
+ },
+ "მობილურები & აქსესუარები/ყურსასმენები/Buds": {
+  "categoryGe": "მობილურები & აქსესუარები",
+  "subcategoryGe": "ყურსასმენები",
+  "categoryEn": "Mobiles & Accessories",
+  "subcategoryEn": "Headphones",
+  "productEn": "Buds"
+ },
+ "ავტო აქსესუარები/საცხებ-საპოხი მასალები/ძრავის ზეთი": {
+  "categoryGe": "ავტო აქსესუარები",
+  "subcategoryGe": "საცხებ-საპოხი მასალები",
+  "categoryEn": "Auto Accessories",
+  "subcategoryEn": "Lubricants",
+  "productEn": "Engine Oil"
+ },
+ "ხელსაწყოები/ხერხები/ტორსული ხერხი": {
+  "categoryGe": "ხელსაწყოები",
+  "subcategoryGe": "ხერხები",
+  "categoryEn": "Tools",
+  "subcategoryEn": "Saws",
+  "productEn": "Miter Saw"
+ },
+ "სმარტ გაჯეტები/დრონი": {
+  "categoryGe": "სმარტ გაჯეტები",
+  "subcategoryGe": "დრონი",
+  "categoryEn": "Smart Gadgets",
+  "subcategoryEn": "Drone",
+  "productEn": "Drone"
+ },
+ "კომპიუტერები & აქსესუარები/პლანშეტი": {
+  "categoryGe": "კომპიუტერები & აქსესუარები",
+  "subcategoryGe": "პლანშეტი",
+  "categoryEn": "Computers & Accessories",
+  "subcategoryEn": "Tablet",
+  "productEn": "Tablet"
+ },
+ "სპორტი & ფიტნესი/სპორტი/ჰოვერბორდი": {
+  "categoryGe": "სპორტი & ფიტნესი",
+  "subcategoryGe": "სპორტი",
+  "categoryEn": "Sport & Fitness",
+  "subcategoryEn": "Sport",
+  "productEn": "Hoverboard"
+ },
+ "ავეჯი/გარე ავეჯი/საყვავილე": {
+  "categoryGe": "ავეჯი",
+  "subcategoryGe": "გარე ავეჯი",
+  "categoryEn": "Furniture",
+  "subcategoryEn": "Outdoor Furniture",
+  "productEn": "Planter"
+ },
+ "კომპიუტერები & აქსესუარები/პრინტერები": {
+  "categoryGe": "კომპიუტერები & აქსესუარები",
+  "subcategoryGe": "პრინტერები",
+  "categoryEn": "Computers & Accessories",
+  "subcategoryEn": "Printers",
+  "productEn": "Printers"
+ },
+ "წვრილი ტექნიკა/პურის საცხობი": {
+  "categoryGe": "წვრილი ტექნიკა",
+  "subcategoryGe": "პურის საცხობი",
+  "categoryEn": "Small Appliances",
+  "subcategoryEn": "Bread Maker",
+  "productEn": "Bread Maker"
+ },
+ "მსხვილი ტექნიკა/გამწოვი": {
+  "categoryGe": "მსხვილი ტექნიკა",
+  "subcategoryGe": "გამწოვი",
+  "categoryEn": "Large Appliances",
+  "subcategoryEn": "Cooker Hood",
+  "productEn": "Cooker Hood"
+ },
+ "ფოტო & ვიდეო/დრონი": {
+  "categoryGe": "ფოტო & ვიდეო",
+  "subcategoryGe": "დრონი",
+  "categoryEn": "Photo & Video",
+  "subcategoryEn": "Drone",
+  "productEn": "Drone"
+ },
+ "კომპიუტერები & აქსესუარები/მონიტორები": {
+  "categoryGe": "კომპიუტერები & აქსესუარები",
+  "subcategoryGe": "მონიტორები",
+  "categoryEn": "Computers & Accessories",
+  "subcategoryEn": "Monitors",
+  "productEn": "Monitors"
+ },
+ "მსხვილი ტექნიკა/ჩასაშენებელი ტექნიკა/ჩასაშენებელი ელექტრო ღუმელი": {
+  "categoryGe": "მსხვილი ტექნიკა",
+  "subcategoryGe": "ჩასაშენებელი ტექნიკა",
+  "categoryEn": "Large Appliances",
+  "subcategoryEn": "Built-in Appliances",
+  "productEn": "Built-in Electric Oven"
+ },
+ "სახლი & ეზო/განათება/ტორშერი": {
+  "categoryGe": "სახლი & ეზო",
+  "subcategoryGe": "განათება",
+  "categoryEn": "Home & Garden",
+  "subcategoryEn": "Lighting",
+  "productEn": "Floor Lamp"
+ },
+ "წვრილი ტექნიკა/სამზარეულოს წვრილი ტექნიკა/ყავის აპარატი": {
+  "categoryGe": "წვრილი ტექნიკა",
+  "subcategoryGe": "სამზარეულოს წვრილი ტექნიკა",
+  "categoryEn": "Small Appliances",
+  "subcategoryEn": "Small Kitchen Appliances",
+  "productEn": "Coffee Machine"
+ },
+ "ტელევიზორები & აუდიო/დინამიკი/": {
+  "categoryGe": "ტელევიზორები & აუდიო",
+  "subcategoryGe": "დინამიკი",
+  "categoryEn": "Televisions & Audio",
+  "subcategoryEn": "Speaker",
+  "productEn": "Speaker"
+ },
+ "წვრილი ტექნიკა/სამზარეულოს წვრილი ტექნიკა/ჩაის დასაყენებელი": {
+  "categoryGe": "წვრილი ტექნიკა",
+  "subcategoryGe": "სამზარეულოს წვრილი ტექნიკა",
+  "categoryEn": "Small Appliances",
+  "subcategoryEn": "Small Kitchen Appliances",
+  "productEn": "Tea Maker"
+ },
+ "სპორტი & ფიტნესი/სპორტი/სკუტერი": {
+  "categoryGe": "სპორტი & ფიტნესი",
+  "subcategoryGe": "სპორტი",
+  "categoryEn": "Sport & Fitness",
+  "subcategoryEn": "Sport",
+  "productEn": "Scooter"
+ },
+ "სმარტ გაჯეტები/ჭკვიანი სახლი": {
+  "categoryGe": "სმარტ გაჯეტები",
+  "subcategoryGe": "ჭკვიანი სახლი",
+  "categoryEn": "Smart Gadgets",
+  "subcategoryEn": "Smart Home",
+  "productEn": "Smart Home"
+ },
+ "სახლი & ეზო/აბაზანა/უნიტაზი & ბიდეები": {
+  "categoryGe": "სახლი & ეზო",
+  "subcategoryGe": "აბაზანა",
+  "categoryEn": "Home & Garden",
+  "subcategoryEn": "Bathroom",
+  "productEn": "Toilets & Bidets"
+ },
+ "ავეჯი/თარო": {
+  "categoryGe": "ავეჯი",
+  "subcategoryGe": "თარო",
+  "categoryEn": "Furniture",
+  "subcategoryEn": "Shelf",
+  "productEn": "Shelf"
+ },
+ "გეიმინგი/სათამაშო კონსოლი": {
+  "categoryGe": "გეიმინგი",
+  "subcategoryGe": "სათამაშო კონსოლი",
+  "categoryEn": "Gaming",
+  "subcategoryEn": "Game Console",
+  "productEn": "Game Console"
+ },
+ "აქსესუარები/ყელსაბამი": {
+  "categoryGe": "აქსესუარები",
+  "subcategoryGe": "ყელსაბამი",
+  "categoryEn": "Accessories",
+  "subcategoryEn": "Necklace",
+  "productEn": "Necklace"
+ },
+ "აქსესუარები/საყურე": {
+  "categoryGe": "აქსესუარები",
+  "subcategoryGe": "საყურე",
+  "categoryEn": "Accessories",
+  "subcategoryEn": "Earrings",
+  "productEn": "Earrings"
+ },
+ "წვრილი ტექნიკა/ყავის აპარატი/ყავის საფქვავი": {
+  "categoryGe": "წვრილი ტექნიკა",
+  "subcategoryGe": "ყავის აპარატი",
+  "categoryEn": "Small Appliances",
+  "subcategoryEn": "Coffee Machine",
+  "productEn": "Coffee Grinder"
+ },
+ "მსხვილი ტექნიკა/კლიმატური ტექნიკა/ვენტილატორი": {
+  "categoryGe": "მსხვილი ტექნიკა",
+  "subcategoryGe": "კლიმატური ტექნიკა",
+  "categoryEn": "Large Appliances",
+  "subcategoryEn": "Climate Appliances",
+  "productEn": "Fan"
+ },
+ "მობილურები & აქსესუარები/სმარტფონები": {
+  "categoryGe": "მობილურები & აქსესუარები",
+  "subcategoryGe": "სმარტფონები",
+  "categoryEn": "Mobiles & Accessories",
+  "subcategoryEn": "Smartphones",
+  "productEn": "Smartphones"
+ },
+ "მსხვილი ტექნიკა/კლიმატური ტექნიკა/კონდიციონერი": {
+  "categoryGe": "მსხვილი ტექნიკა",
+  "subcategoryGe": "კლიმატური ტექნიკა",
+  "categoryEn": "Large Appliances",
+  "subcategoryEn": "Climate Appliances",
+  "productEn": "Air Conditioner"
+ },
+ "მსხვილი ტექნიკა/სარეცხი მანქანა": {
+  "categoryGe": "მსხვილი ტექნიკა",
+  "subcategoryGe": "სარეცხი მანქანა",
+  "categoryEn": "Large Appliances",
+  "subcategoryEn": "Washing Machine",
+  "productEn": "Washing Machine"
+ },
+ "წვრილი ტექნიკა/მტვერსასრუტი": {
+  "categoryGe": "წვრილი ტექნიკა",
+  "subcategoryGe": "მტვერსასრუტი",
+  "categoryEn": "Small Appliances",
+  "subcategoryEn": "Vacuum Cleaner",
+  "productEn": "Vacuum Cleaner"
+ },
+ "ტელევიზორები & აუდიო/ტელევიზორები": {
+  "categoryGe": "ტელევიზორები & აუდიო",
+  "subcategoryGe": "ტელევიზორები",
+  "categoryEn": "Televisions & Audio",
+  "subcategoryEn": "Televisions",
+  "productEn": "Televisions"
+ },
+ "მსხვილი ტექნიკა/მაცივარი": {
+  "categoryGe": "მსხვილი ტექნიკა",
+  "subcategoryGe": "მაცივარი",
+  "categoryEn": "Large Appliances",
+  "subcategoryEn": "Refrigerator",
+  "productEn": "Refrigerator"
+ },
+ "სახლი & ეზო/აუზი & აქსესუარები/აუზი": {
+  "categoryGe": "სახლი & ეზო",
+  "subcategoryGe": "აუზი & აქსესუარები",
+  "categoryEn": "Home & Garden",
+  "subcategoryEn": "Pool & Accessories",
+  "productEn": "Pool"
+ },
+ "წვრილი ტექნიკა/სამზარეულოს წვრილი ტექნიკა/აეროგრილი": {
+  "categoryGe": "წვრილი ტექნიკა",
+  "subcategoryGe": "სამზარეულოს წვრილი ტექნიკა",
+  "categoryEn": "Small Appliances",
+  "subcategoryEn": "Small Kitchen Appliances",
+  "productEn": "Air Fryer"
+ },
+ "ავეჯი/საძინებელი/საწოლი": {
+  "categoryGe": "ავეჯი",
+  "subcategoryGe": "საძინებელი",
+  "categoryEn": "Furniture",
+  "subcategoryEn": "Bedroom",
+  "productEn": "Bed"
+ },
+ "სილამაზე/თავის მოვლა/თმის სტაილერი": {
+  "categoryGe": "სილამაზე",
+  "subcategoryGe": "თავის მოვლა",
+  "categoryEn": "Beauty",
+  "subcategoryEn": "Hair Care",
+  "productEn": "Hair Styler"
+ },
+ "ავეჯი/გარე ავეჯი/ბაღის საქანელები": {
+  "categoryGe": "ავეჯი",
+  "subcategoryGe": "გარე ავეჯი",
+  "categoryEn": "Furniture",
+  "subcategoryEn": "Outdoor Furniture",
+  "productEn": "Garden Swings"
+ },
+ "სახლი & ეზო/ბატუტი": {
+  "categoryGe": "სახლი & ეზო",
+  "subcategoryGe": "ბატუტი",
+  "categoryEn": "Home & Garden",
+  "subcategoryEn": "Trampoline",
+  "productEn": "Trampoline"
+ },
+ "ავეჯი/გარე ავეჯი/გარე ავეჯის კომპლექტი": {
+  "categoryGe": "ავეჯი",
+  "subcategoryGe": "გარე ავეჯი",
+  "categoryEn": "Furniture",
+  "subcategoryEn": "Outdoor Furniture",
+  "productEn": "Outdoor Furniture Set"
+ },
+ "მსხვილი ტექნიკა/ ჭურჭლის სარეცხი მანქანა": {
+  "categoryGe": "მსხვილი ტექნიკა",
+  "subcategoryGe": "ჭურჭლის სარეცხი მანქანა",
+  "categoryEn": "Large Appliances",
+  "subcategoryEn": "Dishwasher",
+  "productEn": "Dishwasher"
+ },
+ "მსხვილი ტექნიკა/გაზქურა": {
+  "categoryGe": "მსხვილი ტექნიკა",
+  "subcategoryGe": "გაზქურა",
+  "categoryEn": "Large Appliances",
+  "subcategoryEn": "Gas Stove",
+  "productEn": "Gas Stove"
+ },
+ "გეიმინგი/ფლეისთეიშენი": {
+  "categoryGe": "გეიმინგი",
+  "subcategoryGe": "ფლეისთეიშენი",
+  "categoryEn": "Gaming",
+  "subcategoryEn": "PlayStation",
+  "productEn": "PlayStation"
+ },
+ "წვრილი ტექნიკა/სამზარეულოს წვრილი ტექნიკა/ბლენდერი": {
+  "categoryGe": "წვრილი ტექნიკა",
+  "subcategoryGe": "სამზარეულოს წვრილი ტექნიკა",
+  "categoryEn": "Small Appliances",
+  "subcategoryEn": "Small Kitchen Appliances",
+  "productEn": "Blender"
+ },
+ "კარ-ფანჯარა & ფურნიტურა/შიდა კარები": {
+  "categoryGe": "კარ-ფანჯარა & ფურნიტურა",
+  "subcategoryGe": "შიდა კარები",
+  "categoryEn": "Doors-Windows & Fittings",
+  "subcategoryEn": "Interior Doors",
+  "productEn": "Interior Doors"
+ },
+ "მსხვილი ტექნიკა/კლიმატური ტექნიკა/წყლის გამაცხელებელი": {
+  "categoryGe": "მსხვილი ტექნიკა",
+  "subcategoryGe": "კლიმატური ტექნიკა",
+  "categoryEn": "Large Appliances",
+  "subcategoryEn": "Climate Appliances",
+  "productEn": "Water Heater"
+ },
+ "სპორტი & ფიტნესი/სპორტი/ველოსპორტი/ველოსიპედი": {
+  "categoryGe": "სპორტი & ფიტნესი",
+  "subcategoryGe": "სპორტი",
+  "categoryEn": "Sport & Fitness",
+  "subcategoryEn": "Sport",
+  "productEn": "Cycling"
+ },
+ "სპორტი & ფიტნესი/სპორტი/ველოსპორტი/სკუტერი": {
+  "categoryGe": "სპორტი & ფიტნესი",
+  "subcategoryGe": "სპორტი",
+  "categoryEn": "Sport & Fitness",
+  "subcategoryEn": "Sport",
+  "productEn": "Cycling"
+ },
+ "მსხვილი ტექნიკა/საყინულე": {
+  "categoryGe": "მსხვილი ტექნიკა",
+  "subcategoryGe": "საყინულე",
+  "categoryEn": "Large Appliances",
+  "subcategoryEn": "Freezer",
+  "productEn": "Freezer"
+ },
+ "წვრილი ტექნიკა/სამზარეულოს წვრილი ტექნიკა/მიკროტალღური ღუმელი": {
+  "categoryGe": "წვრილი ტექნიკა",
+  "subcategoryGe": "სამზარეულოს წვრილი ტექნიკა",
+  "categoryEn": "Small Appliances",
+  "subcategoryEn": "Small Kitchen Appliances",
+  "productEn": "Microwave Oven"
+ },
+ "წვრილი ტექნიკა/რობოტი მტვერსასრუტი": {
+  "categoryGe": "წვრილი ტექნიკა",
+  "subcategoryGe": "რობოტი მტვერსასრუტი",
+  "categoryEn": "Small Appliances",
+  "subcategoryEn": "Robot Vacuum Cleaner",
+  "productEn": "Robot Vacuum Cleaner"
+ },
+ "მსხვილი ტექნიკა/კლიმატური ტექნიკა/გაზის წყლის გამაცხელებელი": {
+  "categoryGe": "მსხვილი ტექნიკა",
+  "subcategoryGe": "კლიმატური ტექნიკა",
+  "categoryEn": "Large Appliances",
+  "subcategoryEn": "Climate Appliances",
+  "productEn": "Gas Water Heater"
+ },
+ "მსხვილი ტექნიკა/სარეცხი მანქანა/სარეცხის საშრობი": {
+  "categoryGe": "მსხვილი ტექნიკა",
+  "subcategoryGe": "სარეცხი მანქანა",
+  "categoryEn": "Large Appliances",
+  "subcategoryEn": "Washing Machine",
+  "productEn": "Tumble Dryer"
+ },
+ "წვრილი ტექნიკა/უთო": {
+  "categoryGe": "წვრილი ტექნიკა",
+  "subcategoryGe": "უთო",
+  "categoryEn": "Small Appliances",
+  "subcategoryEn": "Iron",
+  "productEn": "Iron"
+ },
+ "მსხვილი ტექნიკა/წყლის დისპენსერი": {
+  "categoryGe": "მსხვილი ტექნიკა",
+  "subcategoryGe": "წყლის დისპენსერი",
+  "categoryEn": "Large Appliances",
+  "subcategoryEn": "Water Dispenser",
+  "productEn": "Water Dispenser"
+ },
+ "წვრილი ტექნიკა/სამზარეულოს წვრილი ტექნიკა/ბლენდერი/ხელის ბლენდერი": {
+  "categoryGe": "წვრილი ტექნიკა",
+  "subcategoryGe": "სამზარეულოს წვრილი ტექნიკა",
+  "categoryEn": "Small Appliances",
+  "subcategoryEn": "Small Kitchen Appliances",
+  "productEn": "Blender"
+ },
+ "წვრილი ტექნიკა/სამზარეულოს წვრილი ტექნიკა/მიქსერი": {
+  "categoryGe": "წვრილი ტექნიკა",
+  "subcategoryGe": "სამზარეულოს წვრილი ტექნიკა",
+  "categoryEn": "Small Appliances",
+  "subcategoryEn": "Small Kitchen Appliances",
+  "productEn": "Mixer"
+ },
+ "სილამაზე/თავის მოვლა/თმის უთო": {
+  "categoryGe": "სილამაზე",
+  "subcategoryGe": "თავის მოვლა",
+  "categoryEn": "Beauty",
+  "subcategoryEn": "Hair Care",
+  "productEn": "Hair Straightener"
+ },
+ "ხელსაწყოები/ბაღის ხელსაწყოები/ბაღის მოტო და ელექტრო ინსტრუმენტები": {
+  "categoryGe": "ხელსაწყოები",
+  "subcategoryGe": "ბაღის ხელსაწყოები",
+  "categoryEn": "Tools",
+  "subcategoryEn": "Garden Tools",
+  "productEn": "Garden Motor & Electric Tools"
+ },
+ "წვრილი ტექნიკა/სამზარეულოს წვრილი ტექნიკა/ტოსტერი/გრილ ტოსტერი": {
+  "categoryGe": "წვრილი ტექნიკა",
+  "subcategoryGe": "სამზარეულოს წვრილი ტექნიკა",
+  "categoryEn": "Small Appliances",
+  "subcategoryEn": "Small Kitchen Appliances",
+  "productEn": "Toaster"
+ },
+ "წვრილი ტექნიკა/უთო/ორთქლის უთო": {
+  "categoryGe": "წვრილი ტექნიკა",
+  "subcategoryGe": "უთო",
+  "categoryEn": "Small Appliances",
+  "subcategoryEn": "Iron",
+  "productEn": "Steam Iron"
+ },
+ "ავეჯი/რბილი ავეჯი/დივანი": {
+  "categoryGe": "ავეჯი",
+  "subcategoryGe": "რბილი ავეჯი",
+  "categoryEn": "Furniture",
+  "subcategoryEn": "Upholstered Furniture",
+  "productEn": "Sofa"
+ },
+ "წვრილი ტექნიკა/სამზარეულოს წვრილი ტექნიკა/ელექტრო ღუმელი": {
+  "categoryGe": "წვრილი ტექნიკა",
+  "subcategoryGe": "სამზარეულოს წვრილი ტექნიკა",
+  "categoryEn": "Small Appliances",
+  "subcategoryEn": "Small Kitchen Appliances",
+  "productEn": "Electric Oven"
+ },
+ "მსხვილი ტექნიკა/კლიმატური ტექნიკა/ცენტრალური გათბობის ქვაბი": {
+  "categoryGe": "მსხვილი ტექნიკა",
+  "subcategoryGe": "კლიმატური ტექნიკა",
+  "categoryEn": "Large Appliances",
+  "subcategoryEn": "Climate Appliances",
+  "productEn": "Central Heating Boiler"
+ },
+ "სახლი & ეზო/სახლის მოვლა/მაღალი წნევით რეცხვის აპარატი": {
+  "categoryGe": "სახლი & ეზო",
+  "subcategoryGe": "სახლის მოვლა",
+  "categoryEn": "Home & Garden",
+  "subcategoryEn": "Home Care",
+  "productEn": "Pressure Washer"
+ },
+ "წვრილი ტექნიკა/ყავის აპარატი": {
+  "categoryGe": "წვრილი ტექნიკა",
+  "subcategoryGe": "ყავის აპარატი",
+  "categoryEn": "Small Appliances",
+  "subcategoryEn": "Coffee Machine",
+  "productEn": "Coffee Machine"
+ },
+ "სილამაზე/თავის მოვლა/თმის საშრობი": {
+  "categoryGe": "სილამაზე",
+  "subcategoryGe": "თავის მოვლა",
+  "categoryEn": "Beauty",
+  "subcategoryEn": "Hair Care",
+  "productEn": "Hair Dryer"
+ },
+ "სილამაზე/თავის მოვლა/ელექტრო სავარცხელი": {
+  "categoryGe": "სილამაზე",
+  "subcategoryGe": "თავის მოვლა",
+  "categoryEn": "Beauty",
+  "subcategoryEn": "Hair Care",
+  "productEn": "Electric Comb"
+ },
+ "მსხვილი ტექნიკა/კლიმატური ტექნიკა/დენის წყლის გამაცხელებელი": {
+  "categoryGe": "მსხვილი ტექნიკა",
+  "subcategoryGe": "კლიმატური ტექნიკა",
+  "categoryEn": "Large Appliances",
+  "subcategoryEn": "Climate Appliances",
+  "productEn": "Electric Water Heater"
+ },
+ "სილამაზე/თავის მოვლა/ტრიმერი": {
+  "categoryGe": "სილამაზე",
+  "subcategoryGe": "თავის მოვლა",
+  "categoryEn": "Beauty",
+  "subcategoryEn": "Hair Care",
+  "productEn": "Trimmer"
+ },
+ "სახლი & ეზო/სამზარეულო & სერვირება/ქვაბების ნაკრები": {
+  "categoryGe": "სახლი & ეზო",
+  "subcategoryGe": "სამზარეულო & სერვირება",
+  "categoryEn": "Home & Garden",
+  "subcategoryEn": "Kitchen & Serving",
+  "productEn": "Cookware Set"
+ },
+ "სილამაზე/თავის მოვლა/თმის და წვერის საჭრელი": {
+  "categoryGe": "სილამაზე",
+  "subcategoryGe": "თავის მოვლა",
+  "categoryEn": "Beauty",
+  "subcategoryEn": "Hair Care",
+  "productEn": "Hair & Beard Trimmer"
+ },
+ "სახლი & ეზო/სახლის მოვლა/ორთქლით საწმენდი აპარატი": {
+  "categoryGe": "სახლი & ეზო",
+  "subcategoryGe": "სახლის მოვლა",
+  "categoryEn": "Home & Garden",
+  "subcategoryEn": "Home Care",
+  "productEn": "Steam Cleaner"
+ },
+ "მსხვილი ტექნიკა/ჩასაშენებელი ტექნიკა/ჩასაშენებელი გამწოვი": {
+  "categoryGe": "მსხვილი ტექნიკა",
+  "subcategoryGe": "ჩასაშენებელი ტექნიკა",
+  "categoryEn": "Large Appliances",
+  "subcategoryEn": "Built-in Appliances",
+  "productEn": "Built-in Hood"
+ },
+ "ავეჯი/რბილი ავეჯი/პუფი": {
+  "categoryGe": "ავეჯი",
+  "subcategoryGe": "რბილი ავეჯი",
+  "categoryEn": "Furniture",
+  "subcategoryEn": "Upholstered Furniture",
+  "productEn": "Pouf"
+ },
+ "ხელსაწყოები/ხელის მოტობლოკი": {
+  "categoryGe": "ხელსაწყოები",
+  "subcategoryGe": "ხელის მოტობლოკი",
+  "categoryEn": "Tools",
+  "subcategoryEn": "Power Tiller",
+  "productEn": "Power Tiller"
+ },
+ "აქსესუარები/საათები/უნისექსი": {
+  "categoryGe": "აქსესუარები",
+  "subcategoryGe": "საათები",
+  "categoryEn": "Accessories",
+  "subcategoryEn": "Watches",
+  "productEn": "Unisex Watches"
+ },
+ "წვრილი ტექნიკა/სამზარეულოს წვრილი ტექნიკა/ყინულის აპარატი": {
+  "categoryGe": "წვრილი ტექნიკა",
+  "subcategoryGe": "სამზარეულოს წვრილი ტექნიკა",
+  "categoryEn": "Small Appliances",
+  "subcategoryEn": "Small Kitchen Appliances",
+  "productEn": "Ice Maker"
+ },
+ "წვრილი ტექნიკა/სამზარეულოს წვრილი ტექნიკა/სლაშის აპარატი": {
+  "categoryGe": "წვრილი ტექნიკა",
+  "subcategoryGe": "სამზარეულოს წვრილი ტექნიკა",
+  "categoryEn": "Small Appliances",
+  "subcategoryEn": "Small Kitchen Appliances",
+  "productEn": "Slush Machine"
+ },
+ "ავეჯი/გარე ავეჯი/პავილიონი & ტენტი": {
+  "categoryGe": "ავეჯი",
+  "subcategoryGe": "გარე ავეჯი",
+  "categoryEn": "Furniture",
+  "subcategoryEn": "Outdoor Furniture",
+  "productEn": "Gazebo & Tent"
+ },
+ "წვრილი ტექნიკა/სამზარეულოს წვრილი ტექნიკა/ჩოფერი": {
+  "categoryGe": "წვრილი ტექნიკა",
+  "subcategoryGe": "სამზარეულოს წვრილი ტექნიკა",
+  "categoryEn": "Small Appliances",
+  "subcategoryEn": "Small Kitchen Appliances",
+  "productEn": "Chopper"
+ },
+ "წვრილი ტექნიკა/სამზარეულოს წვრილი ტექნიკა/წვენსაწური": {
+  "categoryGe": "წვრილი ტექნიკა",
+  "subcategoryGe": "სამზარეულოს წვრილი ტექნიკა",
+  "categoryEn": "Small Appliances",
+  "subcategoryEn": "Small Kitchen Appliances",
+  "productEn": "Juicer"
+ },
+ "წვრილი ტექნიკა/სამზარეულოს წვრილი ტექნიკა/ხორცსაკეპი": {
+  "categoryGe": "წვრილი ტექნიკა",
+  "subcategoryGe": "სამზარეულოს წვრილი ტექნიკა",
+  "categoryEn": "Small Appliances",
+  "subcategoryEn": "Small Kitchen Appliances",
+  "productEn": "Meat Grinder"
+ },
+ "მსხვილი ტექნიკა/ჩასაშენებელი ტექნიკა/ჩასაშენებელი ზედაპირი": {
+  "categoryGe": "მსხვილი ტექნიკა",
+  "subcategoryGe": "ჩასაშენებელი ტექნიკა",
+  "categoryEn": "Large Appliances",
+  "subcategoryEn": "Built-in Appliances",
+  "productEn": "Built-in Cooktop"
+ },
+ "სახლი & ეზო/სამზარეულო & სერვირება/ტაფა/ბლინის ტაფა": {
+  "categoryGe": "სახლი & ეზო",
+  "subcategoryGe": "სამზარეულო & სერვირება",
+  "categoryEn": "Home & Garden",
+  "subcategoryEn": "Kitchen & Serving",
+  "productEn": "Frying Pan"
+ },
+ "სახლი & ეზო/საკერავი მანქანა": {
+  "categoryGe": "სახლი & ეზო",
+  "subcategoryGe": "საკერავი მანქანა",
+  "categoryEn": "Home & Garden",
+  "subcategoryEn": "Sewing Machine",
+  "productEn": "Sewing Machine"
+ },
+ "წვრილი ტექნიკა/სამზარეულოს წვრილი ტექნიკა/სამზარეულოს კომბაინი": {
+  "categoryGe": "წვრილი ტექნიკა",
+  "subcategoryGe": "სამზარეულოს წვრილი ტექნიკა",
+  "categoryEn": "Small Appliances",
+  "subcategoryEn": "Small Kitchen Appliances",
+  "productEn": "Food Processor"
+ },
+ "Do not have on web": {
+  "categoryGe": "Do not have on web",
+  "subcategoryGe": "none",
+  "categoryEn": "Do not have on web",
+  "subcategoryEn": "none",
+  "productEn": "none"
+ },
+ "სპორტი & ფიტნესი/სპორტი/ლაშქრობა/კარვები & ტენტები": {
+  "categoryGe": "სპორტი & ფიტნესი",
+  "subcategoryGe": "სპორტი",
+  "categoryEn": "Sport & Fitness",
+  "subcategoryEn": "Sport",
+  "productEn": "Hiking"
+ },
+ "ავეჯი/გარე ავეჯი/გარე სკამი": {
+  "categoryGe": "ავეჯი",
+  "subcategoryGe": "გარე ავეჯი",
+  "categoryEn": "Furniture",
+  "subcategoryEn": "Outdoor Furniture",
+  "productEn": "Outdoor Chair"
+ },
+ "ავტო აქსესუარები/საბურავი": {
+  "categoryGe": "ავტო აქსესუარები",
+  "subcategoryGe": "საბურავი",
+  "categoryEn": "Auto Accessories",
+  "subcategoryEn": "Tire",
+  "productEn": "Tire"
+ },
+ "აქსესუარები/საათები/მამაკაცის საათები": {
+  "categoryGe": "აქსესუარები",
+  "subcategoryGe": "საათები",
+  "categoryEn": "Accessories",
+  "subcategoryEn": "Watches",
+  "productEn": "Men's Watches"
+ },
+ "წვრილი ტექნიკა/სამზარეულოს წვრილი ტექნიკა/ელექტრო ჩაიდანი": {
+  "categoryGe": "წვრილი ტექნიკა",
+  "subcategoryGe": "სამზარეულოს წვრილი ტექნიკა",
+  "categoryEn": "Small Appliances",
+  "subcategoryEn": "Small Kitchen Appliances",
+  "productEn": "Electric Kettle"
+ },
+ "წვრილი ტექნიკა/სამზარეულოს წვრილი ტექნიკა/ხორცსაკეპი მანქანა": {
+  "categoryGe": "წვრილი ტექნიკა",
+  "subcategoryGe": "სამზარეულოს წვრილი ტექნიკა",
+  "categoryEn": "Small Appliances",
+  "subcategoryEn": "Small Kitchen Appliances",
+  "productEn": "Meat Grinder Machine"
+ },
+ "მსხვილი ტექნიკა/კლიმატური ტექნიკა/გაზის გამათბობელი": {
+  "categoryGe": "მსხვილი ტექნიკა",
+  "subcategoryGe": "კლიმატური ტექნიკა",
+  "categoryEn": "Large Appliances",
+  "subcategoryEn": "Climate Appliances",
+  "productEn": "Gas Heater"
+ },
+ "სახლი & ეზო/განათება/ჭაღები": {
+  "categoryGe": "სახლი & ეზო",
+  "subcategoryGe": "განათება",
+  "categoryEn": "Home & Garden",
+  "subcategoryEn": "Lighting",
+  "productEn": "Chandeliers"
+ },
+ "ხელსაწყოები/შედუღების მოწყობილობა & აპარატი": {
+  "categoryGe": "ხელსაწყოები",
+  "subcategoryGe": "შედუღების მოწყობილობა & აპარატი",
+  "categoryEn": "Tools",
+  "subcategoryEn": "Welding Equipment & Machine",
+  "productEn": "Welding Equipment & Machine"
+ },
+ "სახლი & ეზო/სამზარეულო & სერვირება/ტაფა": {
+  "categoryGe": "სახლი & ეზო",
+  "subcategoryGe": "სამზარეულო & სერვირება",
+  "categoryEn": "Home & Garden",
+  "subcategoryEn": "Kitchen & Serving",
+  "productEn": "Frying Pan"
+ },
+ "სახლი & ეზო/სახლის მოვლა/ქიმწმენდის აპარატი": {
+  "categoryGe": "სახლი & ეზო",
+  "subcategoryGe": "სახლის მოვლა",
+  "categoryEn": "Home & Garden",
+  "subcategoryEn": "Home Care",
+  "productEn": "Dry Cleaning Machine"
+ },
+ "წვრილი ტექნიკა/უთო/ორთქლის გენერატორი": {
+  "categoryGe": "წვრილი ტექნიკა",
+  "subcategoryGe": "უთო",
+  "categoryEn": "Small Appliances",
+  "subcategoryEn": "Iron",
+  "productEn": "Steam Generator"
+ },
+ "საყოფაცხოვრებო ტექნიკა,გათბობა & გაგრილება,კონდიციონერი": {
+  "categoryGe": "საყოფაცხოვრებო ტექნიკა",
+  "subcategoryGe": "გათბობა & გაგრილება",
+  "categoryEn": "Large Appliances",
+  "subcategoryEn": "Climate Appliances",
+  "productEn": "Air Conditioner"
+ },
+ "საყოფაცხოვრებო ტექნიკა,სარეცხი მანქანები,სარეცხი მანქანა": {
+  "categoryGe": "საყოფაცხოვრებო ტექნიკა",
+  "subcategoryGe": "სარეცხი მანქანები",
+  "categoryEn": "Large Appliances",
+  "subcategoryEn": "Washing Machine",
+  "productEn": "Washing Machine"
+ },
+ "ტელევიზორები & აუდიო,ტელევიზორები,ტელევიზორი": {
+  "categoryGe": "ტელევიზორები & აუდიო",
+  "subcategoryGe": "ტელევიზორები",
+  "categoryEn": "Televisions & Audio",
+  "subcategoryEn": "Televisions",
+  "productEn": "Televisions"
+ },
+ "სილამაზე,თმის მოვლა,თმის სტაილერი": {
+  "categoryGe": "სილამაზე",
+  "subcategoryGe": "თმის მოვლა",
+  "categoryEn": "Beauty",
+  "subcategoryEn": "Hair Care",
+  "productEn": "Hair Styler"
+ },
+ "საყოფაცხოვრებო ტექნიკა,მაცივარი,მაცივრები": {
+  "categoryGe": "საყოფაცხოვრებო ტექნიკა",
+  "subcategoryGe": "მაცივარი",
+  "categoryEn": "Large Appliances",
+  "subcategoryEn": "Refrigerator",
+  "productEn": "Refrigerator"
+ },
+ "სპორტი,სკუტერი": {
+  "categoryGe": "სპორტი",
+  "subcategoryGe": null,
+  "categoryEn": "Sport & Fitness",
+  "subcategoryEn": "Sport",
+  "productEn": "Scooter"
+ },
+ "საყოფაცხოვრებო ტექნიკა,ჭურჭლის სარეცხი მანქანა": {
+  "categoryGe": "საყოფაცხოვრებო ტექნიკა",
+  "subcategoryGe": null,
+  "categoryEn": "Large Appliances",
+  "subcategoryEn": "Dishwasher",
+  "productEn": "Dishwasher"
+ },
+ "სარეცხი მანქანები,სარეცხი მანქანა": {
+  "categoryGe": "სარეცხი მანქანები",
+  "subcategoryGe": null,
+  "categoryEn": "Large Appliances",
+  "subcategoryEn": "Washing Machine",
+  "productEn": "Washing Machine"
+ },
+ "იატაკი & საფარები,ხელოვნური ბალახი": {
+  "categoryGe": "იატაკი & საფარები",
+  "subcategoryGe": null,
+  "categoryEn": "Do not have on web",
+  "subcategoryEn": "none",
+  "productEn": "none"
+ },
+ "ავეჯი,დივანი,რბილი ავეჯი": {
+  "categoryGe": "ავეჯი",
+  "subcategoryGe": "დივანი",
+  "categoryEn": "Furniture",
+  "subcategoryEn": "Upholstered Furniture",
+  "productEn": "Sofa"
+ },
+ "სათამაშოები,ელექტრო მანქანები": {
+  "categoryGe": "სათამაშოები",
+  "subcategoryGe": null,
+  "categoryEn": "Toys",
+  "subcategoryEn": "Electric Cars",
+  "productEn": "Electric Cars"
+ },
+ "საყოფაცხოვრებო ტექნიკა,გათბობა & გაგრილება,წყლის გამაცხელებელი": {
+  "categoryGe": "საყოფაცხოვრებო ტექნიკა",
+  "subcategoryGe": "გათბობა & გაგრილება",
+  "categoryEn": "Large Appliances",
+  "subcategoryEn": "Climate Appliances",
+  "productEn": "Water Heater"
+ },
+ "სახლი & დეკორი,აუზი,აუზი & აქსესუარები,ეზო & გარე სივრცე": {
+  "categoryGe": "სახლი & დეკორი",
+  "subcategoryGe": "აუზი,აუზი & აქსესუარები",
+  "categoryEn": "Home & Garden",
+  "subcategoryEn": "Pool & Accessories",
+  "productEn": "Pool"
+ },
+ "საყოფაცხოვრებო ტექნიკა,გაზქურა": {
+  "categoryGe": "საყოფაცხოვრებო ტექნიკა",
+  "subcategoryGe": null,
+  "categoryEn": "Large Appliances",
+  "subcategoryEn": "Gas Stove",
+  "productEn": "Gas Stove"
+ },
+ "საყოფაცხოვრებო ტექნიკა,კონდიციონერი,კონდიციონერი & გაგრილების სისტემები": {
+  "categoryGe": "საყოფაცხოვრებო ტექნიკა",
+  "subcategoryGe": "კონდიციონერი",
+  "categoryEn": "Large Appliances",
+  "subcategoryEn": "Climate Appliances",
+  "productEn": "Air Conditioner"
+ },
+ "საყოფაცხოვრებო ტექნიკა,წყლის გამაცხელებელი": {
+  "categoryGe": "საყოფაცხოვრებო ტექნიკა",
+  "subcategoryGe": null,
+  "categoryEn": "Large Appliances",
+  "subcategoryEn": "Climate Appliances",
+  "productEn": "Water Heater"
+ },
+ "კონდიციონერი,კონდიციონერი & გაგრილების სისტემები": {
+  "categoryGe": "კონდიციონერი",
+  "subcategoryGe": null,
+  "categoryEn": "Large Appliances",
+  "subcategoryEn": "Climate Appliances",
+  "productEn": "Air Conditioner"
+ },
+ "გარე ავეჯი,გარე ავეჯის კომპლექტი": {
+  "categoryGe": "გარე ავეჯი",
+  "subcategoryGe": null,
+  "categoryEn": "Furniture",
+  "subcategoryEn": "Outdoor Furniture",
+  "productEn": "Outdoor Furniture Set"
+ },
+ "სახლი & ეზო,ქოთანი": {
+  "categoryGe": "სახლი & ეზო",
+  "subcategoryGe": null,
+  "categoryEn": "Do not have on web",
+  "subcategoryEn": "none",
+  "productEn": "none"
+ },
+ "ტელევიზორები & აქსესუარები,ტელევიზორი": {
+  "categoryGe": "ტელევიზორები & აქსესუარები",
+  "subcategoryGe": null,
+  "categoryEn": "Televisions & Audio",
+  "subcategoryEn": "Televisions",
+  "productEn": "Televisions"
+ },
+ "სპორტი & გართობა,სათამაშოები,ელექტრო მანქანები": {
+  "categoryGe": "სპორტი & გართობა",
+  "subcategoryGe": "სათამაშოები",
+  "categoryEn": "Toys",
+  "subcategoryEn": "Electric Cars",
+  "productEn": "Electric Cars"
+ },
+ "აუზი,აუზი & აქსესუარები": {
+  "categoryGe": "აუზი",
+  "subcategoryGe": null,
+  "categoryEn": "Home & Garden",
+  "subcategoryEn": "Pool & Accessories",
+  "productEn": "Pool"
+ },
+ "საყოფაცხოვრებო ტექნიკა,სარეცხი მანქანა საშრობით,სარეცხი მანქანები": {
+  "categoryGe": "საყოფაცხოვრებო ტექნიკა",
+  "subcategoryGe": "სარეცხი მანქანა საშრობით",
+  "categoryEn": "Large Appliances",
+  "subcategoryEn": "Washing Machine",
+  "productEn": "Washing Machine"
+ },
+ "სილამაზე,თმის მოვლა,თმის საშრობი": {
+  "categoryGe": "სილამაზე",
+  "subcategoryGe": "თმის მოვლა",
+  "categoryEn": "Beauty",
+  "subcategoryEn": "Hair Care",
+  "productEn": "Hair Dryer"
+ },
+ "კონდენციონერი": {
+  "categoryGe": "კონდენციონერი",
+  "subcategoryGe": null,
+  "categoryEn": "Do not have on web",
+  "subcategoryEn": "none",
+  "productEn": "none"
+ },
+ "საყოფაცხოვრებო ტექნიკა,წყლის დისპენსერი": {
+  "categoryGe": "საყოფაცხოვრებო ტექნიკა",
+  "subcategoryGe": null,
+  "categoryEn": "Large Appliances",
+  "subcategoryEn": "Water Dispenser",
+  "productEn": "Water Dispenser"
+ },
+ "სპორტი & გართობა,ველოსპორტი,ველოსიპედი": {
+  "categoryGe": "სპორტი & გართობა",
+  "subcategoryGe": "ველოსპორტი",
+  "categoryEn": "Sport & Fitness",
+  "subcategoryEn": "Sport",
+  "productEn": "Cycling"
+ },
+ "სამზარეულოს ტექნიკა,აეროგრილი": {
+  "categoryGe": "სამზარეულოს ტექნიკა",
+  "subcategoryGe": null,
+  "categoryEn": "Small Appliances",
+  "subcategoryEn": "Small Kitchen Appliances",
+  "productEn": "Air Fryer"
+ },
+ "სამზარეულოს ტექნიკა,ბლენდერი": {
+  "categoryGe": "სამზარეულოს ტექნიკა",
+  "subcategoryGe": null,
+  "categoryEn": "Small Appliances",
+  "subcategoryEn": "Small Kitchen Appliances",
+  "productEn": "Blender"
+ },
+ "ტელევიზორები & აუდიო,დინამიკი": {
+  "categoryGe": "ტელევიზორები & აუდიო",
+  "subcategoryGe": null,
+  "categoryEn": "Televisions & Audio",
+  "subcategoryEn": "Speaker",
+  "productEn": "Speaker"
+ },
+ "ავეჯი,გარე ავეჯი,შეზლონგი": {
+  "categoryGe": "ავეჯი",
+  "subcategoryGe": "გარე ავეჯი",
+  "categoryEn": "Do not have on web",
+  "subcategoryEn": "none",
+  "productEn": "none"
+ },
+ "თმის მოვლა,თმის სტაილერი,სილამაზე &თავის მოვლა": {
+  "categoryGe": "თმის მოვლა",
+  "subcategoryGe": "თმის სტაილერი",
+  "categoryEn": "Beauty",
+  "subcategoryEn": "Hair Care",
+  "productEn": "Hair Styler"
+ },
+ "სამზარეულოს ტექნიკა,ყავის აპარატი": {
+  "categoryGe": "სამზარეულოს ტექნიკა",
+  "subcategoryGe": null,
+  "categoryEn": "Small Appliances",
+  "subcategoryEn": "Coffee Machine",
+  "productEn": "Coffee Machine"
+ },
+ "სპორტი & გართობა,ველოსპორტი,სკუტერი": {
+  "categoryGe": "სპორტი & გართობა",
+  "subcategoryGe": "ველოსპორტი",
+  "categoryEn": "Sport & Fitness",
+  "subcategoryEn": "Sport",
+  "productEn": "Scooter"
+ },
+ "სახლი & დეკორი,კარნიზი": {
+  "categoryGe": "სახლი & დეკორი",
+  "subcategoryGe": null,
+  "categoryEn": "Do not have on web",
+  "subcategoryEn": "none",
+  "productEn": "none"
+ },
+ "სმარტ გაჯეტები,ვიდეოკამერა": {
+  "categoryGe": "სმარტ გაჯეტები",
+  "subcategoryGe": null,
+  "categoryEn": "Do not have on web",
+  "subcategoryEn": "none",
+  "productEn": "none"
+ },
+ "წვრილი ტექნიკა,სამზარეულოს წვრილი ტექნიკა,ტოსტერი,გრილ ტოსტერი": {
+  "categoryGe": "წვრილი ტექნიკა",
+  "subcategoryGe": "სამზარეულოს წვრილი ტექნიკა,ტოსტერი",
+  "categoryEn": "Small Appliances",
+  "subcategoryEn": "Small Kitchen Appliances",
+  "productEn": "Toaster"
+ },
+ "საყოფაცხოვრებო ტექნიკა,გათბობა & გაგრილება,ვენტილატორი": {
+  "categoryGe": "საყოფაცხოვრებო ტექნიკა",
+  "subcategoryGe": "გათბობა & გაგრილება",
+  "categoryEn": "Large Appliances",
+  "subcategoryEn": "Climate Appliances",
+  "productEn": "Fan"
+ },
+ "წვრილი ტექნიკა,სამზარეულოს წვრილი ტექნიკა,ტოსტერი": {
+  "categoryGe": "წვრილი ტექნიკა",
+  "subcategoryGe": "სამზარეულოს წვრილი ტექნიკა",
+  "categoryEn": "Small Appliances",
+  "subcategoryEn": "Small Kitchen Appliances",
+  "productEn": "Toaster"
+ },
+ "სილამაზე,თმის მოვლა,თმის უთო": {
+  "categoryGe": "სილამაზე",
+  "subcategoryGe": "თმის მოვლა",
+  "categoryEn": "Beauty",
+  "subcategoryEn": "Hair Care",
+  "productEn": "Hair Straightener"
+ },
+ "წვრილი ტექნიკა,სამზარეულოს წვრილი ტექნიკა,უთო,ორთქლის უთო": {
+  "categoryGe": "წვრილი ტექნიკა",
+  "subcategoryGe": "სამზარეულოს წვრილი ტექნიკა,უთო",
+  "categoryEn": "Small Appliances",
+  "subcategoryEn": "Iron",
+  "productEn": "Steam Iron"
+ },
+ "თმის მოვლა,თმის საშრობი & სავარცხელი,სილამაზე &თავის მოვლა": {
+  "categoryGe": "თმის მოვლა",
+  "subcategoryGe": "თმის საშრობი & სავარცხელი",
+  "categoryEn": "Do not have on web",
+  "subcategoryEn": "none",
+  "productEn": "none"
+ },
+ "სპორტი & გართობა,სკუტერი": {
+  "categoryGe": "სპორტი & გართობა",
+  "subcategoryGe": null,
+  "categoryEn": "Sport & Fitness",
+  "subcategoryEn": "Sport",
+  "productEn": "Scooter"
+ },
+ "სამზარეულოს ტექნიკა,მიკროტალღური ღუმელი": {
+  "categoryGe": "სამზარეულოს ტექნიკა",
+  "subcategoryGe": null,
+  "categoryEn": "Small Appliances",
+  "subcategoryEn": "Small Kitchen Appliances",
+  "productEn": "Microwave Oven"
+ },
+ "სახლი & დეკორი,ბატუტი,ეზო & გარე სივრცე": {
+  "categoryGe": "სახლი & დეკორი",
+  "subcategoryGe": "ბატუტი",
+  "categoryEn": "Home & Garden",
+  "subcategoryEn": "Trampoline",
+  "productEn": "Trampoline"
+ },
+ "ტაფა,სახლი & დეკორი,სამზარეულო & ჭურჭელი": {
+  "categoryGe": "ტაფა",
+  "subcategoryGe": "სახლი & დეკორი",
+  "categoryEn": "Home & Garden",
+  "subcategoryEn": "Kitchen & Serving",
+  "productEn": "Frying Pan"
+ },
+ "საყოფაცხოვრებო ტექნიკა,გამწოვი,ჩასაშენებელი ტექნიკა,ჩასაშენებელი გამწოვი": {
+  "categoryGe": "საყოფაცხოვრებო ტექნიკა",
+  "subcategoryGe": "გამწოვი,ჩასაშენებელი ტექნიკა",
+  "categoryEn": "Large Appliances",
+  "subcategoryEn": "Built-in Appliances",
+  "productEn": "Built-in Hood"
+ },
+ "საყოფაცხოვრებო ტექნიკა,საყინულე": {
+  "categoryGe": "საყოფაცხოვრებო ტექნიკა",
+  "subcategoryGe": null,
+  "categoryEn": "Large Appliances",
+  "subcategoryEn": "Freezer",
+  "productEn": "Freezer"
+ },
+ "სახლი & დეკორი,აუზი,აუზი & აქსესუარები": {
+  "categoryGe": "სახლი & დეკორი",
+  "subcategoryGe": "აუზი",
+  "categoryEn": "Home & Garden",
+  "subcategoryEn": "Pool & Accessories",
+  "productEn": "Pool"
+ },
+ "ჰოვერბორდი": {
+  "categoryGe": "ჰოვერბორდი",
+  "subcategoryGe": null,
+  "categoryEn": "Sport & Fitness",
+  "subcategoryEn": "Sport",
+  "productEn": "Hoverboard"
+ },
+ "სახლი & დეკორი,ბატუტი": {
+  "categoryGe": "სახლი & დეკორი",
+  "subcategoryGe": null,
+  "categoryEn": "Home & Garden",
+  "subcategoryEn": "Trampoline",
+  "productEn": "Trampoline"
+ },
+ "ბავშვთა სამყარო,ჭოჭინები": {
+  "categoryGe": "ბავშვთა სამყარო",
+  "subcategoryGe": null,
+  "categoryEn": "Do not have on web",
+  "subcategoryEn": "none",
+  "productEn": "none"
+ },
+ "ბავშვთა სამყარო,საწოლ-მანეჟები": {
+  "categoryGe": "ბავშვთა სამყარო",
+  "subcategoryGe": null,
+  "categoryEn": "Do not have on web",
+  "subcategoryEn": "none",
+  "productEn": "none"
+ },
+ "საყოფაცხოვრებო ტექნიკა,ვენტილატორი": {
+  "categoryGe": "საყოფაცხოვრებო ტექნიკა",
+  "subcategoryGe": null,
+  "categoryEn": "Large Appliances",
+  "subcategoryEn": "Climate Appliances",
+  "productEn": "Fan"
+ },
+ "ავეჯი,საწოლი,საძინებელი": {
+  "categoryGe": "ავეჯი",
+  "subcategoryGe": "საწოლი",
+  "categoryEn": "Furniture",
+  "subcategoryEn": "Bedroom",
+  "productEn": "Bed"
+ },
+ "სპორტი,ველოსპორტი,ველოსიპედი,ბავშვთა სამყარო,ველოეტლები": {
+  "categoryGe": "სპორტი",
+  "subcategoryGe": "ველოსპორტი,ველოსიპედი,ბავშვთა სამყარო",
+  "categoryEn": "Sport & Fitness",
+  "subcategoryEn": "Sport",
+  "productEn": "Cycling"
+ },
+ "კომპიუტერები & აქსესუარები,პლანშეტი": {
+  "categoryGe": "კომპიუტერები & აქსესუარები",
+  "subcategoryGe": null,
+  "categoryEn": "Mobiles & Accessories",
+  "subcategoryEn": "Tablets",
+  "productEn": "Tablet"
+ },
+ "სილამაზე,თმის მოვლა,თმის საშრობი & სავარცხელი": {
+  "categoryGe": "სილამაზე",
+  "subcategoryGe": "თმის მოვლა",
+  "categoryEn": "Beauty",
+  "subcategoryEn": "Hair Care",
+  "productEn": "Hair Dryer"
+ },
+ "საყოფაცხოვრებო ტექნიკა,გათბობა & გაგრილება,ცენტრალური გათბობის ქვაბი": {
+  "categoryGe": "საყოფაცხოვრებო ტექნიკა",
+  "subcategoryGe": "გათბობა & გაგრილება",
+  "categoryEn": "Large Appliances",
+  "subcategoryEn": "Climate Appliances",
+  "productEn": "Central Heating Boiler"
+ },
+ "სილამაზე,თმის მოვლა,თმის და წვერის საჭრელი": {
+  "categoryGe": "სილამაზე",
+  "subcategoryGe": "თმის მოვლა",
+  "categoryEn": "Beauty",
+  "subcategoryEn": "Hair Care",
+  "productEn": "Hair & Beard Trimmer"
+ },
+ "გათბობა & გაგრილება,ვენტილატორი": {
+  "categoryGe": "გათბობა & გაგრილება",
+  "subcategoryGe": null,
+  "categoryEn": "Large Appliances",
+  "subcategoryEn": "Climate Appliances",
+  "productEn": "Fan"
+ },
+ "სმარტ გაჯეტები,დრონი": {
+  "categoryGe": "სმარტ გაჯეტები",
+  "subcategoryGe": null,
+  "categoryEn": "Photo & Video",
+  "subcategoryEn": "Drone",
+  "productEn": "Drone"
+ },
+ "საყოფაცხოვრებო ტექნიკა,ჩასაშენებელი ტექნიკა,გაზქურის ზედაპირი,ჩასაშენებელი ზედაპირი": {
+  "categoryGe": "საყოფაცხოვრებო ტექნიკა",
+  "subcategoryGe": "ჩასაშენებელი ტექნიკა,გაზქურის ზედაპირი",
+  "categoryEn": "Large Appliances",
+  "subcategoryEn": "Built-in Appliances",
+  "productEn": "Built-in Cooktop"
+ },
+ "საყოფაცხოვრებო ტექნიკა,მაცივარი": {
+  "categoryGe": "საყოფაცხოვრებო ტექნიკა",
+  "subcategoryGe": null,
+  "categoryEn": "Large Appliances",
+  "subcategoryEn": "Refrigerator",
+  "productEn": "Refrigerator"
+ },
+ "სილამაზე,თმის მოვლა,ელექტრო სავარცხელი": {
+  "categoryGe": "სილამაზე",
+  "subcategoryGe": "თმის მოვლა",
+  "categoryEn": "Beauty",
+  "subcategoryEn": "Hair Care",
+  "productEn": "Electric Comb"
+ },
+ "ხელსაწყოები,ხერხები,ტორსული ხერხი": {
+  "categoryGe": "ხელსაწყოები",
+  "subcategoryGe": "ხერხები",
+  "categoryEn": "Tools",
+  "subcategoryEn": "Saws",
+  "productEn": "Miter Saw"
+ },
+ "წვრილი ტექნიკა,ტაფა,სახლი & ეზო,ბლინის ტაფა,სამზარეულო & სერვირება": {
+  "categoryGe": "წვრილი ტექნიკა",
+  "subcategoryGe": "ტაფა,სახლი & ეზო,ბლინის ტაფა",
+  "categoryEn": "Home & Garden",
+  "subcategoryEn": "Kitchen & Serving",
+  "productEn": "Pancake Pan"
+ },
+ "გარე ავეჯი,პავილიონი & ტენტი,ქოლგები და სადგამები": {
+  "categoryGe": "გარე ავეჯი",
+  "subcategoryGe": "პავილიონი & ტენტი",
+  "categoryEn": "Furniture",
+  "subcategoryEn": "Outdoor Furniture",
+  "productEn": "Gazebo & Tent"
+ },
+ "სახლი & ეზო,აუზის ტენტი,აუზის მოვლა,აუზი & აქსესუარები": {
+  "categoryGe": "სახლი & ეზო",
+  "subcategoryGe": "აუზის ტენტი,აუზის მოვლა",
+  "categoryEn": "Do not have on web",
+  "subcategoryEn": "none",
+  "productEn": "none"
+ },
+ "ხორცის მანქანა": {
+  "categoryGe": "ხორცის მანქანა",
+  "subcategoryGe": null,
+  "categoryEn": "Do not have on web",
+  "subcategoryEn": "none",
+  "productEn": "none"
+ },
+ "სახლი & ეზო,სამზარეულოს აქსესუარების ნაკრები,დანა-ჩანგლის ნაკრები,სამზარეულო & სერვირება": {
+  "categoryGe": "სახლი & ეზო",
+  "subcategoryGe": "სამზარეულოს აქსესუარების ნაკრები,დანა-ჩანგლის ნაკრები",
+  "categoryEn": "Home & Garden",
+  "subcategoryEn": "Kitchen & Serving",
+  "productEn": "Kitchen Accessories Set"
+ },
+ "საყოფაცხოვრებო ტექნიკა,მაცივარი,საყინულე,მაცივრები": {
+  "categoryGe": "საყოფაცხოვრებო ტექნიკა",
+  "subcategoryGe": "მაცივარი,საყინულე",
+  "categoryEn": "Large Appliances",
+  "subcategoryEn": "Freezer",
+  "productEn": "Freezer"
+ },
+ "ავტო აქსესუარები,საცხებ-საპოხი მასალები,ძრავის ზეთი": {
+  "categoryGe": "ავტო აქსესუარები",
+  "subcategoryGe": "საცხებ-საპოხი მასალები",
+  "categoryEn": "Auto Accessories",
+  "subcategoryEn": "Lubricants",
+  "productEn": "Engine Oil"
+ },
+ "სილამაზე,თავის მოვლა,ელექტრო სავარცხელი": {
+  "categoryGe": "სილამაზე",
+  "subcategoryGe": "თავის მოვლა",
+  "categoryEn": "Beauty",
+  "subcategoryEn": "Hair Care",
+  "productEn": "Electric Comb"
+ },
+ "კომპიუტერები & აქსესუარები,პრინტერები": {
+  "categoryGe": "კომპიუტერები & აქსესუარები",
+  "subcategoryGe": null,
+  "categoryEn": "Computers & Accessories",
+  "subcategoryEn": "Printers",
+  "productEn": "Printers"
+ },
+ "საწოლი": {
+  "categoryGe": "საწოლი",
+  "subcategoryGe": null,
+  "categoryEn": "Furniture",
+  "subcategoryEn": "Bedroom",
+  "productEn": "Bed"
+ },
+ "საყოფაცხოვრებო ტექნიკა,ვენტილატორი,კონდიციონერი & გაგრილების სისტემები": {
+  "categoryGe": "საყოფაცხოვრებო ტექნიკა",
+  "subcategoryGe": "ვენტილატორი",
+  "categoryEn": "Large Appliances",
+  "subcategoryEn": "Climate Appliances",
+  "productEn": "Fan"
+ },
+ "მობილურები & აქსესუარები,ყურსასმენები": {
+  "categoryGe": "მობილურები & აქსესუარები",
+  "subcategoryGe": null,
+  "categoryEn": "Mobiles & Accessories",
+  "subcategoryEn": "Headphones",
+  "productEn": "Headphones"
+ },
+ "სახლი & დეკორი,ქიმწმენდის აპარატი,სახლის მოვლა": {
+  "categoryGe": "სახლი & დეკორი",
+  "subcategoryGe": "ქიმწმენდის აპარატი",
+  "categoryEn": "Home & Garden",
+  "subcategoryEn": "Home Care",
+  "productEn": "Dry Cleaning Machine"
+ },
+ "კუთხსახეხი მანქანა": {
+  "categoryGe": "კუთხსახეხი მანქანა",
+  "subcategoryGe": null,
+  "categoryEn": "Do not have on web",
+  "subcategoryEn": "none",
+  "productEn": "none"
+ },
+ "სახლი & დეკორი,უთო": {
+  "categoryGe": "სახლი & დეკორი",
+  "subcategoryGe": null,
+  "categoryEn": "Small Appliances",
+  "subcategoryEn": "Iron",
+  "productEn": "Iron"
+ },
+ "ავეჯი,ხალიჩა": {
+  "categoryGe": "ავეჯი",
+  "subcategoryGe": null,
+  "categoryEn": "Do not have on web",
+  "subcategoryEn": "none",
+  "productEn": "none"
+ },
+ "სათამაშოები": {
+  "categoryGe": "სათამაშოები",
+  "subcategoryGe": null,
+  "categoryEn": "Gaming",
+  "subcategoryEn": "Game Console",
+  "productEn": "Game Console"
+ },
+ "სამზარეულოს ტექნიკა,ხელის ბლენდერი": {
+  "categoryGe": "სამზარეულოს ტექნიკა",
+  "subcategoryGe": null,
+  "categoryEn": "Tools",
+  "subcategoryEn": "Power Tiller",
+  "productEn": "Power Tiller"
+ },
+ "სამზარეულოს ტექნიკა,ბლენდერი,ხელის ბლენდერი": {
+  "categoryGe": "სამზარეულოს ტექნიკა",
+  "subcategoryGe": "ბლენდერი",
+  "categoryEn": "Small Appliances",
+  "subcategoryEn": "Small Kitchen Appliances",
+  "productEn": "Blender"
+ },
+ "თმის მოვლა,თმის საჭრელი & ტრიმერი,სილამაზე &თავის მოვლა": {
+  "categoryGe": "თმის მოვლა",
+  "subcategoryGe": "თმის საჭრელი & ტრიმერი",
+  "categoryEn": "Do not have on web",
+  "subcategoryEn": "none",
+  "productEn": "none"
+ },
+ "თმის მოვლა,თმის უთო,სილამაზე &თავის მოვლა": {
+  "categoryGe": "თმის მოვლა",
+  "subcategoryGe": "თმის უთო",
+  "categoryEn": "Beauty",
+  "subcategoryEn": "Hair Care",
+  "productEn": "Hair Straightener"
+ },
+ "აქსესუარები,ბეჭედი": {
+  "categoryGe": "აქსესუარები",
+  "subcategoryGe": null,
+  "categoryEn": "Do not have on web",
+  "subcategoryEn": "none",
+  "productEn": "none"
+ },
+ "ყელსაბამი": {
+  "categoryGe": "ყელსაბამი",
+  "subcategoryGe": null,
+  "categoryEn": "Accessories",
+  "subcategoryEn": "Necklace",
+  "productEn": "Necklace"
+ },
+ "სილამაზე,თმის მოვლა,ეპილატორი": {
+  "categoryGe": "სილამაზე",
+  "subcategoryGe": "თმის მოვლა",
+  "categoryEn": "Beauty",
+  "subcategoryEn": "Hair Care",
+  "productEn": "Epilator"
+ },
+ "ინდუქციური ქურა": {
+  "categoryGe": "ინდუქციური ქურა",
+  "subcategoryGe": null,
+  "categoryEn": "Do not have on web",
+  "subcategoryEn": "none",
+  "productEn": "none"
+ },
+ "საბავშვო ეტლი": {
+  "categoryGe": "საბავშვო ეტლი",
+  "subcategoryGe": null,
+  "categoryEn": "Home & Garden",
+  "subcategoryEn": "Carpet",
+  "productEn": "Kids Rug"
+ },
+ "ავეჯი,მისაღები": {
+  "categoryGe": "ავეჯი",
+  "subcategoryGe": null,
+  "categoryEn": "Do not have on web",
+  "subcategoryEn": "none",
+  "productEn": "none"
+ },
+ "ჩასამონტაჟებელი ჭურჭლის სარეცხი მანქანა": {
+  "categoryGe": "ჩასამონტაჟებელი ჭურჭლის სარეცხი მანქანა",
+  "subcategoryGe": null,
+  "categoryEn": "Do not have on web",
+  "subcategoryEn": "none",
+  "productEn": "none"
+ },
+ "ჩასაშენებელი გამწოვი": {
+  "categoryGe": "ჩასაშენებელი გამწოვი",
+  "subcategoryGe": null,
+  "categoryEn": "Large Appliances",
+  "subcategoryEn": "Built-in Appliances",
+  "productEn": "Built-in Hood"
+ },
+ "ჩასაშენებელი გაზის ზედა პანელი": {
+  "categoryGe": "ჩასაშენებელი გაზის ზედა პანელი",
+  "subcategoryGe": null,
+  "categoryEn": "Large Appliances",
+  "subcategoryEn": "Built-in Appliances",
+  "productEn": "Built-in Hood"
+ },
+ "სახლი & დეკორი,ორთქლით საწმენდი აპარატი,სახლის მოვლა": {
+  "categoryGe": "სახლი & დეკორი",
+  "subcategoryGe": "ორთქლით საწმენდი აპარატი",
+  "categoryEn": "Home & Garden",
+  "subcategoryEn": "Home Care",
+  "productEn": "Steam Cleaner"
+ },
+ "ფოტო & ვიდეო,ვიდეოკამერა": {
+  "categoryGe": "ფოტო & ვიდეო",
+  "subcategoryGe": null,
+  "categoryEn": "Do not have on web",
+  "subcategoryEn": "none",
+  "productEn": "none"
+ },
+ "სილამაზე,თმის მოვლა,წვერსაპარსი": {
+  "categoryGe": "სილამაზე",
+  "subcategoryGe": "თმის მოვლა",
+  "categoryEn": "Do not have on web",
+  "subcategoryEn": "none",
+  "productEn": "none"
+ },
+ "სახლი & დეკორი,აუზის ტენტი,აუზის მოვლა,აუზი & აქსესუარები": {
+  "categoryGe": "სახლი & დეკორი",
+  "subcategoryGe": "აუზის ტენტი,აუზის მოვლა",
+  "categoryEn": "Do not have on web",
+  "subcategoryEn": "none",
+  "productEn": "none"
+ },
+ "სამზარეულოს ტექნიკა,ტოსტერი,გრილ ტოსტერი": {
+  "categoryGe": "სამზარეულოს ტექნიკა",
+  "subcategoryGe": "ტოსტერი",
+  "categoryEn": "Small Appliances",
+  "subcategoryEn": "Small Kitchen Appliances",
+  "productEn": "Toaster"
+ },
+ "საყოფაცხოვრებო ტექნიკა,კონდიციონერი": {
+  "categoryGe": "საყოფაცხოვრებო ტექნიკა",
+  "subcategoryGe": null,
+  "categoryEn": "Large Appliances",
+  "subcategoryEn": "Climate Appliances",
+  "productEn": "Air Conditioner"
+ },
+ "თმის მოვლა,თმის უთო": {
+  "categoryGe": "თმის მოვლა",
+  "subcategoryGe": null,
+  "categoryEn": "Beauty",
+  "subcategoryEn": "Hair Care",
+  "productEn": "Hair Straightener"
+ },
+ "ხელსაწყოები,ქანჩსახრახნი": {
+  "categoryGe": "ხელსაწყოები",
+  "subcategoryGe": null,
+  "categoryEn": "Do not have on web",
+  "subcategoryEn": "none",
+  "productEn": "none"
+ },
+ "საყოფაცხოვრებო ტექნიკა,გათბობა & გაგრილება,პორტატული კონდიციონერი": {
+  "categoryGe": "საყოფაცხოვრებო ტექნიკა",
+  "subcategoryGe": "გათბობა & გაგრილება",
+  "categoryEn": "Do not have on web",
+  "subcategoryEn": "none",
+  "productEn": "none"
+ },
+ "სმარტ გაჯეტები,მიკროფონები": {
+  "categoryGe": "სმარტ გაჯეტები",
+  "subcategoryGe": null,
+  "categoryEn": "Do not have on web",
+  "subcategoryEn": "none",
+  "productEn": "none"
+ },
+ "მაცივარი,მაცივრები": {
+  "categoryGe": "მაცივარი",
+  "subcategoryGe": null,
+  "categoryEn": "Large Appliances",
+  "subcategoryEn": "Refrigerator",
+  "productEn": "Refrigerator"
+ },
+ "სპორტი,სათამაშოები,ელექტრო მანქანები": {
+  "categoryGe": "სპორტი",
+  "subcategoryGe": "სათამაშოები",
+  "categoryEn": "Toys",
+  "subcategoryEn": "Electric Cars",
+  "productEn": "Electric Cars"
+ },
+ "მსხვილი ტექნიკა,კლიმატური ტექნიკა,გაზის გამათბობელი": {
+  "categoryGe": "მსხვილი ტექნიკა",
+  "subcategoryGe": "კლიმატური ტექნიკა",
+  "categoryEn": "Large Appliances",
+  "subcategoryEn": "Climate Appliances",
+  "productEn": "Gas Heater"
+ },
+ "ავეჯი,რბილი ავეჯი,სამეული": {
+  "categoryGe": "ავეჯი",
+  "subcategoryGe": "რბილი ავეჯი",
+  "categoryEn": "Do not have on web",
+  "subcategoryEn": "none",
+  "productEn": "none"
+ },
+ "წვრილი ტექნიკა,სამზარეულოს წვრილი ტექნიკა,ხელის ბლენდერი": {
+  "categoryGe": "წვრილი ტექნიკა",
+  "subcategoryGe": "სამზარეულოს წვრილი ტექნიკა",
+  "categoryEn": "Tools",
+  "subcategoryEn": "Power Tiller",
+  "productEn": "Power Tiller"
+ },
+ "საყოფაცხოვრებო ტექნიკა,ჩასაშენებელი ზედაპირი": {
+  "categoryGe": "საყოფაცხოვრებო ტექნიკა",
+  "subcategoryGe": null,
+  "categoryEn": "Large Appliances",
+  "subcategoryEn": "Built-in Appliances",
+  "productEn": "Built-in Cooktop"
+ },
+ "წვრილი ტექნიკა,სამზარეულოს წვრილი ტექნიკა,უთო": {
+  "categoryGe": "წვრილი ტექნიკა",
+  "subcategoryGe": "სამზარეულოს წვრილი ტექნიკა",
+  "categoryEn": "Small Appliances",
+  "subcategoryEn": "Iron",
+  "productEn": "Iron"
+ },
+ "წვრილი ტექნიკა,პურის შესანახი": {
+  "categoryGe": "წვრილი ტექნიკა",
+  "subcategoryGe": null,
+  "categoryEn": "Home & Garden",
+  "subcategoryEn": "Kitchen & Serving",
+  "productEn": "Bread Box"
+ },
+ "ხელსაწყოები,ხერხები,დისკური ხერხი": {
+  "categoryGe": "ხელსაწყოები",
+  "subcategoryGe": "ხერხები",
+  "categoryEn": "Do not have on web",
+  "subcategoryEn": "none",
+  "productEn": "none"
+ },
+ "ავეჯი,საძინებელი,საძინებელის კომპლექტი": {
+  "categoryGe": "ავეჯი",
+  "subcategoryGe": "საძინებელი",
+  "categoryEn": "Furniture",
+  "subcategoryEn": "Bedroom",
+  "productEn": "Wardrobe"
+ },
+ "ბავშვთა სამყარო,სასადილო სკამი": {
+  "categoryGe": "ბავშვთა სამყარო",
+  "subcategoryGe": null,
+  "categoryEn": "Do not have on web",
+  "subcategoryEn": "none",
+  "productEn": "none"
+ },
+ "წვრილი ტექნიკა,მიქსერი": {
+  "categoryGe": "წვრილი ტექნიკა",
+  "subcategoryGe": null,
+  "categoryEn": "Small Appliances",
+  "subcategoryEn": "Small Kitchen Appliances",
+  "productEn": "Mixer"
+ },
+ "სახლი & ეზო,აუზის მოვლა,აუზი & აქსესუარები": {
+  "categoryGe": "სახლი & ეზო",
+  "subcategoryGe": "აუზის მოვლა",
+  "categoryEn": "Do not have on web",
+  "subcategoryEn": "none",
+  "productEn": "none"
+ },
+ "ავეჯი,გარე ავეჯი,გარე მაგიდა": {
+  "categoryGe": "ავეჯი",
+  "subcategoryGe": "გარე ავეჯი",
+  "categoryEn": "Furniture",
+  "subcategoryEn": "Outdoor Furniture",
+  "productEn": "Outdoor Table"
+ },
+ "სპორტი,ლაშქრობა,კარვები & ტენტები": {
+  "categoryGe": "სპორტი",
+  "subcategoryGe": "ლაშქრობა",
+  "categoryEn": "Sport & Fitness",
+  "subcategoryEn": "Sport",
+  "productEn": "Hiking"
+ },
+ "ხელსაწყოები,ხელის ინსტრუმენტების ნაკრები": {
+  "categoryGe": "ხელსაწყოები",
+  "subcategoryGe": null,
+  "categoryEn": "Tools",
+  "subcategoryEn": "Power Tiller",
+  "productEn": "Power Tiller"
+ },
+ "საყოფაცხოვრებო ტექნიკა,წვრილი ტექნიკა,აეროგრილი": {
+  "categoryGe": "საყოფაცხოვრებო ტექნიკა",
+  "subcategoryGe": "წვრილი ტექნიკა",
+  "categoryEn": "Small Appliances",
+  "subcategoryEn": "Small Kitchen Appliances",
+  "productEn": "Air Fryer"
+ },
+ "დივანი": {
+  "categoryGe": "დივანი",
+  "subcategoryGe": null,
+  "categoryEn": "Furniture",
+  "subcategoryEn": "Upholstered Furniture",
+  "productEn": "Sofa"
+ },
+ "ბარის მაცივარი": {
+  "categoryGe": "ბარის მაცივარი",
+  "subcategoryGe": null,
+  "categoryEn": "Do not have on web",
+  "subcategoryEn": "none",
+  "productEn": "none"
+ },
+ "პლასმასის სავარძელი": {
+  "categoryGe": "პლასმასის სავარძელი",
+  "subcategoryGe": null,
+  "categoryEn": "Do not have on web",
+  "subcategoryEn": "none",
+  "productEn": "none"
+ },
+ "ქოლგა": {
+  "categoryGe": "ქოლგა",
+  "subcategoryGe": null,
+  "categoryEn": "Do not have on web",
+  "subcategoryEn": "none",
+  "productEn": "none"
+ },
+ "საყოფაცხოვრებო ტექნიკა,ჩასაშენებელი ტექნიკა,ჩასაშენებელი ჭურჭლის სარეცხი მანქანა": {
+  "categoryGe": "საყოფაცხოვრებო ტექნიკა",
+  "subcategoryGe": "ჩასაშენებელი ტექნიკა",
+  "categoryEn": "Large Appliances",
+  "subcategoryEn": "Built-in Appliances",
+  "productEn": "Built-in Hood"
+ },
+ "საყოფაცხოვრებო ტექნიკა,ჩასაშენებელი ტექნიკა,ჩასაშენებელი ელექტრო ღუმელი": {
+  "categoryGe": "საყოფაცხოვრებო ტექნიკა",
+  "subcategoryGe": "ჩასაშენებელი ტექნიკა",
+  "categoryEn": "Large Appliances",
+  "subcategoryEn": "Built-in Appliances",
+  "productEn": "Built-in Electric Oven"
+ },
+ "საყოფაცხოვრებო ტექნიკა,გათბობა & გაგრილება,დენის წყლის გამაცხელებელი": {
+  "categoryGe": "საყოფაცხოვრებო ტექნიკა",
+  "subcategoryGe": "გათბობა & გაგრილება",
+  "categoryEn": "Large Appliances",
+  "subcategoryEn": "Climate Appliances",
+  "productEn": "Electric Water Heater"
+ },
+ "საყოფაცხოვრებო ტექნიკა,გათბობა & გაგრილება,გაზის გამათბობელი": {
+  "categoryGe": "საყოფაცხოვრებო ტექნიკა",
+  "subcategoryGe": "გათბობა & გაგრილება",
+  "categoryEn": "Large Appliances",
+  "subcategoryEn": "Climate Appliances",
+  "productEn": "Gas Heater"
+ },
+ "საყოფაცხოვრებო ტექნიკა,ჩასაშენებელი ტექნიკა,გაზქურის ზედაპირი": {
+  "categoryGe": "საყოფაცხოვრებო ტექნიკა",
+  "subcategoryGe": "ჩასაშენებელი ტექნიკა",
+  "categoryEn": "Large Appliances",
+  "subcategoryEn": "Gas Stove",
+  "productEn": "Gas Stove"
+ },
+ "საყოფაცხოვრებო ტექნიკა,ჩასაშენებელი ტექნიკა,ჩასაშენებელი მიკროტალღური": {
+  "categoryGe": "საყოფაცხოვრებო ტექნიკა",
+  "subcategoryGe": "ჩასაშენებელი ტექნიკა",
+  "categoryEn": "Large Appliances",
+  "subcategoryEn": "Built-in Appliances",
+  "productEn": "Built-in Hood"
+ },
+ "სილამაზე,თმის მოვლა,სასწორი": {
+  "categoryGe": "სილამაზე",
+  "subcategoryGe": "თმის მოვლა",
+  "categoryEn": "Beauty",
+  "subcategoryEn": "Hair Care",
+  "productEn": "Scale"
+ },
+ "ქვაბი,სახლი & ეზო,სამზარეულო & სერვირება": {
+  "categoryGe": "ქვაბი",
+  "subcategoryGe": "სახლი & ეზო",
+  "categoryEn": "Home & Garden",
+  "subcategoryEn": "Kitchen & Serving",
+  "productEn": "Pot"
+ },
+ "სახლი & ეზო,მაღალი წნევით რეცხვის აპარატი,სახლის მოვლა": {
+  "categoryGe": "სახლი & ეზო",
+  "subcategoryGe": "მაღალი წნევით რეცხვის აპარატი",
+  "categoryEn": "Home & Garden",
+  "subcategoryEn": "Home Care",
+  "productEn": "Pressure Washer"
+ },
+ "ტაფა,სახლი & ეზო,ტაფა-ქვაბი,სამზარეულო & სერვირება": {
+  "categoryGe": "ტაფა",
+  "subcategoryGe": "სახლი & ეზო,ტაფა-ქვაბი",
+  "categoryEn": "Home & Garden",
+  "subcategoryEn": "Kitchen & Serving",
+  "productEn": "Frying Pan"
+ },
+ "სპორტი & ფიტნესი,ლაშქრობა,ჰამაკები": {
+  "categoryGe": "სპორტი & ფიტნესი",
+  "subcategoryGe": "ლაშქრობა",
+  "categoryEn": "Sport & Fitness",
+  "subcategoryEn": "Sport",
+  "productEn": "Hiking"
+ },
+ "სახლი & ეზო,უთო": {
+  "categoryGe": "სახლი & ეზო",
+  "subcategoryGe": null,
+  "categoryEn": "Small Appliances",
+  "subcategoryEn": "Iron",
+  "productEn": "Iron"
+ },
+ "წვრილი ტექნიკა,სამზარეულოს წვრილი ტექნიკა,სლაშის აპარატი": {
+  "categoryGe": "წვრილი ტექნიკა",
+  "subcategoryGe": "სამზარეულოს წვრილი ტექნიკა",
+  "categoryEn": "Small Appliances",
+  "subcategoryEn": "Small Kitchen Appliances",
+  "productEn": "Slush Machine"
+ },
+ "ავეჯი,საძინებელი,საძინებლის კარადა": {
+  "categoryGe": "ავეჯი",
+  "subcategoryGe": "საძინებელი",
+  "categoryEn": "Furniture",
+  "subcategoryEn": "Bedroom",
+  "productEn": "Wardrobe"
+ },
+ "სახლი & ეზო,აუზი,აუზის მოვლა,აუზი & აქსესუარები": {
+  "categoryGe": "სახლი & ეზო",
+  "subcategoryGe": "აუზი,აუზის მოვლა",
+  "categoryEn": "Home & Garden",
+  "subcategoryEn": "Pool & Accessories",
+  "productEn": "Pool"
+ },
+ "ხელსაწყოები,ბაღის ხელსაწყოები,ბაღის მოტო & ელექტრო ინსტრუმენტები": {
+  "categoryGe": "ხელსაწყოები",
+  "subcategoryGe": "ბაღის ხელსაწყოები",
+  "categoryEn": "Tools",
+  "subcategoryEn": "Garden Tools",
+  "productEn": "Garden Motor & Electric Tools"
+ },
+ "აბაზანის ავეჯის კომპლექტი Layla": {
+  "categoryGe": "აბაზანის ავეჯის კომპლექტი Layla",
+  "subcategoryGe": null,
+  "categoryEn": "Home & Garden",
+  "subcategoryEn": "Bathroom",
+  "productEn": "Bathroom Furniture"
+ },
+ "წვრილი ტექნიკა,სამზარეულოს წვრილი ტექნიკა,წვენსაწური": {
+  "categoryGe": "წვრილი ტექნიკა",
+  "subcategoryGe": "სამზარეულოს წვრილი ტექნიკა",
+  "categoryEn": "Small Appliances",
+  "subcategoryEn": "Small Kitchen Appliances",
+  "productEn": "Juicer"
+ },
+ "საყოფაცხოვრებო ტექნიკა,სარეცხი მანქანა საშრობით,სარეცხი მანქანა": {
+  "categoryGe": "საყოფაცხოვრებო ტექნიკა",
+  "subcategoryGe": "სარეცხი მანქანა საშრობით",
+  "categoryEn": "Large Appliances",
+  "subcategoryEn": "Washing Machine",
+  "productEn": "Washing Machine"
+ },
+ "საყოფაცხოვრებო ტექნიკა,სარეცხი მანქანა": {
+  "categoryGe": "საყოფაცხოვრებო ტექნიკა",
+  "subcategoryGe": null,
+  "categoryEn": "Large Appliances",
+  "subcategoryEn": "Washing Machine",
+  "productEn": "Washing Machine"
+ },
+ "წვრილი ტექნიკა,უთო": {
+  "categoryGe": "წვრილი ტექნიკა",
+  "subcategoryGe": null,
+  "categoryEn": "Small Appliances",
+  "subcategoryEn": "Iron",
+  "productEn": "Iron"
+ },
+ "ავეჯი,გარე ავეჯი,საყვავილე": {
+  "categoryGe": "ავეჯი",
+  "subcategoryGe": "გარე ავეჯი",
+  "categoryEn": "Furniture",
+  "subcategoryEn": "Outdoor Furniture",
+  "productEn": "Planter"
+ },
+ "წვრილი ტექნიკა,სამზარეულოს წვრილი ტექნიკა,პურის საცხობი": {
+  "categoryGe": "წვრილი ტექნიკა",
+  "subcategoryGe": "სამზარეულოს წვრილი ტექნიკა",
+  "categoryEn": "Small Appliances",
+  "subcategoryEn": "Small Kitchen Appliances",
+  "productEn": "Bread Maker"
+ },
+ "სახლი & ეზო,აუზის ტენტი,აუზი & აქსესუარები": {
+  "categoryGe": "სახლი & ეზო",
+  "subcategoryGe": "აუზის ტენტი",
+  "categoryEn": "Do not have on web",
+  "subcategoryEn": "none",
+  "productEn": "none"
+ },
+ "დამტენი": {
+  "categoryGe": "დამტენი",
+  "subcategoryGe": null,
+  "categoryEn": "Do not have on web",
+  "subcategoryEn": "none",
+  "productEn": "none"
+ },
+ "მსხვილი ტექნიკა,ჩასაშენებელი ტექნიკა,ჩასაშენებელი ზედაპირი": {
+  "categoryGe": "მსხვილი ტექნიკა",
+  "subcategoryGe": "ჩასაშენებელი ტექნიკა",
+  "categoryEn": "Large Appliances",
+  "subcategoryEn": "Built-in Appliances",
+  "productEn": "Built-in Cooktop"
+ },
+ "წვრილი ტექნიკა,ტაფა,სამზარეულო & სერვირება": {
+  "categoryGe": "წვრილი ტექნიკა",
+  "subcategoryGe": "ტაფა",
+  "categoryEn": "Home & Garden",
+  "subcategoryEn": "Kitchen & Serving",
+  "productEn": "Frying Pan"
+ },
+ "სახლი & ეზო,განათება,ტორშერი": {
+  "categoryGe": "სახლი & ეზო",
+  "subcategoryGe": "განათება",
+  "categoryEn": "Home & Garden",
+  "subcategoryEn": "Lighting",
+  "productEn": "Floor Lamp"
+ },
+ "წვრილი ტექნიკა,სამზარეულოს აქსესუარების ნაკრები,სამზარეულო & სერვირება": {
+  "categoryGe": "წვრილი ტექნიკა",
+  "subcategoryGe": "სამზარეულოს აქსესუარების ნაკრები",
+  "categoryEn": "Home & Garden",
+  "subcategoryEn": "Kitchen & Serving",
+  "productEn": "Kitchen Accessories Set"
+ },
+ "წვრილი ტექნიკა,სამზარეულოს წვრილი ტექნიკა,დანების კომპლექტი,სახლი & ეზო,სამზარეულო & სერვირება": {
+  "categoryGe": "წვრილი ტექნიკა",
+  "subcategoryGe": "სამზარეულოს წვრილი ტექნიკა,დანების კომპლექტი,სახლი & ეზო",
+  "categoryEn": "Home & Garden",
+  "subcategoryEn": "Kitchen & Serving",
+  "productEn": "Knife Set"
+ },
+ "წვრილი ტექნიკა,დანების კომპლექტი,სამზარეულო & სერვირება": {
+  "categoryGe": "წვრილი ტექნიკა",
+  "subcategoryGe": "დანების კომპლექტი",
+  "categoryEn": "Home & Garden",
+  "subcategoryEn": "Kitchen & Serving",
+  "productEn": "Knife Set"
+ },
+ "წვრილი ტექნიკა,სამზარეულოს წვრილი ტექნიკა,ჩაის დასაყენებელი": {
+  "categoryGe": "წვრილი ტექნიკა",
+  "subcategoryGe": "სამზარეულოს წვრილი ტექნიკა",
+  "categoryEn": "Small Appliances",
+  "subcategoryEn": "Small Kitchen Appliances",
+  "productEn": "Tea Maker"
+ },
+ "სახლი & ეზო,სამზარეულოს აქსესუარების ნაკრები,სამზარეულო & სერვირება": {
+  "categoryGe": "სახლი & ეზო",
+  "subcategoryGe": "სამზარეულოს აქსესუარების ნაკრები",
+  "categoryEn": "Home & Garden",
+  "subcategoryEn": "Kitchen & Serving",
+  "productEn": "Kitchen Accessories Set"
+ },
+ "ავეჯი,სავარძელი,რბილი ავეჯი": {
+  "categoryGe": "ავეჯი",
+  "subcategoryGe": "სავარძელი",
+  "categoryEn": "Do not have on web",
+  "subcategoryEn": "none",
+  "productEn": "none"
+ },
+ "სილამაზე/თავის მოვლა/ეპილატორი": {
+  "categoryGe": "სილამაზე",
+  "subcategoryGe": "თავის მოვლა",
+  "categoryEn": "Beauty",
+  "subcategoryEn": "Hair Care",
+  "productEn": "Epilator"
+ },
+ "წვრილი ტექნიკა/სამზარეულოს წვრილი ტექნიკა/კაპუჩინატორი": {
+  "categoryGe": "წვრილი ტექნიკა",
+  "subcategoryGe": "სამზარეულოს წვრილი ტექნიკა",
+  "categoryEn": "Small Appliances",
+  "subcategoryEn": "Small Kitchen Appliances",
+  "productEn": "Milk Frother"
+ },
+ "ავეჯი/საძინებელი/მატრასი": {
+  "categoryGe": "ავეჯი",
+  "subcategoryGe": "საძინებელი",
+  "categoryEn": "Furniture",
+  "subcategoryEn": "Bedroom",
+  "productEn": "Mattress"
+ },
+ "წვრილი ტექნიკა/სამზარეულოს წვრილი ტექნიკა/ჩირის აპარატი": {
+  "categoryGe": "წვრილი ტექნიკა",
+  "subcategoryGe": "სამზარეულოს წვრილი ტექნიკა",
+  "categoryEn": "Small Appliances",
+  "subcategoryEn": "Small Kitchen Appliances",
+  "productEn": "Food Dehydrator"
+ },
+ "ავტო აქსესუარები/აკუმულატორი": {
+  "categoryGe": "ავტო აქსესუარები",
+  "subcategoryGe": "აკუმულატორი",
+  "categoryEn": "Auto Accessories",
+  "subcategoryEn": "Car Battery",
+  "productEn": "Car Battery"
+ }
+}

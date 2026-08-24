@@ -9,6 +9,7 @@ require __DIR__ . '/../src/SegmentMetrics.php';
 require __DIR__ . '/../src/Database.php';
 require __DIR__ . '/../src/DateHelper.php';
 require __DIR__ . '/../src/FunnelRepository.php';
+require __DIR__ . '/../src/ProductClassifier.php';
 
 $configPath = __DIR__ . '/../config.php';
 if (!is_file($configPath)) {
@@ -48,11 +49,21 @@ try {
     $dailyFrom = new \DateTimeImmutable($now->format('Y') . '-06-01');
     $dailyStats = $repository->dailySegmentStats($dailyFrom, $yesterdayTo);
 
+    // Sales Monthly / Brand Analyze / Subcategory Analyze tabs: same Jan-1-through-yesterday
+    // window as MTD Statistics.
+    $productClassifier = new ProductClassifier();
+    $salesMonthlyStats = $repository->salesMonthlyStats($monthlyFrom, $yesterdayTo, $productClassifier);
+    $brandStats = $repository->brandMonthlyStats($monthlyFrom, $yesterdayTo);
+    $subcategoryStats = $repository->subcategoryMonthlyStats($monthlyFrom, $yesterdayTo, $productClassifier);
+
     $connectionError = null;
 } catch (\Throwable $e) {
     $data = null;
     $monthlyStats = null;
     $dailyStats = null;
+    $salesMonthlyStats = null;
+    $brandStats = null;
+    $subcategoryStats = null;
     $connectionError = $e->getMessage();
 }
 

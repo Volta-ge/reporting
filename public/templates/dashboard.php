@@ -8,6 +8,9 @@
  * @var string $generatedAt
  * @var array<string, array{A: array, B: array}>|null $monthlyStats
  * @var array<string, array{A: array, B: array}>|null $dailyStats
+ * @var array|null $salesMonthlyStats
+ * @var array|null $brandStats
+ * @var array|null $subcategoryStats
  */
 
 declare(strict_types=1);
@@ -112,6 +115,15 @@ body {
 
 .note { font-size: 11.5px; color: var(--text-muted); line-height: 1.5; }
 
+/* plain table card — used by the Logistics Daily tab */
+.table-card { background: var(--surface-1); border: 1px solid var(--border); border-radius: 12px; padding: 18px 20px; overflow-x: auto; }
+.table-card table { width: 100%; border-collapse: collapse; font-size: 12.5px; min-width: 320px; }
+.table-card th, .table-card td { text-align: right; padding: 7px 10px; border-bottom: 1px solid var(--grid); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.table-card th:first-child, .table-card td:first-child { text-align: left; font-variant-numeric: normal; }
+.table-card th { color: var(--text-secondary); font-weight: 650; font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.03em; }
+.table-card tbody tr:hover { background: color-mix(in srgb, var(--text-primary) 4%, transparent); }
+.table-card tr.total td { font-weight: 650; border-top: 2px solid var(--baseline); border-bottom: none; }
+
 /* page nav */
 .page-nav { display: inline-flex; background: var(--surface-1); border: 1px solid var(--border); border-radius: 8px; padding: 3px; gap: 2px; }
 .page-nav button {
@@ -177,6 +189,55 @@ table.rpt-pivot tr.rpt-title td:first-child { z-index: 3; }
    there's no width to save, and wrapping there just made rows unnecessarily tall). */
 table.rpt-pivot-compact td:first-child, table.rpt-pivot-compact th:first-child { white-space: normal; max-width: 150px; }
 table.rpt-pivot tr.rpt-colhead td:not(:first-child) { text-align: center; }
+
+/* Sales Monthly — product-category x month breakdown, theme-aware (reuses table.rpt-pivot's
+   sticky-first-column/tabular-numbers base). One 4-column group (Sales/Cogs/Margin/Qty) per
+   month plus a Total group; rows pre-sorted by total Sales descending on the PHP side. */
+table.sm-table col.sm-name { width: 190px; }
+table.sm-table tr.sm-grandtotal td { background: var(--rpt-section-strong-bg); color: var(--rpt-ink); font-weight: 700; }
+table.sm-table tr.sm-row:nth-child(even) td { background: var(--rpt-plain-bg); color: var(--rpt-ink); }
+table.sm-table tr.sm-uncategorized td { font-style: italic; color: var(--rpt-muted); background: var(--rpt-plain-bg); }
+table.sm-table td.sm-total-col { border-left: 2px solid var(--rpt-border); font-weight: 600; }
+table.sm-table tr.rpt-colhead td.sm-total-col { border-left: 2px solid var(--rpt-border); font-weight: 700; }
+
+/* Logistics Daily — exact replica of the business's own "LOGISTICS — Delivery Status" sheet,
+   fixed spreadsheet palette regardless of app theme (same convention as .rpt / the Report tab). */
+table.logi-table { border-collapse: collapse; font-size: 11.5px; table-layout: auto; }
+table.logi-table td { padding: 5px 8px; border: 1px solid #c9c9c9; text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; color: #111; }
+table.logi-table td:first-child { text-align: left; font-variant-numeric: normal; position: sticky; left: 0; z-index: 2; box-shadow: 1px 0 0 #c9c9c9; }
+table.logi-table tr.logi-title td { background: #2e5496; color: #fff; font-weight: 700; text-align: left; }
+table.logi-table tr.logi-title td:first-child { z-index: 3; }
+table.logi-table tr.logi-head td { background: #4472c4; color: #fff; font-weight: 700; }
+table.logi-table tr.logi-total td { background: #d9e1f2; font-weight: 700; }
+table.logi-table tr.logi-light td { background: #eaf0fa; }
+table.logi-table tr.logi-white td { background: #fff; }
+table.logi-table tr.logi-plain td { background: #fff; }
+table.logi-table tr.logi-today td:first-child { font-style: italic; }
+
+/* Orders by City / Orders by Goods Type — small breakdown tables, same fixed-palette
+   convention, colored per column to match the source sheet's own styling. */
+.logi-mini-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+@media (max-width: 760px) { .logi-mini-row { grid-template-columns: 1fr; } }
+table.logi-mini { border-collapse: collapse; font-size: 12px; width: 100%; }
+table.logi-mini td { padding: 7px 10px; border: none; border-bottom: 1px solid #e5e7eb; text-align: right; font-variant-numeric: tabular-nums; }
+table.logi-mini td:first-child { text-align: left; font-variant-numeric: normal; }
+table.logi-mini col.logi-mini-name { width: 46%; }
+table.logi-mini tr.logi-mini-title td { background: #0d6e7c; color: #fff; font-weight: 700; text-align: left; }
+table.logi-mini tr.logi-mini-head td { background: #1b2a4a; color: #fff; font-weight: 700; }
+table.logi-mini tr.logi-mini-data td { color: #555; background: #fff; }
+table.logi-mini tr.logi-mini-data td:first-child { color: #333; }
+table.logi-mini tr.logi-mini-data.logi-mini-alt td { background: #f4f6f9; }
+table.logi-mini tr.logi-mini-total td { color: #0d6e7c; font-weight: 700; background: #fff; border-top: 2px solid #0d6e7c; border-bottom: none; }
+table.logi-mini tr.logi-mini-total td:first-child { color: #333; }
+
+/* Open Cases — Still Waiting for Delivery: top 10 oldest not-yet-delivered orders.
+   Title sits directly on the page (not inside a filled table band like the other titles
+   on this tab), so it uses the app's own theme-aware text color instead of a fixed navy —
+   a fixed dark color here goes low-contrast the moment the app is in dark mode. */
+.logi-open-title { color: var(--text-primary); font-weight: 700; font-size: 13px; margin: 4px 0 -6px; }
+table.logi-open { border-collapse: collapse; font-size: 12px; width: 100%; }
+table.logi-open td { padding: 7px 10px; border-bottom: 1px solid #e5e7eb; text-align: left; color: #1f1f1f; background: #fff; }
+table.logi-open tr.logi-open-head td { background: #4472c4; color: #fff; font-weight: 700; }
 table.rpt-pivot td.col-collapsed { display: none; }
 table.rpt-pivot td.rpt-group-toggle { cursor: pointer; user-select: none; text-align: center; }
 
@@ -217,6 +278,10 @@ table.rpt-pivot td.rpt-group-toggle { cursor: pointer; user-select: none; text-a
     <button data-page="report" class="active">Daily Report</button>
     <button data-page="mtdstats">MTD Statistics</button>
     <button data-page="dailystats">Daily Statistics</button>
+    <button data-page="salesmonthly">Sales Monthly</button>
+    <button data-page="brandanalyze">Brand Analyze</button>
+    <button data-page="subcategoryanalyze">Subcategory Analyze</button>
+    <button data-page="logistics">Logistics Daily</button>
   </div>
 
   <div class="page active" id="page-report">
@@ -253,6 +318,82 @@ table.rpt-pivot td.rpt-group-toggle { cursor: pointer; user-select: none; text-a
       </div>
     </div>
   </div>
+
+  <div class="page" id="page-salesmonthly">
+    <p class="section-title">Sales Monthly &mdash; by product category</p>
+    <p class="note" style="margin:-8px 0 0;">One column-group (Sales / Cogs / Margin / Qty) per calendar month of <?= htmlspecialchars($now->format('Y'), ENT_QUOTES, 'UTF-8') ?>, plus Q1 and Q2 quarterly summary groups (each with that row's share of the quarter's total Sales) and an overall Total group (share of the whole window). Live from the database on every page load (not a manual snapshot) &mdash; Order_Status = 5 is used as the "real sale" filter (matches the business's own report exactly for every category+month checked). Rows are sorted by total Sales, highest first. Sales = SUM(Final_Price), Cogs = SUM(Start_Price), both raw and unmodified &mdash; same convention the business's own report uses.</p>
+    <div class="report-card">
+      <div class="report-scroll-top" id="salesMonthlyScrollTop"><div></div></div>
+      <div class="report-scroll" id="salesMonthlyScrollBody">
+        <table class="rpt rpt-pivot sm-table" id="salesMonthlyTable"><tbody></tbody></table>
+      </div>
+    </div>
+    <p class="note" id="salesMonthlyFooterNote"></p>
+  </div>
+
+  <div class="page" id="page-brandanalyze">
+    <p class="section-title">Brand Analyze &mdash; by brand</p>
+    <p class="note" style="margin:-8px 0 0;">Same layout as Sales Monthly, grouped by <code>product_brands.Brand_Name</code> instead of product category &mdash; the Brand_ID link is fully populated in the database (unlike category), so this needed no mapping-sheet translation. Three different "no real brand" spellings found in the data (<code>none</code>, <code>N/A</code>, <code>ბრენდის გარეშე</code>) are combined into one "No Brand" row at the bottom.</p>
+    <div class="report-card">
+      <div class="report-scroll-top" id="brandScrollTop"><div></div></div>
+      <div class="report-scroll" id="brandScrollBody">
+        <table class="rpt rpt-pivot sm-table" id="brandTable"><tbody></tbody></table>
+      </div>
+    </div>
+    <p class="note" id="brandFooterNote"></p>
+  </div>
+
+  <div class="page" id="page-subcategoryanalyze">
+    <p class="section-title">Subcategory Analyze &mdash; by broader product group</p>
+    <p class="note" style="margin:-8px 0 0;">Same layout as Sales Monthly, but one level broader &mdash; e.g. Air Fryer / Blender / Toaster (separate rows on Sales Monthly) all roll up into one "Small Kitchen Appliances" row here. Same mapping-sheet lookup as Sales Monthly, just reading its Subcategory(EN) field instead of Product(EN).</p>
+    <div class="report-card">
+      <div class="report-scroll-top" id="subcategoryScrollTop"><div></div></div>
+      <div class="report-scroll" id="subcategoryScrollBody">
+        <table class="rpt rpt-pivot sm-table" id="subcategoryTable"><tbody></tbody></table>
+      </div>
+    </div>
+    <p class="note" id="subcategoryFooterNote"></p>
+  </div>
+
+  <div class="page" id="page-logistics">
+    <p class="section-title">Logistics Daily &mdash; PO &amp; Order Fulfillment</p>
+
+    <p class="note" style="margin:-8px 0 0;">Source: Google Sheet "Volta Order Managment". History through 20 Aug is carried over unchanged from the business's own tracking sheet; the 21 Aug column is freshly computed from the same raw data.</p>
+    <div class="report-card">
+      <div class="report-scroll-top" id="logisticsSalesScrollTop"><div></div></div>
+      <div class="report-scroll" id="logisticsSalesScrollBody">
+        <table class="logi-table" id="logisticsSalesTable"><tbody></tbody></table>
+      </div>
+    </div>
+    <p class="note">Sales &ndash; Pending Status = customers not yet contacted, by how long the case has been open (measured from the same Status/date basis as the sheet itself). Only "Up to 1 day" has ever had data in the source; "1 to 5 days" / "&gt;5 days" are blank for every date shown, transferred unchanged.</p>
+
+    <p class="note" style="margin:-8px 0 0;">Source: Google Sheet "Volta Order Managment" (&#x10E8;&#x10D4;&#x10D9;&#x10D5;&#x10D4;&#x10D7;&#x10D4;&#x10D1;&#x10D8; / "orders" sheet). History through 20 Aug is carried over unchanged from the business's own tracking sheet; the 21 Aug column is freshly computed from the same raw order data. "Not Delivered" / age-bucket / "On Hold" figures are a snapshot valid only for the date in that column; "Delivered" and "Average Delivery Time" are reconstructed from each order's actual Delivery/Pickup Date, so those two are reliable history, not snapshots.</p>
+    <div class="report-card">
+      <div class="report-scroll-top" id="logisticsScrollTop"><div></div></div>
+      <div class="report-scroll" id="logisticsScrollBody">
+        <table class="logi-table" id="logisticsTable"><tbody></tbody></table>
+      </div>
+    </div>
+    <p class="note">Not Delivered = orders not yet in "Delivered" or "Cancelled" status. Age buckets (&le;1 day / 1&ndash;5 days / &gt;5 days) are measured from each order's Sale Date, for not-yet-delivered, not-on-hold orders. Average Delivery Time = average(Delivery Date &minus; Pickup Date) in days, only over orders where both dates are recorded &mdash; Pickup Date is sparsely filled in the source sheet, so several columns show a dash. This tab is a manual snapshot, not live; automatic daily refresh (planned for 20:00 every day) is not yet set up &mdash; it needs a Google Sheets API service account and a scheduled job on the server.</p>
+
+    <p class="logi-open-title">Open Cases &mdash; Still Waiting for Delivery</p>
+    <div class="table-card">
+      <table class="logi-open" id="logisticsOpenCasesTable"><tbody></tbody></table>
+    </div>
+    <p class="note">The 10 oldest orders (by Sale Date) not yet in "Delivered" or "Cancelled" status &mdash; the customers who have been waiting longest.</p>
+
+    <div class="logi-mini-row">
+      <div>
+        <p class="section-title">Orders by City</p>
+        <table class="logi-mini" id="logisticsCityTable"><tbody></tbody></table>
+      </div>
+      <div>
+        <p class="section-title">Orders by Goods Type</p>
+        <table class="logi-mini" id="logisticsGoodsTable"><tbody></tbody></table>
+      </div>
+    </div>
+    <p class="note">Snapshot, pulled the same manual way as the rest of this tab &mdash; not live.</p>
+  </div>
 </div>
 
 <script>
@@ -261,6 +402,9 @@ const targets = <?= json_encode($targets, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HE
 const generatedAt = <?= json_encode($generatedAt, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>;
 const monthlyStats = <?= json_encode($monthlyStats, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>;
 const dailyStats = <?= json_encode($dailyStats, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>;
+const salesMonthlyStats = <?= json_encode($salesMonthlyStats, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) ?>;
+const brandStats = <?= json_encode($brandStats, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) ?>;
+const subcategoryStats = <?= json_encode($subcategoryStats, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) ?>;
 
 const fmt = n => Math.round(n).toLocaleString('en-US');
 const fmt1 = n => n.toLocaleString('en-US', { maximumFractionDigits: 1 });
@@ -559,6 +703,264 @@ renderPivotReport(
   dailyScrollUpdate
 );
 
+/* ---------- Sales Monthly / Brand Analyze / Subcategory Analyze: bucket x month breakdown,
+   live from the DB (FunnelRepository::salesMonthlyStats / brandMonthlyStats /
+   subcategoryMonthlyStats — see volta_sales_monthly memory for the full investigation behind
+   the Order_Status=5 filter and the mapping-sheet-based category/subcategory/brand
+   translation). One shared render function — the three tabs differ only in their data,
+   row-label column header, and the wording of the "fallback bucket" footer note. ---------- */
+
+function bucketedColHead(rowLabel, periods, q1Periods, q2Periods) {
+  const cells = [];
+  const subCells = [];
+  const summaryHead = label => `<td colspan="5" class="sm-total-col">${label}</td>`;
+  const summarySub = () => `<td class="sm-total-col">Sales</td><td>Cogs</td><td>Mrg</td><td>Qty</td><td>Share</td>`;
+  periods.forEach(p => {
+    cells.push(`<td colspan="4">${monthLabel(p)}</td>`);
+    subCells.push(`<td>Sales</td><td>Cogs</td><td>Mrg</td><td>Qty</td>`);
+    if (q1Periods.length && p === q1Periods[q1Periods.length - 1]) { cells.push(summaryHead('Q1 Total')); subCells.push(summarySub()); }
+    if (q2Periods.length && p === q2Periods[q2Periods.length - 1]) { cells.push(summaryHead('Q2 Total')); subCells.push(summarySub()); }
+  });
+  cells.push(summaryHead('Total'));
+  subCells.push(summarySub());
+  return `<tr class="rpt-colhead"><td>${rowLabel}</td>${cells.join('')}</tr><tr class="rpt-colhead"><td></td>${subCells.join('')}</tr>`;
+}
+function bucketedCells(cell, isSummary) {
+  const margin = cell.sales > 0 ? (cell.sales - cell.cogs) / cell.sales : null;
+  const cls = isSummary ? ' sm-total-col' : '';
+  let html = `<td class="${cls}">${fmt(cell.sales)}</td><td>${fmt(cell.cogs)}</td><td>${margin === null ? '&ndash;' : pct(margin)}</td><td>${fmt(cell.qty)}</td>`;
+  if (isSummary) html += `<td>${pct(cell.share || 0)}</td>`;
+  return html;
+}
+function bucketedRowCells(row, periods, q1Periods, q2Periods) {
+  let html = '';
+  periods.forEach(p => {
+    html += bucketedCells(row.byPeriod[p], false);
+    if (q1Periods.length && p === q1Periods[q1Periods.length - 1]) html += bucketedCells(row.q1, true);
+    if (q2Periods.length && p === q2Periods[q2Periods.length - 1]) html += bucketedCells(row.q2, true);
+  });
+  html += bucketedCells(row.total, true);
+  return html;
+}
+function renderBucketedTable(tableId, footerId, stats, titleText, rowLabel, fallbackBucket, fallbackNoteHtml, garbageNoteHtml) {
+  const table = document.getElementById(tableId);
+  if (!stats || !stats.rows) {
+    table.querySelector('tbody').innerHTML = '<tr><td>No data.</td></tr>';
+    return;
+  }
+  const { periods, q1Periods, q2Periods, rows, grandTotal, grandQ1, grandQ2, uncategorized, garbage } = stats;
+  const summaryGroups = 1 + (q1Periods.length ? 1 : 0) + (q2Periods.length ? 1 : 0);
+  const colspan = 1 + periods.length * 4 + summaryGroups * 5;
+
+  let html = rptPivotPlainSpan('rpt-title', titleText, colspan);
+  html += bucketedColHead(rowLabel, periods, q1Periods, q2Periods);
+
+  html += `<tr class="sm-grandtotal"><td>TOTAL (all)</td>`;
+  html += bucketedRowCells({
+    byPeriod: Object.fromEntries(periods.map(p => [p, rows.reduce((acc, r) => {
+      const c = r.byPeriod[p]; acc.sales += c.sales; acc.cogs += c.cogs; acc.qty += c.qty; return acc;
+    }, { sales: 0, cogs: 0, qty: 0 })])),
+    q1: { ...grandQ1, share: 1 }, q2: { ...grandQ2, share: 1 }, total: { ...grandTotal, share: 1 },
+  }, periods, q1Periods, q2Periods);
+  html += `</tr>`;
+
+  rows.forEach(row => {
+    const rowCls = row.bucket === fallbackBucket ? 'sm-row sm-uncategorized' : 'sm-row';
+    html += `<tr class="${rowCls}"><td>${row.bucket}</td>${bucketedRowCells(row, periods, q1Periods, q2Periods)}</tr>`;
+  });
+
+  table.querySelector('tbody').innerHTML = html;
+
+  const note = document.getElementById(footerId);
+  const uncatPct = grandTotal.sales > 0 ? (100 * uncategorized.sales / grandTotal.sales).toFixed(1) : '0';
+  const garbagePct = garbage.total > 0 ? (100 * garbage.count / garbage.total).toFixed(1) : '0';
+  const garbageSalesPct = grandTotal.sales > 0 ? (100 * garbage.salesAffected / grandTotal.sales).toFixed(1) : '0';
+  note.innerHTML = fallbackNoteHtml
+    .replace('{count}', fmt(uncategorized.count)).replace('{sales}', fmt(uncategorized.sales)).replace('{pct}', uncatPct)
+    + ' ' + garbageNoteHtml
+      .replace('{gcount}', fmt(garbage.count)).replace('{gtotal}', fmt(garbage.total)).replace('{gpct}', garbagePct)
+      .replace('{gsales}', fmt(garbage.salesAffected)).replace('{gsalespct}', garbageSalesPct);
+}
+
+const GARBAGE_NOTE = `<strong>Cogs data quality:</strong> {gcount} of {gtotal} line items ({gpct}%, {gsales} GEL / {gsalespct}% of sales) have a placeholder or clearly-wrong Cogs value (staff enters "1" because the system requires some value, then returns later with the real cost) &mdash; the Cogs column above is left raw/unmodified to match the business's own report exactly, so months with more unfilled Cogs will show an inflated Margin until those get backfilled.`;
+
+renderBucketedTable('salesMonthlyTable', 'salesMonthlyFooterNote', salesMonthlyStats,
+  'Sales Monthly &mdash; by Product Category', 'Product Category', 'Uncategorized',
+  `<strong>Uncategorized:</strong> {count} line items / {sales} GEL ({pct}% of total sales) have no usable product category in the database (recently-added products often sit under a category literally named "none" until someone categorizes them) &mdash; grouped into one row at the bottom rather than guessed at.`,
+  GARBAGE_NOTE);
+const salesMonthlyScrollUpdate = setupTopScrollSync('salesMonthlyScrollTop', 'salesMonthlyScrollBody');
+
+renderBucketedTable('brandTable', 'brandFooterNote', brandStats,
+  'Brand Analyze &mdash; by Brand', 'Brand', 'No Brand',
+  `<strong>No Brand:</strong> {count} line items / {sales} GEL ({pct}% of total sales) had no real brand recorded (combines "none" / "N/A" / "ბრენდის გარეშე" into one row) &mdash; grouped at the bottom rather than guessed at.`,
+  GARBAGE_NOTE);
+const brandScrollUpdate = setupTopScrollSync('brandScrollTop', 'brandScrollBody');
+
+renderBucketedTable('subcategoryTable', 'subcategoryFooterNote', subcategoryStats,
+  'Subcategory Analyze &mdash; by Broader Product Group', 'Subcategory', 'Uncategorized',
+  `<strong>Uncategorized:</strong> {count} line items / {sales} GEL ({pct}% of total sales) have no usable product category in the database &mdash; same gap as Sales Monthly, grouped into one row at the bottom rather than guessed at.`,
+  GARBAGE_NOTE);
+const subcategoryScrollUpdate = setupTopScrollSync('subcategoryScrollTop', 'subcategoryScrollBody');
+
+/* ---------- Sales — Pending Status: same "one column per date, transferred unchanged"
+   pattern as the Logistics Delivery Status table below it, from the same source sheet.
+   Reuses the identical .logi-table CSS classes (title/head/total/white/light) since the
+   business's own coloring for this table happens to match exactly. */
+const salesPendingHistory = {
+  dates: ['2026-06-26','2026-06-29','2026-06-30','2026-07-01','2026-07-09','2026-07-10','2026-07-14','2026-07-15','2026-07-16','2026-07-20','2026-07-21','2026-07-22','2026-07-24','2026-07-27','2026-07-28','2026-07-29','2026-07-30','2026-07-31','2026-08-17','2026-08-18','2026-08-19','2026-08-20','2026-08-21'],
+  upTo1:  [8, 22, 35, 103, 14, 22, 26, 25, 23, 20, 21, 21, 14, 36, 7, 54, 25, 29, 29, 33, 19, 19, 31],
+  oneTo5: new Array(23).fill(null),
+  over5:  new Array(23).fill(null),
+};
+
+function renderSalesPendingTable() {
+  const h = salesPendingHistory;
+  const n = h.dates.length;
+  function cell(v) { return (v === null || v === undefined) ? '<td>&ndash;</td>' : `<td>${fmt(v)}</td>`; }
+  function rowHtml(cls, label, vals) {
+    return `<tr class="${cls}"><td>${label}</td>${vals.map(cell).join('')}</tr>`;
+  }
+  const pending = h.dates.map((_, i) => (h.upTo1[i] || 0) + (h.oneTo5[i] || 0) + (h.over5[i] || 0));
+  const dateLabels = h.dates.map(d => {
+    const [, m, day] = d.split('-').map(Number);
+    return `<td>${MONTH_NAMES[m - 1]} ${day}</td>`;
+  }).join('');
+
+  let html = `<tr class="logi-title"><td colspan="${n + 1}">SALES &mdash; Pending Status</td></tr>`;
+  html += `<tr class="logi-head"><td>Status</td>${dateLabels}</tr>`;
+  html += rowHtml('logi-total', 'Sales &ndash; Pending Status (Not Contacted Customers)', pending);
+  html += rowHtml('logi-white', 'Up to 1 day', h.upTo1);
+  html += rowHtml('logi-light', '1 to 5 days', h.oneTo5);
+  html += rowHtml('logi-white', '&gt;5 days', h.over5);
+
+  document.getElementById('logisticsSalesTable').querySelector('tbody').innerHTML = html;
+}
+renderSalesPendingTable();
+const logisticsSalesScrollUpdate = setupTopScrollSync('logisticsSalesScrollTop', 'logisticsSalesScrollBody');
+
+/* ---------- Logistics Daily: exact replica of the business's own "LOGISTICS — Delivery
+   Status" tracking sheet. History (26 Jun – 20 Aug) is copied unchanged from that sheet —
+   those figures are a point-in-time snapshot per column and cannot be recomputed later.
+   The 21 Aug column is freshly computed from the same raw order data this session; from
+   here on, each new day's column should be appended the same way (or, once the daily
+   20:00 automation exists, captured automatically). Delivered / Average Delivery Time are
+   the exception — reconstructed from real Delivery/Pickup Date facts, so those two rows are
+   reliable history rather than snapshots even for days that were never captured live.
+   Average Delivery Time, for 21 Aug onward, = average(Delivery Date − Sale Date), NOT
+   Pickup Date — Pickup Date is populated for only ~20% of orders (too sparse to reliably
+   produce a number every day; today it would have been 0/9 data points vs. 9/9 using Sale
+   Date). Historical columns keep whatever basis the business's own sheet used (unknown,
+   not our formula) — only new columns going forward use this Sale→Delivery definition. */
+const logisticsHistory = {
+  dates: ['2026-06-26','2026-06-29','2026-06-30','2026-07-01','2026-07-09','2026-07-10','2026-07-14','2026-07-15','2026-07-16','2026-07-20','2026-07-20','2026-07-21','2026-07-24','2026-07-27','2026-07-28','2026-07-29','2026-07-30','2026-07-31','2026-08-17','2026-08-18','2026-08-19','2026-08-20','2026-08-21'],
+  upTo1:   [103,109,135,87,55,65,68,51,51,57,38,68,67,36,36,43,36,27,23,34,30,22, 42],
+  oneTo5:  [204,228,169,169,202,214,177,183,190,121,148,135,75,121,101,73,69,60,75,40,37,40, 36],
+  over5:   [382,301,316,344,245,186,341,381,328,247,216,154,36,71,45,62,44,25,87,17,19,11, 7],
+  onHold:  [null,null,73,60,9,13,12,9,9,15,20,17,10,25,21,11,10,2,2,3,2,2, 2],
+  delivered:       [65,16,49,14,23,41,23,1,4,6,11,3,0,33,6,72,61,45,29,43,50,37, 9],
+  avgDeliveryTime: [10,11.2,7,8.4,8.6,9.8,7.3,7,13.8,8.8,10.5,9,null,10.4,7.2,6,5.2,3.4,5.9,4.4,3.1,3.3, 3.2],
+};
+
+function renderLogisticsTable() {
+  const h = logisticsHistory;
+  const n = h.dates.length;
+  const todayIdx = n - 1;
+
+  function cell(v, isAvg) {
+    if (v === null || v === undefined) return '<td>&ndash;</td>';
+    return `<td>${isAvg ? v.toFixed(1) : fmt(v)}</td>`;
+  }
+  function rowHtml(cls, label, vals, isAvg) {
+    const tds = vals.map(v => cell(v, isAvg)).join('');
+    return `<tr class="${cls}"><td>${label}</td>${tds}</tr>`;
+  }
+
+  const notDelivered = h.dates.map((_, i) => (h.upTo1[i] || 0) + (h.oneTo5[i] || 0) + (h.over5[i] || 0) + (h.onHold[i] || 0));
+
+  const dateLabels = h.dates.map((d, i) => {
+    const [, m, day] = d.split('-').map(Number);
+    const label = `${MONTH_NAMES[m - 1]} ${day}`;
+    return i === todayIdx ? `<td>${label} (today)</td>` : `<td>${label}</td>`;
+  }).join('');
+
+  let html = `<tr class="logi-title"><td colspan="${n + 1}">LOGISTICS &mdash; Delivery Status</td></tr>`;
+  html += `<tr class="logi-head"><td>Status</td>${dateLabels}</tr>`;
+  html += rowHtml('logi-total', 'Logistics &ndash; Number of Not Delivered Orders', notDelivered);
+  html += rowHtml('logi-white', 'Up to 1 day', h.upTo1);
+  html += rowHtml('logi-light', '1 to 5 days', h.oneTo5);
+  html += rowHtml('logi-white', '&gt;5 days', h.over5);
+  html += rowHtml('logi-white', 'On Hold', h.onHold);
+  html += rowHtml('logi-plain', 'Delivered', h.delivered);
+  html += rowHtml('logi-plain', 'Average Delivery Time', h.avgDeliveryTime, true);
+
+  document.getElementById('logisticsTable').querySelector('tbody').innerHTML = html;
+}
+renderLogisticsTable();
+const logisticsScrollUpdate = setupTopScrollSync('logisticsScrollTop', 'logisticsScrollBody');
+
+/* Orders by City / Orders by Goods Type — snapshot from the same Google Sheet, pulled the
+   same manual way as the rest of this tab. */
+const logisticsByCity = {
+  title: 'Orders by City',
+  headLabel: 'City',
+  rows: [
+    { label: 'Tbilisi', notDelivered: 57, all: 1860, share: 0.6785714285714286 },
+    { label: 'Other Cities', notDelivered: 23, all: 1233, share: 0.27380952380952384 },
+    { label: 'Without City', notDelivered: 4, all: 187, share: 0.047619047619047616 },
+  ],
+  total: { label: 'ToTal', notDelivered: 84, all: 3280, share: 1 },
+};
+const logisticsByGoods = {
+  title: 'Orders by Goods Type',
+  headLabel: 'Goods Type',
+  rows: [
+    { label: 'Soft', notDelivered: 45, all: 1019, share: 0.5421686746987951 },
+    { label: 'Medium', notDelivered: 9, all: 662, share: 0.10843373493975904 },
+    { label: 'Heavy', notDelivered: 13, all: 1010, share: 0.1566265060240964 },
+    { label: '#N/A', notDelivered: 16, all: 589, share: 0.1927710843373494 },
+  ],
+  total: { label: 'Total', notDelivered: 83, all: 3280, share: 1 },
+};
+
+function renderLogisticsMiniTable(tableId, data) {
+  let html = `<tr class="logi-mini-title"><td colspan="4">${data.title}</td></tr>`;
+  html += `<tr class="logi-mini-head"><td>${data.headLabel}</td><td>Not Delivered Orders</td><td>ALL Orders</td><td>Share</td></tr>`;
+  data.rows.forEach((r, i) => {
+    const alt = i % 2 === 0 ? ' logi-mini-alt' : '';
+    html += `<tr class="logi-mini-data${alt}"><td>${r.label}</td><td>${fmt(r.notDelivered)}</td><td>${fmt(r.all)}</td><td>${pct(r.share)}</td></tr>`;
+  });
+  const t = data.total;
+  html += `<tr class="logi-mini-total"><td>${t.label}</td><td>${fmt(t.notDelivered)}</td><td>${fmt(t.all)}</td><td>${pct(t.share)}</td></tr>`;
+  document.getElementById(tableId).querySelector('tbody').innerHTML = html;
+}
+renderLogisticsMiniTable('logisticsCityTable', logisticsByCity);
+renderLogisticsMiniTable('logisticsGoodsTable', logisticsByGoods);
+
+/* Open Cases — Still Waiting for Delivery: the 10 oldest not-yet-delivered orders, by Sale
+   Date, transferred unchanged from the same Google Sheet. */
+const logisticsOpenCases = [
+  { customer: 'ნაია ჯანეზაშვილი', waitingFrom: '2026-07-10', status: 'გასარკვევი', city: 'თბილისი', orderNum: 155957 },
+  { customer: 'იზა ღუბელაძე', waitingFrom: '2026-07-11', status: 'გასარკვევი', city: 'თბილისი', orderNum: 156561 },
+  { customer: 'ნინო ქადაგიშვილი', waitingFrom: '2026-08-13', status: 'შეკვეთილი / Ordered', city: 'ბათუმი', orderNum: 162153 },
+  { customer: 'ანა ხურციძე', waitingFrom: '2026-08-13', status: 'აღებული / Warehouse', city: 'თბილისი', orderNum: 161999 },
+  { customer: 'სოფიკო ნოზაძე', waitingFrom: '2026-08-13', status: 'აღებული / Warehouse', city: 'თბილისი', orderNum: 162085 },
+  { customer: 'ანდრეი ოვსიანიკოვი (საჩუქ)', waitingFrom: '2026-08-17', status: 'აღებული / Warehouse', city: 'თბილისი', orderNum: 157453 },
+  { customer: 'მელანო ბენდელიანი', waitingFrom: '2026-08-17', status: 'აღებული / Warehouse', city: 'თბილისი', orderNum: 162452 },
+  { customer: 'ნინო გოგოლაძე', waitingFrom: '2026-08-17', status: 'აღებული / Warehouse', city: 'თბილისი', orderNum: 160998 },
+  { customer: 'ჟანა მალანია', waitingFrom: '2026-08-17', status: 'აღებული / Warehouse', city: 'ახალციხე', orderNum: 162446 },
+  { customer: 'სვეტლანა კოტეიანი', waitingFrom: '2026-08-17', status: 'აღებული / Warehouse', city: 'თბილისი', orderNum: 161571 },
+];
+
+function renderLogisticsOpenCases() {
+  let html = '<tr class="logi-open-head"><td>Customer</td><td>Waiting from</td><td>Status</td><td>City</td><td>Order #</td></tr>';
+  logisticsOpenCases.forEach(c => {
+    const [, m, d] = c.waitingFrom.split('-').map(Number);
+    html += `<tr><td>${c.customer}</td><td>${MONTH_NAMES[m - 1]} ${d}</td><td>${c.status}</td><td>${c.city}</td><td>${c.orderNum}</td></tr>`;
+  });
+  document.getElementById('logisticsOpenCasesTable').querySelector('tbody').innerHTML = html;
+}
+renderLogisticsOpenCases();
+
 document.querySelectorAll('#pageNav button').forEach(btn => {
   btn.addEventListener('click', () => {
     document.querySelectorAll('#pageNav button').forEach(b => b.classList.remove('active'));
@@ -570,6 +972,10 @@ document.querySelectorAll('#pageNav button').forEach(btn => {
     // gets its real width once the tab holding it is actually visible.
     if (page === 'mtdstats') mtdScrollUpdate();
     if (page === 'dailystats') dailyScrollUpdate();
+    if (page === 'salesmonthly') salesMonthlyScrollUpdate();
+    if (page === 'brandanalyze') brandScrollUpdate();
+    if (page === 'subcategoryanalyze') subcategoryScrollUpdate();
+    if (page === 'logistics') { logisticsSalesScrollUpdate(); logisticsScrollUpdate(); }
   });
 });
 </script>
