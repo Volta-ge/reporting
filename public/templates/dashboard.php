@@ -859,24 +859,26 @@ const logisticsSalesScrollUpdate = setupTopScrollSync('logisticsSalesScrollTop',
 /* ---------- Logistics Daily: exact replica of the business's own "LOGISTICS — Delivery
    Status" tracking sheet. History (26 Jun – 20 Aug) is copied unchanged from that sheet —
    those figures are a point-in-time snapshot per column and cannot be recomputed later.
-   The 21 Aug column is freshly computed from the same raw order data this session; from
-   here on, each new day's column should be appended the same way (or, once the daily
-   20:00 automation exists, captured automatically). Delivered / Average Delivery Time are
-   the exception — reconstructed from real Delivery/Pickup Date facts, so those two rows are
-   reliable history rather than snapshots even for days that were never captured live.
+   21 Aug and 24 Aug are freshly computed from the same raw order data (22/23 Aug were never
+   captured and can't be reconstructed after the fact — same rule as everywhere else on this
+   tab, so those two dates are simply absent, not zero); each new day's column should keep
+   being appended the same way (or, once the daily 20:00 automation exists, captured
+   automatically). Delivered / Average Delivery Time are the exception — reconstructed from
+   real Delivery/Pickup Date facts, so those two rows are reliable history rather than
+   snapshots even for days that were never captured live.
    Average Delivery Time, for 21 Aug onward, = average(Delivery Date − Sale Date), NOT
    Pickup Date — Pickup Date is populated for only ~20% of orders (too sparse to reliably
-   produce a number every day; today it would have been 0/9 data points vs. 9/9 using Sale
-   Date). Historical columns keep whatever basis the business's own sheet used (unknown,
-   not our formula) — only new columns going forward use this Sale→Delivery definition. */
+   produce a number every day). Historical columns keep whatever basis the business's own
+   sheet used (unknown, not our formula) — only new columns going forward use this
+   Sale→Delivery definition. */
 const logisticsHistory = {
-  dates: ['2026-06-26','2026-06-29','2026-06-30','2026-07-01','2026-07-09','2026-07-10','2026-07-14','2026-07-15','2026-07-16','2026-07-20','2026-07-20','2026-07-21','2026-07-24','2026-07-27','2026-07-28','2026-07-29','2026-07-30','2026-07-31','2026-08-17','2026-08-18','2026-08-19','2026-08-20','2026-08-21'],
-  upTo1:   [103,109,135,87,55,65,68,51,51,57,38,68,67,36,36,43,36,27,23,34,30,22, 42],
-  oneTo5:  [204,228,169,169,202,214,177,183,190,121,148,135,75,121,101,73,69,60,75,40,37,40, 36],
-  over5:   [382,301,316,344,245,186,341,381,328,247,216,154,36,71,45,62,44,25,87,17,19,11, 7],
-  onHold:  [null,null,73,60,9,13,12,9,9,15,20,17,10,25,21,11,10,2,2,3,2,2, 2],
-  delivered:       [65,16,49,14,23,41,23,1,4,6,11,3,0,33,6,72,61,45,29,43,50,37, 9],
-  avgDeliveryTime: [10,11.2,7,8.4,8.6,9.8,7.3,7,13.8,8.8,10.5,9,null,10.4,7.2,6,5.2,3.4,5.9,4.4,3.1,3.3, 3.2],
+  dates: ['2026-06-26','2026-06-29','2026-06-30','2026-07-01','2026-07-09','2026-07-10','2026-07-14','2026-07-15','2026-07-16','2026-07-20','2026-07-20','2026-07-21','2026-07-24','2026-07-27','2026-07-28','2026-07-29','2026-07-30','2026-07-31','2026-08-17','2026-08-18','2026-08-19','2026-08-20','2026-08-21','2026-08-24'],
+  upTo1:   [103,109,135,87,55,65,68,51,51,57,38,68,67,36,36,43,36,27,23,34,30,22, 42, 40],
+  oneTo5:  [204,228,169,169,202,214,177,183,190,121,148,135,75,121,101,73,69,60,75,40,37,40, 36, 35],
+  over5:   [382,301,316,344,245,186,341,381,328,247,216,154,36,71,45,62,44,25,87,17,19,11, 7, 7],
+  onHold:  [null,null,73,60,9,13,12,9,9,15,20,17,10,25,21,11,10,2,2,3,2,2, 2, 3],
+  delivered:       [65,16,49,14,23,41,23,1,4,6,11,3,0,33,6,72,61,45,29,43,50,37, 9, 63],
+  avgDeliveryTime: [10,11.2,7,8.4,8.6,9.8,7.3,7,13.8,8.8,10.5,9,null,10.4,7.2,6,5.2,3.4,5.9,4.4,3.1,3.3, 3.2, 4.0],
 };
 
 function renderLogisticsTable() {
@@ -922,22 +924,22 @@ const logisticsByCity = {
   title: 'Orders by City',
   headLabel: 'City',
   rows: [
-    { label: 'Tbilisi', notDelivered: 57, all: 1860, share: 0.6785714285714286 },
-    { label: 'Other Cities', notDelivered: 23, all: 1233, share: 0.27380952380952384 },
-    { label: 'Without City', notDelivered: 4, all: 187, share: 0.047619047619047616 },
+    { label: 'Tbilisi', notDelivered: 68, all: 1973, share: 0.8 },
+    { label: 'Other Cities', notDelivered: 17, all: 1188, share: 0.2 },
+    { label: 'Without City', notDelivered: 0, all: 185, share: 0 },
   ],
-  total: { label: 'ToTal', notDelivered: 84, all: 3280, share: 1 },
+  total: { label: 'ToTal', notDelivered: 85, all: 3346, share: 1 },
 };
 const logisticsByGoods = {
   title: 'Orders by Goods Type',
   headLabel: 'Goods Type',
   rows: [
-    { label: 'Soft', notDelivered: 45, all: 1019, share: 0.5421686746987951 },
-    { label: 'Medium', notDelivered: 9, all: 662, share: 0.10843373493975904 },
-    { label: 'Heavy', notDelivered: 13, all: 1010, share: 0.1566265060240964 },
-    { label: '#N/A', notDelivered: 16, all: 589, share: 0.1927710843373494 },
+    { label: 'Soft', notDelivered: 39, all: 1056, share: 0.4588235294117647 },
+    { label: 'Medium', notDelivered: 13, all: 674, share: 0.15294117647058825 },
+    { label: 'Heavy', notDelivered: 16, all: 1026, share: 0.18823529411764706 },
+    { label: '#N/A', notDelivered: 17, all: 590, share: 0.2 },
   ],
-  total: { label: 'Total', notDelivered: 83, all: 3280, share: 1 },
+  total: { label: 'Total', notDelivered: 85, all: 3346, share: 1 },
 };
 
 function renderLogisticsMiniTable(tableId, data) {
@@ -959,14 +961,14 @@ renderLogisticsMiniTable('logisticsGoodsTable', logisticsByGoods);
 const logisticsOpenCases = [
   { customer: 'ნაია ჯანეზაშვილი', waitingFrom: '2026-07-10', status: 'გასარკვევი', city: 'თბილისი', orderNum: 155957 },
   { customer: 'იზა ღუბელაძე', waitingFrom: '2026-07-11', status: 'გასარკვევი', city: 'თბილისი', orderNum: 156561 },
-  { customer: 'ნინო ქადაგიშვილი', waitingFrom: '2026-08-13', status: 'შეკვეთილი / Ordered', city: 'ბათუმი', orderNum: 162153 },
+  { customer: 'ნინო აბელიშვილი', waitingFrom: '2026-07-21', status: 'შეჩერებული / On Hold', city: 'თბილისი', orderNum: 158057 },
+  { customer: 'ნინო ქადაგიშვილი', waitingFrom: '2026-08-13', status: 'შეჩერებული / On Hold', city: 'ბათუმი', orderNum: 162153 },
   { customer: 'ანა ხურციძე', waitingFrom: '2026-08-13', status: 'აღებული / Warehouse', city: 'თბილისი', orderNum: 161999 },
-  { customer: 'სოფიკო ნოზაძე', waitingFrom: '2026-08-13', status: 'აღებული / Warehouse', city: 'თბილისი', orderNum: 162085 },
   { customer: 'ანდრეი ოვსიანიკოვი (საჩუქ)', waitingFrom: '2026-08-17', status: 'აღებული / Warehouse', city: 'თბილისი', orderNum: 157453 },
-  { customer: 'მელანო ბენდელიანი', waitingFrom: '2026-08-17', status: 'აღებული / Warehouse', city: 'თბილისი', orderNum: 162452 },
-  { customer: 'ნინო გოგოლაძე', waitingFrom: '2026-08-17', status: 'აღებული / Warehouse', city: 'თბილისი', orderNum: 160998 },
-  { customer: 'ჟანა მალანია', waitingFrom: '2026-08-17', status: 'აღებული / Warehouse', city: 'ახალციხე', orderNum: 162446 },
-  { customer: 'სვეტლანა კოტეიანი', waitingFrom: '2026-08-17', status: 'აღებული / Warehouse', city: 'თბილისი', orderNum: 161571 },
+  { customer: 'ნათია გოგობერიშვილი', waitingFrom: '2026-08-18', status: 'აღებული / Warehouse', city: 'თბილისი', orderNum: 162811 },
+  { customer: 'ლაშა ჟღენტი', waitingFrom: '2026-08-18', status: 'ადგილზეა/From Warehouse', city: 'თბილისი', orderNum: 162755 },
+  { customer: 'გენადი გოგუაძე', waitingFrom: '2026-08-19', status: 'აღებული / Warehouse', city: 'თბილისი', orderNum: 162100 },
+  { customer: 'ლელა კეკელია', waitingFrom: '2026-08-19', status: 'აღებული / Warehouse', city: 'თბილისი', orderNum: 162950 },
 ];
 
 function renderLogisticsOpenCases() {
