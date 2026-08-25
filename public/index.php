@@ -10,6 +10,7 @@ require __DIR__ . '/../src/Database.php';
 require __DIR__ . '/../src/DateHelper.php';
 require __DIR__ . '/../src/FunnelRepository.php';
 require __DIR__ . '/../src/ProductClassifier.php';
+require __DIR__ . '/../src/PortfolioRepository.php';
 
 $configPath = __DIR__ . '/../config.php';
 if (!is_file($configPath)) {
@@ -56,6 +57,13 @@ try {
     $brandStats = $repository->brandMonthlyStats($monthlyFrom, $yesterdayTo);
     $subcategoryStats = $repository->subcategoryMonthlyStats($monthlyFrom, $yesterdayTo, $productClassifier);
 
+    // Customers / Risk Segmentation / Closed Loans / Overdue Analysis (portfolio) tabs.
+    $portfolioRepository = new PortfolioRepository($pdo);
+    $customerAnalysis = $portfolioRepository->customerAnalysis();
+    $riskSegmentation = $portfolioRepository->riskSegmentation();
+    $closedLoansMonthly = $portfolioRepository->closedLoansMonthly($monthlyFrom, $yesterdayTo);
+    $delinquencyAnalysis = $portfolioRepository->delinquencyAnalysis();
+
     $connectionError = null;
 } catch (\Throwable $e) {
     $data = null;
@@ -64,6 +72,10 @@ try {
     $salesMonthlyStats = null;
     $brandStats = null;
     $subcategoryStats = null;
+    $customerAnalysis = null;
+    $riskSegmentation = null;
+    $closedLoansMonthly = null;
+    $delinquencyAnalysis = null;
     $connectionError = $e->getMessage();
 }
 

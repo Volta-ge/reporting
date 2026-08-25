@@ -12,6 +12,10 @@
  * @var array|null $brandStats
  * @var array|null $subcategoryStats
  * @var array<string, array{count: int, capturedAt: string}> $pendingStatusLog
+ * @var array|null $customerAnalysis
+ * @var array|null $riskSegmentation
+ * @var array|null $closedLoansMonthly
+ * @var array|null $delinquencyAnalysis
  */
 
 declare(strict_types=1);
@@ -283,6 +287,10 @@ table.rpt-pivot td.rpt-group-toggle { cursor: pointer; user-select: none; text-a
     <button data-page="brandanalyze">Brand Analyze</button>
     <button data-page="subcategoryanalyze">Subcategory Analyze</button>
     <button data-page="logistics">Logistics Daily</button>
+    <button data-page="customers">Customers</button>
+    <button data-page="risksegmentation">Risk Segmentation</button>
+    <button data-page="closedloans">Closed Loans</button>
+    <button data-page="delinquency">Overdue Analysis</button>
   </div>
 
   <div class="page active" id="page-report">
@@ -397,6 +405,60 @@ table.rpt-pivot td.rpt-group-toggle { cursor: pointer; user-select: none; text-a
   </div>
 </div>
 
+<div class="page" id="page-customers">
+  <p class="section-title">Customers &mdash; portfolio customer analysis</p>
+  <p class="note" style="margin:-8px 0 0;">Aggregate counts only, scoped to customers with at least one real application (Product_ID &gt; 1) &mdash; no individual customer data shown. "New" = exactly one loan ever; "Repeat" = two or more. Live from the database on every page load.</p>
+  <div class="table-card">
+    <table id="customersSummaryTable"><tbody></tbody></table>
+  </div>
+  <p class="section-title" style="margin-top:20px;">Loans per Customer</p>
+  <div class="table-card">
+    <table id="customersLoansDistTable"><tbody></tbody></table>
+  </div>
+  <div class="logi-mini-row" style="margin-top:20px;">
+    <div>
+      <p class="section-title">By City</p>
+      <div class="table-card">
+        <table id="customersByCityTable"><tbody></tbody></table>
+      </div>
+    </div>
+    <div>
+      <p class="section-title">By Gender</p>
+      <div class="table-card">
+        <table id="customersByGenderTable"><tbody></tbody></table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="page" id="page-risksegmentation">
+  <p class="section-title">Risk Segmentation &mdash; active portfolio</p>
+  <p class="note" style="margin:-8px 0 0;">Active loans (<code>Active = 1</code>) grouped by <code>Risk_Status</code>. Live from the database on every page load.</p>
+  <div class="table-card">
+    <table id="riskSegmentationTable"><tbody></tbody></table>
+  </div>
+</div>
+
+<div class="page" id="page-closedloans">
+  <p class="section-title">Closed Loans Analysis &mdash; paid off vs. written off</p>
+  <p class="note" style="margin:-8px 0 0;">One row per month, keyed to <code>Close_Date</code>. Only loans that were genuinely active and then closed (<code>Close_Type</code> 1 = paid off, 2 = written off) &mdash; excludes rejected/never-activated applications, which sit at <code>Close_Type = 0</code> along with currently-active loans and aren't a real "closure." Paid Off Amount = <code>Full_Cost</code> (the loan's full sale price); Written Off Debt = remaining <code>Debt</code> at closure. Live from the database on every page load.</p>
+  <div class="report-card">
+    <div class="report-scroll-top" id="closedLoansScrollTop"><div></div></div>
+    <div class="report-scroll" id="closedLoansScrollBody">
+      <table class="rpt rpt-pivot" id="closedLoansTable"><tbody></tbody></table>
+    </div>
+  </div>
+</div>
+
+<div class="page" id="page-delinquency">
+  <p class="section-title">Overdue Analysis &mdash; Portfolio at Risk</p>
+  <p class="note" style="margin:-8px 0 0;">Active loans (<code>Active = 1</code>) grouped by <code>Days_Age</code> &mdash; the reliably-populated aging field (<code>OverDay</code> is 0 for every active loan in this database and isn't usable). PAR30/60/90 = share of total outstanding debt that is 30/60/90+ days overdue, the standard lending "Portfolio at Risk" metric. Point-in-time snapshot, live on every page load, but not reconstructable for a past date &mdash; same as the Logistics Daily "Not Delivered" table.</p>
+  <div class="table-card">
+    <table id="delinquencyTable"><tbody></tbody></table>
+  </div>
+  <p class="note" id="delinquencyParNote"></p>
+</div>
+
 <script>
 const data = <?= json_encode($data, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) ?>;
 const targets = <?= json_encode($targets, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>;
@@ -407,6 +469,10 @@ const salesMonthlyStats = <?= json_encode($salesMonthlyStats, JSON_HEX_TAG | JSO
 const brandStats = <?= json_encode($brandStats, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) ?>;
 const subcategoryStats = <?= json_encode($subcategoryStats, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) ?>;
 const pendingStatusLog = <?= json_encode($pendingStatusLog, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) ?>;
+const customerAnalysis = <?= json_encode($customerAnalysis, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) ?>;
+const riskSegmentation = <?= json_encode($riskSegmentation, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) ?>;
+const closedLoansMonthly = <?= json_encode($closedLoansMonthly, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) ?>;
+const delinquencyAnalysis = <?= json_encode($delinquencyAnalysis, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) ?>;
 
 const fmt = n => Math.round(n).toLocaleString('en-US');
 const fmt1 = n => n.toLocaleString('en-US', { maximumFractionDigits: 1 });
@@ -981,6 +1047,104 @@ function renderLogisticsOpenCases() {
 }
 renderLogisticsOpenCases();
 
+/* ---------- Customers / Risk Segmentation / Closed Loans / Overdue Analysis: loan-portfolio
+   tabs, a different domain from the sales/application funnel above — live from the DB on every
+   page load, computed server-side in PortfolioRepository. See its class docblock for the data
+   quality checks behind these definitions (OverDay unusable, Close_Type meanings, etc.) and
+   volta_portfolio_analysis memory for the full investigation. ---------- */
+
+function renderCustomerAnalysis() {
+  const d = customerAnalysis;
+  if (!d) return;
+
+  const summaryHtml = `
+    <tr><td>Total Customers (all-time, real applications)</td><td>${fmt(d.totalCustomers)}</td></tr>
+    <tr><td>Active Customers (currently have &ge;1 active loan)</td><td>${fmt(d.activeCustomers)}</td></tr>
+    <tr><td>New (exactly 1 loan ever)</td><td>${fmt(d.newCustomers)} (${pct(d.newCustomers / d.totalCustomers)})</td></tr>
+    <tr class="total"><td>Repeat (2+ loans ever)</td><td>${fmt(d.repeatCustomers)} (${pct(d.repeatCustomers / d.totalCustomers)})</td></tr>
+  `;
+  document.getElementById('customersSummaryTable').querySelector('tbody').innerHTML =
+    `<tr><th>Metric</th><th>Value</th></tr>${summaryHtml}`;
+
+  const loansDistTotal = Object.values(d.loansPerCustomer).reduce((s, n) => s + n, 0);
+  let loansDistHtml = '';
+  Object.entries(d.loansPerCustomer).forEach(([loans, n]) => {
+    loansDistHtml += `<tr><td>${loans} loan${loans === '1' ? '' : 's'}</td><td>${fmt(n)}</td><td>${pct(n / loansDistTotal)}</td></tr>`;
+  });
+  document.getElementById('customersLoansDistTable').querySelector('tbody').innerHTML =
+    `<tr><th>Loans per Customer</th><th>Customers</th><th>Share</th></tr>${loansDistHtml}`;
+
+  const cityTotal = d.byCity.reduce((s, r) => s + r.n, 0);
+  const topCities = d.byCity.slice(0, 12);
+  const otherCitiesN = d.byCity.slice(12).reduce((s, r) => s + r.n, 0);
+  let cityHtml = topCities.map(r => `<tr><td>${r.label}</td><td>${fmt(r.n)}</td><td>${pct(r.n / cityTotal)}</td></tr>`).join('');
+  if (otherCitiesN > 0) cityHtml += `<tr><td>Other</td><td>${fmt(otherCitiesN)}</td><td>${pct(otherCitiesN / cityTotal)}</td></tr>`;
+  document.getElementById('customersByCityTable').querySelector('tbody').innerHTML =
+    `<tr><th>City</th><th>Customers</th><th>Share</th></tr>${cityHtml}<tr class="total"><td>Total</td><td>${fmt(cityTotal)}</td><td>100.0%</td></tr>`;
+
+  const genderTotal = d.byGender.reduce((s, r) => s + r.n, 0);
+  const genderLabel = { 'მდედრ.': 'Female', 'მამრ.': 'Male', 'N/A': 'N/A' };
+  const genderHtml = d.byGender.map(r => `<tr><td>${genderLabel[r.label] || r.label}</td><td>${fmt(r.n)}</td><td>${pct(r.n / genderTotal)}</td></tr>`).join('');
+  document.getElementById('customersByGenderTable').querySelector('tbody').innerHTML =
+    `<tr><th>Gender</th><th>Customers</th><th>Share</th></tr>${genderHtml}<tr class="total"><td>Total</td><td>${fmt(genderTotal)}</td><td>100.0%</td></tr>`;
+}
+renderCustomerAnalysis();
+
+function renderRiskSegmentation() {
+  const d = riskSegmentation;
+  if (!d) return;
+  const rowsHtml = d.rows.map(r =>
+    `<tr><td>${r.label}</td><td>${fmt(r.n)}</td><td>${fmt(r.debt)}</td><td>${fmt(r.penalty)}</td><td>${pct(r.share)}</td></tr>`
+  ).join('');
+  const html = `<tr><th>Risk Tier</th><th>Loans</th><th>Debt (GEL)</th><th>Penalty (GEL)</th><th>Share</th></tr>`
+    + rowsHtml
+    + `<tr class="total"><td>Total</td><td>${fmt(d.total.n)}</td><td>${fmt(d.total.debt)}</td><td></td><td>100.0%</td></tr>`;
+  document.getElementById('riskSegmentationTable').querySelector('tbody').innerHTML = html;
+}
+renderRiskSegmentation();
+
+function renderClosedLoans() {
+  const d = closedLoansMonthly;
+  if (!d) return;
+  const periods = Object.keys(d.periods).sort();
+  const table = document.getElementById('closedLoansTable');
+
+  const periodCells = periods.map(p => `<td colspan="2">${monthLabel(p)}</td>`).join('');
+  const subCells = periods.map(() => `<td>Qty</td><td>Amount</td>`).join('');
+  let html = `<tr class="rpt-title"><td colspan="${1 + periods.length * 2 + 2}">Closed Loans &mdash; Paid Off vs. Written Off</td></tr>`;
+  html += `<tr class="rpt-colhead"><td>Status</td>${periodCells}<td colspan="2" class="sm-total-col">Total</td></tr>`;
+  html += `<tr class="rpt-colhead"><td></td>${subCells}<td class="sm-total-col">Qty</td><td>Amount</td></tr>`;
+
+  const paidCells = periods.map(p => `<td>${fmt(d.periods[p].paidOffN)}</td><td>${fmt(d.periods[p].paidOffAmount)}</td>`).join('');
+  html += `<tr class="sm-row"><td>Paid Off</td>${paidCells}<td class="sm-total-col">${fmt(d.total.paidOffN)}</td><td>${fmt(d.total.paidOffAmount)}</td></tr>`;
+
+  const writtenCells = periods.map(p => `<td>${fmt(d.periods[p].writtenOffN)}</td><td>${fmt(d.periods[p].writtenOffDebt)}</td>`).join('');
+  html += `<tr class="sm-row"><td>Written Off</td>${writtenCells}<td class="sm-total-col">${fmt(d.total.writtenOffN)}</td><td>${fmt(d.total.writtenOffDebt)}</td></tr>`;
+
+  table.querySelector('tbody').innerHTML = html;
+}
+renderClosedLoans();
+const closedLoansScrollUpdate = setupTopScrollSync('closedLoansScrollTop', 'closedLoansScrollBody');
+
+function renderDelinquency() {
+  const d = delinquencyAnalysis;
+  if (!d) return;
+  const order = ['Current', '1-30', '31-60', '61-90', '90+'];
+  const rowsHtml = order.map(bucket => {
+    const b = d.buckets[bucket];
+    const share = d.total.debt > 0 ? b.debt / d.total.debt : 0;
+    return `<tr><td>${bucket === 'Current' ? 'Current (not overdue)' : bucket + ' days'}</td><td>${fmt(b.n)}</td><td>${fmt(b.debt)}</td><td>${fmt(b.penalty)}</td><td>${pct(share)}</td></tr>`;
+  }).join('');
+  const html = `<tr><th>Days Overdue</th><th>Loans</th><th>Debt (GEL)</th><th>Penalty (GEL)</th><th>Share of Debt</th></tr>`
+    + rowsHtml
+    + `<tr class="total"><td>Total</td><td>${fmt(d.total.n)}</td><td>${fmt(d.total.debt)}</td><td></td><td>100.0%</td></tr>`;
+  document.getElementById('delinquencyTable').querySelector('tbody').innerHTML = html;
+
+  document.getElementById('delinquencyParNote').innerHTML =
+    `<strong>Portfolio at Risk:</strong> PAR30 = ${pct(d.par30)} &middot; PAR60 = ${pct(d.par60)} &middot; PAR90 = ${pct(d.par90)} of total outstanding debt.`;
+}
+renderDelinquency();
+
 document.querySelectorAll('#pageNav button').forEach(btn => {
   btn.addEventListener('click', () => {
     document.querySelectorAll('#pageNav button').forEach(b => b.classList.remove('active'));
@@ -996,6 +1160,7 @@ document.querySelectorAll('#pageNav button').forEach(btn => {
     if (page === 'brandanalyze') brandScrollUpdate();
     if (page === 'subcategoryanalyze') subcategoryScrollUpdate();
     if (page === 'logistics') { logisticsSalesScrollUpdate(); logisticsScrollUpdate(); }
+    if (page === 'closedloans') closedLoansScrollUpdate();
   });
 });
 </script>
