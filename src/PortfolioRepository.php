@@ -126,20 +126,47 @@ final class PortfolioRepository
      * Age (from BirthDay) x Gender breakdown, same customer scope as customerAnalysis().
      * Buckets match the layout the business asked for: "<18" (labelled ">18" on their own
      * template — read in context as "under 18" since it's followed by "18-25", not "over 18"),
-     * 18-25, 25-35, 35-45, 45-60, "60+". Customers with a missing/blank BirthDay (646 of 35,799
-     * in this scope, checked before building) get their own "Unspecified" row rather than being
-     * dropped or guessed into a bucket. Share % is computed within each gender column (that
-     * bucket's count ÷ that gender's total), not against the grand total — answers "how is each
-     * gender's age distributed", which is what a per-gender breakdown is for.
+     * 18-25, 25-35, 35-45, 45-60, "60+". Customers with a missing/blank BirthDay get their own
+     * "Unspecified" row rather than being dropped or guessed into a bucket. Share % is computed
+     * within each gender column (that bucket's count ÷ that gender's total), not against the
+     * grand total — answers "how is each gender's age distributed", which is what a per-gender
+     * breakdown is for.
+     *
+     * This and the four reports below (Workshop/Workpos/Comment/FactAddress) originally fetched
+     * every scoped customer row (~35,800) into PHP for regex/substring processing. On this DB's
+     * connection that took ~26s for the shared fetch ALONE (confirmed by timing each query
+     * variant — a derived-table join, a direct join, and an EXISTS subquery all took the same
+     * ~30s, and even a bare `SELECT * FROM customers` with no join took 42s for 44k rows — so
+     * it's row-transfer-bound on this connection, not a query-plan problem) — with five reports
+     * doing this per page load, real production hit PHP's 30s `max_execution_time` and fataled
+     * (caught by the user's own next "refresh Daily Report" request, not by this session's own
+     * verification, which happened to run on a faster connection when first built). Rewritten to
+     * aggregate server-side (`GROUP BY`/`COUNT(DISTINCT Customer_ID)`) like every *other* method
+     * in this class already does, so only a handful of summary rows cross the network — same
+     * fix category as `FunnelRepository`'s `cogsGarbageStats()` memoization, but here the fix is
+     * "don't transfer 35,800 rows to do what SQL can aggregate", not just "don't ask twice".
+     * MySQL 5.7 has no `REGEXP_SUBSTR` (that's 8.0+), so `customerIncomeAnalysis()` below is a
+     * hybrid: buckets pure-numeric Comments in SQL, and only pulls the free-text minority
+     * (~14% of rows) to PHP for first-number regex extraction.
      */
     public function customerAgeGenderAnalysis(): array
     {
         $rows = $this->pdo->query(<<<SQL
             SELECT
-                c.BirthDay AS birthday,
-                CASE WHEN c.Gender IN ('მდედრ.', 'მამრ.') THEN c.Gender ELSE 'N/A' END AS gender
+                CASE
+                    WHEN c.BirthDay IS NULL OR c.BirthDay = '0000-00-00' THEN 'Unspecified'
+                    WHEN TIMESTAMPDIFF(YEAR, c.BirthDay, CURDATE()) < 18 THEN '<18'
+                    WHEN TIMESTAMPDIFF(YEAR, c.BirthDay, CURDATE()) < 25 THEN '18-25'
+                    WHEN TIMESTAMPDIFF(YEAR, c.BirthDay, CURDATE()) < 35 THEN '25-35'
+                    WHEN TIMESTAMPDIFF(YEAR, c.BirthDay, CURDATE()) < 45 THEN '35-45'
+                    WHEN TIMESTAMPDIFF(YEAR, c.BirthDay, CURDATE()) < 60 THEN '45-60'
+                    ELSE '60+'
+                END AS bucket,
+                CASE WHEN c.Gender IN ('მდედრ.', 'მამრ.') THEN c.Gender ELSE 'N/A' END AS gender,
+                COUNT(DISTINCT c.Customer_ID) AS n
             FROM customers c
-            JOIN (SELECT DISTINCT Customer_ID FROM instalments WHERE Product_ID > 1) i ON i.Customer_ID = c.Customer_ID
+            JOIN instalments i ON i.Customer_ID = c.Customer_ID AND i.Product_ID > 1
+            GROUP BY bucket, gender
             SQL)->fetchAll(PDO::FETCH_ASSOC);
 
         $buckets = ['<18', '18-25', '25-35', '35-45', '45-60', '60+', 'Unspecified'];
@@ -150,31 +177,11 @@ final class PortfolioRepository
                 $grid[$b][$g] = 0;
             }
         }
-
-        $today = new \DateTimeImmutable('today');
+        // MySQL occasionally returns more than one group for what should be a single collapsed
+        // 'N/A' gender bucket (a real quirk on this server, checked directly) — sum defensively
+        // by key instead of assuming one row per (bucket, gender) pair.
         foreach ($rows as $r) {
-            $gender = $r['gender'];
-            if (empty($r['birthday']) || $r['birthday'] === '0000-00-00') {
-                $grid['Unspecified'][$gender]++;
-                continue;
-            }
-            $bd = \DateTimeImmutable::createFromFormat('Y-m-d', $r['birthday']);
-            $age = $bd ? $today->diff($bd)->y : null;
-            if ($age === null) {
-                $grid['Unspecified'][$gender]++;
-            } elseif ($age < 18) {
-                $grid['<18'][$gender]++;
-            } elseif ($age < 25) {
-                $grid['18-25'][$gender]++;
-            } elseif ($age < 35) {
-                $grid['25-35'][$gender]++;
-            } elseif ($age < 45) {
-                $grid['35-45'][$gender]++;
-            } elseif ($age < 60) {
-                $grid['45-60'][$gender]++;
-            } else {
-                $grid['60+'][$gender]++;
-            }
+            $grid[$r['bucket']][$r['gender']] += (int) $r['n'];
         }
 
         $genderTotals = [];
@@ -211,45 +218,50 @@ final class PortfolioRepository
      * long tail) + "Unspecified" (blank). This is a "most common exact strings" report, not
      * semantic clustering — typo/spelling variants (e.g. "თვითდასაქმებული" vs "თვით
      * დასაქმებული") are NOT merged, since guessing which strings mean the same thing risks being
-     * wrong; the footer note discloses this explicitly.
+     * wrong; the footer note discloses this explicitly. All aggregated server-side (see class-
+     * level note above on why) — only ever transfers ~20 summary rows plus one totals row.
      */
     private function groupedTextFieldReport(string $column, int $topN): array
     {
-        $rows = $this->pdo->query(<<<SQL
-            SELECT c.{$column} AS raw_value
+        $raw = "COALESCE(c.{$column}, '')";
+        $expr = "CASE WHEN {$raw} LIKE ',%' THEN TRIM(SUBSTRING({$raw}, 2)) ELSE TRIM({$raw}) END";
+
+        $top = $this->pdo->query(<<<SQL
+            SELECT {$expr} AS label, COUNT(DISTINCT c.Customer_ID) AS n
             FROM customers c
-            JOIN (SELECT DISTINCT Customer_ID FROM instalments WHERE Product_ID > 1) i ON i.Customer_ID = c.Customer_ID
+            JOIN instalments i ON i.Customer_ID = c.Customer_ID AND i.Product_ID > 1
+            WHERE {$expr} <> ''
+            GROUP BY label
+            ORDER BY n DESC
+            LIMIT {$topN}
             SQL)->fetchAll(PDO::FETCH_ASSOC);
 
-        $counts = [];
-        $unspecified = 0;
-        foreach ($rows as $r) {
-            $v = trim((string) $r['raw_value']);
-            if (str_starts_with($v, ',')) {
-                $v = trim(ltrim($v, ','));
-            }
-            if ($v === '') {
-                $unspecified++;
-                continue;
-            }
-            $counts[$v] = ($counts[$v] ?? 0) + 1;
-        }
-        arsort($counts);
+        $totals = $this->pdo->query(<<<SQL
+            SELECT
+                COUNT(DISTINCT c.Customer_ID) AS total,
+                COUNT(DISTINCT CASE WHEN {$expr} = '' THEN c.Customer_ID END) AS blankN,
+                COUNT(DISTINCT CASE WHEN {$expr} <> '' THEN {$expr} END) AS distinctValues,
+                COUNT(DISTINCT CASE WHEN {$expr} <> '' THEN c.Customer_ID END) AS nonBlankCustomers
+            FROM customers c
+            JOIN instalments i ON i.Customer_ID = c.Customer_ID AND i.Product_ID > 1
+            SQL)->fetch(PDO::FETCH_ASSOC);
 
-        $total = count($rows);
-        $top = array_slice($counts, 0, $topN, true);
-        $otherCount = array_sum($counts) - array_sum($top);
+        $total = (int) $totals['total'];
+        $topTotal = array_sum(array_column($top, 'n'));
+        $otherCount = (int) $totals['nonBlankCustomers'] - $topTotal;
+        $unspecified = (int) $totals['blankN'];
 
         $result = [];
-        foreach ($top as $label => $n) {
-            $result[] = ['label' => $label, 'n' => $n, 'share' => $total > 0 ? round($n / $total, 4) : 0.0];
+        foreach ($top as $r) {
+            $n = (int) $r['n'];
+            $result[] = ['label' => $r['label'], 'n' => $n, 'share' => $total > 0 ? round($n / $total, 4) : 0.0];
         }
         if ($otherCount > 0) {
             $result[] = ['label' => 'Other', 'n' => $otherCount, 'share' => $total > 0 ? round($otherCount / $total, 4) : 0.0];
         }
         $result[] = ['label' => 'Unspecified', 'n' => $unspecified, 'share' => $total > 0 ? round($unspecified / $total, 4) : 0.0];
 
-        return ['rows' => $result, 'total' => $total, 'distinctValues' => count($counts)];
+        return ['rows' => $result, 'total' => $total, 'distinctValues' => (int) $totals['distinctValues']];
     }
 
     public function customerWorkshopAnalysis(): array
@@ -271,39 +283,78 @@ final class PortfolioRepository
      * normalize daily-wage phrasing ("დღეში" = "per day") to a monthly figure, since that would
      * be guessing at a conversion; the footer note discloses this as a known limitation rather
      * than silently mixing daily and monthly figures into the same buckets.
+     *
+     * Hybrid SQL/PHP: pure-numeric Comments (the majority) are bucketed server-side via
+     * `CAST(... AS UNSIGNED)` — MySQL 5.7 on this DB has no `REGEXP_SUBSTR` to extract a number
+     * from "1200 ლარი..." server-side, so only the free-text minority (~14% of rows) is pulled
+     * to PHP for regex extraction, not all ~35,800.
      */
     public function customerIncomeAnalysis(): array
     {
-        $rows = $this->pdo->query(<<<SQL
-            SELECT c.Comment AS raw_value
-            FROM customers c
-            JOIN (SELECT DISTINCT Customer_ID FROM instalments WHERE Product_ID > 1) i ON i.Customer_ID = c.Customer_ID
-            SQL)->fetchAll(PDO::FETCH_ASSOC);
-
         $buckets = [
             '0-500' => [0, 500], '500-1000' => [500, 1000], '1000-1500' => [1000, 1500],
             '1500-2000' => [1500, 2000], '2000-3000' => [2000, 3000], '3000-5000' => [3000, 5000],
             '5000+' => [5000, PHP_INT_MAX],
         ];
         $counts = array_fill_keys(array_keys($buckets), 0);
-        $unspecified = 0;
 
-        foreach ($rows as $r) {
-            $v = trim((string) $r['raw_value']);
+        $bucketCase = '';
+        foreach ($buckets as $label => [, $hi]) {
+            if ($hi === PHP_INT_MAX) {
+                continue;
+            }
+            $bucketCase .= "WHEN CAST(c.Comment AS UNSIGNED) < {$hi} THEN '{$label}' ";
+        }
+        $numericRows = $this->pdo->query(<<<SQL
+            SELECT
+                CASE {$bucketCase} ELSE '5000+' END AS bucket,
+                COUNT(DISTINCT c.Customer_ID) AS n
+            FROM customers c
+            JOIN instalments i ON i.Customer_ID = c.Customer_ID AND i.Product_ID > 1
+            WHERE c.Comment REGEXP '^[0-9]+$'
+            GROUP BY bucket
+            SQL)->fetchAll(PDO::FETCH_ASSOC);
+        foreach ($numericRows as $r) {
+            $counts[$r['bucket']] += (int) $r['n'];
+        }
+
+        $total = (int) $this->pdo->query(
+            'SELECT COUNT(DISTINCT c.Customer_ID) AS n FROM customers c JOIN instalments i ON i.Customer_ID = c.Customer_ID AND i.Product_ID > 1'
+        )->fetch()['n'];
+        $unspecified = (int) $this->pdo->query(<<<SQL
+            SELECT COUNT(DISTINCT c.Customer_ID) AS n
+            FROM customers c
+            JOIN instalments i ON i.Customer_ID = c.Customer_ID AND i.Product_ID > 1
+            WHERE c.Comment IS NULL OR c.Comment = ''
+            SQL)->fetch()['n'];
+
+        // The free-text minority: non-blank, not pure-numeric — pulled to PHP for regex only.
+        // Grouped (with a customer count per distinct string), not a flat row list — several
+        // customers often share the exact same phrasing (e.g. "დღეში 100 ლარი"), and a flat
+        // `SELECT DISTINCT Comment` would collapse them into one row and silently undercount.
+        $messyRows = $this->pdo->query(<<<SQL
+            SELECT c.Comment, COUNT(DISTINCT c.Customer_ID) AS n
+            FROM customers c
+            JOIN instalments i ON i.Customer_ID = c.Customer_ID AND i.Product_ID > 1
+            WHERE c.Comment IS NOT NULL AND c.Comment <> '' AND c.Comment NOT REGEXP '^[0-9]+$'
+            GROUP BY c.Comment
+            SQL)->fetchAll(PDO::FETCH_ASSOC);
+        foreach ($messyRows as $r) {
+            $v = trim((string) $r['Comment']);
+            $n = (int) $r['n'];
             if ($v === '' || !preg_match('/(\d+)/', $v, $m)) {
-                $unspecified++;
+                $unspecified += $n;
                 continue;
             }
             $amount = (int) $m[1];
             foreach ($buckets as $label => [$lo, $hi]) {
                 if ($amount >= $lo && $amount < $hi) {
-                    $counts[$label]++;
+                    $counts[$label] += $n;
                     break;
                 }
             }
         }
 
-        $total = count($rows);
         $result = [];
         foreach ($counts as $label => $n) {
             $result[] = ['label' => $label, 'n' => $n, 'share' => $total > 0 ? round($n / $total, 4) : 0.0];
@@ -322,9 +373,12 @@ final class PortfolioRepository
      * list of real Tbilisi districts/microrayons — the list itself was built empirically from
      * this database's own comma-segment-2 values (not from outside knowledge), checked longest-
      * name-first so e.g. "ზემო ფონიჭალა" matches before the more generic "ფონიჭალა". Measured
-     * match rate on real data: 46.7% (8,526 of 18,260 Tbilisi addresses in scope) — the rest go
-     * into "ვერ დადგინდა" ("Could not be determined") rather than guessed at. This is inherently
-     * best-effort text parsing, not a real data field, and the footer note says so.
+     * match rate on real data: ~46-47% — the rest go into "ვერ დადგინდა" ("Could not be
+     * determined") rather than guessed at. This is inherently best-effort text parsing, not a
+     * real data field, and the footer note says so.
+     *
+     * The matching itself runs as one big SQL `CASE`/`LIKE` expression (server-side), not a PHP
+     * loop over every fetched address — see class-level note above on why.
      */
     public function customerDistrictAnalysis(): array
     {
@@ -338,33 +392,34 @@ final class PortfolioRepository
         ];
         usort($districts, static fn ($a, $b) => strlen($b) <=> strlen($a));
 
+        $whenClauses = '';
+        foreach ($districts as $d) {
+            $esc = str_replace("'", "''", $d);
+            $whenClauses .= "WHEN c.FactAddress LIKE '%{$esc}%' THEN '{$esc}' ";
+        }
+
         $rows = $this->pdo->query(<<<SQL
-            SELECT c.FactAddress AS addr
+            SELECT
+                CASE {$whenClauses} ELSE 'ვერ დადგინდა' END AS district,
+                COUNT(DISTINCT c.Customer_ID) AS n
             FROM customers c
-            JOIN (SELECT DISTINCT Customer_ID FROM instalments WHERE Product_ID > 1) i ON i.Customer_ID = c.Customer_ID
+            JOIN instalments i ON i.Customer_ID = c.Customer_ID AND i.Product_ID > 1
             WHERE c.FactAddress LIKE '%თბილისი%'
+            GROUP BY district
             SQL)->fetchAll(PDO::FETCH_ASSOC);
 
-        $counts = [];
         $undetermined = 0;
+        $counts = [];
         foreach ($rows as $r) {
-            $addr = (string) $r['addr'];
-            $found = null;
-            foreach ($districts as $d) {
-                if (str_contains($addr, $d)) {
-                    $found = $d;
-                    break;
-                }
-            }
-            if ($found === null) {
-                $undetermined++;
+            if ($r['district'] === 'ვერ დადგინდა') {
+                $undetermined += (int) $r['n'];
             } else {
-                $counts[$found] = ($counts[$found] ?? 0) + 1;
+                $counts[$r['district']] = ($counts[$r['district']] ?? 0) + (int) $r['n'];
             }
         }
         arsort($counts);
 
-        $total = count($rows);
+        $total = $undetermined + array_sum($counts);
         $result = [];
         foreach ($counts as $label => $n) {
             $result[] = ['label' => $label, 'n' => $n, 'share' => $total > 0 ? round($n / $total, 4) : 0.0];

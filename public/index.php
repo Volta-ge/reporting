@@ -4,6 +4,14 @@ declare(strict_types=1);
 
 namespace Volta\Funnel;
 
+// This page runs ~25 separate queries against a remote DB (myvolta.info) — under normal network
+// conditions that's comfortably under PHP's 30s default, but on a slower-latency day it isn't
+// (measured 25-30s end-to-end on 2026-08-26 with nothing unusual in the queries themselves —
+// per-query round-trip latency, not payload size, dominates). Raised as a safety margin rather
+// than trying to chase network variance; if this route ever legitimately needs more, that's a
+// sign to revisit query count, not just push the limit further.
+set_time_limit(90);
+
 require __DIR__ . '/../src/Segment.php';
 require __DIR__ . '/../src/SegmentMetrics.php';
 require __DIR__ . '/../src/Database.php';
