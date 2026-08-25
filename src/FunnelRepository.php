@@ -213,19 +213,37 @@ final class FunnelRepository
      * see its class docblock for the exact-match validation against the business's own
      * numbers (Smartphones, Jan 2026: 53010 / 28967 / 34).
      *
-     * Order_Status = 5 is the "real sale" filter — confirmed by reverse-engineering against
-     * 34 known case IDs from the business's own report; Active is NOT the right filter here
-     * (varies freely across genuine sales, since a sale can still be active=0 later e.g. paid
-     * off/closed). Sales = SUM(Final_Price), Cogs = SUM(Start_Price) — both raw, unmodified
-     * from what's stored per line item, matching the business's own report's own methodology
-     * exactly (their own Cogs column is not garbage-cleaned either).
+     * Order_Status = 5 is the "real sale" filter for installment deals — confirmed by
+     * reverse-engineering against 34 known case IDs from the business's own report; Active is
+     * NOT the right filter here (varies freely across genuine sales, since a sale can still be
+     * active=0 later e.g. paid off/closed). Sales = SUM(Final_Price), Cogs = SUM(Start_Price) —
+     * both raw, unmodified from what's stored per line item, matching the business's own
+     * report's own methodology exactly (their own Cogs column is not garbage-cleaned either).
+     *
+     * Single-payment ("ერთიანი გადახდა") sales are a separate deal type entirely, confirmed
+     * against real Instalment_IDs from two admin-panel screenshots (2026-08-25):
+     * `Type_Of_Sales = 99` (installment deals are always `0`), and they use `Order_Status IN
+     * (1, 3)` instead of 5 — this business's committee/invoice pipeline doesn't apply to a
+     * same-day full-payment sale. Their `Order_Date` is frequently NULL (unlike installment
+     * deals, where it's always populated) — `COALESCE(Order_Date, Aplication_Date)` is used as
+     * the effective sale-month date for both deal types, since Aplication_Date is the only
+     * date reliably populated for single-payment rows and, for a one-step cash sale, is
+     * effectively the transaction date anyway. Each of the three *MonthlyStats() methods below
+     * returns `['all' => ..., 'installment' => ..., 'single' => ...]` — all three built from one
+     * DB fetch (see rawGroupedSales()/cogsGarbageStats()), not three separate queries.
      */
     public function salesMonthlyStats(DateTimeImmutable $from, DateTimeImmutable $to, ProductClassifier $classifier): array
     {
         $rawRows = $this->rawGroupedSales($from, $to, 'pc.Category_Name');
-        $report = $this->buildBucketedReport($rawRows, fn (?string $raw) => $classifier->classify($raw), 'Uncategorized');
-        $report['garbage'] = $this->cogsGarbageStats($from, $to);
-        return $report;
+        $garbage = $this->cogsGarbageStats($from, $to);
+        $result = [];
+        foreach (['all', 'installment', 'single'] as $dealType) {
+            $filtered = $dealType === 'all' ? $rawRows : array_filter($rawRows, fn ($r) => $r['deal_type'] === $dealType);
+            $report = $this->buildBucketedReport($filtered, fn (?string $raw) => $classifier->classify($raw), 'Uncategorized');
+            $report['garbage'] = $garbage[$dealType];
+            $result[$dealType] = $report;
+        }
+        return $result;
     }
 
     /**
@@ -247,9 +265,15 @@ final class FunnelRepository
             }
             return $name;
         };
-        $report = $this->buildBucketedReport($rawRows, $classify, 'No Brand');
-        $report['garbage'] = $this->cogsGarbageStats($from, $to);
-        return $report;
+        $garbage = $this->cogsGarbageStats($from, $to);
+        $result = [];
+        foreach (['all', 'installment', 'single'] as $dealType) {
+            $filtered = $dealType === 'all' ? $rawRows : array_filter($rawRows, fn ($r) => $r['deal_type'] === $dealType);
+            $report = $this->buildBucketedReport($filtered, $classify, 'No Brand');
+            $report['garbage'] = $garbage[$dealType];
+            $result[$dealType] = $report;
+        }
+        return $result;
     }
 
     /**
@@ -262,9 +286,15 @@ final class FunnelRepository
     public function subcategoryMonthlyStats(DateTimeImmutable $from, DateTimeImmutable $to, ProductClassifier $classifier): array
     {
         $rawRows = $this->rawGroupedSales($from, $to, 'pc.Category_Name');
-        $report = $this->buildBucketedReport($rawRows, fn (?string $raw) => $classifier->classifySubcategory($raw), 'Uncategorized');
-        $report['garbage'] = $this->cogsGarbageStats($from, $to);
-        return $report;
+        $garbage = $this->cogsGarbageStats($from, $to);
+        $result = [];
+        foreach (['all', 'installment', 'single'] as $dealType) {
+            $filtered = $dealType === 'all' ? $rawRows : array_filter($rawRows, fn ($r) => $r['deal_type'] === $dealType);
+            $report = $this->buildBucketedReport($filtered, fn (?string $raw) => $classifier->classifySubcategory($raw), 'Uncategorized');
+            $report['garbage'] = $garbage[$dealType];
+            $result[$dealType] = $report;
+        }
+        return $result;
     }
 
     /** @var array<string, array> */
@@ -293,8 +323,9 @@ final class FunnelRepository
         ];
         $stmt = $this->pdo->prepare(<<<SQL
             SELECT
-                DATE_FORMAT(i.Order_Date, '%Y-%m') AS period,
+                DATE_FORMAT(COALESCE(i.Order_Date, i.Aplication_Date), '%Y-%m') AS period,
                 {$groupExpr} AS raw_key,
+                CASE WHEN i.Type_Of_Sales = 99 THEN 'single' ELSE 'installment' END AS deal_type,
                 SUM(ip.Final_Price) AS sales,
                 SUM(ip.Start_Price) AS cogs,
                 COUNT(*) AS qty
@@ -303,9 +334,9 @@ final class FunnelRepository
             JOIN products p ON p.Product_ID = ip.Product_ID
             LEFT JOIN product_category pc ON pc.Category_ID = p.Category_ID
             {$extraJoin}
-            WHERE i.Order_Date >= :from AND i.Order_Date < :to
-              AND i.Order_Status = 5
-            GROUP BY period, {$groupExpr}
+            WHERE COALESCE(i.Order_Date, i.Aplication_Date) >= :from AND COALESCE(i.Order_Date, i.Aplication_Date) < :to
+              AND (i.Order_Status = 5 OR (i.Order_Status IN (1, 3) AND i.Type_Of_Sales = 99))
+            GROUP BY period, {$groupExpr}, deal_type
             SQL);
         $stmt->execute($params);
         $rows = $stmt->fetchAll();
@@ -432,9 +463,9 @@ final class FunnelRepository
      * Start_Price entries; the 0.5x/2x band was chosen because 99.8% of clean values fall
      * within it.
      *
-     * @return array{count: int, salesAffected: float, total: int}
+     * @return array{all: array{count: int, salesAffected: float, total: int}, installment: array{count: int, salesAffected: float, total: int}, single: array{count: int, salesAffected: float, total: int}}
      */
-    /** @var array<string, array{count: int, salesAffected: float, total: int}> */
+    /** @var array<string, array{all: array{count: int, salesAffected: float, total: int}, installment: array{count: int, salesAffected: float, total: int}, single: array{count: int, salesAffected: float, total: int}}> */
     private array $garbageStatsCache = [];
 
     private function cogsGarbageStats(DateTimeImmutable $from, DateTimeImmutable $to): array
@@ -453,45 +484,58 @@ final class FunnelRepository
             'to' => $to->format('Y-m-d H:i:s'),
         ];
         $stmt = $this->pdo->prepare(<<<SQL
-            SELECT ip.Product_ID AS product_id, ip.Start_Price AS start_price, ip.Final_Price AS final_price
+            SELECT
+                ip.Product_ID AS product_id, ip.Start_Price AS start_price, ip.Final_Price AS final_price,
+                CASE WHEN i.Type_Of_Sales = 99 THEN 'single' ELSE 'installment' END AS deal_type
             FROM instalment_products ip
             JOIN instalments i ON i.Instalment_ID = ip.Instalment_ID
-            WHERE i.Order_Date >= :from AND i.Order_Date < :to
-              AND i.Order_Status = 5
+            WHERE COALESCE(i.Order_Date, i.Aplication_Date) >= :from AND COALESCE(i.Order_Date, i.Aplication_Date) < :to
+              AND (i.Order_Status = 5 OR (i.Order_Status IN (1, 3) AND i.Type_Of_Sales = 99))
             SQL);
         $stmt->execute($params);
-        $lines = $stmt->fetchAll();
+        $allLines = $stmt->fetchAll();
 
         $isRepdigit = static fn (float $v): bool => $v > 0 && preg_match('/^1+$/', (string) (int) round($v)) === 1;
 
-        $cleanByProduct = [];
-        foreach ($lines as $line) {
-            $sp = (float) $line['start_price'];
-            if ($sp > 0 && !$isRepdigit($sp)) {
-                $cleanByProduct[$line['product_id']][] = $sp;
+        $computeForLines = function (array $lines) use ($isRepdigit): array {
+            $cleanByProduct = [];
+            foreach ($lines as $line) {
+                $sp = (float) $line['start_price'];
+                if ($sp > 0 && !$isRepdigit($sp)) {
+                    $cleanByProduct[$line['product_id']][] = $sp;
+                }
             }
-        }
-        $medianByProduct = [];
-        foreach ($cleanByProduct as $pid => $values) {
-            sort($values);
-            $n = count($values);
-            $mid = intdiv($n, 2);
-            $medianByProduct[$pid] = $n % 2 ? $values[$mid] : ($values[$mid - 1] + $values[$mid]) / 2;
-        }
-
-        $garbageCount = 0;
-        $garbageSales = 0.0;
-        foreach ($lines as $line) {
-            $sp = (float) $line['start_price'];
-            $med = $medianByProduct[$line['product_id']] ?? null;
-            $isGarbage = $sp <= 0 || $isRepdigit($sp) || ($med !== null && ($sp < 0.5 * $med || $sp > 2 * $med));
-            if ($isGarbage) {
-                $garbageCount++;
-                $garbageSales += (float) $line['final_price'];
+            $medianByProduct = [];
+            foreach ($cleanByProduct as $pid => $values) {
+                sort($values);
+                $n = count($values);
+                $mid = intdiv($n, 2);
+                $medianByProduct[$pid] = $n % 2 ? $values[$mid] : ($values[$mid - 1] + $values[$mid]) / 2;
             }
-        }
 
-        $result = ['count' => $garbageCount, 'salesAffected' => round($garbageSales, 2), 'total' => count($lines)];
+            $garbageCount = 0;
+            $garbageSales = 0.0;
+            foreach ($lines as $line) {
+                $sp = (float) $line['start_price'];
+                $med = $medianByProduct[$line['product_id']] ?? null;
+                $isGarbage = $sp <= 0 || $isRepdigit($sp) || ($med !== null && ($sp < 0.5 * $med || $sp > 2 * $med));
+                if ($isGarbage) {
+                    $garbageCount++;
+                    $garbageSales += (float) $line['final_price'];
+                }
+            }
+
+            return ['count' => $garbageCount, 'salesAffected' => round($garbageSales, 2), 'total' => count($lines)];
+        };
+
+        $installmentLines = array_filter($allLines, fn ($l) => $l['deal_type'] === 'installment');
+        $singleLines = array_filter($allLines, fn ($l) => $l['deal_type'] === 'single');
+
+        $result = [
+            'all' => $computeForLines($allLines),
+            'installment' => $computeForLines($installmentLines),
+            'single' => $computeForLines($singleLines),
+        ];
         $this->garbageStatsCache[$cacheKey] = $result;
         return $result;
     }

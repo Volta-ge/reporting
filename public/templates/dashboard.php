@@ -13,9 +13,19 @@
  * @var array|null $subcategoryStats
  * @var array<string, array{count: int, capturedAt: string}> $pendingStatusLog
  * @var array|null $customerAnalysis
+ * @var array|null $customerAgeGenderAnalysis
+ * @var array|null $customerWorkshopAnalysis
+ * @var array|null $customerWorkposAnalysis
+ * @var array|null $customerIncomeAnalysis
+ * @var array|null $customerDistrictAnalysis
  * @var array|null $riskSegmentation
  * @var array|null $closedLoansMonthly
  * @var array|null $delinquencyAnalysis
+ * @var array|null $rejectionReasonsMonthly
+ * @var array|null $clientRefusedReasonsMonthly
+ * @var array|null $expiredReasonsMonthly
+ * @var array|null $notRespondingReasonsMonthly
+ * @var array|null $approvedReasonsMonthly
  */
 
 declare(strict_types=1);
@@ -291,6 +301,7 @@ table.rpt-pivot td.rpt-group-toggle { cursor: pointer; user-select: none; text-a
     <button data-page="risksegmentation">Risk Segmentation</button>
     <button data-page="closedloans">Closed Loans</button>
     <button data-page="delinquency">Overdue Analysis</button>
+    <button data-page="rejectionreasons">Committee</button>
   </div>
 
   <div class="page active" id="page-report">
@@ -330,7 +341,12 @@ table.rpt-pivot td.rpt-group-toggle { cursor: pointer; user-select: none; text-a
 
   <div class="page" id="page-salesmonthly">
     <p class="section-title">Sales Monthly &mdash; by product category</p>
-    <p class="note" style="margin:-8px 0 0;">One column-group (Sales / Cogs / Margin / Qty) per calendar month of <?= htmlspecialchars($now->format('Y'), ENT_QUOTES, 'UTF-8') ?>, plus Q1 and Q2 quarterly summary groups (each with that row's share of the quarter's total Sales) and an overall Total group (share of the whole window). Live from the database on every page load (not a manual snapshot) &mdash; Order_Status = 5 is used as the "real sale" filter (matches the business's own report exactly for every category+month checked). Rows are sorted by total Sales, highest first. Sales = SUM(Final_Price), Cogs = SUM(Start_Price), both raw and unmodified &mdash; same convention the business's own report uses.</p>
+    <p class="note" style="margin:-8px 0 0;">One column-group (Sales / Cogs / Margin / Qty) per calendar month of <?= htmlspecialchars($now->format('Y'), ENT_QUOTES, 'UTF-8') ?>, plus Q1 and Q2 quarterly summary groups (each with that row's share of the quarter's total Sales) and an overall Total group (share of the whole window). Live from the database on every page load (not a manual snapshot) &mdash; installment sales use Order_Status = 5 as the "real sale" filter (matches the business's own report exactly for every category+month checked); single-payment sales use <code>Type_Of_Sales = 99</code> instead, keyed to <code>Aplication_Date</code> since they have no <code>Order_Date</code>. Rows are sorted by total Sales, highest first. Sales = SUM(Final_Price), Cogs = SUM(Start_Price), both raw and unmodified &mdash; same convention the business's own report uses.</p>
+    <div class="page-nav" id="salesMonthlyDealTypeNav" style="margin-bottom:-8px;">
+      <button data-deal="all" class="active">ყველა</button>
+      <button data-deal="installment">განვადება</button>
+      <button data-deal="single">ერთიანი გადახდა</button>
+    </div>
     <div class="report-card">
       <div class="report-scroll-top" id="salesMonthlyScrollTop"><div></div></div>
       <div class="report-scroll" id="salesMonthlyScrollBody">
@@ -343,6 +359,11 @@ table.rpt-pivot td.rpt-group-toggle { cursor: pointer; user-select: none; text-a
   <div class="page" id="page-brandanalyze">
     <p class="section-title">Brand Analyze &mdash; by brand</p>
     <p class="note" style="margin:-8px 0 0;">Same layout as Sales Monthly, grouped by <code>product_brands.Brand_Name</code> instead of product category &mdash; the Brand_ID link is fully populated in the database (unlike category), so this needed no mapping-sheet translation. Three different "no real brand" spellings found in the data (<code>none</code>, <code>N/A</code>, <code>ბრენდის გარეშე</code>) are combined into one "No Brand" row at the bottom.</p>
+    <div class="page-nav" id="brandDealTypeNav" style="margin-bottom:-8px;">
+      <button data-deal="all" class="active">ყველა</button>
+      <button data-deal="installment">განვადება</button>
+      <button data-deal="single">ერთიანი გადახდა</button>
+    </div>
     <div class="report-card">
       <div class="report-scroll-top" id="brandScrollTop"><div></div></div>
       <div class="report-scroll" id="brandScrollBody">
@@ -355,6 +376,11 @@ table.rpt-pivot td.rpt-group-toggle { cursor: pointer; user-select: none; text-a
   <div class="page" id="page-subcategoryanalyze">
     <p class="section-title">Subcategory Analyze &mdash; by broader product group</p>
     <p class="note" style="margin:-8px 0 0;">Same layout as Sales Monthly, but one level broader &mdash; e.g. Air Fryer / Blender / Toaster (separate rows on Sales Monthly) all roll up into one "Small Kitchen Appliances" row here. Same mapping-sheet lookup as Sales Monthly, just reading its Subcategory(EN) field instead of Product(EN).</p>
+    <div class="page-nav" id="subcategoryDealTypeNav" style="margin-bottom:-8px;">
+      <button data-deal="all" class="active">ყველა</button>
+      <button data-deal="installment">განვადება</button>
+      <button data-deal="single">ერთიანი გადახდა</button>
+    </div>
     <div class="report-card">
       <div class="report-scroll-top" id="subcategoryScrollTop"><div></div></div>
       <div class="report-scroll" id="subcategoryScrollBody">
@@ -429,6 +455,46 @@ table.rpt-pivot td.rpt-group-toggle { cursor: pointer; user-select: none; text-a
       </div>
     </div>
   </div>
+
+  <p class="section-title" style="margin-top:20px;">Age &times; Gender</p>
+  <p class="note" style="margin:-8px 0 0;">From <code>customers.BirthDay</code>. Share % is computed within each gender column (that age bucket's count &divide; that gender's own total) &mdash; shows how each gender's ages are distributed, not each bucket's share of everyone. "Unspecified" = missing/blank BirthDay.</p>
+  <div class="table-card">
+    <table id="customersAgeGenderTable"><tbody></tbody></table>
+  </div>
+
+  <div class="logi-mini-row" style="margin-top:20px;">
+    <div>
+      <p class="section-title">Workshop (Employer / Field)</p>
+      <div class="table-card">
+        <table id="customersWorkshopTable"><tbody></tbody></table>
+      </div>
+      <p class="note" id="customersWorkshopNote"></p>
+    </div>
+    <div>
+      <p class="section-title">Workpos (Job Title)</p>
+      <div class="table-card">
+        <table id="customersWorkposTable"><tbody></tbody></table>
+      </div>
+      <p class="note" id="customersWorkposNote"></p>
+    </div>
+  </div>
+
+  <div class="logi-mini-row" style="margin-top:20px;">
+    <div>
+      <p class="section-title">Reported Income (from Comment)</p>
+      <div class="table-card">
+        <table id="customersIncomeTable"><tbody></tbody></table>
+      </div>
+      <p class="note">From <code>customers.Comment</code> &mdash; not a free-text note field despite the name, this is where staff record reported income (e.g. "1500", "1200 ლარი თიბისი ბანკში", "დღეში 100 ლ"). Bucketed by the first number found in the text; daily-wage phrasing ("დღეში" = "per day") is not converted to a monthly figure, so a handful of daily amounts sit in the same buckets as monthly ones.</p>
+    </div>
+    <div>
+      <p class="section-title">Tbilisi District (decoded from address)</p>
+      <div class="table-card">
+        <table id="customersDistrictTable"><tbody></tbody></table>
+      </div>
+      <p class="note" id="customersDistrictNote">From <code>customers.FactAddress</code>, scoped to addresses mentioning "თბილისი". Real addresses don't follow one consistent format, so this is a best-effort substring match against a list of known Tbilisi districts/microrayons; the rest are "ვერ დადგინდა" (could not be determined) rather than guessed at.</p>
+    </div>
+  </div>
 </div>
 
 <div class="page" id="page-risksegmentation">
@@ -459,6 +525,52 @@ table.rpt-pivot td.rpt-group-toggle { cursor: pointer; user-select: none; text-a
   <p class="note" id="delinquencyParNote"></p>
 </div>
 
+<div class="page" id="page-rejectionreasons">
+  <p class="section-title">Committee &mdash; decision reasons by status</p>
+  <p class="note" style="margin:-8px 0 0;">There's no separate committee/reasons table &mdash; every status below is <code>instalments.Order_Status</code>, and every reason is <code>instalments.Reason</code>, the same admin-panel Status filter shown in the loan-management panel (Approved/Rejected/"Client Refused"/Expired/Not Responded). Each table is one row per month, keyed to <code>Aplication_Date</code>, "Unspecified" = Reason left blank, shown as its own row rather than dropped. English column is a hand-translated label for the free-text Georgian Reason (no English field exists in the database). Live from the database on every page load.</p>
+
+  <p class="section-title" style="margin-top:20px;">Rejected &mdash; <code>Order_Status = 6</code> ("უარი განაცხადზე")</p>
+  <div class="report-card">
+    <div class="report-scroll-top" id="rejectionReasonsScrollTop"><div></div></div>
+    <div class="report-scroll" id="rejectionReasonsScrollBody">
+      <table class="rpt rpt-pivot sm-table" id="rejectionReasonsTable"><tbody></tbody></table>
+    </div>
+  </div>
+
+  <p class="section-title" style="margin-top:20px;">Client Refused &mdash; <code>Order_Status = 12</code> ("კლიენტის უარი განაცხადზე")</p>
+  <div class="report-card">
+    <div class="report-scroll-top" id="clientRefusedReasonsScrollTop"><div></div></div>
+    <div class="report-scroll" id="clientRefusedReasonsScrollBody">
+      <table class="rpt rpt-pivot sm-table" id="clientRefusedReasonsTable"><tbody></tbody></table>
+    </div>
+  </div>
+
+  <p class="section-title" style="margin-top:20px;">Expired &mdash; <code>Order_Status = 13</code></p>
+  <div class="report-card">
+    <div class="report-scroll-top" id="expiredReasonsScrollTop"><div></div></div>
+    <div class="report-scroll" id="expiredReasonsScrollBody">
+      <table class="rpt rpt-pivot sm-table" id="expiredReasonsTable"><tbody></tbody></table>
+    </div>
+  </div>
+
+  <p class="section-title" style="margin-top:20px;">Not Responding &mdash; <code>Order_Status = 14</code> ("არ პასუხობს")</p>
+  <div class="report-card">
+    <div class="report-scroll-top" id="notRespondingReasonsScrollTop"><div></div></div>
+    <div class="report-scroll" id="notRespondingReasonsScrollBody">
+      <table class="rpt rpt-pivot sm-table" id="notRespondingReasonsTable"><tbody></tbody></table>
+    </div>
+  </div>
+
+  <p class="section-title" style="margin-top:20px;">Approved &mdash; <code>Order_Status = 5</code> ("ინვოისის გაგზავნა", the same status used elsewhere in this project as the "real sale" filter)</p>
+  <p class="note" style="margin:-8px 0 0;">Unlike the four outcomes above, an approved/sold application doesn't need a reason recorded &mdash; 11,360 of 11,361 <code>Order_Status = 5</code> rows have a blank Reason (shown below almost entirely as "Unspecified"). Kept for completeness/transparency rather than hidden.</p>
+  <div class="report-card">
+    <div class="report-scroll-top" id="approvedReasonsScrollTop"><div></div></div>
+    <div class="report-scroll" id="approvedReasonsScrollBody">
+      <table class="rpt rpt-pivot sm-table" id="approvedReasonsTable"><tbody></tbody></table>
+    </div>
+  </div>
+</div>
+
 <script>
 const data = <?= json_encode($data, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) ?>;
 const targets = <?= json_encode($targets, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>;
@@ -470,9 +582,19 @@ const brandStats = <?= json_encode($brandStats, JSON_HEX_TAG | JSON_HEX_APOS | J
 const subcategoryStats = <?= json_encode($subcategoryStats, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) ?>;
 const pendingStatusLog = <?= json_encode($pendingStatusLog, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) ?>;
 const customerAnalysis = <?= json_encode($customerAnalysis, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) ?>;
+const customerAgeGenderAnalysis = <?= json_encode($customerAgeGenderAnalysis, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) ?>;
+const customerWorkshopAnalysis = <?= json_encode($customerWorkshopAnalysis, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) ?>;
+const customerWorkposAnalysis = <?= json_encode($customerWorkposAnalysis, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) ?>;
+const customerIncomeAnalysis = <?= json_encode($customerIncomeAnalysis, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) ?>;
+const customerDistrictAnalysis = <?= json_encode($customerDistrictAnalysis, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) ?>;
 const riskSegmentation = <?= json_encode($riskSegmentation, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) ?>;
 const closedLoansMonthly = <?= json_encode($closedLoansMonthly, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) ?>;
 const delinquencyAnalysis = <?= json_encode($delinquencyAnalysis, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) ?>;
+const rejectionReasonsMonthly = <?= json_encode($rejectionReasonsMonthly, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) ?>;
+const clientRefusedReasonsMonthly = <?= json_encode($clientRefusedReasonsMonthly, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) ?>;
+const expiredReasonsMonthly = <?= json_encode($expiredReasonsMonthly, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) ?>;
+const notRespondingReasonsMonthly = <?= json_encode($notRespondingReasonsMonthly, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) ?>;
+const approvedReasonsMonthly = <?= json_encode($approvedReasonsMonthly, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) ?>;
 
 const fmt = n => Math.round(n).toLocaleString('en-US');
 const fmt1 = n => n.toLocaleString('en-US', { maximumFractionDigits: 1 });
@@ -852,23 +974,57 @@ function renderBucketedTable(tableId, footerId, stats, titleText, rowLabel, fall
 
 const GARBAGE_NOTE = `<strong>Cogs data quality:</strong> {gcount} of {gtotal} line items ({gpct}%, {gsales} GEL / {gsalespct}% of sales) have a placeholder or clearly-wrong Cogs value (staff enters "1" because the system requires some value, then returns later with the real cost) &mdash; the Cogs column above is left raw/unmodified to match the business's own report exactly, so months with more unfilled Cogs will show an inflated Margin until those get backfilled.`;
 
-renderBucketedTable('salesMonthlyTable', 'salesMonthlyFooterNote', salesMonthlyStats,
-  'Sales Monthly &mdash; by Product Category', 'Product Category', 'Uncategorized',
-  `<strong>Uncategorized:</strong> {count} line items / {sales} GEL ({pct}% of total sales) have no usable product category in the database (recently-added products often sit under a category literally named "none" until someone categorizes them) &mdash; grouped into one row at the bottom rather than guessed at.`,
-  GARBAGE_NOTE);
+/* ---------- Deal-type filter (All / Installment / Single Payment): shared by Sales Monthly,
+   Brand Analyze, Subcategory Analyze. Each *Stats object from the PHP app is now
+   {all, installment, single} — see FunnelRepository::salesMonthlyStats() docblock for how
+   "single payment" (Type_Of_Sales=99, Order_Status IN (1,3), no dedicated Order_Date) was
+   identified and folded in. One small reusable wiring function per tab rather than three
+   near-identical blocks. */
+function wireDealTypeFilter(navId, dealTypeSetter) {
+  document.querySelectorAll('#' + navId + ' button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('#' + navId + ' button').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      dealTypeSetter(btn.getAttribute('data-deal'));
+    });
+  });
+}
+
 const salesMonthlyScrollUpdate = setupTopScrollSync('salesMonthlyScrollTop', 'salesMonthlyScrollBody');
+let salesMonthlyDealType = 'all';
+function renderSalesMonthlyForDealType() {
+  renderBucketedTable('salesMonthlyTable', 'salesMonthlyFooterNote', salesMonthlyStats ? salesMonthlyStats[salesMonthlyDealType] : null,
+    'Sales Monthly &mdash; by Product Category', 'Product Category', 'Uncategorized',
+    `<strong>Uncategorized:</strong> {count} line items / {sales} GEL ({pct}% of total sales) have no usable product category in the database (recently-added products often sit under a category literally named "none" until someone categorizes them) &mdash; grouped into one row at the bottom rather than guessed at.`,
+    GARBAGE_NOTE);
+  salesMonthlyScrollUpdate();
+}
+renderSalesMonthlyForDealType();
+wireDealTypeFilter('salesMonthlyDealTypeNav', dt => { salesMonthlyDealType = dt; renderSalesMonthlyForDealType(); });
 
-renderBucketedTable('brandTable', 'brandFooterNote', brandStats,
-  'Brand Analyze &mdash; by Brand', 'Brand', 'No Brand',
-  `<strong>No Brand:</strong> {count} line items / {sales} GEL ({pct}% of total sales) had no real brand recorded (combines "none" / "N/A" / "ბრენდის გარეშე" into one row) &mdash; grouped at the bottom rather than guessed at.`,
-  GARBAGE_NOTE);
 const brandScrollUpdate = setupTopScrollSync('brandScrollTop', 'brandScrollBody');
+let brandDealType = 'all';
+function renderBrandForDealType() {
+  renderBucketedTable('brandTable', 'brandFooterNote', brandStats ? brandStats[brandDealType] : null,
+    'Brand Analyze &mdash; by Brand', 'Brand', 'No Brand',
+    `<strong>No Brand:</strong> {count} line items / {sales} GEL ({pct}% of total sales) had no real brand recorded (combines "none" / "N/A" / "ბრენდის გარეშე" into one row) &mdash; grouped at the bottom rather than guessed at.`,
+    GARBAGE_NOTE);
+  brandScrollUpdate();
+}
+renderBrandForDealType();
+wireDealTypeFilter('brandDealTypeNav', dt => { brandDealType = dt; renderBrandForDealType(); });
 
-renderBucketedTable('subcategoryTable', 'subcategoryFooterNote', subcategoryStats,
-  'Subcategory Analyze &mdash; by Broader Product Group', 'Subcategory', 'Uncategorized',
-  `<strong>Uncategorized:</strong> {count} line items / {sales} GEL ({pct}% of total sales) have no usable product category in the database &mdash; same gap as Sales Monthly, grouped into one row at the bottom rather than guessed at.`,
-  GARBAGE_NOTE);
 const subcategoryScrollUpdate = setupTopScrollSync('subcategoryScrollTop', 'subcategoryScrollBody');
+let subcategoryDealType = 'all';
+function renderSubcategoryForDealType() {
+  renderBucketedTable('subcategoryTable', 'subcategoryFooterNote', subcategoryStats ? subcategoryStats[subcategoryDealType] : null,
+    'Subcategory Analyze &mdash; by Broader Product Group', 'Subcategory', 'Uncategorized',
+    `<strong>Uncategorized:</strong> {count} line items / {sales} GEL ({pct}% of total sales) have no usable product category in the database &mdash; same gap as Sales Monthly, grouped into one row at the bottom rather than guessed at.`,
+    GARBAGE_NOTE);
+  subcategoryScrollUpdate();
+}
+renderSubcategoryForDealType();
+wireDealTypeFilter('subcategoryDealTypeNav', dt => { subcategoryDealType = dt; renderSubcategoryForDealType(); });
 
 /* ---------- Sales — Pending Status: same "one column per date, transferred unchanged"
    pattern as the Logistics Delivery Status table below it, from the same source sheet.
@@ -1090,6 +1246,57 @@ function renderCustomerAnalysis() {
 }
 renderCustomerAnalysis();
 
+function renderCustomerAgeGender() {
+  const d = customerAgeGenderAnalysis;
+  if (!d) return;
+  const genderLabel = { 'მდედრ.': 'Female', 'მამრ.': 'Male', 'N/A': 'N/A' };
+  const headCells = d.genders.map(g => `<th colspan="2">${genderLabel[g] || g}</th>`).join('');
+  const subCells = d.genders.map(() => `<th>Qty</th><th>%</th>`).join('');
+  let html = `<tr><th rowspan="2">Age</th>${headCells}<th colspan="2">Total</th></tr>`;
+  html += `<tr>${subCells}<th>Qty</th><th>%</th></tr>`;
+
+  d.rows.forEach(row => {
+    const cells = d.genders.map(g => `<td>${fmt(row[g].n)}</td><td>${pct(row[g].share)}</td>`).join('');
+    html += `<tr><td>${row.bucket}</td>${cells}<td>${fmt(row.total.n)}</td><td>${pct(row.total.share)}</td></tr>`;
+  });
+
+  const totalRowCells = d.genders.map(g => `<td>${fmt(d.genderTotals[g])}</td><td>100.0%</td>`).join('');
+  html += `<tr class="total"><td>Total</td>${totalRowCells}<td>${fmt(d.grandTotal)}</td><td>100.0%</td></tr>`;
+
+  document.getElementById('customersAgeGenderTable').querySelector('tbody').innerHTML = html;
+}
+renderCustomerAgeGender();
+
+function renderCustomerGroupedField(stats, tableId, headLabel, noteId, noteTemplate) {
+  if (!stats) return;
+  const rowsHtml = stats.rows.map(r =>
+    `<tr><td>${r.label}</td><td>${fmt(r.n)}</td><td>${pct(r.share)}</td></tr>`
+  ).join('');
+  document.getElementById(tableId).querySelector('tbody').innerHTML =
+    `<tr><th>${headLabel}</th><th>Customers</th><th>Share</th></tr>${rowsHtml}<tr class="total"><td>Total</td><td>${fmt(stats.total)}</td><td>100.0%</td></tr>`;
+  if (noteId && noteTemplate) {
+    document.getElementById(noteId).innerHTML = noteTemplate.replace('{distinct}', fmt(stats.distinctValues));
+  }
+}
+renderCustomerGroupedField(customerWorkshopAnalysis, 'customersWorkshopTable', 'Workshop', 'customersWorkshopNote',
+  `From <code>customers.Workshop</code> &mdash; free text (employer/field), top 20 exact values shown + "Other" for the long tail ({distinct} distinct raw values total). Spelling/typo variants (e.g. "თვითდასაქმებული" vs "თვით დასაქმებული") are shown separately, not merged &mdash; merging them would mean guessing which strings mean the same thing.`);
+renderCustomerGroupedField(customerWorkposAnalysis, 'customersWorkposTable', 'Workpos',  'customersWorkposNote',
+  `From <code>customers.Workpos</code> &mdash; job title/position, top 20 exact values shown + "Other" for the long tail ({distinct} distinct raw values total). Same convention as Workshop: no spelling-variant merging.`);
+renderCustomerGroupedField(customerIncomeAnalysis, 'customersIncomeTable', 'Income (GEL)', null, null);
+
+function renderCustomerDistrict() {
+  const d = customerDistrictAnalysis;
+  if (!d) return;
+  const topRows = d.rows.filter(r => r.label !== 'ვერ დადგინდა');
+  const undetermined = d.rows.find(r => r.label === 'ვერ დადგინდა');
+  const rowsHtml = topRows.map(r => `<tr><td>${r.label}</td><td>${fmt(r.n)}</td><td>${pct(r.share)}</td></tr>`).join('');
+  document.getElementById('customersDistrictTable').querySelector('tbody').innerHTML =
+    `<tr><th>District</th><th>Addresses</th><th>Share</th></tr>${rowsHtml}<tr><td>${undetermined.label}</td><td>${fmt(undetermined.n)}</td><td>${pct(undetermined.share)}</td></tr><tr class="total"><td>Total (Tbilisi)</td><td>${fmt(d.total)}</td><td>100.0%</td></tr>`;
+  const matchedShare = 1 - undetermined.share;
+  document.getElementById('customersDistrictNote').innerHTML += ` Matched on ${pct(matchedShare)} of Tbilisi addresses.`;
+}
+renderCustomerDistrict();
+
 function renderRiskSegmentation() {
   const d = riskSegmentation;
   if (!d) return;
@@ -1145,6 +1352,76 @@ function renderDelinquency() {
 }
 renderDelinquency();
 
+// Hand-translated English labels for the free-text Georgian Reason values (no English field
+// exists in the database) — shown as a second column alongside the original. Falls back to the
+// Georgian text itself for any value not in this list, rather than showing a blank cell.
+const reasonLabelEn = {
+  'შეუსაბამო მონაცემები': 'Inconsistent Data',
+  'მოვალეთა რეესტრი': "Debtors' Registry",
+  'კლიენტის უარი': 'Client Refused',
+  'დასაფარია მიმდინარე': 'Existing Debt to Settle',
+  'გადახდისუუნარო': 'Insolvent',
+  'დუბლირებული განაცხადი': 'Duplicate Application',
+  'ხიშნიკი': 'Fraud/Scam',
+  'ხიშნიკი (NO SMS)': 'Fraud/Scam (No SMS)',
+  'ვერ ვუკავშირდები': 'Unable to Reach',
+  'პროდუქციის არ ქონა': 'Product Unavailable',
+  'სხვა': 'Other',
+  'აღარ არის დაინტერესებული': 'No Longer Interested',
+  'მაღალი ფასი': 'Price Too High',
+  'ავანსი': 'Down Payment Issue',
+  'მიტანის საფასური': 'Delivery Fee',
+  'ხანდაზმული განაცხადი': 'Expired Application',
+  'არ პასუხობს': 'Not Responding',
+  'Unspecified': 'Unspecified',
+};
+
+function renderReasonsPivotTable(d, tableId, title, emptyMessage) {
+  if (!d) return;
+  const table = document.getElementById(tableId);
+  if (d.rows.length === 0) {
+    table.querySelector('tbody').innerHTML =
+      `<tr><th>${title}</th></tr><tr><td>${emptyMessage || 'No data for this period.'}</td></tr>`;
+    return;
+  }
+  const periods = d.periods;
+
+  const totalsByPeriod = {};
+  periods.forEach(p => { totalsByPeriod[p] = d.rows.reduce((s, r) => s + r.byPeriod[p], 0); });
+
+  const periodHeadCells = periods.map(p => `<td colspan="2">${monthLabel(p)}</td>`).join('');
+  const periodSubCells = periods.map(() => `<td>Qty</td><td>%</td>`).join('');
+  let html = `<tr class="rpt-title"><td colspan="${periods.length * 2 + 4}">${title} &mdash; by Month</td></tr>`;
+  html += `<tr class="rpt-colhead"><td>Reason</td><td>English</td>${periodHeadCells}<td colspan="2" class="sm-total-col">Total</td></tr>`;
+  html += `<tr class="rpt-colhead"><td></td><td></td>${periodSubCells}<td class="sm-total-col">Qty</td><td>Share</td></tr>`;
+
+  d.rows.forEach(row => {
+    const rowCls = row.reason === 'Unspecified' ? 'sm-row sm-uncategorized' : 'sm-row';
+    const cells = periods.map(p => {
+      const n = row.byPeriod[p];
+      const monthShare = totalsByPeriod[p] > 0 ? n / totalsByPeriod[p] : 0;
+      return `<td>${fmt(n)}</td><td>${pct(monthShare)}</td>`;
+    }).join('');
+    const english = reasonLabelEn[row.reason] || row.reason;
+    html += `<tr class="${rowCls}"><td>${row.reason}</td><td>${english}</td>${cells}<td class="sm-total-col">${fmt(row.total)}</td><td>${pct(row.share)}</td></tr>`;
+  });
+
+  const grandCells = periods.map(p => `<td>${fmt(totalsByPeriod[p])}</td><td>100.0%</td>`).join('');
+  html += `<tr class="sm-grandtotal"><td>TOTAL (all reasons)</td><td></td>${grandCells}<td class="sm-total-col">${fmt(d.grandTotal)}</td><td>100.0%</td></tr>`;
+
+  table.querySelector('tbody').innerHTML = html;
+}
+renderReasonsPivotTable(rejectionReasonsMonthly, 'rejectionReasonsTable', 'Rejected');
+renderReasonsPivotTable(clientRefusedReasonsMonthly, 'clientRefusedReasonsTable', 'Client Refused');
+renderReasonsPivotTable(expiredReasonsMonthly, 'expiredReasonsTable', 'Expired');
+renderReasonsPivotTable(notRespondingReasonsMonthly, 'notRespondingReasonsTable', 'Not Responding');
+renderReasonsPivotTable(approvedReasonsMonthly, 'approvedReasonsTable', 'Approved');
+const rejectionReasonsScrollUpdate = setupTopScrollSync('rejectionReasonsScrollTop', 'rejectionReasonsScrollBody');
+const clientRefusedReasonsScrollUpdate = setupTopScrollSync('clientRefusedReasonsScrollTop', 'clientRefusedReasonsScrollBody');
+const expiredReasonsScrollUpdate = setupTopScrollSync('expiredReasonsScrollTop', 'expiredReasonsScrollBody');
+const notRespondingReasonsScrollUpdate = setupTopScrollSync('notRespondingReasonsScrollTop', 'notRespondingReasonsScrollBody');
+const approvedReasonsScrollUpdate = setupTopScrollSync('approvedReasonsScrollTop', 'approvedReasonsScrollBody');
+
 document.querySelectorAll('#pageNav button').forEach(btn => {
   btn.addEventListener('click', () => {
     document.querySelectorAll('#pageNav button').forEach(b => b.classList.remove('active'));
@@ -1161,6 +1438,13 @@ document.querySelectorAll('#pageNav button').forEach(btn => {
     if (page === 'subcategoryanalyze') subcategoryScrollUpdate();
     if (page === 'logistics') { logisticsSalesScrollUpdate(); logisticsScrollUpdate(); }
     if (page === 'closedloans') closedLoansScrollUpdate();
+    if (page === 'rejectionreasons') {
+      rejectionReasonsScrollUpdate();
+      clientRefusedReasonsScrollUpdate();
+      expiredReasonsScrollUpdate();
+      notRespondingReasonsScrollUpdate();
+      approvedReasonsScrollUpdate();
+    }
   });
 });
 </script>

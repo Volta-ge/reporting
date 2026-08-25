@@ -60,9 +60,19 @@ try {
     // Customers / Risk Segmentation / Closed Loans / Overdue Analysis (portfolio) tabs.
     $portfolioRepository = new PortfolioRepository($pdo);
     $customerAnalysis = $portfolioRepository->customerAnalysis();
+    $customerAgeGenderAnalysis = $portfolioRepository->customerAgeGenderAnalysis();
+    $customerWorkshopAnalysis = $portfolioRepository->customerWorkshopAnalysis();
+    $customerWorkposAnalysis = $portfolioRepository->customerWorkposAnalysis();
+    $customerIncomeAnalysis = $portfolioRepository->customerIncomeAnalysis();
+    $customerDistrictAnalysis = $portfolioRepository->customerDistrictAnalysis();
     $riskSegmentation = $portfolioRepository->riskSegmentation();
     $closedLoansMonthly = $portfolioRepository->closedLoansMonthly($monthlyFrom, $yesterdayTo);
     $delinquencyAnalysis = $portfolioRepository->delinquencyAnalysis();
+    $rejectionReasonsMonthly = $portfolioRepository->reasonsByStatusMonthly($monthlyFrom, $yesterdayTo, 6);
+    $clientRefusedReasonsMonthly = $portfolioRepository->reasonsByStatusMonthly($monthlyFrom, $yesterdayTo, 12);
+    $expiredReasonsMonthly = $portfolioRepository->reasonsByStatusMonthly($monthlyFrom, $yesterdayTo, 13);
+    $notRespondingReasonsMonthly = $portfolioRepository->reasonsByStatusMonthly($monthlyFrom, $yesterdayTo, 14);
+    $approvedReasonsMonthly = $portfolioRepository->reasonsByStatusMonthly($monthlyFrom, $yesterdayTo, 5);
 
     $connectionError = null;
 } catch (\Throwable $e) {
@@ -73,9 +83,19 @@ try {
     $brandStats = null;
     $subcategoryStats = null;
     $customerAnalysis = null;
+    $customerAgeGenderAnalysis = null;
+    $customerWorkshopAnalysis = null;
+    $customerWorkposAnalysis = null;
+    $customerIncomeAnalysis = null;
+    $customerDistrictAnalysis = null;
     $riskSegmentation = null;
     $closedLoansMonthly = null;
     $delinquencyAnalysis = null;
+    $rejectionReasonsMonthly = null;
+    $clientRefusedReasonsMonthly = null;
+    $expiredReasonsMonthly = null;
+    $notRespondingReasonsMonthly = null;
+    $approvedReasonsMonthly = null;
     $connectionError = $e->getMessage();
 }
 
