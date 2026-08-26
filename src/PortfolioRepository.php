@@ -659,4 +659,165 @@ final class PortfolioRepository
 
         return ['periods' => $periods, 'rows' => $result, 'grandTotal' => $grandTotal];
     }
+
+    /**
+     * Application Statuses tab: every `Order_Status` an application has ever carried, one row per
+     * month, keyed to `Aplication_Date` — the full-lifecycle counterpart to
+     * reasonsByStatusMonthly() above, which only covers the 5 committee-outcome statuses. Built
+     * 2026-08-26 per the user sharing a screenshot of the external admin panel's own "Applications"
+     * Status filter and asking for a by-month status breakdown in the same style as Committee
+     * Statuses.
+     *
+     * Bucketed by `order_statuses.Order_Status` (the label text), not the raw numeric code —
+     * two codes share the literal label "ინვოისის გაგზავნა" (IDs 5 and 9; ID 5 is overwhelmingly
+     * the one actually used, ID 9 a rare/legacy duplicate — same pattern as ID 16 vs ID 5 for
+     * "Approved" found earlier this session, see volta_portfolio_analysis memory) — grouping by
+     * label merges them into one meaningful row instead of splitting a single business concept
+     * across two near-identical rows. Two raw codes (1 and 99) have no `order_statuses` row at all
+     * (small counts — 79 and 1 respectively in the Jan–Aug 2026 window) and fall into
+     * "Unspecified" alongside any future code that's similarly missing a label, same convention as
+     * reasonsByStatusMonthly()'s blank-Reason handling.
+     *
+     * No `Product_ID > 1` filter, same reasoning as reasonsByStatusMonthly() — this is the
+     * application-lifecycle domain, not the sales-funnel domain.
+     */
+    public function applicationStatusesMonthly(DateTimeImmutable $from, DateTimeImmutable $to): array
+    {
+        $rows = $this->pdo->prepare(<<<SQL
+            SELECT
+                DATE_FORMAT(i.Aplication_Date, '%Y-%m') AS period,
+                os.Order_Status AS status_label,
+                COUNT(*) AS n
+            FROM instalments i
+            LEFT JOIN order_statuses os ON os.Order_Status_ID = i.Order_Status
+            WHERE i.Aplication_Date >= :from AND i.Aplication_Date < :to
+            GROUP BY period, status_label
+            SQL);
+        $rows->execute([
+            'from' => $from->format('Y-m-d H:i:s'),
+            'to' => $to->format('Y-m-d H:i:s'),
+        ]);
+
+        $periodsSeen = [];
+        $byStatus = [];
+        foreach ($rows->fetchAll(PDO::FETCH_ASSOC) as $r) {
+            $period = $r['period'];
+            $periodsSeen[$period] = true;
+            $status = trim((string) $r['status_label']) === '' ? 'Unspecified' : $r['status_label'];
+            $byStatus[$status][$period] = ($byStatus[$status][$period] ?? 0) + (int) $r['n'];
+        }
+
+        $periods = array_keys($periodsSeen);
+        sort($periods);
+
+        $result = [];
+        $grandTotal = 0;
+        foreach ($byStatus as $status => $byPeriod) {
+            $total = 0;
+            $filledByPeriod = [];
+            foreach ($periods as $period) {
+                $n = $byPeriod[$period] ?? 0;
+                $filledByPeriod[$period] = $n;
+                $total += $n;
+            }
+            $result[] = ['status' => $status, 'byPeriod' => $filledByPeriod, 'total' => $total];
+            $grandTotal += $total;
+        }
+
+        usort($result, function ($a, $b) {
+            if ($a['status'] === 'Unspecified') return 1;
+            if ($b['status'] === 'Unspecified') return -1;
+            return $b['total'] <=> $a['total'];
+        });
+
+        foreach ($result as &$r) {
+            $r['share'] = $grandTotal > 0 ? round($r['total'] / $grandTotal, 4) : 0.0;
+        }
+        unset($r);
+
+        return ['periods' => $periods, 'rows' => $result, 'grandTotal' => $grandTotal];
+    }
+
+    /**
+     * Marketing / Leads tab: every `Lead_Status_ID` a lead has carried, one row per month, keyed
+     * to `Lead_Create_Date` — the lead-stage counterpart to applicationStatusesMonthly() above.
+     * Built 2026-08-26 per the user sharing a screenshot of the external admin panel's own
+     * "Leads" list Status filter and asking for a by-month breakdown in the same style as
+     * Committee Statuses.
+     *
+     * There are actually TWO places lead status data could come from — investigated both before
+     * picking one:
+     *  - The standalone `leads` table (14,828 rows, own `Lead_Status_ID` column): in the
+     *    Jan–Aug 2026 window this is 92% `Lead_Status_ID = 0` (no label) and the rest `1`
+     *    (Pending) — essentially just an untriaged intake log, none of the later-stage statuses
+     *    (Processing/Not Responding/No Longer Interested/Duplicate/Expired/Application Created)
+     *    ever show up there.
+     *  - `instalments.Lead_Status_ID` / `Lead_Create_Date` / `Lead_Reason`: same
+     *    `lead_statuses` lookup table, but here the full status lifecycle is actually populated
+     *    (e.g. 6,440 "შექმნილია განაცხადი" / Application Created, 3,872 "აღარ არის
+     *    დაინტერესებული" / No Longer Interested, in the Jan–Aug 2026 window) — this is where a
+     *    lead's status actually gets updated once someone works it, which only happens after the
+     *    lead is pulled into `instalments` (as a `Lead = 1` row). Confirmed by matching the full
+     *    distribution against the same `lead_statuses` labels shown in the admin panel's own
+     *    Status filter dropdown.
+     * Used `instalments` for that reason — it's the one that actually reflects worked-lead
+     * outcomes, not just raw intake volume. No `Product_ID > 1` filter, same reasoning as
+     * applicationStatusesMonthly() — a lead legitimately has no product selected yet.
+     */
+    public function leadStatusesMonthly(DateTimeImmutable $from, DateTimeImmutable $to): array
+    {
+        $rows = $this->pdo->prepare(<<<SQL
+            SELECT
+                DATE_FORMAT(i.Lead_Create_Date, '%Y-%m') AS period,
+                ls.Lid_Status AS status_label,
+                COUNT(*) AS n
+            FROM instalments i
+            LEFT JOIN lead_statuses ls ON ls.Lid_Status_ID = i.Lead_Status_ID
+            WHERE i.Lead_Create_Date >= :from AND i.Lead_Create_Date < :to
+            GROUP BY period, status_label
+            SQL);
+        $rows->execute([
+            'from' => $from->format('Y-m-d H:i:s'),
+            'to' => $to->format('Y-m-d H:i:s'),
+        ]);
+
+        $periodsSeen = [];
+        $byStatus = [];
+        foreach ($rows->fetchAll(PDO::FETCH_ASSOC) as $r) {
+            $period = $r['period'];
+            $periodsSeen[$period] = true;
+            $status = trim((string) $r['status_label']) === '' ? 'Unspecified' : $r['status_label'];
+            $byStatus[$status][$period] = ($byStatus[$status][$period] ?? 0) + (int) $r['n'];
+        }
+
+        $periods = array_keys($periodsSeen);
+        sort($periods);
+
+        $result = [];
+        $grandTotal = 0;
+        foreach ($byStatus as $status => $byPeriod) {
+            $total = 0;
+            $filledByPeriod = [];
+            foreach ($periods as $period) {
+                $n = $byPeriod[$period] ?? 0;
+                $filledByPeriod[$period] = $n;
+                $total += $n;
+            }
+            $result[] = ['status' => $status, 'byPeriod' => $filledByPeriod, 'total' => $total];
+            $grandTotal += $total;
+        }
+
+        usort($result, function ($a, $b) {
+            if ($a['status'] === 'Unspecified') return 1;
+            if ($b['status'] === 'Unspecified') return -1;
+            return $b['total'] <=> $a['total'];
+        });
+
+        foreach ($result as &$r) {
+            $r['share'] = $grandTotal > 0 ? round($r['total'] / $grandTotal, 4) : 0.0;
+        }
+        unset($r);
+
+        return ['periods' => $periods, 'rows' => $result, 'grandTotal' => $grandTotal];
+    }
 }

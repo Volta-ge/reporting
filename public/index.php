@@ -19,6 +19,8 @@ require __DIR__ . '/../src/DateHelper.php';
 require __DIR__ . '/../src/FunnelRepository.php';
 require __DIR__ . '/../src/ProductClassifier.php';
 require __DIR__ . '/../src/PortfolioRepository.php';
+require __DIR__ . '/../src/IncomeDelinquencyRepository.php';
+require __DIR__ . '/../src/ExCustomerRepository.php';
 
 $configPath = __DIR__ . '/../config.php';
 if (!is_file($configPath)) {
@@ -64,6 +66,15 @@ try {
     $salesMonthlyStats = $repository->salesMonthlyStats($monthlyFrom, $yesterdayTo, $productClassifier);
     $brandStats = $repository->brandMonthlyStats($monthlyFrom, $yesterdayTo);
     $subcategoryStats = $repository->subcategoryMonthlyStats($monthlyFrom, $yesterdayTo, $productClassifier);
+    $categoryBrandBreakdown = $repository->categoryBrandBreakdown($monthlyFrom, $yesterdayTo, $productClassifier);
+
+    // Income & Delinquency by product dimension (Category/Subcategory/Brand/Product) — closed
+    // loans only, same Jan-1-through-yesterday window as the tabs above.
+    $incomeDelinquencyRepository = new IncomeDelinquencyRepository($pdo);
+    $incomeDelinquencyByCategory = $incomeDelinquencyRepository->categoryReport($monthlyFrom, $yesterdayTo, $productClassifier);
+    $incomeDelinquencyBySubcategory = $incomeDelinquencyRepository->subcategoryReport($monthlyFrom, $yesterdayTo, $productClassifier);
+    $incomeDelinquencyByBrand = $incomeDelinquencyRepository->brandReport($monthlyFrom, $yesterdayTo);
+    $incomeDelinquencyByProduct = $incomeDelinquencyRepository->productReport($monthlyFrom, $yesterdayTo, $productClassifier);
 
     // Customers / Risk Segmentation / Closed Loans / Overdue Analysis (portfolio) tabs.
     $portfolioRepository = new PortfolioRepository($pdo);
@@ -74,6 +85,14 @@ try {
     $customerIncomeAnalysis = $portfolioRepository->customerIncomeAnalysis();
     $customerDistrictAnalysis = $portfolioRepository->customerDistrictAnalysis();
     $riskSegmentation = $portfolioRepository->riskSegmentation();
+    // Ex Customers: individual-row PII report (~6s, the heaviest single addition on this page so
+    // far) — kept in its own repository class rather than PortfolioRepository, see its docblock.
+    $exCustomerRepository = new ExCustomerRepository($pdo);
+    $exCustomers = $exCustomerRepository->exCustomers($productClassifier);
+    // Aggregate-only (no PII) breakdown of the other ~26,500 inactive customers who never had a
+    // genuinely closed loan — reconciles this tab's total against Customer Analysis's own
+    // Total − Active figure. See ExCustomerRepository::neverBorrowedByStatus() docblock.
+    $neverBorrowedByStatus = $exCustomerRepository->neverBorrowedByStatus();
     $closedLoansMonthly = $portfolioRepository->closedLoansMonthly($monthlyFrom, $yesterdayTo);
     $delinquencyAnalysis = $portfolioRepository->delinquencyAnalysis();
     $rejectionReasonsMonthly = $portfolioRepository->reasonsByStatusMonthly($monthlyFrom, $yesterdayTo, 6);
@@ -81,6 +100,8 @@ try {
     $expiredReasonsMonthly = $portfolioRepository->reasonsByStatusMonthly($monthlyFrom, $yesterdayTo, 13);
     $notRespondingReasonsMonthly = $portfolioRepository->reasonsByStatusMonthly($monthlyFrom, $yesterdayTo, 14);
     $approvedReasonsMonthly = $portfolioRepository->reasonsByStatusMonthly($monthlyFrom, $yesterdayTo, 5);
+    $applicationStatusesMonthly = $portfolioRepository->applicationStatusesMonthly($monthlyFrom, $yesterdayTo);
+    $leadStatusesMonthly = $portfolioRepository->leadStatusesMonthly($monthlyFrom, $yesterdayTo);
 
     $connectionError = null;
 } catch (\Throwable $e) {
@@ -90,6 +111,11 @@ try {
     $salesMonthlyStats = null;
     $brandStats = null;
     $subcategoryStats = null;
+    $categoryBrandBreakdown = null;
+    $incomeDelinquencyByCategory = null;
+    $incomeDelinquencyBySubcategory = null;
+    $incomeDelinquencyByBrand = null;
+    $incomeDelinquencyByProduct = null;
     $customerAnalysis = null;
     $customerAgeGenderAnalysis = null;
     $customerWorkshopAnalysis = null;
@@ -97,6 +123,8 @@ try {
     $customerIncomeAnalysis = null;
     $customerDistrictAnalysis = null;
     $riskSegmentation = null;
+    $exCustomers = null;
+    $neverBorrowedByStatus = null;
     $closedLoansMonthly = null;
     $delinquencyAnalysis = null;
     $rejectionReasonsMonthly = null;
@@ -104,6 +132,8 @@ try {
     $expiredReasonsMonthly = null;
     $notRespondingReasonsMonthly = null;
     $approvedReasonsMonthly = null;
+    $applicationStatusesMonthly = null;
+    $leadStatusesMonthly = null;
     $connectionError = $e->getMessage();
 }
 

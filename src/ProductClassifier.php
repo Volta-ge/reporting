@@ -53,6 +53,18 @@ final class ProductClassifier
     }
 
     /**
+     * Same lookup again, but the broadest bucket — Category(EN) — e.g. "Small Kitchen
+     * Appliances" (subcategory) and "Air Fryer"/"Blender" (product) all roll up into "Small
+     * Appliances" here. Note that despite its name, `classify()` actually returns the *finest*
+     * grained bucket (Product(EN)) — this method is the one that returns the true top-level
+     * category, used by the Category/Subcategory/Brand/Product income-and-delinquency tabs.
+     */
+    public function classifyCategory(?string $rawCategoryName): ?string
+    {
+        return $this->lookup($rawCategoryName)['categoryEn'] ?? null;
+    }
+
+    /**
      * @return array{categoryGe: ?string, subcategoryGe: ?string, categoryEn: ?string, subcategoryEn: ?string, productEn: string}|null
      */
     private function lookup(?string $rawCategoryName): ?array

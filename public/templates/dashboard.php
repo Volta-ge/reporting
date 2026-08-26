@@ -11,6 +11,11 @@
  * @var array|null $salesMonthlyStats
  * @var array|null $brandStats
  * @var array|null $subcategoryStats
+ * @var array|null $categoryBrandBreakdown
+ * @var array|null $incomeDelinquencyByCategory
+ * @var array|null $incomeDelinquencyBySubcategory
+ * @var array|null $incomeDelinquencyByBrand
+ * @var array|null $incomeDelinquencyByProduct
  * @var array<string, array{count: int, capturedAt: string}> $pendingStatusLog
  * @var array|null $customerAnalysis
  * @var array|null $customerAgeGenderAnalysis
@@ -26,6 +31,10 @@
  * @var array|null $expiredReasonsMonthly
  * @var array|null $notRespondingReasonsMonthly
  * @var array|null $approvedReasonsMonthly
+ * @var array|null $applicationStatusesMonthly
+ * @var array|null $leadStatusesMonthly
+ * @var array|null $exCustomers
+ * @var array|null $neverBorrowedByStatus
  */
 
 declare(strict_types=1);
@@ -148,6 +157,43 @@ body {
 .page-nav button.active { background: var(--text-primary); color: var(--surface-1); }
 .page { display: none; flex-direction: column; gap: 22px; }
 .page.active { display: flex; }
+
+/* top-level nav groups: 3 group cards side by side, each with its own title and a vertically
+   stacked list of its sub-tabs always visible (not a dropdown/accordion) — so which sub-tabs
+   live inside a group is visible without ever clicking into it. Sized to fit one screen without
+   scrolling even for the 8-item Sales Analyze group. */
+.nav-groups { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 10px; }
+.nav-group { background: var(--surface-1); border: 2px solid var(--border); border-radius: 10px; padding: 7px; min-width: 180px; }
+.nav-group.active-group { border-color: var(--text-primary); }
+.nav-group-title { font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-muted); padding: 3px 7px 6px; }
+.nav-group.active-group .nav-group-title { color: var(--text-primary); }
+.nav-group-items { display: flex; flex-direction: column; gap: 1px; }
+.nav-group-items button {
+  border: none; background: transparent; color: var(--text-secondary); font: inherit; font-size: 12.5px; font-weight: 600;
+  padding: 6px 9px; border-radius: 6px; cursor: pointer; text-align: left; white-space: nowrap;
+}
+.nav-group-items button:hover { background: color-mix(in srgb, var(--text-primary) 6%, transparent); }
+.nav-group-items button.active { background: var(--text-primary); color: var(--surface-1); }
+
+/* Ex Customers: the one individual-row (PII) table in this project — a plain wide table instead
+   of .table-card's label/value/share layout (most columns here are text, not numeric), plus a
+   client-side search box since it lists 3,000+ people. */
+.excust-search { margin: -8px 0 4px; display: flex; align-items: center; gap: 8px; }
+.excust-search input {
+  font: inherit; font-size: 13px; padding: 7px 12px; border: 1px solid var(--border); border-radius: 6px;
+  width: 320px; background: var(--surface-1); color: var(--text-primary);
+}
+.excust-search-count { font-size: 12px; color: var(--text-muted); }
+table.excust-table { width: 100%; border-collapse: collapse; font-size: 11.5px; }
+table.excust-table th, table.excust-table td { padding: 5px 8px; border-bottom: 1px solid var(--grid); white-space: nowrap; text-align: left; }
+table.excust-table th { color: var(--text-secondary); font-weight: 650; font-size: 10px; text-transform: uppercase; letter-spacing: 0.02em; background: var(--surface-1); position: sticky; top: 0; }
+table.excust-table td.num { text-align: right; font-variant-numeric: tabular-nums; }
+table.excust-table td.products-cell { white-space: normal; max-width: 260px; }
+table.excust-table tbody tr:hover { background: color-mix(in srgb, var(--text-primary) 4%, transparent); }
+table.excust-table td.grade-cell { font-weight: 700; text-align: center; }
+table.excust-table tr[data-grade="A"] td.grade-cell { color: var(--good); }
+table.excust-table tr[data-grade="B"] td.grade-cell, table.excust-table tr[data-grade="C"] td.grade-cell { color: var(--warning); }
+table.excust-table tr[data-grade="D"] td.grade-cell, table.excust-table tr[data-grade="E"] td.grade-cell { color: var(--critical); }
 
 /* report page (spreadsheet replica) */
 .report-card { background: var(--surface-1); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
@@ -286,22 +332,70 @@ table.rpt-pivot td.rpt-group-toggle { cursor: pointer; user-select: none; text-a
       <h1>Volta &mdash; Sales &amp; Product-Terms Funnel</h1>
       <div class="sub">myvolta8_voltadb &middot; instalments table &middot; Product Terms approved by customer = moved to Underwriting</div>
     </div>
-    <div class="period">Yesterday: <b><?= htmlspecialchars($headerYesterday, ENT_QUOTES, 'UTF-8') ?></b><br>MTD: <b><?= htmlspecialchars($headerMtdRange, ENT_QUOTES, 'UTF-8') ?></b></div>
+    <div class="period" id="periodBadge">Yesterday: <b><?= htmlspecialchars($headerYesterday, ENT_QUOTES, 'UTF-8') ?></b><br>MTD: <b><?= htmlspecialchars($headerMtdRange, ENT_QUOTES, 'UTF-8') ?></b></div>
   </div>
 
-  <div class="page-nav" id="pageNav">
-    <button data-page="report" class="active">Daily Report</button>
-    <button data-page="mtdstats">MTD Statistics</button>
-    <button data-page="dailystats">Daily Statistics</button>
-    <button data-page="salesmonthly">Sales Monthly</button>
-    <button data-page="brandanalyze">Brand Analyze</button>
-    <button data-page="subcategoryanalyze">Subcategory Analyze</button>
-    <button data-page="logistics">Logistics Daily</button>
-    <button data-page="customers">Customers</button>
-    <button data-page="risksegmentation">Risk Segmentation</button>
-    <button data-page="closedloans">Closed Loans</button>
-    <button data-page="delinquency">Overdue Analysis</button>
-    <button data-page="rejectionreasons">Committee</button>
+  <div class="nav-groups" id="pageNav">
+    <div class="nav-group" data-group="dailymail">
+      <div class="nav-group-title">Daily Mail</div>
+      <div class="nav-group-items">
+        <button data-page="report" class="active">Daily Report</button>
+        <button data-page="mtdstats">MTD Statistics</button>
+        <button data-page="dailystats">Daily Statistics</button>
+      </div>
+    </div>
+    <div class="nav-group" data-group="salesanalyze">
+      <div class="nav-group-title">Sales Analyze</div>
+      <div class="nav-group-items">
+        <button data-page="salesmonthly">Sales Monthly</button>
+        <button data-page="brandanalyze">Brand Analyze</button>
+        <button data-page="subcategoryanalyze">Subcategory Analyze</button>
+        <button data-page="categorybrand">Category/Brand</button>
+        <button data-page="incomecategory">Income/Delinq: Category</button>
+        <button data-page="incomesubcategory">Income/Delinq: Subcategory</button>
+        <button data-page="incomebrand">Income/Delinq: Brand</button>
+        <button data-page="incomeproduct">Income/Delinq: Product</button>
+      </div>
+    </div>
+    <div class="nav-group" data-group="logistics">
+      <div class="nav-group-title">Logistics</div>
+      <div class="nav-group-items">
+        <button data-page="logistics">Logistics Daily</button>
+      </div>
+    </div>
+    <div class="nav-group" data-group="customers">
+      <div class="nav-group-title">Customers</div>
+      <div class="nav-group-items">
+        <button data-page="customers">Customers Analyze</button>
+        <button data-page="excustomers">Ex Customers</button>
+      </div>
+    </div>
+    <div class="nav-group" data-group="marketing">
+      <div class="nav-group-title">Marketing</div>
+      <div class="nav-group-items">
+        <button data-page="leads">Leads</button>
+      </div>
+    </div>
+    <div class="nav-group" data-group="application">
+      <div class="nav-group-title">Application</div>
+      <div class="nav-group-items">
+        <button data-page="applicationstatuses">Application Statuses</button>
+      </div>
+    </div>
+    <div class="nav-group" data-group="committee">
+      <div class="nav-group-title">Committee</div>
+      <div class="nav-group-items">
+        <button data-page="rejectionreasons">Committee Statuses</button>
+      </div>
+    </div>
+    <div class="nav-group" data-group="other">
+      <div class="nav-group-title">Other</div>
+      <div class="nav-group-items">
+        <button data-page="risksegmentation">Risk Segmentation</button>
+        <button data-page="closedloans">Closed Loans</button>
+        <button data-page="delinquency">Overdue Analysis</button>
+      </div>
+    </div>
   </div>
 
   <div class="page active" id="page-report">
@@ -388,6 +482,89 @@ table.rpt-pivot td.rpt-group-toggle { cursor: pointer; user-select: none; text-a
       </div>
     </div>
     <p class="note" id="subcategoryFooterNote"></p>
+  </div>
+
+  <div class="page" id="page-categorybrand">
+    <p class="section-title">Category / Brand &mdash; brand breakdown within each category</p>
+    <p class="note" style="margin:-8px 0 0;">One block per product category, brands broken down within it &mdash; same layout as the business's own reference report's "Top 4 &mdash; Brands" sheet, built here for every category found in the window instead of a hand-picked top 4. Q1/Q2 Sales are date-bounded quarterly columns; Total Sales/COGS/Margin/Qty are for the whole window (Jan 1&ndash;yesterday), matching the reference sheet's own formulas. Categories and brands within them are sorted by Total Sales, highest first (Uncategorized/No Brand always last). Live from the database on every page load.</p>
+    <div class="page-nav" id="categoryBrandDealTypeNav" style="margin-bottom:-8px;">
+      <button data-deal="all" class="active">ყველა</button>
+      <button data-deal="installment">განვადება</button>
+      <button data-deal="single">ერთიანი გადახდა</button>
+    </div>
+    <div class="report-card">
+      <div class="report-scroll">
+        <table class="rpt rpt-pivot sm-table" id="categoryBrandTable"><tbody></tbody></table>
+      </div>
+    </div>
+  </div>
+
+  <div class="page" id="page-incomecategory">
+    <p class="section-title">Income &amp; Delinquency &mdash; by Product Category</p>
+    <p class="note" style="margin:-8px 0 0;">Closed loans only (<code>Close_Type IN (1, 2)</code>, keyed to <code>Close_Date</code>), same Jan 1&ndash;yesterday window as Sales Monthly. <strong>Income</strong> = realized (actually collected) margin, not invoiced/sale-time margin &mdash; a loan Paid Off (<code>Close_Type=1</code>) collected its full sale amount, one Written Off (<code>Close_Type=2</code>) only collected <code>Full_Cost &minus; Debt</code>; that per-loan collection ratio is applied proportionally across the loan's product lines, since Cogs lives per line item but collection status lives per loan (a documented modeling simplification, not exact accounting &mdash; see <code>IncomeDelinquencyRepository</code>). <strong>Delinquency</strong> = write-off rate: the share of closed loans, by quantity and by GEL, that ended up Written Off rather than Paid Off, broken down the same way (written-off GEL uses the same proportional allocation of the loan's remaining Debt). Rows sorted by Total Revenue, highest first (Uncategorized always last).</p>
+    <div class="report-card">
+      <div class="report-scroll-top" id="incomeCategoryScrollTop"><div></div></div>
+      <div class="report-scroll" id="incomeCategoryScrollBody">
+        <table class="rpt rpt-pivot sm-table" id="incomeCategoryTable"><tbody></tbody></table>
+      </div>
+    </div>
+    <div class="report-card" style="margin-top:16px;">
+      <div class="report-scroll-top" id="delinquencyCategoryScrollTop"><div></div></div>
+      <div class="report-scroll" id="delinquencyCategoryScrollBody">
+        <table class="rpt rpt-pivot sm-table" id="delinquencyCategoryTable"><tbody></tbody></table>
+      </div>
+    </div>
+  </div>
+
+  <div class="page" id="page-incomesubcategory">
+    <p class="section-title">Income &amp; Delinquency &mdash; by Subcategory</p>
+    <p class="note" style="margin:-8px 0 0;">Same methodology and window as Income/Delinquency: Category (see its note for the full Income/Delinquency definitions), grouped one level finer &mdash; e.g. "Small Kitchen Appliances" (one row on the Category tab) splits into "Air Fryer" / "Blender" / "Toaster" here.</p>
+    <div class="report-card">
+      <div class="report-scroll-top" id="incomeSubcategoryScrollTop"><div></div></div>
+      <div class="report-scroll" id="incomeSubcategoryScrollBody">
+        <table class="rpt rpt-pivot sm-table" id="incomeSubcategoryTable"><tbody></tbody></table>
+      </div>
+    </div>
+    <div class="report-card" style="margin-top:16px;">
+      <div class="report-scroll-top" id="delinquencySubcategoryScrollTop"><div></div></div>
+      <div class="report-scroll" id="delinquencySubcategoryScrollBody">
+        <table class="rpt rpt-pivot sm-table" id="delinquencySubcategoryTable"><tbody></tbody></table>
+      </div>
+    </div>
+  </div>
+
+  <div class="page" id="page-incomebrand">
+    <p class="section-title">Income &amp; Delinquency &mdash; by Brand</p>
+    <p class="note" style="margin:-8px 0 0;">Same methodology and window as Income/Delinquency: Category (see its note for the full Income/Delinquency definitions), grouped by <code>product_brands.Brand_Name</code> instead of product category. The three "no real brand" spellings (<code>none</code>, <code>N/A</code>, <code>ბრენდის გარეშე</code>) are combined into one "No Brand" row at the bottom.</p>
+    <div class="report-card">
+      <div class="report-scroll-top" id="incomeBrandScrollTop"><div></div></div>
+      <div class="report-scroll" id="incomeBrandScrollBody">
+        <table class="rpt rpt-pivot sm-table" id="incomeBrandTable"><tbody></tbody></table>
+      </div>
+    </div>
+    <div class="report-card" style="margin-top:16px;">
+      <div class="report-scroll-top" id="delinquencyBrandScrollTop"><div></div></div>
+      <div class="report-scroll" id="delinquencyBrandScrollBody">
+        <table class="rpt rpt-pivot sm-table" id="delinquencyBrandTable"><tbody></tbody></table>
+      </div>
+    </div>
+  </div>
+
+  <div class="page" id="page-incomeproduct">
+    <p class="section-title">Income &amp; Delinquency &mdash; by Product</p>
+    <p class="note" style="margin:-8px 0 0;">Same methodology and window as Income/Delinquency: Category (see its note for the full Income/Delinquency definitions), grouped at the finest level &mdash; the same Product(EN) buckets as the Sales Monthly tab (e.g. "Air Fryer", "Smartphones").</p>
+    <div class="report-card">
+      <div class="report-scroll-top" id="incomeProductScrollTop"><div></div></div>
+      <div class="report-scroll" id="incomeProductScrollBody">
+        <table class="rpt rpt-pivot sm-table" id="incomeProductTable"><tbody></tbody></table>
+      </div>
+    </div>
+    <div class="report-card" style="margin-top:16px;">
+      <div class="report-scroll-top" id="delinquencyProductScrollTop"><div></div></div>
+      <div class="report-scroll" id="delinquencyProductScrollBody">
+        <table class="rpt rpt-pivot sm-table" id="delinquencyProductTable"><tbody></tbody></table>
+      </div>
+    </div>
   </div>
 
   <div class="page" id="page-logistics">
@@ -497,6 +674,39 @@ table.rpt-pivot td.rpt-group-toggle { cursor: pointer; user-select: none; text-a
   </div>
 </div>
 
+<div class="page" id="page-excustomers">
+  <p class="section-title">Ex Customers &mdash; payment-quality grade &amp; contact list</p>
+  <p class="note" style="margin:-8px 0 0;">An "ex customer" = a <code>Customer_ID</code> with at least one genuinely closed loan (<code>Close_Type IN (1, 2)</code>) and no currently active one &mdash; 3,210 as of this build. <strong>Grade (A&ndash;E)</strong> = how much of what they bought actually got collected, weighted across all their closed loans (<code>SUM(Full_Cost &minus; Debt) / SUM(Full_Cost)</code>): <b>A</b> &ge;98% collected (paid in full) &middot; <b>B</b> 80&ndash;98% &middot; <b>C</b> 50&ndash;80% &middot; <b>D</b> 1&ndash;50% &middot; <b>E</b> &lt;1% (collected essentially nothing). Bands were chosen by looking at the real distribution before picking round numbers &mdash; not arbitrary. Contains real customer PII (name, national ID, phone, email) &mdash; this is the one individual-row report in this project, built for collections/win-back outreach specifically because it was asked for; every other tab stays aggregate-only on purpose. Live from the database on every page load.</p>
+  <p class="note" style="margin:4px 0 0;"><strong>Reconciling against Customer Analysis</strong>: Total Customers &minus; Active Customers = ~29,768 "not currently a customer," not 3,210. The gap (~26,558) never actually received a loan in the first place &mdash; every application they ever submitted was rejected, refused, or expired before disbursement, so there's no payment history to grade. Shown below as an aggregate-only breakdown by their most recent application status (no PII), not folded into the graded list.</p>
+  <div class="table-card">
+    <table id="exCustomersSummaryTable"><tbody></tbody></table>
+  </div>
+  <p class="section-title" style="margin-top:20px;">Never Became a Customer &mdash; by last application status (no PII)</p>
+  <p class="note" style="margin:-8px 0 0;">The other ~26,500 inactive people, bucketed by whichever <code>Order_Status</code> their most recent application ended on. Reconciles: 3,210 (graded) + this table's total = ~29,768 = Customer Analysis's Total &minus; Active.</p>
+  <div class="table-card">
+    <table id="neverBorrowedTable"><tbody></tbody></table>
+  </div>
+  <p class="section-title" style="margin-top:20px;">Full List &mdash; sorted worst payer first</p>
+  <div class="excust-search">
+    <input type="text" id="exCustomersSearch" placeholder="Search name, PID, phone, email, product…">
+    <span class="excust-search-count" id="exCustomersSearchCount"></span>
+  </div>
+  <div class="report-card">
+    <div class="report-scroll">
+      <table class="excust-table" id="exCustomersTable">
+        <thead>
+          <tr>
+            <th>Name</th><th>PID</th><th>Phone</th><th>Email</th><th>City</th><th>Grade</th>
+            <th class="num">Collected %</th><th class="num">Loans</th><th class="num">Purchased</th>
+            <th class="num">Written Off</th><th>Last Close</th><th>Products</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
 <div class="page" id="page-risksegmentation">
   <p class="section-title">Risk Segmentation &mdash; active portfolio</p>
   <p class="note" style="margin:-8px 0 0;">Active loans (<code>Active = 1</code>) grouped by <code>Risk_Status</code>. Live from the database on every page load.</p>
@@ -523,6 +733,28 @@ table.rpt-pivot td.rpt-group-toggle { cursor: pointer; user-select: none; text-a
     <table id="delinquencyTable"><tbody></tbody></table>
   </div>
   <p class="note" id="delinquencyParNote"></p>
+</div>
+
+<div class="page" id="page-leads">
+  <p class="section-title">Leads &mdash; status by month</p>
+  <p class="note" style="margin:-8px 0 0;">Every lead status by month, keyed to <code>instalments.Lead_Create_Date</code> &mdash; the same admin-panel Status filter shown in the "Leads" panel. Uses <code>instalments.Lead_Status_ID</code> rather than the standalone <code>leads</code> table: the standalone table is just the untriaged intake log (92% blank/Pending in this window), while a lead's status only actually gets updated once it's pulled into <code>instalments</code> (as a <code>Lead = 1</code> row) and worked. "Unspecified" covers a small number of rows with no status set. Live from the database on every page load.</p>
+  <div class="report-card">
+    <div class="report-scroll-top" id="leadsScrollTop"><div></div></div>
+    <div class="report-scroll" id="leadsScrollBody">
+      <table class="rpt rpt-pivot sm-table" id="leadsTable"><tbody></tbody></table>
+    </div>
+  </div>
+</div>
+
+<div class="page" id="page-applicationstatuses">
+  <p class="section-title">Application Statuses &mdash; all statuses by month</p>
+  <p class="note" style="margin:-8px 0 0;">Every <code>instalments.Order_Status</code> an application has ever carried, one row per month, keyed to <code>Aplication_Date</code> &mdash; the same admin-panel Status filter shown in the "Applications" panel, but covering the full status lifecycle rather than just the 5 committee outcomes on the Committee tab. Two raw codes that share the literal label "ინვოისის გაგზავნა" (IDs 5 and 9 &mdash; 5 is the one actually used at volume) are merged into one row; "Unspecified" covers a small number of rows whose status code has no label in <code>order_statuses</code> at all. Live from the database on every page load.</p>
+  <div class="report-card">
+    <div class="report-scroll-top" id="applicationStatusesScrollTop"><div></div></div>
+    <div class="report-scroll" id="applicationStatusesScrollBody">
+      <table class="rpt rpt-pivot sm-table" id="applicationStatusesTable"><tbody></tbody></table>
+    </div>
+  </div>
 </div>
 
 <div class="page" id="page-rejectionreasons">
@@ -575,11 +807,18 @@ table.rpt-pivot td.rpt-group-toggle { cursor: pointer; user-select: none; text-a
 const data = <?= json_encode($data, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) ?>;
 const targets = <?= json_encode($targets, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>;
 const generatedAt = <?= json_encode($generatedAt, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>;
+const headerYesterday = <?= json_encode($headerYesterday, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>;
+const headerMtdRange = <?= json_encode($headerMtdRange, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>;
 const monthlyStats = <?= json_encode($monthlyStats, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>;
 const dailyStats = <?= json_encode($dailyStats, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>;
 const salesMonthlyStats = <?= json_encode($salesMonthlyStats, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) ?>;
 const brandStats = <?= json_encode($brandStats, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) ?>;
 const subcategoryStats = <?= json_encode($subcategoryStats, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) ?>;
+const categoryBrandBreakdown = <?= json_encode($categoryBrandBreakdown, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) ?>;
+const incomeDelinquencyByCategory = <?= json_encode($incomeDelinquencyByCategory, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) ?>;
+const incomeDelinquencyBySubcategory = <?= json_encode($incomeDelinquencyBySubcategory, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) ?>;
+const incomeDelinquencyByBrand = <?= json_encode($incomeDelinquencyByBrand, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) ?>;
+const incomeDelinquencyByProduct = <?= json_encode($incomeDelinquencyByProduct, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) ?>;
 const pendingStatusLog = <?= json_encode($pendingStatusLog, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) ?>;
 const customerAnalysis = <?= json_encode($customerAnalysis, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) ?>;
 const customerAgeGenderAnalysis = <?= json_encode($customerAgeGenderAnalysis, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) ?>;
@@ -588,6 +827,8 @@ const customerWorkposAnalysis = <?= json_encode($customerWorkposAnalysis, JSON_H
 const customerIncomeAnalysis = <?= json_encode($customerIncomeAnalysis, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) ?>;
 const customerDistrictAnalysis = <?= json_encode($customerDistrictAnalysis, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) ?>;
 const riskSegmentation = <?= json_encode($riskSegmentation, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) ?>;
+const exCustomers = <?= json_encode($exCustomers, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) ?>;
+const neverBorrowedByStatus = <?= json_encode($neverBorrowedByStatus, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) ?>;
 const closedLoansMonthly = <?= json_encode($closedLoansMonthly, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) ?>;
 const delinquencyAnalysis = <?= json_encode($delinquencyAnalysis, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) ?>;
 const rejectionReasonsMonthly = <?= json_encode($rejectionReasonsMonthly, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) ?>;
@@ -595,6 +836,8 @@ const clientRefusedReasonsMonthly = <?= json_encode($clientRefusedReasonsMonthly
 const expiredReasonsMonthly = <?= json_encode($expiredReasonsMonthly, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) ?>;
 const notRespondingReasonsMonthly = <?= json_encode($notRespondingReasonsMonthly, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) ?>;
 const approvedReasonsMonthly = <?= json_encode($approvedReasonsMonthly, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) ?>;
+const applicationStatusesMonthly = <?= json_encode($applicationStatusesMonthly, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) ?>;
+const leadStatusesMonthly = <?= json_encode($leadStatusesMonthly, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) ?>;
 
 const fmt = n => Math.round(n).toLocaleString('en-US');
 const fmt1 = n => n.toLocaleString('en-US', { maximumFractionDigits: 1 });
@@ -1026,6 +1269,203 @@ function renderSubcategoryForDealType() {
 renderSubcategoryForDealType();
 wireDealTypeFilter('subcategoryDealTypeNav', dt => { subcategoryDealType = dt; renderSubcategoryForDealType(); });
 
+/* ---------- Category/Brand: one block per category (title bar + header + brand rows + total
+   row), mirroring the business's own reference report's "Top 4 — Brands" sheet layout for every
+   category instead of a hand-picked top 4. Same All/Installment/Single-Payment deal-type filter
+   as Sales Monthly/Brand Analyze/Subcategory Analyze. */
+function renderCategoryBrandTable(d) {
+  const table = document.getElementById('categoryBrandTable');
+  if (!d || !d.categories) {
+    table.querySelector('tbody').innerHTML = '<tr><td>No data.</td></tr>';
+    return;
+  }
+
+  const marginCell = m => m === null ? '&ndash;' : pct(m);
+  let html = '';
+
+  d.categories.forEach(cat => {
+    const isFallback = cat.category === 'Uncategorized';
+    html += `<tr class="rpt-title"><td colspan="8">${cat.category}</td></tr>`;
+    html += `<tr class="rpt-colhead"><td>Brand</td><td>Q1 Sales</td><td>Q2 Sales</td><td>Total Sales</td><td>Share %</td><td>COGS</td><td>PR Mrg %</td><td>Q-ty</td></tr>`;
+    cat.brands.forEach(b => {
+      const rowCls = (isFallback || b.brand === 'No Brand') ? 'sm-row sm-uncategorized' : 'sm-row';
+      html += `<tr class="${rowCls}"><td>${b.brand}</td><td>${fmt(b.q1.sales)}</td><td>${fmt(b.q2.sales)}</td><td>${fmt(b.total.sales)}</td><td>${pct(b.share)}</td><td>${fmt(b.total.cogs)}</td><td>${marginCell(b.margin)}</td><td>${fmt(b.total.qty)}</td></tr>`;
+    });
+    html += `<tr class="sm-grandtotal"><td>Total</td><td></td><td></td><td>${fmt(cat.total.sales)}</td><td>100.0%</td><td>${fmt(cat.total.cogs)}</td><td>${marginCell(cat.margin)}</td><td>${fmt(cat.total.qty)}</td></tr>`;
+  });
+
+  table.querySelector('tbody').innerHTML = html;
+}
+let categoryBrandDealType = 'all';
+function renderCategoryBrandForDealType() {
+  renderCategoryBrandTable(categoryBrandBreakdown ? categoryBrandBreakdown[categoryBrandDealType] : null);
+}
+renderCategoryBrandForDealType();
+wireDealTypeFilter('categoryBrandDealTypeNav', dt => { categoryBrandDealType = dt; renderCategoryBrandForDealType(); });
+
+/* ---------- Income & Delinquency by Product (Category/Subcategory/Brand/Product): two pivot
+   tables per dimension, sharing the same period/Q1/Q2/Total column structure as Sales Monthly
+   but reading IncomeDelinquencyRepository's cell shape — revenue/cogs/qty for Income,
+   paidQty/writtenQty/paidAmt/writtenAmt for Delinquency — instead of Sales Monthly's
+   sales/cogs/qty. Closed-loans-only, no deal-type filter (Close_Type is a closed-loan concept,
+   not a deal-type one). Percentages (margin, write-off rate) are always computed client-side
+   from the raw counts/amounts rather than trusted from a precomputed field, same convention as
+   bucketedCells() above — works whether the cell came straight from the server or was summed
+   here in JS for a synthetic "TOTAL (all)" row. */
+function incomeColHead(rowLabel, periods, q1Periods, q2Periods) {
+  const cells = [];
+  const subCells = [];
+  const summaryHead = label => `<td colspan="5" class="sm-total-col">${label}</td>`;
+  const summarySub = () => `<td class="sm-total-col">Revenue</td><td>Cogs</td><td>Mrg</td><td>Qty</td><td>Share</td>`;
+  periods.forEach(p => {
+    cells.push(`<td colspan="4">${monthLabel(p)}</td>`);
+    subCells.push(`<td>Revenue</td><td>Cogs</td><td>Mrg</td><td>Qty</td>`);
+    if (q1Periods.length && p === q1Periods[q1Periods.length - 1]) { cells.push(summaryHead('Q1 Total')); subCells.push(summarySub()); }
+    if (q2Periods.length && p === q2Periods[q2Periods.length - 1]) { cells.push(summaryHead('Q2 Total')); subCells.push(summarySub()); }
+  });
+  cells.push(summaryHead('Total'));
+  subCells.push(summarySub());
+  return `<tr class="rpt-colhead"><td>${rowLabel}</td>${cells.join('')}</tr><tr class="rpt-colhead"><td></td>${subCells.join('')}</tr>`;
+}
+function incomeCells(cell, isSummary) {
+  const margin = cell.revenue > 0 ? (cell.revenue - cell.cogs) / cell.revenue : null;
+  const cls = isSummary ? ' sm-total-col' : '';
+  let html = `<td class="${cls}">${fmt(cell.revenue)}</td><td>${fmt(cell.cogs)}</td><td>${margin === null ? '&ndash;' : pct(margin)}</td><td>${fmt(cell.qty)}</td>`;
+  if (isSummary) html += `<td>${pct(cell.share || 0)}</td>`;
+  return html;
+}
+function incomeRowCells(row, periods, q1Periods, q2Periods) {
+  let html = '';
+  periods.forEach(p => {
+    html += incomeCells(row.byPeriod[p], false);
+    if (q1Periods.length && p === q1Periods[q1Periods.length - 1]) html += incomeCells(row.q1, true);
+    if (q2Periods.length && p === q2Periods[q2Periods.length - 1]) html += incomeCells(row.q2, true);
+  });
+  html += incomeCells(row.total, true);
+  return html;
+}
+function renderIncomeTable(tableId, stats, titleText, rowLabel, fallbackBucket) {
+  const table = document.getElementById(tableId);
+  if (!stats || !stats.rows) {
+    table.querySelector('tbody').innerHTML = '<tr><td>No data.</td></tr>';
+    return;
+  }
+  const { periods, q1Periods, q2Periods, rows, grandTotal, grandQ1, grandQ2 } = stats;
+  const summaryGroups = 1 + (q1Periods.length ? 1 : 0) + (q2Periods.length ? 1 : 0);
+  const colspan = 1 + periods.length * 4 + summaryGroups * 5;
+
+  let html = rptPivotPlainSpan('rpt-title', titleText, colspan);
+  html += incomeColHead(rowLabel, periods, q1Periods, q2Periods);
+
+  html += `<tr class="sm-grandtotal"><td>TOTAL (all)</td>`;
+  html += incomeRowCells({
+    byPeriod: Object.fromEntries(periods.map(p => [p, rows.reduce((acc, r) => {
+      const c = r.byPeriod[p]; acc.revenue += c.revenue; acc.cogs += c.cogs; acc.qty += c.qty; return acc;
+    }, { revenue: 0, cogs: 0, qty: 0 })])),
+    q1: { ...grandQ1, share: 1 }, q2: { ...grandQ2, share: 1 }, total: { ...grandTotal, share: 1 },
+  }, periods, q1Periods, q2Periods);
+  html += `</tr>`;
+
+  rows.forEach(row => {
+    const rowCls = row.bucket === fallbackBucket ? 'sm-row sm-uncategorized' : 'sm-row';
+    html += `<tr class="${rowCls}"><td>${row.bucket}</td>${incomeRowCells(row, periods, q1Periods, q2Periods)}</tr>`;
+  });
+
+  table.querySelector('tbody').innerHTML = html;
+}
+
+function delinquencyColHead(rowLabel, periods, q1Periods, q2Periods) {
+  const cells = [];
+  const subCells = [];
+  const summaryHead = label => `<td colspan="6" class="sm-total-col">${label}</td>`;
+  const summarySub = () => `<td class="sm-total-col">Paid Qty</td><td>WO Qty</td><td>WO Qty %</td><td>Paid GEL</td><td>WO GEL</td><td>WO GEL %</td>`;
+  periods.forEach(p => {
+    cells.push(`<td colspan="6">${monthLabel(p)}</td>`);
+    subCells.push(summarySub());
+    if (q1Periods.length && p === q1Periods[q1Periods.length - 1]) { cells.push(summaryHead('Q1 Total')); subCells.push(summarySub()); }
+    if (q2Periods.length && p === q2Periods[q2Periods.length - 1]) { cells.push(summaryHead('Q2 Total')); subCells.push(summarySub()); }
+  });
+  cells.push(summaryHead('Total'));
+  subCells.push(summarySub());
+  return `<tr class="rpt-colhead"><td>${rowLabel}</td>${cells.join('')}</tr><tr class="rpt-colhead"><td></td>${subCells.join('')}</tr>`;
+}
+function delinquencyCells(cell, isSummary) {
+  const closedQty = cell.paidQty + cell.writtenQty;
+  const woQtyRate = closedQty > 0 ? cell.writtenQty / closedQty : 0;
+  const closedAmt = cell.paidAmt + cell.writtenAmt;
+  const woAmtRate = closedAmt > 0 ? cell.writtenAmt / closedAmt : 0;
+  const cls = isSummary ? ' sm-total-col' : '';
+  return `<td class="${cls}">${fmt(cell.paidQty)}</td><td>${fmt(cell.writtenQty)}</td><td>${pct(woQtyRate)}</td><td>${fmt(cell.paidAmt)}</td><td>${fmt(cell.writtenAmt)}</td><td>${pct(woAmtRate)}</td>`;
+}
+function delinquencyRowCells(row, periods, q1Periods, q2Periods) {
+  let html = '';
+  periods.forEach(p => {
+    html += delinquencyCells(row.byPeriod[p], false);
+    if (q1Periods.length && p === q1Periods[q1Periods.length - 1]) html += delinquencyCells(row.q1, true);
+    if (q2Periods.length && p === q2Periods[q2Periods.length - 1]) html += delinquencyCells(row.q2, true);
+  });
+  html += delinquencyCells(row.total, true);
+  return html;
+}
+function renderDelinquencyTable(tableId, stats, titleText, rowLabel, fallbackBucket) {
+  const table = document.getElementById(tableId);
+  if (!stats || !stats.rows) {
+    table.querySelector('tbody').innerHTML = '<tr><td>No data.</td></tr>';
+    return;
+  }
+  const { periods, q1Periods, q2Periods, rows, grandTotal, grandQ1, grandQ2 } = stats;
+  const summaryGroups = 1 + (q1Periods.length ? 1 : 0) + (q2Periods.length ? 1 : 0);
+  const colspan = 1 + periods.length * 6 + summaryGroups * 6;
+
+  let html = rptPivotPlainSpan('rpt-title', titleText, colspan);
+  html += delinquencyColHead(rowLabel, periods, q1Periods, q2Periods);
+
+  html += `<tr class="sm-grandtotal"><td>TOTAL (all)</td>`;
+  html += delinquencyRowCells({
+    byPeriod: Object.fromEntries(periods.map(p => [p, rows.reduce((acc, r) => {
+      const c = r.byPeriod[p];
+      acc.paidQty += c.paidQty; acc.writtenQty += c.writtenQty; acc.paidAmt += c.paidAmt; acc.writtenAmt += c.writtenAmt;
+      return acc;
+    }, { paidQty: 0, writtenQty: 0, paidAmt: 0, writtenAmt: 0 })])),
+    q1: grandQ1, q2: grandQ2, total: grandTotal,
+  }, periods, q1Periods, q2Periods);
+  html += `</tr>`;
+
+  rows.forEach(row => {
+    const rowCls = row.bucket === fallbackBucket ? 'sm-row sm-uncategorized' : 'sm-row';
+    html += `<tr class="${rowCls}"><td>${row.bucket}</td>${delinquencyRowCells(row, periods, q1Periods, q2Periods)}</tr>`;
+  });
+
+  table.querySelector('tbody').innerHTML = html;
+}
+
+// Keyed by data-page value (not dimKey) so the #pageNav click handler below can re-trigger the
+// scroll-spacer measurement for whichever tab was just switched into — a hidden table reports
+// scrollWidth 0, so this has to run again once the tab is actually visible, same as every other
+// scroll-synced tab on this page.
+const incomeDelinquencyScrollUpdaters = {};
+function renderIncomeDelinquencyDimension(pageKey, dimKey, data, incomeTitleText, delinquencyTitleText, rowLabel, fallbackBucket) {
+  const incomeScrollUpdate = setupTopScrollSync(`income${dimKey}ScrollTop`, `income${dimKey}ScrollBody`);
+  const delinquencyScrollUpdate = setupTopScrollSync(`delinquency${dimKey}ScrollTop`, `delinquency${dimKey}ScrollBody`);
+  renderIncomeTable(`income${dimKey}Table`, data, incomeTitleText, rowLabel, fallbackBucket);
+  renderDelinquencyTable(`delinquency${dimKey}Table`, data, delinquencyTitleText, rowLabel, fallbackBucket);
+  incomeScrollUpdate();
+  delinquencyScrollUpdate();
+  incomeDelinquencyScrollUpdaters[pageKey] = [incomeScrollUpdate, delinquencyScrollUpdate];
+}
+renderIncomeDelinquencyDimension('incomecategory', 'Category', incomeDelinquencyByCategory,
+  'Income &mdash; by Product Category (Realized Margin, Closed Loans)', 'Delinquency &mdash; Write-off Rate by Product Category',
+  'Product Category', 'Uncategorized');
+renderIncomeDelinquencyDimension('incomesubcategory', 'Subcategory', incomeDelinquencyBySubcategory,
+  'Income &mdash; by Subcategory (Realized Margin, Closed Loans)', 'Delinquency &mdash; Write-off Rate by Subcategory',
+  'Subcategory', 'Uncategorized');
+renderIncomeDelinquencyDimension('incomebrand', 'Brand', incomeDelinquencyByBrand,
+  'Income &mdash; by Brand (Realized Margin, Closed Loans)', 'Delinquency &mdash; Write-off Rate by Brand',
+  'Brand', 'No Brand');
+renderIncomeDelinquencyDimension('incomeproduct', 'Product', incomeDelinquencyByProduct,
+  'Income &mdash; by Product (Realized Margin, Closed Loans)', 'Delinquency &mdash; Write-off Rate by Product',
+  'Product', 'Uncategorized');
+
 /* ---------- Sales — Pending Status: same "one column per date, transferred unchanged"
    pattern as the Logistics Delivery Status table below it, from the same source sheet.
    Reuses the identical .logi-table CSS classes (title/head/total/white/light) since the
@@ -1310,6 +1750,64 @@ function renderRiskSegmentation() {
 }
 renderRiskSegmentation();
 
+/* ---------- Ex Customers: individual-row PII report (name/PID/phone/email + payment grade),
+   the one report in this project that isn't aggregate-only — see ExCustomerRepository's docblock
+   for why. Summary table reuses the plain .table-card th/td idiom already used above; the full
+   list is a new wide table (.excust-table, see CSS) with a client-side text-search filter, since
+   it lists 3,000+ people. */
+function renderExCustomersSummary() {
+  const d = exCustomers;
+  if (!d) return;
+  const rowsHtml = d.summary.byGrade.map(g =>
+    `<tr><td>Grade ${g.grade}</td><td>${fmt(g.count)}</td><td>${pct(g.share)}</td><td>${fmt(g.totalPurchased)}</td><td>${fmt(g.totalWrittenOff)}</td></tr>`
+  ).join('');
+  const html = `<tr><th>Grade</th><th>Customers</th><th>Share</th><th>Total Purchased (GEL)</th><th>Total Written Off (GEL)</th></tr>`
+    + rowsHtml
+    + `<tr class="total"><td>Total</td><td>${fmt(d.summary.grandTotal.count)}</td><td>100.0%</td><td>${fmt(d.summary.grandTotal.totalPurchased)}</td><td>${fmt(d.summary.grandTotal.totalWrittenOff)}</td></tr>`;
+  document.getElementById('exCustomersSummaryTable').querySelector('tbody').innerHTML = html;
+}
+renderExCustomersSummary();
+
+function renderNeverBorrowedByStatus() {
+  const d = neverBorrowedByStatus;
+  if (!d) return;
+  const rowsHtml = d.rows.map(r =>
+    `<tr><td>${r.status}</td><td>${fmt(r.count)}</td><td>${pct(r.share)}</td></tr>`
+  ).join('');
+  const html = `<tr><th>Last Application Status</th><th>Customers</th><th>Share</th></tr>`
+    + rowsHtml
+    + `<tr class="total"><td>Total</td><td>${fmt(d.total)}</td><td>100.0%</td></tr>`;
+  document.getElementById('neverBorrowedTable').querySelector('tbody').innerHTML = html;
+}
+renderNeverBorrowedByStatus();
+
+function renderExCustomersTable(filterText) {
+  const d = exCustomers;
+  const table = document.getElementById('exCustomersTable');
+  if (!d || !d.rows) {
+    table.querySelector('tbody').innerHTML = '<tr><td>No data.</td></tr>';
+    return;
+  }
+  const needle = (filterText || '').trim().toLowerCase();
+  const rows = needle
+    ? d.rows.filter(r => `${r.name} ${r.pid} ${r.phone} ${r.email} ${r.products}`.toLowerCase().includes(needle))
+    : d.rows;
+
+  const html = rows.map(r => `<tr data-grade="${r.grade}">
+    <td>${r.name}</td><td>${r.pid}</td><td>${r.phone}</td><td>${r.email}</td><td>${r.city}</td>
+    <td class="grade-cell">${r.grade}</td>
+    <td class="num">${pct(r.collectionRate)}</td><td class="num">${fmt(r.loanCount)}</td>
+    <td class="num">${fmt(r.totalPurchased)}</td><td class="num">${fmt(r.totalWrittenOff)}</td>
+    <td>${r.lastCloseDate || '&ndash;'}</td><td class="products-cell">${r.products}</td>
+  </tr>`).join('');
+  table.querySelector('tbody').innerHTML = html || '<tr><td colspan="12">No matches.</td></tr>';
+
+  const countEl = document.getElementById('exCustomersSearchCount');
+  if (countEl) countEl.textContent = needle ? `${rows.length} of ${d.rows.length}` : `${d.rows.length} customers`;
+}
+renderExCustomersTable('');
+document.getElementById('exCustomersSearch').addEventListener('input', e => renderExCustomersTable(e.target.value));
+
 function renderClosedLoans() {
   const d = closedLoansMonthly;
   if (!d) return;
@@ -1422,13 +1920,96 @@ const expiredReasonsScrollUpdate = setupTopScrollSync('expiredReasonsScrollTop',
 const notRespondingReasonsScrollUpdate = setupTopScrollSync('notRespondingReasonsScrollTop', 'notRespondingReasonsScrollBody');
 const approvedReasonsScrollUpdate = setupTopScrollSync('approvedReasonsScrollTop', 'approvedReasonsScrollBody');
 
+/* ---------- Application Statuses: same pivot idiom as renderReasonsPivotTable() above (one
+   row per bucket, Qty+% per month, Total Qty+Share), minus the "English" translation column —
+   most status labels here are already the production label shown in the admin panel, and no
+   per-status English mapping was asked for. */
+function renderStatusPivotTable(d, tableId, title) {
+  if (!d) return;
+  const table = document.getElementById(tableId);
+  if (d.rows.length === 0) {
+    table.querySelector('tbody').innerHTML = `<tr><th>${title}</th></tr><tr><td>No data for this period.</td></tr>`;
+    return;
+  }
+  const periods = d.periods;
+  const totalsByPeriod = {};
+  periods.forEach(p => { totalsByPeriod[p] = d.rows.reduce((s, r) => s + r.byPeriod[p], 0); });
+
+  const periodHeadCells = periods.map(p => `<td colspan="2">${monthLabel(p)}</td>`).join('');
+  const periodSubCells = periods.map(() => `<td>Qty</td><td>%</td>`).join('');
+  let html = `<tr class="rpt-title"><td colspan="${periods.length * 2 + 3}">${title} &mdash; by Month</td></tr>`;
+  html += `<tr class="rpt-colhead"><td>Status</td>${periodHeadCells}<td colspan="2" class="sm-total-col">Total</td></tr>`;
+  html += `<tr class="rpt-colhead"><td></td>${periodSubCells}<td class="sm-total-col">Qty</td><td>Share</td></tr>`;
+
+  d.rows.forEach(row => {
+    const rowCls = row.status === 'Unspecified' ? 'sm-row sm-uncategorized' : 'sm-row';
+    const cells = periods.map(p => {
+      const n = row.byPeriod[p];
+      const monthShare = totalsByPeriod[p] > 0 ? n / totalsByPeriod[p] : 0;
+      return `<td>${fmt(n)}</td><td>${pct(monthShare)}</td>`;
+    }).join('');
+    html += `<tr class="${rowCls}"><td>${row.status}</td>${cells}<td class="sm-total-col">${fmt(row.total)}</td><td>${pct(row.share)}</td></tr>`;
+  });
+
+  const grandCells = periods.map(p => `<td>${fmt(totalsByPeriod[p])}</td><td>100.0%</td>`).join('');
+  html += `<tr class="sm-grandtotal"><td>TOTAL (all statuses)</td>${grandCells}<td class="sm-total-col">${fmt(d.grandTotal)}</td><td>100.0%</td></tr>`;
+
+  table.querySelector('tbody').innerHTML = html;
+}
+renderStatusPivotTable(applicationStatusesMonthly, 'applicationStatusesTable', 'Application Statuses');
+const applicationStatusesScrollUpdate = setupTopScrollSync('applicationStatusesScrollTop', 'applicationStatusesScrollBody');
+renderStatusPivotTable(leadStatusesMonthly, 'leadsTable', 'Leads');
+const leadsScrollUpdate = setupTopScrollSync('leadsScrollTop', 'leadsScrollBody');
+
+/* ---------- Per-tab "as of" badge (top-right corner) — replaces one dashboard-wide Yesterday/MTD
+   date with a label specific to whichever tab is currently open, since different tabs query
+   genuinely different windows (per user request 2026-08-26: each tab should show its own dates,
+   not one shared pair). Grounded in each tab's actual query window, not guessed:
+   - report/mtdstats: Yesterday + MTD, exactly as before (these two tabs ARE that window).
+   - dailystats: Jun 1 through yesterday (DailyStatistics' real window, see index.php $dailyFrom).
+   - salesmonthly/brandanalyze/subcategoryanalyze/categorybrand/incomecategory/
+     incomesubcategory/incomebrand/incomeproduct/closedloans/rejectionreasons: all share the same
+     Jan 1 through yesterday window ($monthlyFrom in index.php).
+   - logistics: manual/mixed-source snapshot with its own per-table dates already disclosed in
+     each table's note text — no single accurate date to put in the corner badge.
+   - customers/risksegmentation/delinquency (Overdue Analysis): point-in-time snapshots of the
+     current active-loan book, not date-ranged at all (PortfolioRepository takes no from/to for
+     these three). */
+const windowedPages = new Set(['salesmonthly', 'brandanalyze', 'subcategoryanalyze', 'categorybrand',
+  'incomecategory', 'incomesubcategory', 'incomebrand', 'incomeproduct', 'closedloans', 'rejectionreasons',
+  'applicationstatuses', 'leads']);
+function periodBadgeHtml(page) {
+  if (page === 'report' || page === 'mtdstats') {
+    return `Yesterday: <b>${headerYesterday}</b><br>MTD: <b>${headerMtdRange}</b>`;
+  }
+  if (page === 'dailystats') {
+    return `Window: <b>Jun 1 &ndash; ${headerYesterday}</b>`;
+  }
+  if (windowedPages.has(page)) {
+    return `Window: <b>Jan 1 &ndash; ${headerYesterday}</b>`;
+  }
+  if (page === 'logistics') {
+    return `Manual snapshot &mdash; <b>see notes below</b>`;
+  }
+  if (page === 'excustomers') {
+    return `<b>Live snapshot</b> &mdash; closed-loan history, all-time`;
+  }
+  return `<b>Live snapshot</b> &mdash; current loan book`;
+}
+function updatePeriodBadge(page) {
+  document.getElementById('periodBadge').innerHTML = periodBadgeHtml(page);
+}
+
 document.querySelectorAll('#pageNav button').forEach(btn => {
   btn.addEventListener('click', () => {
     document.querySelectorAll('#pageNav button').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
+    document.querySelectorAll('.nav-group').forEach(g => g.classList.remove('active-group'));
+    btn.closest('.nav-group').classList.add('active-group');
     const page = btn.getAttribute('data-page');
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
     document.getElementById('page-' + page).classList.add('active');
+    updatePeriodBadge(page);
     // A hidden (display:none) table reports scrollWidth 0, so the top-scroll spacer only
     // gets its real width once the tab holding it is actually visible.
     if (page === 'mtdstats') mtdScrollUpdate();
@@ -1436,8 +2017,11 @@ document.querySelectorAll('#pageNav button').forEach(btn => {
     if (page === 'salesmonthly') salesMonthlyScrollUpdate();
     if (page === 'brandanalyze') brandScrollUpdate();
     if (page === 'subcategoryanalyze') subcategoryScrollUpdate();
+    if (incomeDelinquencyScrollUpdaters[page]) incomeDelinquencyScrollUpdaters[page].forEach(fn => fn());
     if (page === 'logistics') { logisticsSalesScrollUpdate(); logisticsScrollUpdate(); }
     if (page === 'closedloans') closedLoansScrollUpdate();
+    if (page === 'applicationstatuses') applicationStatusesScrollUpdate();
+    if (page === 'leads') leadsScrollUpdate();
     if (page === 'rejectionreasons') {
       rejectionReasonsScrollUpdate();
       clientRefusedReasonsScrollUpdate();
@@ -1447,6 +2031,7 @@ document.querySelectorAll('#pageNav button').forEach(btn => {
     }
   });
 });
+document.querySelector('.nav-group[data-group="dailymail"]').classList.add('active-group');
 </script>
 </body>
 </html>

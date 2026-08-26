@@ -277,6 +277,116 @@ final class FunnelRepository
     }
 
     /**
+     * Category/Brand tab: one block per product category, brands broken down within it —
+     * mirrors the exact layout of the business's own reference report's "Top 4 — Brands" sheet
+     * (Brand | Q1 Sales | Q2 Sales | <period> Sales | Share % | COGS | PR Mrg % | Q-ty, one
+     * category title bar + header + brand rows + total row per category), just built for every
+     * category found in the window instead of a hand-picked top 4, and using "Total Sales" for
+     * the third sales column instead of "H1 Sales" since this report's window runs Jan through
+     * yesterday (matching every other tab here), not a fixed first-half cutoff — Q1/Q2 are still
+     * broken out as their own columns for the same at-a-glance quarterly comparison the
+     * reference sheet gives, they just don't bound the total anymore. COGS/Margin/Qty are always
+     * for the whole window (not per-quarter), matching the reference sheet's own formulas
+     * exactly (its COGS/Margin/Qty columns are SUMIFS/COUNTIFS with no EOM date filter, only
+     * Q1/Q2 Sales are date-bounded). Same All/Installment/Single-Payment deal-type split as
+     * Sales Monthly/Brand Analyze/Subcategory Analyze (`['all' => ..., 'installment' => ...,
+     * 'single' => ...]`) — the reference sheet itself has no such distinction, but this project's
+     * own convention across every other sales tab does, so kept consistent rather than being the
+     * one report without it. Uses the exact same `rawGroupedSales()` infra as Sales Monthly/Brand
+     * Analyze — grouped by category and brand together via a `CHAR(1)`-joined composite key so
+     * it's one query, not one query per category, and all three deal-type variants are built
+     * from that one fetch (PHP-side filtering), not three separate queries.
+     */
+    public function categoryBrandBreakdown(DateTimeImmutable $from, DateTimeImmutable $to, ProductClassifier $classifier): array
+    {
+        $rawRows = $this->rawGroupedSales(
+            $from,
+            $to,
+            "CONCAT(COALESCE(pc.Category_Name, ''), CHAR(1), COALESCE(pb.Brand_Name, ''))",
+            'LEFT JOIN product_brands pb ON pb.Brand_ID = p.Brand_ID'
+        );
+
+        $result = [];
+        foreach (['all', 'installment', 'single'] as $dealType) {
+            $filtered = $dealType === 'all' ? $rawRows : array_filter($rawRows, fn ($r) => $r['deal_type'] === $dealType);
+            $result[$dealType] = $this->buildCategoryBrandReport($filtered, $classifier);
+        }
+        return $result;
+    }
+
+    private function buildCategoryBrandReport(array $rawRows, ProductClassifier $classifier): array
+    {
+        $noBrandValues = ['none', 'n/a', 'ბრენდის გარეშე', ''];
+        $emptyPeriod = ['sales' => 0.0, 'cogs' => 0.0, 'qty' => 0];
+        $byCategory = [];
+
+        foreach ($rawRows as $row) {
+            [$rawCategory, $rawBrand] = explode("\x01", $row['raw_key'], 2);
+            $category = $classifier->classify($rawCategory) ?? 'Uncategorized';
+            $brandName = trim($rawBrand);
+            $brand = ($brandName === '' || in_array(strtolower($brandName), $noBrandValues, true)) ? 'No Brand' : $brandName;
+
+            $month = substr($row['period'], 5, 2);
+            $quarter = in_array($month, ['01', '02', '03'], true) ? 'q1' : (in_array($month, ['04', '05', '06'], true) ? 'q2' : null);
+
+            $sales = round((float) $row['sales'], 2);
+            $cogs = round((float) $row['cogs'], 2);
+            $qty = (int) $row['qty'];
+
+            $byCategory[$category][$brand] ??= ['q1' => $emptyPeriod, 'q2' => $emptyPeriod, 'total' => $emptyPeriod];
+            $entry = &$byCategory[$category][$brand];
+            if ($quarter !== null) {
+                $entry[$quarter]['sales'] += $sales;
+                $entry[$quarter]['cogs'] += $cogs;
+                $entry[$quarter]['qty'] += $qty;
+            }
+            $entry['total']['sales'] += $sales;
+            $entry['total']['cogs'] += $cogs;
+            $entry['total']['qty'] += $qty;
+            unset($entry);
+        }
+
+        $categories = [];
+        foreach ($byCategory as $categoryName => $brands) {
+            $brandRows = [];
+            $catTotal = ['sales' => 0.0, 'cogs' => 0.0, 'qty' => 0];
+            foreach ($brands as $brandName => $periods) {
+                $margin = $periods['total']['sales'] > 0
+                    ? ($periods['total']['sales'] - $periods['total']['cogs']) / $periods['total']['sales']
+                    : null;
+                $brandRows[] = [
+                    'brand' => $brandName,
+                    'q1' => $periods['q1'],
+                    'q2' => $periods['q2'],
+                    'total' => $periods['total'],
+                    'margin' => $margin,
+                ];
+                $catTotal['sales'] += $periods['total']['sales'];
+                $catTotal['cogs'] += $periods['total']['cogs'];
+                $catTotal['qty'] += $periods['total']['qty'];
+            }
+            usort($brandRows, static fn ($a, $b) => $b['total']['sales'] <=> $a['total']['sales']);
+            foreach ($brandRows as &$br) {
+                $br['share'] = $catTotal['sales'] > 0 ? round($br['total']['sales'] / $catTotal['sales'], 4) : 0.0;
+            }
+            unset($br);
+            $catMargin = $catTotal['sales'] > 0 ? ($catTotal['sales'] - $catTotal['cogs']) / $catTotal['sales'] : null;
+            $categories[] = ['category' => $categoryName, 'brands' => $brandRows, 'total' => $catTotal, 'margin' => $catMargin];
+        }
+        usort($categories, static function ($a, $b) {
+            if ($a['category'] === 'Uncategorized') {
+                return 1;
+            }
+            if ($b['category'] === 'Uncategorized') {
+                return -1;
+            }
+            return $b['total']['sales'] <=> $a['total']['sales'];
+        });
+
+        return ['categories' => $categories];
+    }
+
+    /**
      * Subcategory Analyze tab: same shape as salesMonthlyStats(), grouped by the mapping
      * sheet's broader Subcategory(EN) bucket (e.g. "Small Kitchen Appliances", which combines
      * Air Fryer/Blender/Toaster/etc. from the Product-level grouping) instead of the specific
