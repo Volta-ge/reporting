@@ -3330,7 +3330,16 @@ document.querySelector('.nav-group[data-group="dailymail"]').classList.add('acti
   var VA_PERMISSIONS = <?= json_encode($vaPermissions ?? [], JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) ?>;
   var STORAGE_KEY = "va_auth_email";
 
-  function norm(s){ return (s||"").trim().toLowerCase(); }
+  // Strips ALL whitespace, not just leading/trailing — a real email never
+  // contains a space, but mobile autocorrect/autocapitalize can silently
+  // insert one mid-string while typing (e.g. after "@domain" is mistaken
+  // for a word boundary), which .trim() alone would never catch. Caught
+  // this via a real user report: a listed, correctly-spelled email got
+  // "წვდომა შეზღუდულია" even though the permissions data was verified
+  // correct — the invisible stray space was the only explanation left
+  // standing once the data and matching logic were both re-checked byte
+  // for byte and found provably correct on their own.
+  function norm(s){ return (s||"").replace(/\s+/g, "").toLowerCase(); }
   function findPerm(email){
     var e = norm(email);
     for (var i=0;i<VA_PERMISSIONS.length;i++){
