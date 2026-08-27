@@ -1151,6 +1151,13 @@ html[data-theme="dark"] .acct-scope {
 
 
   <div class="page acct-scope" id="page-acct-waybills">
+<?php if ($acctError !== null): ?>
+    <div class="db-error" style="margin-bottom:16px;">
+      <strong>Could not load Accounting data from RS.ge.</strong>
+      <p><?= htmlspecialchars($acctError, ENT_QUOTES, 'UTF-8') ?></p>
+      <p class="note">Waybills/invoices/reconciliation depend on RS.ge (a separate system from the main DB) — this error doesn't affect any other tab. If this says "Class &quot;SoapClient&quot; not found", the server's PHP needs the <code>soap</code> extension enabled (check <code>php -m</code> / php.ini, then restart PHP-FPM or Apache).</p>
+    </div>
+<?php endif; ?>
 
     <div class="subhead">
       <div class="brand-block">
@@ -1221,6 +1228,13 @@ html[data-theme="dark"] .acct-scope {
   </div>
 
   <div class="page acct-scope" id="page-acct-invoices">
+<?php if ($acctError !== null): ?>
+    <div class="db-error" style="margin-bottom:16px;">
+      <strong>Could not load Accounting data from RS.ge.</strong>
+      <p><?= htmlspecialchars($acctError, ENT_QUOTES, 'UTF-8') ?></p>
+      <p class="note">Waybills/invoices/reconciliation depend on RS.ge (a separate system from the main DB) — this error doesn't affect any other tab. If this says "Class &quot;SoapClient&quot; not found", the server's PHP needs the <code>soap</code> extension enabled (check <code>php -m</code> / php.ini, then restart PHP-FPM or Apache).</p>
+    </div>
+<?php endif; ?>
 
     <div class="subhead">
       <div class="brand-block">
@@ -1288,6 +1302,13 @@ html[data-theme="dark"] .acct-scope {
   </div>
 
   <div class="page acct-scope" id="page-acct-recon">
+<?php if ($acctError !== null): ?>
+    <div class="db-error" style="margin-bottom:16px;">
+      <strong>Could not load Accounting data from RS.ge.</strong>
+      <p><?= htmlspecialchars($acctError, ENT_QUOTES, 'UTF-8') ?></p>
+      <p class="note">Waybills/invoices/reconciliation depend on RS.ge (a separate system from the main DB) — this error doesn't affect any other tab. If this says "Class &quot;SoapClient&quot; not found", the server's PHP needs the <code>soap</code> extension enabled (check <code>php -m</code> / php.ini, then restart PHP-FPM or Apache).</p>
+    </div>
+<?php endif; ?>
 
     <div class="subhead">
       <div class="brand-block">
