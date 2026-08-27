@@ -735,9 +735,9 @@ html[data-theme="dark"] .acct-scope {
     <div class="nav-group" data-group="accounting">
       <div class="nav-group-title">Accounting</div>
       <div class="nav-group-items">
+        <button data-page="acct-recon">გაყიდვა ↔ ზედნადები</button>
         <button data-page="acct-waybills">ზედნადებები</button>
         <button data-page="acct-invoices">ანგარიშ-ფაქტურები</button>
-        <button data-page="acct-recon">გაყიდვა ↔ ზედნადები</button>
       </div>
     </div>
   
