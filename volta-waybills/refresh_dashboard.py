@@ -429,19 +429,23 @@ def build_reconciliation(crm_rows, waybill_raw):
     }
 
 
-def build_excel_report(recon):
+def build_excel_report(recon, wb_rows, inv_rows):
     """
-    Full person-level reconciliation export (fixed filename, overwritten
-    daily) — mirrors everything the dashboard's reconciliation tab holds for
-    every buyer, not just the flagged ones, so the underlying data can be
-    audited/filtered/corrected directly in Excel rather than only spot-
-    checked person by person in the browser. A person counts as
-    "აკლია ზედნადები" only if their CRM-sales total and waybill total don't
-    net out (|diff| >= 1 GEL), never by a raw per-sale match-flag count — see
-    the "KPI/chart consistency fix" note in volta_sales_waybill_reconciliation.md.
-    Three sheets: შეჯამება (summary), პირები (one row per buyer — ALL of
-    them, matched and missing alike, with a status column + AutoFilter),
-    დეტალები (every sale + waybill line item for every one of those buyers).
+    Full "Accounting" export (fixed filename, overwritten daily) — every tab
+    of the merged Accounting nav-group (see volta_analytics_merge memory),
+    not just reconciliation: the raw ზედნადებები/ანგარიშ-ფაქტურები registers
+    plus the full person-level reconciliation. Mirrors everything the
+    dashboard holds so the underlying data can be audited/filtered/corrected
+    directly in Excel rather than only spot-checked in the browser. A person
+    counts as "აკლია ზედნადები" only if their CRM-sales total and waybill
+    total don't net out (|diff| >= 1 GEL), never by a raw per-sale
+    match-flag count — see the "KPI/chart consistency fix" note in
+    volta_sales_waybill_reconciliation.md. Six sheets: ზედნადებები (full
+    waybill register), ანგარიშ-ფაქტურები (full invoice register), შეჯამება
+    (reconciliation summary), პირები (one row per buyer — ALL of them,
+    matched and missing alike, with a status column + AutoFilter), დეტალები
+    (every sale + waybill line item for every one of those buyers),
+    გაყიდვები პირადობის მიხედვით (person-card format).
     """
     summary = recon["summary"]
     by_person = recon["byPerson"]
@@ -465,8 +469,79 @@ def build_excel_report(recon):
 
     wb = Workbook()
 
-    ws = wb.active
-    ws.title = "შეჯამება"
+    STATUS_MAP_WB = {
+        "2": "დასრულებული", "1": "აქტიური", "8": "გადამზიდავთან",
+        "-2": "გაუქმებული", "0": "შენახული", "-1": "წაშლილი",
+    }
+    TYPE_MAP_WB = {
+        "1": "შიდა გადაზიდვა", "2": "მიწოდება ტრანსპორტირებით", "3": "მიწოდება ტრანსპორტირების გარეშე",
+        "4": "დისტრიბუცია", "5": "საქონლის დაბრუნება", "6": "ქვე-ზედნადები",
+    }
+    STATUS_MAP_INV = {
+        "0": "ახალი", "1": "დასადასტურებელი", "2": "დადასტურებული", "3": "კორექტირებული (პირველადი)",
+        "4": "ახალი კორექტირება", "5": "კორექტ. დასადასტურებელი", "8": "კორექტ. დადასტურებული",
+    }
+
+    def naive_dt(s):
+        # REG_DT (invoices) comes back with a timezone offset; BEGIN_DATE/OPERATION_DT
+        # don't. openpyxl refuses to write a tz-aware datetime at all, so always strip it.
+        if not s:
+            return None
+        return datetime.fromisoformat(s).replace(tzinfo=None)
+
+    ws0 = wb.active
+    ws0.title = "ზედნადებები"
+    headers0 = ["თარიღი", "ზედნადების №", "მყიდველი", "პ/ნ", "თანხა (₾)", "სტატუსი", "ტიპი", "ავტომობილი", "მისამართი"]
+    for col, h in enumerate(headers0, start=1):
+        c = ws0.cell(row=1, column=col, value=h)
+        c.font = header_font
+        c.fill = header_fill
+        c.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+    for i, r in enumerate(sorted(wb_rows, key=lambda r: r["d"], reverse=True), start=2):
+        ws0.cell(row=i, column=1, value=naive_dt(r["d"])).number_format = "DD.MM.YYYY HH:MM"
+        ws0.cell(row=i, column=2, value=r["n"])
+        ws0.cell(row=i, column=3, value=r["b"])
+        ws0.cell(row=i, column=4, value=r["t"])
+        ws0.cell(row=i, column=5, value=r["a"]).number_format = "#,##0"
+        ws0.cell(row=i, column=6, value=STATUS_MAP_WB.get(r["s"], r["s"]))
+        ws0.cell(row=i, column=7, value=TYPE_MAP_WB.get(r["y"], r["y"]))
+        ws0.cell(row=i, column=8, value=r["c"])
+        ws0.cell(row=i, column=9, value=r["e"])
+        for col in range(1, 10):
+            ws0.cell(row=i, column=col).font = cell_font
+    last_row0 = len(wb_rows) + 1
+    widths0 = [18, 14, 34, 13, 12, 14, 24, 12, 40]
+    for col, w in enumerate(widths0, start=1):
+        ws0.column_dimensions[get_column_letter(col)].width = w
+    ws0.freeze_panes = "A2"
+    ws0.auto_filter.ref = f"A1:I{last_row0}"
+
+    ws00 = wb.create_sheet("ანგარიშ-ფაქტურები")
+    headers00 = ["პერიოდი", "რეგისტრაციის თარიღი", "ფაქტურის №", "მყიდველი", "პ/ნ", "თანხა (₾)", "დღგ (₾)", "სტატუსი"]
+    for col, h in enumerate(headers00, start=1):
+        c = ws00.cell(row=1, column=col, value=h)
+        c.font = header_font
+        c.fill = header_fill
+        c.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+    for i, r in enumerate(sorted(inv_rows, key=lambda r: r["d"], reverse=True), start=2):
+        ws00.cell(row=i, column=1, value=naive_dt(r["d"])).number_format = "DD.MM.YYYY"
+        ws00.cell(row=i, column=2, value=naive_dt(r["reg"])).number_format = "DD.MM.YYYY HH:MM"
+        ws00.cell(row=i, column=3, value=r["f"])
+        ws00.cell(row=i, column=4, value=r["b"])
+        ws00.cell(row=i, column=5, value=r["t"])
+        ws00.cell(row=i, column=6, value=r["a"]).number_format = "#,##0"
+        ws00.cell(row=i, column=7, value=r["v"]).number_format = "#,##0"
+        ws00.cell(row=i, column=8, value=STATUS_MAP_INV.get(r["s"], r["s"]))
+        for col in range(1, 9):
+            ws00.cell(row=i, column=col).font = cell_font
+    last_row00 = len(inv_rows) + 1
+    widths00 = [14, 18, 14, 34, 13, 12, 12, 22]
+    for col, w in enumerate(widths00, start=1):
+        ws00.column_dimensions[get_column_letter(col)].width = w
+    ws00.freeze_panes = "A2"
+    ws00.auto_filter.ref = f"A1:H{last_row00}"
+
+    ws = wb.create_sheet("შეჯამება")
     ws["A1"] = "ვოლტა — გაყიდვა ↔ ზედნადები შედარება"
     ws["A1"].font = title_font
     ws["A2"] = ("წყარო: myvolta.info CRM (instalments, Order_Status=5) + RS.ge WayBillService · "
@@ -510,7 +585,10 @@ def build_excel_report(recon):
         "ფილტრი (AutoFilter, C სვეტი) ბრაუზერის ყველა/დაწყვილებული/აკლია ზედნადები/აკლია გაყიდვა ფილტრების",
         "იმეორებლად. 'დეტალები' გვერდზე ყველა ამ მყიდველის ცალკეული გაყიდვა და ზედნადები ცალ-ცალკეა —",
         "ეს არის ზუსტად ის, რასაც დეშბორდზე პირის ბარათი აჩვენებს.",
-        "გაუქმებული და 'უკან დაბრუნება' ტიპის ზედნადებები არცერთ ჯამში არ ითვლება.",
+        "გაუქმებული ზედნადებები არცერთ ჯამში არ ითვლება. 'უკან დაბრუნება' ტიპის ზედნადებები",
+        "ჩართულია პირის ჯამში (თანხა უარყოფითად, RS.ge-ის საკუთარი კონვენციის მიხედვით) — ისინი",
+        "მხოლოდ ახალი გაყიდვის დამწყვილებელ კანდიდატებად არ განიხილება, დაბრუნება ხომ არ ადასტურებს",
+        "ახალ მიწოდებას; მაგრამ პირის საერთო სხვაობის (და სტატუსის) გამოთვლაში სრულად ჩართულია.",
     ]
     for line in methodology:
         ws.cell(row=row, column=1, value=line).font = note_font
@@ -700,7 +778,7 @@ def main():
           f"missing waybill {s['missingWbPeople']} people ({s['riskAmountWb']:.0f} GEL), "
           f"missing sale {s['missingSalePeople']} people ({s['riskAmountSale']:.0f} GEL)", file=sys.stderr)
 
-    xlsx_path = build_excel_report(recon)
+    xlsx_path = build_excel_report(recon, wb_rows, inv_rows)
     print(f"wrote {xlsx_path}", file=sys.stderr)
 
     wb_json = json.dumps(wb_rows, ensure_ascii=False, separators=(",", ":"))
