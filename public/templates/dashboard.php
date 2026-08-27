@@ -3363,6 +3363,15 @@ document.querySelector('.nav-group[data-group="dailymail"]').classList.add('acti
     document.getElementById('vaUserBadge').style.display = 'none';
     document.getElementById('vaDeniedMsg').textContent =
       '"' + email + '" ელ-ფოსტას არ აქვს დაშვება Volta_Analytics-ზე. დაუკავშირდით ადმინისტრატორს, ან სცადეთ სხვა მეილით.';
+    // TEMPORARY diagnostic (2026-08-27): a listed, verified-clean email is
+    // still being denied for one user after two blind fixes — this reveals
+    // the exact bytes actually submitted (JSON.stringify escapes anything
+    // invisible: NBSP, zero-width chars, BOM, homoglyphs, etc.) so the next
+    // fix is evidence-based instead of a third guess. Remove once resolved.
+    var dbg = document.createElement('div');
+    dbg.style.cssText = 'margin-top:14px;font-size:11px;color:#999;word-break:break-all;font-family:monospace;';
+    dbg.textContent = 'debug: ' + JSON.stringify(email) + ' (length ' + email.length + ')';
+    document.getElementById('vaDeniedMsg').appendChild(dbg);
     setAppVisible(false);
   }
   function applyFilter(perm){
