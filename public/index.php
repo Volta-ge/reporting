@@ -191,17 +191,4 @@ if (is_file($pendingStatusLogPath)) {
     }
 }
 
-// Volta_Analytics's client-side nav filter (NOT real security — see the
-// volta_analytics_auth Claude memory) — synced by hand from a Google Sheet.
-// Missing/unreadable file fails CLOSED (empty list = nobody can log in),
-// not open, since this gates who sees what.
-$vaPermissionsPath = __DIR__ . '/../access_permissions.json';
-$vaPermissions = [];
-if (is_file($vaPermissionsPath)) {
-    $decodedPerms = json_decode((string) file_get_contents($vaPermissionsPath), true);
-    if (is_array($decodedPerms)) {
-        $vaPermissions = $decodedPerms;
-    }
-}
-
 require __DIR__ . '/templates/dashboard.php';
