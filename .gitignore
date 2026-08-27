@@ -1,2 +1,11 @@
 config.php
 data/
+
+# volta-waybills subproject
+volta-waybills/config.py
+volta-waybills/access_permissions.json
+volta-waybills/php83/
+volta-waybills/waybill_dashboard.html
+volta-waybills/volta_analytics_merged.html
+volta-waybills/*.xlsx
+

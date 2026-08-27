@@ -1,0 +1,1314 @@
+<meta charset="UTF-8">
+<title>ვოლტას ზედნადებები და ფაქტურები</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+Georgian:wght@500;600;700&family=Noto+Sans+Georgian:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#F6F4EE;
+    --surface:#FFFFFF;
+    --surface-2:#FBFAF6;
+    --ink:#1B2224;
+    --muted:#5B6B6E;
+    --faint:#8A9598;
+    --line:#DDD7C9;
+    --accent:#1F6F78;
+    --accent-ink:#0F4147;
+    --accent-soft:rgba(31,111,120,0.10);
+    --warm:#B8631F;
+    --warm-soft:rgba(184,99,31,0.12);
+    --success:#3B8F6B;
+    --success-soft:rgba(59,143,107,0.12);
+    --danger:#B23A3A;
+    --danger-soft:rgba(178,58,58,0.12);
+    --warning:#B08A16;
+    --warning-soft:rgba(176,138,22,0.14);
+    --shadow: 0 1px 2px rgba(27,34,36,0.06), 0 6px 20px rgba(27,34,36,0.05);
+    --radius: 3px;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#12181A;
+      --surface:#1A2224;
+      --surface-2:#161E20;
+      --ink:#ECEAE4;
+      --muted:#93A6A9;
+      --faint:#5E6E70;
+      --line:#2B3538;
+      --accent:#57C2CC;
+      --accent-ink:#BFEFF2;
+      --accent-soft:rgba(87,194,204,0.14);
+      --warm:#E3944C;
+      --warm-soft:rgba(227,148,76,0.16);
+      --success:#5FBE93;
+      --success-soft:rgba(95,190,147,0.16);
+      --danger:#E38181;
+      --danger-soft:rgba(227,129,129,0.16);
+      --warning:#E0C258;
+      --warning-soft:rgba(224,194,88,0.16);
+      --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 8px 24px rgba(0,0,0,0.35);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#12181A;
+    --surface:#1A2224;
+    --surface-2:#161E20;
+    --ink:#ECEAE4;
+    --muted:#93A6A9;
+    --faint:#5E6E70;
+    --line:#2B3538;
+    --accent:#57C2CC;
+    --accent-ink:#BFEFF2;
+    --accent-soft:rgba(87,194,204,0.14);
+    --warm:#E3944C;
+    --warm-soft:rgba(227,148,76,0.16);
+    --success:#5FBE93;
+    --success-soft:rgba(95,190,147,0.16);
+    --danger:#E38181;
+    --danger-soft:rgba(227,129,129,0.16);
+    --warning:#E0C258;
+    --warning-soft:rgba(224,194,88,0.16);
+    --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 8px 24px rgba(0,0,0,0.35);
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:"Noto Sans Georgian","Noto Sans",system-ui,sans-serif;
+    font-size:14px;
+    line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+  }
+  ::selection{ background:var(--accent-soft); }
+
+  .num{ font-family:"IBM Plex Mono",ui-monospace,monospace; font-variant-numeric:tabular-nums; }
+
+  a{ color:var(--accent); }
+
+  .wrap{
+    max-width:1360px;
+    margin:0 auto;
+    padding:20px 24px 60px;
+    display:flex;
+    flex-direction:column;
+    gap:18px;
+  }
+
+  /* ---------- Header ---------- */
+  .topbar{
+    display:flex;
+    flex-wrap:wrap;
+    align-items:flex-end;
+    justify-content:space-between;
+    gap:16px;
+    padding-bottom:16px;
+    border-bottom:2px solid var(--ink);
+  }
+  .brand-block{ display:flex; flex-direction:column; gap:2px; }
+  .eyebrow{
+    font-family:"IBM Plex Mono",monospace;
+    font-size:11px;
+    letter-spacing:0.14em;
+    text-transform:uppercase;
+    color:var(--muted);
+  }
+  h1{
+    font-family:"Noto Serif Georgian", Georgia, serif;
+    font-weight:700;
+    font-size:28px;
+    line-height:1.15;
+    margin:2px 0 0;
+    text-wrap:balance;
+    color:var(--ink);
+  }
+  .subline{ color:var(--muted); font-size:13px; margin-top:2px; }
+
+  /* ---------- Tab switcher ---------- */
+  .tabbar{ display:flex; gap:4px; }
+  .tabbtn{
+    font-family:"Noto Serif Georgian",serif;
+    font-weight:600;
+    font-size:14px;
+    padding:9px 18px;
+    border:1px solid var(--line);
+    border-bottom:none;
+    border-radius:var(--radius) var(--radius) 0 0;
+    background:var(--surface-2);
+    color:var(--muted);
+    cursor:pointer;
+  }
+  .tabbtn.active{ background:var(--surface); color:var(--ink); border-color:var(--ink); position:relative; top:1px; }
+  .tabbtn:hover:not(.active){ color:var(--ink); }
+
+  .tabpanel{ display:none; flex-direction:column; gap:18px; }
+  .tabpanel.active{ display:flex; }
+
+  .subhead{
+    display:flex; flex-wrap:wrap; align-items:flex-end; justify-content:space-between; gap:16px;
+  }
+
+  .filters{
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px;
+    align-items:flex-end;
+  }
+  .field{ display:flex; flex-direction:column; gap:4px; }
+  .field label{
+    font-size:10.5px; letter-spacing:0.08em; text-transform:uppercase;
+    color:var(--muted); font-family:"IBM Plex Mono",monospace;
+  }
+  .field select, .field input[type="date"]{
+    font:inherit;
+    font-family:"Noto Sans Georgian",sans-serif;
+    font-size:13px;
+    background:var(--surface);
+    color:var(--ink);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:7px 9px;
+    min-width:120px;
+  }
+  .field select:focus, .field input:focus, button:focus-visible, th button:focus-visible, .search-input:focus{
+    outline:2px solid var(--accent); outline-offset:1px;
+  }
+  .btn-reset{
+    font-family:"IBM Plex Mono",monospace;
+    font-size:11.5px;
+    letter-spacing:0.04em;
+    color:var(--accent-ink);
+    background:var(--accent-soft);
+    border:1px solid transparent;
+    border-radius:var(--radius);
+    padding:8px 12px;
+    cursor:pointer;
+    height:32px;
+  }
+  .btn-reset:hover{ border-color:var(--accent); }
+
+  /* ---------- KPI ledger ---------- */
+  .kpis{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:1px;
+    background:var(--line);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    overflow:hidden;
+  }
+  .kpis-5{ grid-template-columns:repeat(5,1fr); }
+  .kpi{
+    background:var(--surface);
+    padding:16px 18px;
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+  }
+  .kpi-label{
+    font-family:"IBM Plex Mono",monospace;
+    font-size:11px; letter-spacing:0.08em; text-transform:uppercase;
+    color:var(--muted);
+  }
+  .kpi-value{
+    font-family:"Noto Serif Georgian",serif;
+    font-weight:700;
+    font-size:26px;
+    color:var(--ink);
+  }
+  .kpi-value .num{ font-family:"Noto Serif Georgian",serif; font-weight:700; }
+  .kpi-sub{ font-size:12px; color:var(--muted); }
+  .kpi-sub .pos{ color:var(--success); }
+  .kpi-sub .neg{ color:var(--danger); }
+
+  /* ---------- Panels ---------- */
+  .grid-main{
+    display:grid;
+    grid-template-columns:1.7fr 1fr;
+    gap:16px;
+    align-items:start;
+  }
+  @media (max-width:900px){ .grid-main{ grid-template-columns:1fr; } }
+
+  .panel{
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    box-shadow:var(--shadow);
+    padding:18px 20px;
+  }
+  .panel-head{
+    display:flex; align-items:baseline; justify-content:space-between; gap:12px;
+    margin-bottom:14px;
+  }
+  .panel-title{
+    font-family:"Noto Serif Georgian",serif;
+    font-weight:600;
+    font-size:16px;
+  }
+  .panel-note{ font-size:11.5px; color:var(--faint); font-family:"IBM Plex Mono",monospace; }
+
+  .side-stack{ display:flex; flex-direction:column; gap:16px; }
+
+  /* ---------- Bar-list breakdowns ---------- */
+  .barlist{ display:flex; flex-direction:column; gap:10px; }
+  .barlist-row{ display:grid; grid-template-columns:120px 1fr 64px; gap:10px; align-items:center; }
+  .barlist-label{ font-size:12.5px; color:var(--ink); }
+  .barlist-track{ background:var(--surface-2); border-radius:2px; height:10px; overflow:hidden; border:1px solid var(--line); }
+  .barlist-fill{ height:100%; border-radius:1px; }
+  .barlist-val{ text-align:right; font-size:12px; color:var(--muted); }
+
+  /* ---------- Trend chart ---------- */
+  .trend-legend{ display:flex; gap:16px; font-size:12px; color:var(--muted); margin-bottom:6px; }
+  .legend-dot{ display:inline-block; width:9px; height:9px; border-radius:2px; margin-right:6px; vertical-align:middle; }
+  .trend-svg{ width:100%; height:230px; display:block; }
+  .axis-label{ font-family:"IBM Plex Mono",monospace; font-size:10px; fill:var(--faint); }
+  .grid-line{ stroke:var(--line); stroke-width:1; }
+
+  /* ---------- Person-group cards (reconciliation) ---------- */
+  .person-scroll{
+    max-height:640px; overflow-y:auto; overflow-x:hidden;
+    border:1px solid var(--line); border-radius:var(--radius);
+    padding:12px; background:var(--surface-2);
+  }
+  .person-card{ border:1px solid var(--line); border-radius:var(--radius); margin-bottom:14px; overflow:hidden; }
+  .person-head{
+    display:flex; justify-content:space-between; align-items:baseline; gap:12px;
+    padding:10px 14px; background:var(--surface-2); border-bottom:1px solid var(--line);
+  }
+  .person-name{ font-family:"Noto Serif Georgian",serif; font-weight:600; font-size:13.5px; }
+  .person-meta{ font-size:11px; color:var(--faint); font-family:"IBM Plex Mono",monospace; }
+  .person-cols{ display:grid; grid-template-columns:1fr 1fr; gap:0; }
+  @media (max-width:800px){ .person-cols{ grid-template-columns:1fr; } }
+  .person-col{ padding:10px 14px; }
+  .person-col + .person-col{ border-left:1px solid var(--line); }
+  @media (max-width:800px){ .person-col + .person-col{ border-left:none; border-top:1px solid var(--line); } }
+  .person-col-title{ font-size:10.5px; letter-spacing:0.06em; text-transform:uppercase; color:var(--muted); font-family:"IBM Plex Mono",monospace; margin-bottom:6px; }
+  .person-row{ display:grid; grid-template-columns:88px 1fr auto; gap:8px; padding:4px 0; font-size:12px; align-items:baseline; }
+  .person-row.is-matched{ opacity:0.55; }
+  .person-row .pd{ color:var(--muted); font-family:"IBM Plex Mono",monospace; font-size:11px; }
+  .person-row .pp{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .person-row .pa{ font-family:"IBM Plex Mono",monospace; font-variant-numeric:tabular-nums; white-space:nowrap; }
+  .person-dot{ display:inline-block; width:6px; height:6px; border-radius:50%; margin-right:5px; }
+
+  /* ---------- Rank list ---------- */
+  .rank-list{ display:flex; flex-direction:column; }
+  .rank-row{
+    display:grid; grid-template-columns:22px 1fr auto; gap:10px; align-items:center;
+    padding:8px 0; border-bottom:1px solid var(--line);
+  }
+  .rank-row:last-child{ border-bottom:none; }
+  .rank-num{ font-family:"IBM Plex Mono",monospace; font-size:11px; color:var(--faint); }
+  .rank-name{ font-size:12.5px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .rank-meta{ font-size:10.5px; color:var(--faint); }
+  .rank-amt{ font-size:12.5px; font-weight:600; text-align:right; white-space:nowrap; }
+
+  /* ---------- Table ---------- */
+  .table-toolbar{
+    display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:12px; flex-wrap:wrap;
+  }
+  .search-input{
+    font:inherit; font-family:"Noto Sans Georgian",sans-serif; font-size:13px;
+    background:var(--surface-2); border:1px solid var(--line); border-radius:var(--radius);
+    padding:7px 10px; min-width:240px; color:var(--ink);
+  }
+  .table-scroll{ overflow-x:auto; border:1px solid var(--line); border-radius:var(--radius); }
+  table{ width:100%; border-collapse:collapse; font-size:12.5px; min-width:920px; }
+  thead th{
+    position:sticky; top:0; background:var(--surface-2);
+    text-align:left; padding:9px 12px; border-bottom:1px solid var(--line);
+    font-family:"IBM Plex Mono",monospace; font-size:10.5px; letter-spacing:0.05em; text-transform:uppercase;
+    color:var(--muted); white-space:nowrap;
+  }
+  thead th button{
+    all:unset; cursor:pointer; display:inline-flex; align-items:center; gap:4px;
+  }
+  tbody td{ padding:9px 12px; border-bottom:1px solid var(--line); color:var(--ink); white-space:nowrap; }
+  tbody tr:hover{ background:var(--surface-2); }
+  tbody tr:last-child td{ border-bottom:none; }
+  td.amt{ text-align:right; }
+  td.addr{ white-space:normal; max-width:260px; color:var(--muted); }
+
+  .tag{
+    display:inline-block; padding:2px 8px; border-radius:99px;
+    font-size:11px; font-weight:600; white-space:nowrap;
+  }
+  .tag-completed{ background:var(--success-soft); color:var(--success); }
+  .tag-active{ background:var(--accent-soft); color:var(--accent-ink); }
+  .tag-carrier{ background:var(--warning-soft); color:var(--warning); }
+  .tag-cancelled{ background:var(--danger-soft); color:var(--danger); }
+  .tag-other{ background:var(--surface-2); color:var(--muted); border:1px solid var(--line); }
+
+  .pager{ display:flex; justify-content:space-between; align-items:center; margin-top:12px; font-size:12px; color:var(--muted); }
+  .pager-btns{ display:flex; gap:6px; }
+  .pager button{
+    font-family:"IBM Plex Mono",monospace; font-size:12px;
+    background:var(--surface); border:1px solid var(--line); color:var(--ink);
+    border-radius:var(--radius); padding:5px 10px; cursor:pointer;
+  }
+  .pager button:disabled{ opacity:0.4; cursor:not-allowed; }
+  .pager button:not(:disabled):hover{ border-color:var(--accent); }
+
+  footer{
+    display:flex; justify-content:space-between; flex-wrap:wrap; gap:8px;
+    color:var(--faint); font-size:11px; font-family:"IBM Plex Mono",monospace;
+    padding-top:8px; border-top:1px solid var(--line);
+  }
+
+  @media (max-width:640px){
+    .kpis, .kpis-5{ grid-template-columns:1fr 1fr; }
+    .barlist-row{ grid-template-columns:90px 1fr 50px; }
+  }
+</style>
+
+<div class="wrap">
+
+  <div class="topbar">
+    <div class="brand-block">
+      <span class="eyebrow">RS.GE &middot; ELECTRONIC RECORDS</span>
+      <h1>ვოლტას სავაჭრო რეესტრები</h1>
+    </div>
+    <div class="tabbar">
+      <button class="tabbtn active" data-tab="wb">ზედნადებები</button>
+      <button class="tabbtn" data-tab="inv">ანგარიშ-ფაქტურები</button>
+      <button class="tabbtn" data-tab="recon">გაყიდვა ↔ ზედნადები</button>
+    </div>
+  </div>
+
+  <!-- ======================= WAYBILLS TAB ======================= -->
+  <div class="tabpanel active" id="tab-wb">
+
+    <div class="subhead">
+      <div class="brand-block">
+        <div class="subline" id="wbRangeSubline">—</div>
+        <div class="subline" style="font-size:11.5px;opacity:0.75;">გაუქმებული ან ნომრის მიღებამდე გაუქმებული ზედნადებები (ნომრის გარეშე) რეესტრში არ შედის</div>
+      </div>
+      <div class="filters">
+        <div class="field"><label for="wbStart">დან</label><input type="date" id="wbStart"></div>
+        <div class="field"><label for="wbEnd">მდე</label><input type="date" id="wbEnd"></div>
+        <div class="field"><label for="wbStatus">სტატუსი</label><select id="wbStatus"><option value="">ყველა</option></select></div>
+        <div class="field"><label for="wbType">ტიპი</label><select id="wbType"><option value="">ყველა</option></select></div>
+        <button class="btn-reset" id="wbReset">ფილტრის გასუფთავება</button>
+      </div>
+    </div>
+
+    <div class="kpis">
+      <div class="kpi"><span class="kpi-label">ზედნადებები</span><span class="kpi-value num" id="wbKpiCount">—</span><span class="kpi-sub" id="wbKpiCountSub">&nbsp;</span></div>
+      <div class="kpi"><span class="kpi-label">ჯამური თანხა</span><span class="kpi-value num" id="wbKpiAmount">—</span><span class="kpi-sub" id="wbKpiAmountSub">&nbsp;</span></div>
+      <div class="kpi"><span class="kpi-label">დასრულებული / გაუქმებული</span><span class="kpi-value num" id="wbKpiDoneCancel">—</span><span class="kpi-sub" id="wbKpiDoneCancelSub">&nbsp;</span></div>
+      <div class="kpi"><span class="kpi-label">უნიკალური მყიდველი</span><span class="kpi-value num" id="wbKpiBuyers">—</span><span class="kpi-sub" id="wbKpiBuyersSub">&nbsp;</span></div>
+    </div>
+
+    <div class="grid-main">
+      <div class="panel">
+        <div class="panel-head"><span class="panel-title">კვირეული მოცულობა</span><span class="panel-note">ზედნადებების რაოდენობა &amp; თანხა</span></div>
+        <div class="trend-legend"><span><span class="legend-dot" style="background:var(--accent)"></span>რაოდენობა</span><span><span class="legend-dot" style="background:var(--warm)"></span>თანხა (₾)</span></div>
+        <svg class="trend-svg" id="wbTrendChart" viewBox="0 0 960 230" preserveAspectRatio="none"></svg>
+      </div>
+      <div class="side-stack">
+        <div class="panel"><div class="panel-head"><span class="panel-title">სტატუსების მიხედვით</span></div><div class="barlist" id="wbStatusBars"></div></div>
+        <div class="panel"><div class="panel-head"><span class="panel-title">ტიპების მიხედვით</span></div><div class="barlist" id="wbTypeBars"></div></div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head"><span class="panel-title">მსხვილი მყიდველები</span><span class="panel-note">ტოპ 12, ჯამური თანხით</span></div>
+      <div class="rank-list" id="wbRankList"></div>
+    </div>
+
+    <div class="panel">
+      <div class="table-toolbar">
+        <span class="panel-title">ზედნადებების რეესტრი</span>
+        <input class="search-input" id="wbSearchBox" placeholder="ძებნა: მყიდველი, ს/ნ, ნომერი, მანქანა…">
+      </div>
+      <div class="table-scroll">
+        <table>
+          <thead><tr>
+            <th><button data-k="d">ტრანსპ. დაწყება</button></th>
+            <th><button data-k="n">ზედნადების №</button></th>
+            <th><button data-k="b">მყიდველი</button></th>
+            <th><button data-k="t">ს/ნ</button></th>
+            <th><button data-k="e">დანიშნულება</button></th>
+            <th><button data-k="c">მანქანა</button></th>
+            <th><button data-k="y">ტიპი</button></th>
+            <th><button data-k="s">სტატუსი</button></th>
+            <th><button data-k="a">თანხა (₾)</button></th>
+          </tr></thead>
+          <tbody id="wbTbody"></tbody>
+        </table>
+      </div>
+      <div class="pager">
+        <span id="wbPagerInfo">—</span>
+        <div class="pager-btns"><button id="wbPFirst">&laquo;</button><button id="wbPPrev">&lsaquo;</button><button id="wbPNext">&rsaquo;</button><button id="wbPLast">&raquo;</button></div>
+      </div>
+    </div>
+
+    <footer><span>წყარო: შემოსავლების სამსახური &middot; ელექტრონული ზედნადებების სერვისი (RS.ge WayBillService)</span><span id="wbGenStamp">—</span></footer>
+  </div>
+
+  <!-- ======================= INVOICES TAB ======================= -->
+  <div class="tabpanel" id="tab-inv">
+
+    <div class="subhead">
+      <div class="brand-block">
+        <div class="subline" id="invRangeSubline">—</div>
+        <div class="subline" style="font-size:11.5px;opacity:0.75;">თარიღი აღნიშნავს ოპერაციის პერიოდს (თვის დასაწყისი), არა რეგისტრაციის დღეს</div>
+      </div>
+      <div class="filters">
+        <div class="field"><label for="invStart">დან</label><input type="date" id="invStart"></div>
+        <div class="field"><label for="invEnd">მდე</label><input type="date" id="invEnd"></div>
+        <div class="field"><label for="invStatus">სტატუსი</label><select id="invStatus"><option value="">ყველა</option></select></div>
+        <button class="btn-reset" id="invReset">ფილტრის გასუფთავება</button>
+      </div>
+    </div>
+
+    <div class="kpis">
+      <div class="kpi"><span class="kpi-label">ფაქტურები</span><span class="kpi-value num" id="invKpiCount">—</span><span class="kpi-sub" id="invKpiCountSub">&nbsp;</span></div>
+      <div class="kpi"><span class="kpi-label">ჯამური თანხა</span><span class="kpi-value num" id="invKpiAmount">—</span><span class="kpi-sub" id="invKpiAmountSub">&nbsp;</span></div>
+      <div class="kpi"><span class="kpi-label">ჯამური დღგ</span><span class="kpi-value num" id="invKpiVat">—</span><span class="kpi-sub" id="invKpiVatSub">&nbsp;</span></div>
+      <div class="kpi"><span class="kpi-label">უნიკალური მყიდველი</span><span class="kpi-value num" id="invKpiBuyers">—</span><span class="kpi-sub" id="invKpiBuyersSub">&nbsp;</span></div>
+    </div>
+
+    <div class="grid-main">
+      <div class="panel">
+        <div class="panel-head"><span class="panel-title">თვიური მოცულობა</span><span class="panel-note">ფაქტურების რაოდენობა &amp; თანხა</span></div>
+        <div class="trend-legend"><span><span class="legend-dot" style="background:var(--accent)"></span>რაოდენობა</span><span><span class="legend-dot" style="background:var(--warm)"></span>თანხა (₾)</span></div>
+        <svg class="trend-svg" id="invTrendChart" viewBox="0 0 960 230" preserveAspectRatio="none"></svg>
+      </div>
+      <div class="side-stack">
+        <div class="panel"><div class="panel-head"><span class="panel-title">სტატუსების მიხედვით</span></div><div class="barlist" id="invStatusBars"></div></div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head"><span class="panel-title">მსხვილი მყიდველები</span><span class="panel-note">ტოპ 12, ჯამური თანხით</span></div>
+      <div class="rank-list" id="invRankList"></div>
+    </div>
+
+    <div class="panel">
+      <div class="table-toolbar">
+        <span class="panel-title">ფაქტურების რეესტრი</span>
+        <input class="search-input" id="invSearchBox" placeholder="ძებნა: მყიდველი, ს/ნ, სერია/№…">
+      </div>
+      <div class="table-scroll">
+        <table>
+          <thead><tr>
+            <th><button data-k="d">ოპერაცია</button></th>
+            <th><button data-k="r">რეგისტრაცია</button></th>
+            <th><button data-k="f">სერია / №</button></th>
+            <th><button data-k="b">მყიდველი</button></th>
+            <th><button data-k="t">ს/ნ</button></th>
+            <th><button data-k="s">სტატუსი</button></th>
+            <th><button data-k="v">დღგ (₾)</button></th>
+            <th><button data-k="a">თანხა (₾)</button></th>
+          </tr></thead>
+          <tbody id="invTbody"></tbody>
+        </table>
+      </div>
+      <div class="pager">
+        <span id="invPagerInfo">—</span>
+        <div class="pager-btns"><button id="invPFirst">&laquo;</button><button id="invPPrev">&lsaquo;</button><button id="invPNext">&rsaquo;</button><button id="invPLast">&raquo;</button></div>
+      </div>
+    </div>
+
+    <footer><span>წყარო: შემოსავლების სამსახური &middot; ელექტრონული ანგარიშ-ფაქტურის სერვისი (RS.ge NtosService)</span><span id="invGenStamp">—</span></footer>
+  </div>
+
+  <!-- ======================= RECONCILIATION TAB ======================= -->
+  <div class="tabpanel" id="tab-recon">
+
+    <div class="subhead">
+      <div class="brand-block">
+        <div class="subline" id="reconRangeSubline">—</div>
+        <div class="subline" style="font-size:11.5px;opacity:0.75;">CRM-ის რეალური გაყიდვები (Order_Status=5) დაწყვილებულია იმავე მყიდველის ზედნადებთან &plusmn;45 დღისა და თანხის &plusmn;5%/50&#8382; ტოლერანტობით — პირის CRM/ზედნადები ჯამების სხვაობა დადებითია, თუ ზედნადები აკლია (გაყიდვა ჩაწერილია, ზედნადები არა) და უარყოფითია, თუ გაყიდვა აკლია (ზედნადები არსებობს, CRM-ში ჩანაწერი არა)</div>
+      </div>
+      <div class="filters">
+        <div class="field"><label for="reconStart">დან</label><input type="date" id="reconStart"></div>
+        <div class="field"><label for="reconEnd">მდე</label><input type="date" id="reconEnd"></div>
+        <div class="field">
+          <label for="reconStatus">სტატუსი</label>
+          <select id="reconStatus">
+            <option value="all">ყველა</option>
+            <option value="matched">დაწყვილებული</option>
+            <option value="missing_wb" selected>აკლია ზედნადები</option>
+            <option value="missing_sale">აკლია გაყიდვა</option>
+          </select>
+        </div>
+        <button class="btn-reset" id="reconReset">ფილტრის გასუფთავება</button>
+      </div>
+    </div>
+
+    <div class="kpis kpis-5">
+      <div class="kpi"><span class="kpi-label">სულ გაყიდვა</span><span class="kpi-value num" id="reconKpiTotal">—</span><span class="kpi-sub" id="reconKpiTotalSub">&nbsp;</span></div>
+      <div class="kpi"><span class="kpi-label">დაწყვილებული</span><span class="kpi-value num" id="reconKpiMatched">—</span><span class="kpi-sub" id="reconKpiMatchedSub">&nbsp;</span></div>
+      <div class="kpi"><span class="kpi-label">აკლია ზედნადები</span><span class="kpi-value num" id="reconKpiMissing">—</span><span class="kpi-sub" id="reconKpiMissingSub">&nbsp;</span></div>
+      <div class="kpi"><span class="kpi-label">აკლია გაყიდვა</span><span class="kpi-value num" id="reconKpiMissingSale">—</span><span class="kpi-sub" id="reconKpiMissingSaleSub">&nbsp;</span></div>
+      <div class="kpi"><span class="kpi-label">რისკის ქვეშ თანხა</span><span class="kpi-value num" id="reconKpiAmount">—</span><span class="kpi-sub" id="reconKpiAmountSub">&nbsp;</span></div>
+    </div>
+
+    <div class="grid-main">
+      <div class="panel">
+        <div class="panel-head"><span class="panel-title" id="reconTrendTitle">აკლია ზედნადები — თვიური დინამიკა</span><span class="panel-note">გაყიდვების რაოდენობა &amp; თანხა</span></div>
+        <div class="trend-legend"><span><span class="legend-dot" style="background:var(--accent)"></span>რაოდენობა</span><span><span class="legend-dot" style="background:var(--warm)"></span>თანხა (₾)</span></div>
+        <svg class="trend-svg" id="reconTrendChart" viewBox="0 0 960 230" preserveAspectRatio="none"></svg>
+      </div>
+      <div class="side-stack">
+        <div class="panel"><div class="panel-head"><span class="panel-title" id="reconSideTitle">მენეჯერების მიხედვით</span><span class="panel-note" id="reconSideNote">ტოპ, აკლია-ზედნადების რაოდენობით</span></div><div class="barlist" id="reconMgrBars"></div></div>
+      </div>
+    </div>
+
+    <div class="panel" id="reconGroupPanel">
+      <div class="table-toolbar">
+        <span class="panel-title">გაყიდვები პირადობის მიხედვით</span>
+        <input class="search-input" id="reconGroupSearchBox" placeholder="ძებნა: მყიდველი, ს/ნ…">
+      </div>
+      <div id="reconGroupList" class="person-scroll"></div>
+      <div class="pager">
+        <span id="reconGroupPagerInfo">—</span>
+        <div class="pager-btns"><button id="reconGPFirst">&laquo;</button><button id="reconGPPrev">&lsaquo;</button><button id="reconGPNext">&rsaquo;</button><button id="reconGPLast">&raquo;</button></div>
+      </div>
+    </div>
+
+    <footer><span>წყარო: myvolta.info CRM (instalments, Order_Status=5) &middot; RS.ge WayBillService</span><span id="reconGenStamp">—</span></footer>
+  </div>
+
+</div>
+
+<script>
+const RAW_WB = __DATA_WB__;
+const RAW_INV = __DATA_INV__;
+const RAW_RECON = __DATA_RECON__;
+
+/* ---------- shared helpers ---------- */
+const GE_MONTHS = ["იანვარი","თებერვალი","მარტი","აპრილი","მაისი","ივნისი","ივლისი","აგვისტო","სექტემბერი","ოქტომბერი","ნოემბერი","დეკემბერი"];
+function pad2(n){ return String(n).padStart(2,"0"); }
+function fmtDateTime(dstr){
+  const d = new Date(dstr);
+  return pad2(d.getDate())+"."+pad2(d.getMonth()+1)+"."+d.getFullYear()+" "+pad2(d.getHours())+":"+pad2(d.getMinutes());
+}
+function fmtDateOnly(dstr){
+  const d = new Date(dstr);
+  return pad2(d.getDate())+"."+pad2(d.getMonth()+1)+"."+d.getFullYear();
+}
+function fmtDateLong(dstr){
+  const d = new Date(dstr);
+  return d.getDate()+" "+GE_MONTHS[d.getMonth()]+", "+d.getFullYear();
+}
+function fmtMonthLong(dstr){
+  const d = new Date(dstr);
+  return GE_MONTHS[d.getMonth()]+", "+d.getFullYear();
+}
+function fmtInt(n){ return Math.round(n).toLocaleString("ka-GE"); }
+function fmtGel(n){ return Math.round(n).toLocaleString("ka-GE") + " ₾"; }
+function fmtGelShort(n){
+  const sign = n < 0 ? "-" : "";
+  const abs = Math.abs(n);
+  if (abs >= 1000000) return sign + (abs/1000000).toFixed(1).replace(".0","") + "მლნ ₾";
+  if (abs >= 1000) return sign + (abs/1000).toFixed(0) + "ათ ₾";
+  return sign + Math.round(abs) + " ₾";
+}
+function escapeHtml(s){
+  return String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+}
+function isoWeek(dstr){
+  const d = new Date(dstr);
+  const day = (d.getDay()+6)%7;
+  d.setHours(0,0,0,0);
+  d.setDate(d.getDate()-day);
+  return d.toISOString().slice(0,10);
+}
+function monthKey(dstr){ return dstr.slice(0,7); }
+
+function renderBarList(containerId, counts, labelFn, colorFn){
+  const el = document.getElementById(containerId);
+  el.innerHTML = "";
+  const entries = Object.entries(counts).sort((a,b)=>b[1]-a[1]);
+  const max = entries.length ? entries[0][1] : 1;
+  entries.forEach(([k,v])=>{
+    const row = document.createElement("div");
+    row.className = "barlist-row";
+    row.innerHTML =
+      '<span class="barlist-label">'+labelFn(k)+'</span>'+
+      '<span class="barlist-track"><span class="barlist-fill" style="width:'+(v/max*100)+'%;background:'+colorFn(k)+'"></span></span>'+
+      '<span class="barlist-val num">'+fmtInt(v)+'</span>';
+    el.appendChild(row);
+  });
+}
+
+function drawTrend(svg, buckets, keys){
+  svg.innerHTML = "";
+  if (keys.length === 0) return;
+  const W = 960, H = 230, padL = 44, padR = 44, padT = 12, padB = 24;
+  const plotW = W - padL - padR, plotH = H - padT - padB;
+  const maxCount = Math.max(...keys.map(k=>buckets[k].count), 1);
+  const maxAmt = Math.max(...keys.map(k=>buckets[k].amount), 1);
+  const n = keys.length;
+  const bw = plotW / n;
+  const ns = "http://www.w3.org/2000/svg";
+  function el(tag, attrs){
+    const e = document.createElementNS(ns, tag);
+    for (const k in attrs) e.setAttribute(k, attrs[k]);
+    return e;
+  }
+  for (let i=0;i<=3;i++){
+    const y = padT + plotH*i/3;
+    svg.appendChild(el("line", {x1:padL, x2:W-padR, y1:y, y2:y, class:"grid-line"}));
+  }
+  keys.forEach((k,i)=>{
+    const v = buckets[k].count;
+    const h = plotH * (v/maxCount);
+    const x = padL + i*bw + bw*0.18;
+    const bwidth = bw*0.64;
+    const y = padT + plotH - h;
+    svg.appendChild(el("rect", {x, y, width:bwidth, height:Math.max(h,1), fill:"var(--accent)", opacity:"0.55", rx:"1"}));
+  });
+  const pts = keys.map((k,i)=>{
+    const v = buckets[k].amount;
+    const x = padL + i*bw + bw/2;
+    const y = padT + plotH - plotH*(v/maxAmt);
+    return [x,y];
+  });
+  const path = pts.map((p,i)=> (i===0?"M":"L") + p[0].toFixed(1) + "," + p[1].toFixed(1)).join(" ");
+  svg.appendChild(el("path", {d:path, fill:"none", stroke:"var(--warm)", "stroke-width":"2.25"}));
+  pts.forEach((p,i)=>{
+    if (i===pts.length-1 || i===0 || i%4===0){
+      svg.appendChild(el("circle", {cx:p[0], cy:p[1], r:"2.6", fill:"var(--warm)"}));
+    }
+  });
+  keys.forEach((k,i)=>{
+    if (i % Math.ceil(n/8) === 0 || i===n-1){
+      const x = padL + i*bw + bw/2;
+      const t = el("text", {x, y:H-6, "text-anchor":"middle", class:"axis-label"});
+      const wd = new Date(k.length===7 ? k+"-01T00:00:00" : k+"T00:00:00");
+      t.textContent = k.length===7 ? GE_MONTHS[wd.getMonth()].slice(0,3)+" "+wd.getFullYear() : wd.getDate()+" "+GE_MONTHS[wd.getMonth()].slice(0,3);
+      svg.appendChild(t);
+    }
+  });
+  for (let i=0;i<=3;i++){
+    const v = maxCount*(3-i)/3;
+    const y = padT + plotH*i/3;
+    const t = el("text", {x:padL-8, y:y+3, "text-anchor":"end", class:"axis-label"});
+    t.textContent = Math.round(v);
+    svg.appendChild(t);
+  }
+  for (let i=0;i<=3;i++){
+    const v = maxAmt*(3-i)/3;
+    const y = padT + plotH*i/3;
+    const t = el("text", {x:W-padR+8, y:y+3, "text-anchor":"start", class:"axis-label"});
+    t.textContent = fmtGelShort(v);
+    svg.appendChild(t);
+  }
+}
+
+/* =========================================================
+   WAYBILLS TAB
+   ========================================================= */
+(function(){
+  const STATUS_MAP = {
+    "2": {label:"დასრულებული", cls:"tag-completed", color:"var(--success)"},
+    "1": {label:"აქტიური", cls:"tag-active", color:"var(--accent)"},
+    "8": {label:"გადამზიდავთან", cls:"tag-carrier", color:"var(--warning)"},
+    "-2": {label:"გაუქმებული", cls:"tag-cancelled", color:"var(--danger)"},
+    "0": {label:"შენახული", cls:"tag-other", color:"var(--muted)"},
+    "-1": {label:"წაშლილი", cls:"tag-other", color:"var(--muted)"}
+  };
+  const TYPE_MAP = {
+    "1": "შიდა გადაზიდვა", "2": "მიწოდება ტრანსპორტირებით", "3": "მიწოდება ტრანსპორტირების გარეშე",
+    "4": "დისტრიბუცია", "5": "საქონლის დაბრუნება", "6": "ქვე-ზედნადები"
+  };
+  function statusInfo(s){ return STATUS_MAP[s] || {label:"სხვა ("+s+")", cls:"tag-other", color:"var(--muted)"}; }
+  function typeLabel(t){ return TYPE_MAP[t] || ("ტიპი "+t); }
+
+  const allDates = RAW_WB.map(r => r.d).sort();
+  const minDate = allDates[0] || new Date().toISOString();
+  const maxDate = allDates[allDates.length-1] || new Date().toISOString();
+  document.getElementById("wbStart").value = minDate.slice(0,10);
+  document.getElementById("wbEnd").value = maxDate.slice(0,10);
+  document.getElementById("wbRangeSubline").textContent =
+    fmtDateLong(minDate) + " — " + fmtDateLong(maxDate) + " · " + RAW_WB.length.toLocaleString("ka-GE") + " ჩანაწერი · თარიღი: ტრანსპორტირების დაწყება";
+  document.getElementById("wbGenStamp").textContent = "გენერირებულია: " + fmtDateTime(new Date().toISOString());
+
+  function populateSelect(id, map, extra){
+    const sel = document.getElementById(id);
+    const keys = Object.keys(extra || {});
+    keys.sort((a,b)=> extra[b]-extra[a]);
+    keys.forEach(k=>{
+      const opt = document.createElement("option");
+      opt.value = k;
+      opt.textContent = map ? (map[k] ? map[k].label || map[k] : k) : k;
+      sel.appendChild(opt);
+    });
+  }
+  const statusCounts0 = {}; RAW_WB.forEach(r => statusCounts0[r.s] = (statusCounts0[r.s]||0)+1);
+  const typeCounts0 = {}; RAW_WB.forEach(r => typeCounts0[r.y] = (typeCounts0[r.y]||0)+1);
+  populateSelect("wbStatus", STATUS_MAP, statusCounts0);
+  populateSelect("wbType", TYPE_MAP, typeCounts0);
+
+  let sortKey = "d", sortDir = "desc", page = 0;
+  const PAGE_SIZE = 50;
+  let filtered = RAW_WB;
+
+  function applyFilters(){
+    const start = document.getElementById("wbStart").value;
+    const end = document.getElementById("wbEnd").value;
+    const st = document.getElementById("wbStatus").value;
+    const ty = document.getElementById("wbType").value;
+    const q = document.getElementById("wbSearchBox").value.trim().toLowerCase();
+    filtered = RAW_WB.filter(r=>{
+      const day = r.d.slice(0,10);
+      if (start && day < start) return false;
+      if (end && day > end) return false;
+      if (st && r.s !== st) return false;
+      if (ty && r.y !== ty) return false;
+      if (q && !(r.b.toLowerCase().includes(q) || r.t.includes(q) || r.n.includes(q) || r.c.toLowerCase().includes(q))) return false;
+      return true;
+    });
+    page = 0;
+    renderAll();
+  }
+
+  function renderKPIs(){
+    const count = filtered.length;
+    const amount = filtered.reduce((s,r)=>s+r.a,0);
+    const buyers = new Set(filtered.map(r=>r.t)).size;
+    const done = filtered.filter(r=>r.s==="2").length;
+    const cancelled = filtered.filter(r=>r.s==="-2").length;
+    document.getElementById("wbKpiCount").textContent = fmtInt(count);
+    document.getElementById("wbKpiAmount").textContent = fmtGelShort(amount);
+    document.getElementById("wbKpiAmountSub").innerHTML = fmtGel(amount);
+    document.getElementById("wbKpiDoneCancel").innerHTML =
+      '<span style="color:var(--success)">'+fmtInt(done)+'</span> / <span style="color:var(--danger)">'+fmtInt(cancelled)+'</span>';
+    const rate = count ? ((done/count)*100).toFixed(1) : "0.0";
+    document.getElementById("wbKpiDoneCancelSub").textContent = rate + "% დასრულების წილი";
+    document.getElementById("wbKpiBuyers").textContent = fmtInt(buyers);
+    document.getElementById("wbKpiCountSub").textContent = count ? "საშ. " + fmtGel(amount/count) + " / ზედნადებზე" : " ";
+    document.getElementById("wbKpiBuyersSub").textContent = count ? (count/buyers).toFixed(1) + " ზედნადები / მყიდველი" : " ";
+  }
+
+  function renderBreakdowns(){
+    const statusCounts = {}; filtered.forEach(r => statusCounts[r.s] = (statusCounts[r.s]||0)+1);
+    const typeCounts = {}; filtered.forEach(r => typeCounts[r.y] = (typeCounts[r.y]||0)+1);
+    renderBarList("wbStatusBars", statusCounts, k=>statusInfo(k).label, k=>statusInfo(k).color);
+    renderBarList("wbTypeBars", typeCounts, k=>typeLabel(k), ()=>"var(--accent)");
+  }
+
+  function renderRankList(){
+    const byBuyer = {};
+    filtered.forEach(r=>{
+      if (!byBuyer[r.t]) byBuyer[r.t] = {name:r.b, tin:r.t, amount:0, count:0};
+      byBuyer[r.t].amount += r.a;
+      byBuyer[r.t].count += 1;
+    });
+    const top = Object.values(byBuyer).sort((a,b)=>b.amount-a.amount).slice(0,12);
+    const el = document.getElementById("wbRankList");
+    el.innerHTML = "";
+    top.forEach((b,idx)=>{
+      const row = document.createElement("div");
+      row.className = "rank-row";
+      row.innerHTML =
+        '<span class="rank-num num">'+(idx+1)+'</span>'+
+        '<span><span class="rank-name">'+escapeHtml(b.name)+'</span><br><span class="rank-meta num">ს/ნ '+b.tin+' &middot; '+b.count+' ზედნადები</span></span>'+
+        '<span class="rank-amt num">'+fmtGel(b.amount)+'</span>';
+      el.appendChild(row);
+    });
+  }
+
+  function renderTrend(){
+    const byWeek = {};
+    filtered.forEach(r=>{
+      const wk = isoWeek(r.d);
+      if (!byWeek[wk]) byWeek[wk] = {count:0, amount:0};
+      byWeek[wk].count += 1;
+      byWeek[wk].amount += r.a;
+    });
+    const weeks = Object.keys(byWeek).sort();
+    drawTrend(document.getElementById("wbTrendChart"), byWeek, weeks);
+  }
+
+  function renderTable(){
+    const sorted = [...filtered].sort((a,b)=>{
+      let av = a[sortKey], bv = b[sortKey];
+      if (sortKey === "a"){ av = +av; bv = +bv; }
+      const cmp = av < bv ? -1 : av > bv ? 1 : 0;
+      return sortDir === "asc" ? cmp : -cmp;
+    });
+    const totalPages = Math.max(1, Math.ceil(sorted.length / PAGE_SIZE));
+    page = Math.min(page, totalPages-1);
+    const start = page*PAGE_SIZE;
+    const pageRows = sorted.slice(start, start+PAGE_SIZE);
+    document.getElementById("wbTbody").innerHTML = pageRows.map(r=>{
+      const si = statusInfo(r.s);
+      return "<tr>"+
+        "<td class='num'>"+fmtDateTime(r.d)+"</td>"+
+        "<td class='num'>"+r.n+"</td>"+
+        "<td>"+escapeHtml(r.b)+"</td>"+
+        "<td class='num'>"+r.t+"</td>"+
+        "<td class='addr'>"+escapeHtml(r.e||"—")+"</td>"+
+        "<td class='num'>"+(r.c||"—")+"</td>"+
+        "<td>"+typeLabel(r.y)+"</td>"+
+        "<td><span class='tag "+si.cls+"'>"+si.label+"</span></td>"+
+        "<td class='amt num'>"+fmtGel(r.a)+"</td>"+
+      "</tr>";
+    }).join("");
+    document.getElementById("wbPagerInfo").textContent =
+      sorted.length === 0 ? "ჩანაწერი არ მოიძებნა" :
+      "ნაჩვენებია " + (start+1) + "–" + Math.min(start+PAGE_SIZE, sorted.length) + " / " + sorted.length.toLocaleString("ka-GE");
+    document.getElementById("wbPFirst").disabled = page===0;
+    document.getElementById("wbPPrev").disabled = page===0;
+    document.getElementById("wbPNext").disabled = page>=totalPages-1;
+    document.getElementById("wbPLast").disabled = page>=totalPages-1;
+  }
+
+  function renderAll(){ renderKPIs(); renderBreakdowns(); renderRankList(); renderTrend(); renderTable(); }
+
+  document.querySelectorAll("#tab-wb thead button").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      const k = btn.dataset.k;
+      if (sortKey === k){ sortDir = sortDir === "asc" ? "desc" : "asc"; }
+      else { sortKey = k; sortDir = (k==="a"||k==="d") ? "desc" : "asc"; }
+      renderTable();
+    });
+  });
+  document.getElementById("wbPFirst").addEventListener("click", ()=>{ page=0; renderTable(); });
+  document.getElementById("wbPPrev").addEventListener("click", ()=>{ page=Math.max(0,page-1); renderTable(); });
+  document.getElementById("wbPNext").addEventListener("click", ()=>{ page=page+1; renderTable(); });
+  document.getElementById("wbPLast").addEventListener("click", ()=>{ page=1e9; renderTable(); });
+  ["wbStart","wbEnd","wbStatus","wbType"].forEach(id=>{ document.getElementById(id).addEventListener("change", applyFilters); });
+  document.getElementById("wbSearchBox").addEventListener("input", applyFilters);
+  document.getElementById("wbReset").addEventListener("click", ()=>{
+    document.getElementById("wbStart").value = minDate.slice(0,10);
+    document.getElementById("wbEnd").value = maxDate.slice(0,10);
+    document.getElementById("wbStatus").value = "";
+    document.getElementById("wbType").value = "";
+    document.getElementById("wbSearchBox").value = "";
+    applyFilters();
+  });
+
+  applyFilters();
+})();
+
+/* =========================================================
+   INVOICES TAB
+   ========================================================= */
+(function(){
+  const STATUS_MAP = {
+    "0": {label:"ახალი", cls:"tag-other", color:"var(--muted)"},
+    "1": {label:"დასადასტურებელი", cls:"tag-active", color:"var(--accent)"},
+    "2": {label:"დადასტურებული", cls:"tag-completed", color:"var(--success)"},
+    "3": {label:"კორექტირებული (პირველადი)", cls:"tag-carrier", color:"var(--warning)"},
+    "4": {label:"ახალი კორექტირება", cls:"tag-other", color:"var(--muted)"},
+    "5": {label:"კორექტ. დასადასტურებელი", cls:"tag-active", color:"var(--accent)"},
+    "8": {label:"კორექტ. დადასტურებული", cls:"tag-completed", color:"var(--success)"},
+    "6": {label:"გაუქმებული", cls:"tag-cancelled", color:"var(--danger)"},
+    "7": {label:"გაუქმ. დადასტურებული", cls:"tag-cancelled", color:"var(--danger)"}
+  };
+  function statusInfo(s){ return STATUS_MAP[s] || {label:"სხვა ("+s+")", cls:"tag-other", color:"var(--muted)"}; }
+
+  const allDates = RAW_INV.map(r => r.d).sort();
+  const minDate = allDates[0] || new Date().toISOString();
+  const maxDate = allDates[allDates.length-1] || new Date().toISOString();
+  document.getElementById("invStart").value = minDate.slice(0,10);
+  document.getElementById("invEnd").value = maxDate.slice(0,10);
+  document.getElementById("invRangeSubline").textContent =
+    fmtMonthLong(minDate) + " — " + fmtMonthLong(maxDate) + " · " + RAW_INV.length.toLocaleString("ka-GE") + " ჩანაწერი";
+  document.getElementById("invGenStamp").textContent = "გენერირებულია: " + fmtDateTime(new Date().toISOString());
+
+  function populateSelect(id, map, extra){
+    const sel = document.getElementById(id);
+    const keys = Object.keys(extra || {});
+    keys.sort((a,b)=> extra[b]-extra[a]);
+    keys.forEach(k=>{
+      const opt = document.createElement("option");
+      opt.value = k;
+      opt.textContent = map[k] ? map[k].label : k;
+      sel.appendChild(opt);
+    });
+  }
+  const statusCounts0 = {}; RAW_INV.forEach(r => statusCounts0[r.s] = (statusCounts0[r.s]||0)+1);
+  populateSelect("invStatus", STATUS_MAP, statusCounts0);
+
+  let sortKey = "d", sortDir = "desc", page = 0;
+  const PAGE_SIZE = 50;
+  let filtered = RAW_INV;
+
+  function applyFilters(){
+    const start = document.getElementById("invStart").value;
+    const end = document.getElementById("invEnd").value;
+    const st = document.getElementById("invStatus").value;
+    const q = document.getElementById("invSearchBox").value.trim().toLowerCase();
+    filtered = RAW_INV.filter(r=>{
+      const day = r.d.slice(0,10);
+      if (start && day < start) return false;
+      if (end && day > end) return false;
+      if (st && r.s !== st) return false;
+      if (q && !(r.b.toLowerCase().includes(q) || r.t.includes(q) || r.f.toLowerCase().includes(q))) return false;
+      return true;
+    });
+    page = 0;
+    renderAll();
+  }
+
+  function renderKPIs(){
+    const count = filtered.length;
+    const amount = filtered.reduce((s,r)=>s+r.a,0);
+    const vat = filtered.reduce((s,r)=>s+r.v,0);
+    const buyers = new Set(filtered.map(r=>r.t)).size;
+    document.getElementById("invKpiCount").textContent = fmtInt(count);
+    document.getElementById("invKpiAmount").textContent = fmtGelShort(amount);
+    document.getElementById("invKpiAmountSub").innerHTML = fmtGel(amount);
+    document.getElementById("invKpiVat").textContent = fmtGelShort(vat);
+    document.getElementById("invKpiVatSub").innerHTML = fmtGel(vat);
+    document.getElementById("invKpiBuyers").textContent = fmtInt(buyers);
+    document.getElementById("invKpiCountSub").textContent = count ? "საშ. " + fmtGel(amount/count) + " / ფაქტურაზე" : " ";
+    document.getElementById("invKpiBuyersSub").textContent = count ? (count/buyers).toFixed(1) + " ფაქტურა / მყიდველი" : " ";
+  }
+
+  function renderBreakdowns(){
+    const statusCounts = {}; filtered.forEach(r => statusCounts[r.s] = (statusCounts[r.s]||0)+1);
+    renderBarList("invStatusBars", statusCounts, k=>statusInfo(k).label, k=>statusInfo(k).color);
+  }
+
+  function renderRankList(){
+    const byBuyer = {};
+    filtered.forEach(r=>{
+      if (!byBuyer[r.t]) byBuyer[r.t] = {name:r.b, tin:r.t, amount:0, count:0};
+      byBuyer[r.t].amount += r.a;
+      byBuyer[r.t].count += 1;
+    });
+    const top = Object.values(byBuyer).sort((a,b)=>b.amount-a.amount).slice(0,12);
+    const el = document.getElementById("invRankList");
+    el.innerHTML = "";
+    top.forEach((b,idx)=>{
+      const row = document.createElement("div");
+      row.className = "rank-row";
+      row.innerHTML =
+        '<span class="rank-num num">'+(idx+1)+'</span>'+
+        '<span><span class="rank-name">'+escapeHtml(b.name)+'</span><br><span class="rank-meta num">ს/ნ '+b.tin+' &middot; '+b.count+' ფაქტურა</span></span>'+
+        '<span class="rank-amt num">'+fmtGel(b.amount)+'</span>';
+      el.appendChild(row);
+    });
+  }
+
+  function renderTrend(){
+    const byMonth = {};
+    filtered.forEach(r=>{
+      const mk = monthKey(r.d);
+      if (!byMonth[mk]) byMonth[mk] = {count:0, amount:0};
+      byMonth[mk].count += 1;
+      byMonth[mk].amount += r.a;
+    });
+    const months = Object.keys(byMonth).sort();
+    drawTrend(document.getElementById("invTrendChart"), byMonth, months);
+  }
+
+  function renderTable(){
+    const sorted = [...filtered].sort((a,b)=>{
+      let av = a[sortKey], bv = b[sortKey];
+      if (sortKey === "a" || sortKey === "v"){ av = +av; bv = +bv; }
+      const cmp = av < bv ? -1 : av > bv ? 1 : 0;
+      return sortDir === "asc" ? cmp : -cmp;
+    });
+    const totalPages = Math.max(1, Math.ceil(sorted.length / PAGE_SIZE));
+    page = Math.min(page, totalPages-1);
+    const start = page*PAGE_SIZE;
+    const pageRows = sorted.slice(start, start+PAGE_SIZE);
+    document.getElementById("invTbody").innerHTML = pageRows.map(r=>{
+      const si = statusInfo(r.s);
+      return "<tr>"+
+        "<td class='num'>"+fmtMonthLong(r.d)+"</td>"+
+        "<td class='num'>"+(r.reg ? fmtDateTime(r.reg) : "—")+"</td>"+
+        "<td class='num'>"+escapeHtml(r.f)+"</td>"+
+        "<td>"+escapeHtml(r.b)+"</td>"+
+        "<td class='num'>"+r.t+"</td>"+
+        "<td><span class='tag "+si.cls+"'>"+si.label+"</span></td>"+
+        "<td class='amt num'>"+fmtGel(r.v)+"</td>"+
+        "<td class='amt num'>"+fmtGel(r.a)+"</td>"+
+      "</tr>";
+    }).join("");
+    document.getElementById("invPagerInfo").textContent =
+      sorted.length === 0 ? "ჩანაწერი არ მოიძებნა" :
+      "ნაჩვენებია " + (start+1) + "–" + Math.min(start+PAGE_SIZE, sorted.length) + " / " + sorted.length.toLocaleString("ka-GE");
+    document.getElementById("invPFirst").disabled = page===0;
+    document.getElementById("invPPrev").disabled = page===0;
+    document.getElementById("invPNext").disabled = page>=totalPages-1;
+    document.getElementById("invPLast").disabled = page>=totalPages-1;
+  }
+
+  function renderAll(){ renderKPIs(); renderBreakdowns(); renderRankList(); renderTrend(); renderTable(); }
+
+  document.querySelectorAll("#tab-inv thead button").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      const k = btn.dataset.k;
+      if (sortKey === k){ sortDir = sortDir === "asc" ? "desc" : "asc"; }
+      else { sortKey = k; sortDir = (k==="a"||k==="v"||k==="d") ? "desc" : "asc"; }
+      renderTable();
+    });
+  });
+  document.getElementById("invPFirst").addEventListener("click", ()=>{ page=0; renderTable(); });
+  document.getElementById("invPPrev").addEventListener("click", ()=>{ page=Math.max(0,page-1); renderTable(); });
+  document.getElementById("invPNext").addEventListener("click", ()=>{ page=page+1; renderTable(); });
+  document.getElementById("invPLast").addEventListener("click", ()=>{ page=1e9; renderTable(); });
+  ["invStart","invEnd","invStatus"].forEach(id=>{ document.getElementById(id).addEventListener("change", applyFilters); });
+  document.getElementById("invSearchBox").addEventListener("input", applyFilters);
+  document.getElementById("invReset").addEventListener("click", ()=>{
+    document.getElementById("invStart").value = minDate.slice(0,10);
+    document.getElementById("invEnd").value = maxDate.slice(0,10);
+    document.getElementById("invStatus").value = "";
+    document.getElementById("invSearchBox").value = "";
+    applyFilters();
+  });
+
+  applyFilters();
+})();
+
+/* =========================================================
+   RECONCILIATION TAB (CRM sale ↔ waybill)
+   ========================================================= */
+(function(){
+  const missing = RAW_RECON.missing;
+  const matchedList = RAW_RECON.matched;
+  const byPerson = RAW_RECON.byPerson;
+  const all = missing.concat(matchedList);
+  const summary = RAW_RECON.summary;
+
+  const allDates = all.map(r => r.d).sort();
+  const minDate = allDates[0] || new Date().toISOString();
+  const maxDate = allDates[allDates.length-1] || new Date().toISOString();
+  document.getElementById("reconStart").value = minDate.slice(0,10);
+  document.getElementById("reconEnd").value = maxDate.slice(0,10);
+  document.getElementById("reconRangeSubline").textContent =
+    fmtDateLong(minDate) + " — " + fmtDateLong(maxDate) + " · " + summary.total.toLocaleString("ka-GE") + " გაყიდვა შემოწმებული";
+  document.getElementById("reconGenStamp").textContent = "გენერირებულია: " + fmtDateTime(new Date().toISOString());
+
+  const statusLabel = {all:"სულ გაყიდვები", matched:"დაწყვილებული", missing_wb:"აკლია ზედნადები", missing_sale:"აკლია გაყიდვა"};
+  const NET_TOL = 1; // ₾ — below this, a person's CRM/waybill totals count as fully reconciled
+
+  function inRange(dstr, start, end){
+    const day = dstr.slice(0,10);
+    return (!start || day>=start) && (!end || day<=end);
+  }
+
+  function personRowsInRange(items, start, end){
+    return items.filter(x=> inRange(x.d, start, end));
+  }
+
+  // A person's netDiff sign tells us WHICH problem it is, not just whether
+  // one exists: CRM total > waybill total means a real sale has no waybill
+  // ("აკლია ზედნადები" — compliance risk); waybill total > CRM total means a
+  // waybill was issued for goods that never got recorded as a CRM sale
+  // ("აკლია გაყიდვა" — an unrecorded sale, revenue-tracking risk). Both were
+  // originally lumped into one "missing" bucket, which hid the second, very
+  // different failure mode. See volta_sales_waybill_reconciliation.md.
+  function personStatus(p){
+    if (p.netDiff >= NET_TOL) return "missing_wb";
+    if (p.netDiff <= -NET_TOL) return "missing_sale";
+    return "matched";
+  }
+
+  // Single source of truth for "is this person's period actually reconciled,
+  // and if not, in which direction?" — judged by the NET total (CRM sales
+  // sum vs waybill sum), never by whether every individual sale cleared the
+  // ±45d/±5% pairwise match. A person can have several sale-level
+  // "unmatched" flags that net to exactly ₾0 against their waybills (goods
+  // delivered via split/partial waybills), which is not a real gap. Every
+  // KPI, chart, and the person list all derive from this one function so
+  // they can never disagree with each other again.
+  function computePeopleForRange(start, end){
+    return byPerson.map(p=>{
+      const sales = personRowsInRange(p.sales, start, end);
+      const wbs = personRowsInRange(p.waybills, start, end);
+      const salesTotal = sales.reduce((s,x)=>s+x.a,0);
+      const wbTotal = wbs.reduce((s,x)=>s+x.a,0);
+      const netDiff = salesTotal - wbTotal;
+      const withStatus = {...p, sales, wbs, salesTotal, wbTotal, netDiff};
+      withStatus.status = personStatus(withStatus);
+      return withStatus;
+    }).filter(p => p.sales.length > 0);
+  }
+
+  function peopleForStatus(start, end, status){
+    const people = computePeopleForRange(start, end);
+    if (status === "all") return people;
+    return people.filter(p => p.status === status);
+  }
+
+  function applyFilters(){
+    renderKPIs();
+    renderBreakdowns();
+    renderTrend();
+    groupPage = 0;
+    renderGroupList();
+  }
+
+  function renderKPIs(){
+    const start = document.getElementById("reconStart").value;
+    const end = document.getElementById("reconEnd").value;
+    const people = computePeopleForRange(start, end);
+    const missingWb = people.filter(p => p.status === "missing_wb");
+    const missingSale = people.filter(p => p.status === "missing_sale");
+    const matchedPeople = people.length - missingWb.length - missingSale.length;
+    const riskAmount = people.reduce((s,p)=> p.status !== "matched" ? s+Math.abs(p.netDiff) : s, 0);
+
+    document.getElementById("reconKpiTotal").textContent = fmtInt(people.length);
+    document.getElementById("reconKpiTotalSub").textContent = "მყიდველი მიმდინარე პერიოდში";
+    document.getElementById("reconKpiMatched").textContent = fmtInt(matchedPeople);
+    const rate = people.length ? ((matchedPeople/people.length)*100).toFixed(1) : "0.0";
+    document.getElementById("reconKpiMatchedSub").textContent = rate + "% დაფარვა (ჯამური თანხით)";
+    document.getElementById("reconKpiMissing").textContent = fmtInt(missingWb.length);
+    document.getElementById("reconKpiMissingSub").textContent = people.length ? ((missingWb.length/people.length)*100).toFixed(1)+"% მყიდველიდან" : " ";
+    document.getElementById("reconKpiMissingSale").textContent = fmtInt(missingSale.length);
+    document.getElementById("reconKpiMissingSaleSub").textContent = people.length ? ((missingSale.length/people.length)*100).toFixed(1)+"% მყიდველიდან" : " ";
+    document.getElementById("reconKpiAmount").textContent = fmtGelShort(riskAmount);
+    document.getElementById("reconKpiAmountSub").innerHTML = fmtGel(riskAmount);
+  }
+
+  function renderBreakdowns(){
+    const start = document.getElementById("reconStart").value;
+    const end = document.getElementById("reconEnd").value;
+    const status = document.getElementById("reconStatus").value;
+    const people = peopleForStatus(start, end, status);
+
+    if (status === "missing_sale"){
+      // no CRM sale <-> no sales manager on the surplus waybills — break
+      // those down by product instead, since "manager" doesn't apply.
+      const prodCounts = {};
+      people.forEach(p=>{
+        p.wbs.filter(w=>!w.matched).forEach(w => prodCounts[w.prod] = (prodCounts[w.prod]||0)+1);
+      });
+      const top = Object.entries(prodCounts).sort((a,b)=>b[1]-a[1]).slice(0,12);
+      document.getElementById("reconSideTitle").textContent = "პროდუქტების მიხედვით";
+      document.getElementById("reconSideNote").textContent = "ტოპ, აკლია-გაყიდვის რაოდენობით";
+      renderBarList("reconMgrBars", Object.fromEntries(top), k=>escapeHtml(k), ()=>"var(--warning)");
+      return;
+    }
+
+    // for missing-waybill people, their unmatched CRM sales are the
+    // representative "at risk" line items; for reconciled/all people, every
+    // sale in range counts.
+    const mgrCounts = {};
+    people.forEach(p=>{
+      const relevant = status === "missing_wb" ? p.sales.filter(s=>!s.matched) : p.sales;
+      relevant.forEach(s => mgrCounts[s.mgr] = (mgrCounts[s.mgr]||0)+1);
+    });
+    const top = Object.entries(mgrCounts).sort((a,b)=>b[1]-a[1]).slice(0,12);
+    document.getElementById("reconSideTitle").textContent = "მენეჯერების მიხედვით";
+    document.getElementById("reconSideNote").textContent = "ტოპ, აკლია-ზედნადების რაოდენობით";
+    renderBarList("reconMgrBars", Object.fromEntries(top), k=>escapeHtml(k), ()=>"var(--danger)");
+  }
+
+  function renderTrend(){
+    const start = document.getElementById("reconStart").value;
+    const end = document.getElementById("reconEnd").value;
+    const status = document.getElementById("reconStatus").value;
+    const people = peopleForStatus(start, end, status);
+    const byMonth = {};
+    people.forEach(p=>{
+      // missing_sale's representative events are the surplus (unmatched)
+      // waybills, since those are what has no CRM sale behind them.
+      const relevant = status === "missing_sale" ? p.wbs.filter(w=>!w.matched)
+                      : status === "missing_wb" ? p.sales.filter(s=>!s.matched)
+                      : p.sales;
+      relevant.forEach(item=>{
+        const mk = monthKey(item.d);
+        if (!byMonth[mk]) byMonth[mk] = {count:0, amount:0};
+        byMonth[mk].count += 1;
+        byMonth[mk].amount += item.a;
+      });
+    });
+    const months = Object.keys(byMonth).sort();
+    drawTrend(document.getElementById("reconTrendChart"), byMonth, months);
+    document.getElementById("reconTrendTitle").textContent = statusLabel[status] + " — თვიური დინამიკა";
+  }
+
+  /* ---- grouped-by-person view (the tab's main/only table) ---- */
+  let groupPage = 0;
+  const GROUP_PAGE_SIZE = 15;
+
+  function renderGroupList(){
+    const start = document.getElementById("reconStart").value;
+    const end = document.getElementById("reconEnd").value;
+    const q = document.getElementById("reconGroupSearchBox").value.trim().toLowerCase();
+    const status = document.getElementById("reconStatus").value;
+
+    let people = peopleForStatus(start, end, status).filter(p=>{
+      if (q && !(p.b.toLowerCase().includes(q) || p.t.includes(q))) return false;
+      return true;
+    });
+
+    const latestSaleDate = p => p.sales.reduce((max,s)=> s.d > max ? s.d : max, "");
+    people.sort((a,b)=> latestSaleDate(b).localeCompare(latestSaleDate(a)) || a.b.localeCompare(b.b));
+
+    const totalPages = Math.max(1, Math.ceil(people.length / GROUP_PAGE_SIZE));
+    groupPage = Math.min(groupPage, totalPages-1);
+    const pageStart = groupPage*GROUP_PAGE_SIZE;
+    const pagePeople = people.slice(pageStart, pageStart+GROUP_PAGE_SIZE);
+
+    document.getElementById("reconGroupList").innerHTML = pagePeople.map(p=>{
+      const diff = p.netDiff;
+      const diffColor = p.status === "matched" ? "var(--success)" : (p.status === "missing_wb" ? "var(--danger)" : "var(--warning)");
+      const statusTag = p.status === "matched" ? "" :
+        " &middot; <span style='color:"+diffColor+"'>"+statusLabel[p.status]+"</span>";
+      const salesHtml = p.sales.length ? p.sales.map(s=>
+        "<div class='person-row"+(s.matched?" is-matched":"")+"'>"+
+          "<span class='pd'><span class='person-dot' style='background:"+(s.matched?"var(--success)":"var(--danger)")+"'></span>"+fmtDateOnly(s.d)+"</span>"+
+          "<span class='pp'>"+escapeHtml(s.prod)+"</span>"+
+          "<span class='pa'>"+fmtGel(s.a)+"</span>"+
+        "</div>"
+      ).join("") : "<div class='person-row'><span class='pp' style='color:var(--faint)'>ამ პერიოდში გაყიდვა არ არის</span></div>";
+      const wbHtml = p.wbs.length ? p.wbs.map(w=>
+        "<div class='person-row"+(w.matched?" is-matched":"")+"'>"+
+          "<span class='pd'><span class='person-dot' style='background:"+(w.isReturn?"var(--warning)":(w.matched?"var(--success)":"var(--muted)"))+"'></span>"+fmtDateOnly(w.d)+"</span>"+
+          "<span class='pp' title='№"+escapeHtml(w.n)+"'>"+escapeHtml(w.prod)+(w.isReturn?" &middot; <span style='color:var(--warning)'>დაბრუნება</span>":"")+"</span>"+
+          "<span class='pa'>"+fmtGel(w.a)+"</span>"+
+        "</div>"
+      ).join("") : "<div class='person-row'><span class='pp' style='color:var(--faint)'>ამ პერიოდში ზედნადები არ არის</span></div>";
+      return "<div class='person-card'>"+
+        "<div class='person-head'>"+
+          "<span class='person-name'>"+escapeHtml(p.b)+"</span>"+
+          "<span class='person-meta'>პ/ნ "+p.t+" &middot; CRM "+fmtGel(p.salesTotal)+" / ზედნადები "+fmtGel(p.wbTotal)+
+            " &middot; სხვაობა <span style='color:"+diffColor+"'>"+fmtGel(diff)+"</span>"+statusTag+"</span>"+
+        "</div>"+
+        "<div class='person-cols'>"+
+          "<div class='person-col'><div class='person-col-title'>CRM გაყიდვები ("+p.sales.length+")</div>"+salesHtml+"</div>"+
+          "<div class='person-col'><div class='person-col-title'>ზედნადებები ("+p.wbs.length+")</div>"+wbHtml+"</div>"+
+        "</div>"+
+      "</div>";
+    }).join("");
+
+    document.getElementById("reconGroupPagerInfo").textContent =
+      people.length === 0 ? "პირი არ მოიძებნა" :
+      "ნაჩვენებია " + (pageStart+1) + "–" + Math.min(pageStart+GROUP_PAGE_SIZE, people.length) + " / " + people.length.toLocaleString("ka-GE") + " პირი";
+    document.getElementById("reconGPFirst").disabled = groupPage===0;
+    document.getElementById("reconGPPrev").disabled = groupPage===0;
+    document.getElementById("reconGPNext").disabled = groupPage>=totalPages-1;
+    document.getElementById("reconGPLast").disabled = groupPage>=totalPages-1;
+  }
+
+  document.getElementById("reconGPFirst").addEventListener("click", ()=>{ groupPage=0; renderGroupList(); });
+  document.getElementById("reconGPPrev").addEventListener("click", ()=>{ groupPage=Math.max(0,groupPage-1); renderGroupList(); });
+  document.getElementById("reconGPNext").addEventListener("click", ()=>{ groupPage=groupPage+1; renderGroupList(); });
+  document.getElementById("reconGPLast").addEventListener("click", ()=>{ groupPage=1e9; renderGroupList(); });
+  ["reconStart","reconEnd","reconStatus"].forEach(id=>{ document.getElementById(id).addEventListener("change", applyFilters); });
+  document.getElementById("reconGroupSearchBox").addEventListener("input", ()=>{ groupPage=0; renderGroupList(); });
+  document.getElementById("reconReset").addEventListener("click", ()=>{
+    document.getElementById("reconStart").value = minDate.slice(0,10);
+    document.getElementById("reconEnd").value = maxDate.slice(0,10);
+    document.getElementById("reconStatus").value = "missing_wb";
+    document.getElementById("reconGroupSearchBox").value = "";
+    applyFilters();
+  });
+
+  applyFilters();
+})();
+
+/* ---------- tab switching ---------- */
+document.querySelectorAll(".tabbtn").forEach(btn=>{
+  btn.addEventListener("click", ()=>{
+    document.querySelectorAll(".tabbtn").forEach(b=>b.classList.remove("active"));
+    document.querySelectorAll(".tabpanel").forEach(p=>p.classList.remove("active"));
+    btn.classList.add("active");
+    document.getElementById("tab-"+btn.dataset.tab).classList.add("active");
+  });
+});
+</script>
