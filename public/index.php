@@ -21,6 +21,7 @@ require __DIR__ . '/../src/ProductClassifier.php';
 require __DIR__ . '/../src/PortfolioRepository.php';
 require __DIR__ . '/../src/IncomeDelinquencyRepository.php';
 require __DIR__ . '/../src/ExCustomerRepository.php';
+require __DIR__ . '/../src/AccountingRepository.php';
 
 $configPath = __DIR__ . '/../config.php';
 if (!is_file($configPath)) {
@@ -103,6 +104,32 @@ try {
     $applicationStatusesMonthly = $portfolioRepository->applicationStatusesMonthly($monthlyFrom, $yesterdayTo);
     $leadStatusesMonthly = $portfolioRepository->leadStatusesMonthly($monthlyFrom, $yesterdayTo);
 
+    // Accounting (waybills / invoices / reconciliation) — RS.ge is a separate, less
+    // reliable dependency than the DB, so its own failure (auth, network, RS.ge
+    // outage) must not take down the other ~20 tabs above. Caught independently;
+    // see AccountingRepository's own docblock for the reconciliation logic itself.
+    try {
+        $accountingRepository = new AccountingRepository(
+            $pdo,
+            $config['rsge']['su'],
+            $config['rsge']['sp'],
+            $config['rsge']['invoice_user_id'],
+            $config['rsge']['invoice_un_id'],
+            $monthlyFrom,
+        );
+        $acctRawWaybills = $accountingRepository->fetchWaybills();
+        [$acctWbRows, ] = $accountingRepository->buildWaybillRows($acctRawWaybills);
+        $acctInvRows = $accountingRepository->buildInvoiceRows($accountingRepository->fetchInvoices());
+        $acctCrmRows = $accountingRepository->fetchCrmSales();
+        $acctRecon = $accountingRepository->buildReconciliation($acctCrmRows, $acctRawWaybills);
+        $acctError = null;
+    } catch (\Throwable $e) {
+        $acctWbRows = [];
+        $acctInvRows = [];
+        $acctRecon = null;
+        $acctError = $e->getMessage();
+    }
+
     $connectionError = null;
 } catch (\Throwable $e) {
     $data = null;
@@ -134,6 +161,10 @@ try {
     $approvedReasonsMonthly = null;
     $applicationStatusesMonthly = null;
     $leadStatusesMonthly = null;
+    $acctWbRows = [];
+    $acctInvRows = [];
+    $acctRecon = null;
+    $acctError = 'Database connection failed — see the main error above.';
     $connectionError = $e->getMessage();
 }
 
@@ -157,6 +188,19 @@ if (is_file($pendingStatusLogPath)) {
     $decoded = json_decode((string) file_get_contents($pendingStatusLogPath), true);
     if (is_array($decoded)) {
         $pendingStatusLog = $decoded;
+    }
+}
+
+// Volta_Analytics's client-side nav filter (NOT real security — see the
+// volta_analytics_auth Claude memory) — synced by hand from a Google Sheet.
+// Missing/unreadable file fails CLOSED (empty list = nobody can log in),
+// not open, since this gates who sees what.
+$vaPermissionsPath = __DIR__ . '/../access_permissions.json';
+$vaPermissions = [];
+if (is_file($vaPermissionsPath)) {
+    $decodedPerms = json_decode((string) file_get_contents($vaPermissionsPath), true);
+    if (is_array($decodedPerms)) {
+        $vaPermissions = $decodedPerms;
     }
 }
 
