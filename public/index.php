@@ -109,13 +109,17 @@ try {
     // outage) must not take down the other ~20 tabs above. Caught independently;
     // see AccountingRepository's own docblock for the reconciliation logic itself.
     try {
+        // Accounting's own window is independent of $monthlyFrom (which the OTHER
+        // tabs use, always Jan 1 of the current year) — the user asked for this
+        // section specifically to go back further, to 2025-09-01.
+        $acctStart = new \DateTimeImmutable('2025-09-01');
         $accountingRepository = new AccountingRepository(
             $pdo,
             $config['rsge']['su'],
             $config['rsge']['sp'],
             $config['rsge']['invoice_user_id'],
             $config['rsge']['invoice_un_id'],
-            $monthlyFrom,
+            $acctStart,
         );
         $acctRawWaybills = $accountingRepository->fetchWaybills();
         [$acctWbRows, ] = $accountingRepository->buildWaybillRows($acctRawWaybills);

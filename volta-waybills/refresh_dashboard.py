@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 Fetches Volta Group's seller-side waybills AND invoices from RS.ge
-(2026-01-01 to now), applies validated corrections, and bakes both
+(2025-09-01 to now — see START below), applies validated corrections, and bakes both
 datasets into template.html to produce waybill_dashboard.html (which now
 covers both the waybills and invoices tabs) in this same folder.
 
@@ -33,7 +33,7 @@ WAYBILL_WSDL = "http://services.rs.ge/WayBillService/WayBillService.asmx?WSDL"
 INVOICE_WSDL = "https://www.revenue.mof.ge/ntosservice/ntosservice.asmx?WSDL"
 INVOICE_ENDPOINT = "https://www.revenue.mof.ge/ntosservice/ntosservice.asmx"
 
-START = datetime(2026, 1, 1)
+START = datetime(2025, 9, 1)
 
 RECON_DATE_TOL_DAYS = 45
 
@@ -549,7 +549,7 @@ def build_excel_report(recon, wb_rows, inv_rows):
     ws["A2"].font = note_font
 
     labels = [
-        ("სულ მყიდველი (2026-01-01-დან, PID-ით)", summary["totalPeople"]),
+        ("სულ მყიდველი (2025-09-01-დან, PID-ით)", summary["totalPeople"]),
         ("დაწყვილებული მყიდველი (სხვაობა < 1₾)", summary["matchedPeople"]),
         ("აკლია ზედნადები (მყიდველი — გაყიდვაა, ზედნადები არა)", summary["missingWbPeople"]),
         ("რისკის ქვეშ თანხა — აკლია ზედნადები (₾)", summary["riskAmountWb"]),

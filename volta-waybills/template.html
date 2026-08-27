@@ -547,15 +547,10 @@
       <div class="kpi"><span class="kpi-label">რისკის ქვეშ თანხა</span><span class="kpi-value num" id="reconKpiAmount">—</span><span class="kpi-sub" id="reconKpiAmountSub">&nbsp;</span></div>
     </div>
 
-    <div class="grid-main">
-      <div class="panel">
-        <div class="panel-head"><span class="panel-title" id="reconTrendTitle">აკლია ზედნადები — თვიური დინამიკა</span><span class="panel-note">გაყიდვების რაოდენობა &amp; თანხა</span></div>
-        <div class="trend-legend"><span><span class="legend-dot" style="background:var(--accent)"></span>რაოდენობა</span><span><span class="legend-dot" style="background:var(--warm)"></span>თანხა (₾)</span></div>
-        <svg class="trend-svg" id="reconTrendChart" viewBox="0 0 960 230" preserveAspectRatio="none"></svg>
-      </div>
-      <div class="side-stack">
-        <div class="panel"><div class="panel-head"><span class="panel-title" id="reconSideTitle">მენეჯერების მიხედვით</span><span class="panel-note" id="reconSideNote">ტოპ, აკლია-ზედნადების რაოდენობით</span></div><div class="barlist" id="reconMgrBars"></div></div>
-      </div>
+    <div class="panel">
+      <div class="panel-head"><span class="panel-title" id="reconTrendTitle">აკლია ზედნადები — თვიური დინამიკა</span><span class="panel-note">გაყიდვების რაოდენობა &amp; თანხა</span></div>
+      <div class="trend-legend"><span><span class="legend-dot" style="background:var(--accent)"></span>რაოდენობა</span><span><span class="legend-dot" style="background:var(--warm)"></span>თანხა (₾)</span></div>
+      <svg class="trend-svg" id="reconTrendChart" viewBox="0 0 960 230" preserveAspectRatio="none"></svg>
     </div>
 
     <div class="panel" id="reconGroupPanel">
@@ -1135,7 +1130,6 @@ function drawTrend(svg, buckets, keys){
 
   function applyFilters(){
     renderKPIs();
-    renderBreakdowns();
     renderTrend();
     groupPage = 0;
     renderGroupList();
@@ -1148,7 +1142,15 @@ function drawTrend(svg, buckets, keys){
     const missingWb = people.filter(p => p.status === "missing_wb");
     const missingSale = people.filter(p => p.status === "missing_sale");
     const matchedPeople = people.length - missingWb.length - missingSale.length;
-    const riskAmount = people.reduce((s,p)=> p.status !== "matched" ? s+Math.abs(p.netDiff) : s, 0);
+    // missingWb people always have netDiff >= 0 (sale exceeds waybill) and
+    // missingSale people always have netDiff <= 0 (waybill exceeds sale) —
+    // summing each group directly (with the sale group negated back to
+    // positive) gives that group's own at-risk amount; adding the two still
+    // equals the combined riskAmount below, so the last KPI card's total
+    // never disagrees with these two.
+    const riskAmountWb = missingWb.reduce((s,p)=>s+p.netDiff,0);
+    const riskAmountSale = missingSale.reduce((s,p)=>s-p.netDiff,0);
+    const riskAmount = riskAmountWb + riskAmountSale;
 
     document.getElementById("reconKpiTotal").textContent = fmtInt(people.length);
     document.getElementById("reconKpiTotalSub").textContent = "მყიდველი მიმდინარე პერიოდში";
@@ -1156,45 +1158,11 @@ function drawTrend(svg, buckets, keys){
     const rate = people.length ? ((matchedPeople/people.length)*100).toFixed(1) : "0.0";
     document.getElementById("reconKpiMatchedSub").textContent = rate + "% დაფარვა (ჯამური თანხით)";
     document.getElementById("reconKpiMissing").textContent = fmtInt(missingWb.length);
-    document.getElementById("reconKpiMissingSub").textContent = people.length ? ((missingWb.length/people.length)*100).toFixed(1)+"% მყიდველიდან" : " ";
+    document.getElementById("reconKpiMissingSub").innerHTML = people.length ? ((missingWb.length/people.length)*100).toFixed(1)+"% მყიდველიდან &middot; "+fmtGel(riskAmountWb) : " ";
     document.getElementById("reconKpiMissingSale").textContent = fmtInt(missingSale.length);
-    document.getElementById("reconKpiMissingSaleSub").textContent = people.length ? ((missingSale.length/people.length)*100).toFixed(1)+"% მყიდველიდან" : " ";
+    document.getElementById("reconKpiMissingSaleSub").innerHTML = people.length ? ((missingSale.length/people.length)*100).toFixed(1)+"% მყიდველიდან &middot; "+fmtGel(riskAmountSale) : " ";
     document.getElementById("reconKpiAmount").textContent = fmtGelShort(riskAmount);
     document.getElementById("reconKpiAmountSub").innerHTML = fmtGel(riskAmount);
-  }
-
-  function renderBreakdowns(){
-    const start = document.getElementById("reconStart").value;
-    const end = document.getElementById("reconEnd").value;
-    const status = document.getElementById("reconStatus").value;
-    const people = peopleForStatus(start, end, status);
-
-    if (status === "missing_sale"){
-      // no CRM sale <-> no sales manager on the surplus waybills — break
-      // those down by product instead, since "manager" doesn't apply.
-      const prodCounts = {};
-      people.forEach(p=>{
-        p.wbs.filter(w=>!w.matched).forEach(w => prodCounts[w.prod] = (prodCounts[w.prod]||0)+1);
-      });
-      const top = Object.entries(prodCounts).sort((a,b)=>b[1]-a[1]).slice(0,12);
-      document.getElementById("reconSideTitle").textContent = "პროდუქტების მიხედვით";
-      document.getElementById("reconSideNote").textContent = "ტოპ, აკლია-გაყიდვის რაოდენობით";
-      renderBarList("reconMgrBars", Object.fromEntries(top), k=>escapeHtml(k), ()=>"var(--warning)");
-      return;
-    }
-
-    // for missing-waybill people, their unmatched CRM sales are the
-    // representative "at risk" line items; for reconciled/all people, every
-    // sale in range counts.
-    const mgrCounts = {};
-    people.forEach(p=>{
-      const relevant = status === "missing_wb" ? p.sales.filter(s=>!s.matched) : p.sales;
-      relevant.forEach(s => mgrCounts[s.mgr] = (mgrCounts[s.mgr]||0)+1);
-    });
-    const top = Object.entries(mgrCounts).sort((a,b)=>b[1]-a[1]).slice(0,12);
-    document.getElementById("reconSideTitle").textContent = "მენეჯერების მიხედვით";
-    document.getElementById("reconSideNote").textContent = "ტოპ, აკლია-ზედნადების რაოდენობით";
-    renderBarList("reconMgrBars", Object.fromEntries(top), k=>escapeHtml(k), ()=>"var(--danger)");
   }
 
   function renderTrend(){
