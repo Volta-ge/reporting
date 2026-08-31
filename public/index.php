@@ -21,7 +21,6 @@ require __DIR__ . '/../src/ProductClassifier.php';
 require __DIR__ . '/../src/PortfolioRepository.php';
 require __DIR__ . '/../src/IncomeDelinquencyRepository.php';
 require __DIR__ . '/../src/ExCustomerRepository.php';
-require __DIR__ . '/../src/AccountingRepository.php';
 
 $configPath = __DIR__ . '/../config.php';
 if (!is_file($configPath)) {
@@ -104,36 +103,6 @@ try {
     $applicationStatusesMonthly = $portfolioRepository->applicationStatusesMonthly($monthlyFrom, $yesterdayTo);
     $leadStatusesMonthly = $portfolioRepository->leadStatusesMonthly($monthlyFrom, $yesterdayTo);
 
-    // Accounting (waybills / invoices / reconciliation) — RS.ge is a separate, less
-    // reliable dependency than the DB, so its own failure (auth, network, RS.ge
-    // outage) must not take down the other ~20 tabs above. Caught independently;
-    // see AccountingRepository's own docblock for the reconciliation logic itself.
-    try {
-        // Accounting's own window is independent of $monthlyFrom (which the OTHER
-        // tabs use, always Jan 1 of the current year) — the user asked for this
-        // section specifically to go back further, to 2025-09-01.
-        $acctStart = new \DateTimeImmutable('2025-09-01');
-        $accountingRepository = new AccountingRepository(
-            $pdo,
-            $config['rsge']['su'],
-            $config['rsge']['sp'],
-            $config['rsge']['invoice_user_id'],
-            $config['rsge']['invoice_un_id'],
-            $acctStart,
-        );
-        $acctRawWaybills = $accountingRepository->fetchWaybills();
-        [$acctWbRows, ] = $accountingRepository->buildWaybillRows($acctRawWaybills);
-        $acctInvRows = $accountingRepository->buildInvoiceRows($accountingRepository->fetchInvoices());
-        $acctCrmRows = $accountingRepository->fetchCrmSales();
-        $acctRecon = $accountingRepository->buildReconciliation($acctCrmRows, $acctRawWaybills);
-        $acctError = null;
-    } catch (\Throwable $e) {
-        $acctWbRows = [];
-        $acctInvRows = [];
-        $acctRecon = null;
-        $acctError = $e->getMessage();
-    }
-
     $connectionError = null;
 } catch (\Throwable $e) {
     $data = null;
@@ -165,10 +134,6 @@ try {
     $approvedReasonsMonthly = null;
     $applicationStatusesMonthly = null;
     $leadStatusesMonthly = null;
-    $acctWbRows = [];
-    $acctInvRows = [];
-    $acctRecon = null;
-    $acctError = 'Database connection failed — see the main error above.';
     $connectionError = $e->getMessage();
 }
 
