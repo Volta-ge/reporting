@@ -120,6 +120,15 @@ body {
 .table-card table { width: 100%; border-collapse: collapse; font-size: 12.5px; min-width: 320px; }
 .table-card th, .table-card td { text-align: right; padding: 7px 10px; border-bottom: 1px solid var(--grid); font-variant-numeric: tabular-nums; white-space: nowrap; }
 .table-card th:first-child, .table-card td:first-child { text-align: left; font-variant-numeric: normal; }
+
+/* Collection tab KPI position tiles — this dashboard has no chart infrastructure elsewhere, so
+   these plus the plain tables below are the whole visual language for this tab, matching the
+   rest of the file rather than introducing new charting code. */
+.kpi-grid { display: flex; flex-wrap: wrap; gap: 10px; margin: 4px 0 18px; }
+.kpi-tile { background: var(--surface-1); border: 1px solid var(--border); border-radius: 10px; padding: 12px 16px; flex: 1 1 160px; min-width: 160px; }
+.kpi-tile .kpi-label { font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-muted); }
+.kpi-tile .kpi-value { font-size: 21px; font-weight: 700; color: var(--text-primary); margin: 4px 0 2px; font-variant-numeric: tabular-nums; }
+.kpi-tile .kpi-sub { font-size: 11px; color: var(--text-secondary); }
 .table-card th { color: var(--text-secondary); font-weight: 650; font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.03em; }
 .table-card tbody tr:hover { background: color-mix(in srgb, var(--text-primary) 4%, transparent); }
 .table-card tr.total td { font-weight: 650; border-top: 2px solid var(--baseline); border-bottom: none; }
@@ -355,6 +364,14 @@ table.rpt-pivot td.rpt-group-toggle { cursor: pointer; user-select: none; text-a
       <div class="nav-group-items">
         <button data-page="logistics">Logistics Daily</button>
         <a href="https://volta-ge.github.io/reporting/waybills.html" target="_blank" rel="noopener">CRM Sales &harr; RS Waybills &#8599;</a>
+      </div>
+    </div>
+    <div class="nav-group" data-group="collection">
+      <div class="nav-group-title">Collection</div>
+      <div class="nav-group-items">
+        <button data-page="collectionoverview">Overview</button>
+        <button data-page="collectionbuckets">Delinquency Buckets</button>
+        <button data-page="collectionfinancials">Financials</button>
       </div>
     </div>
     <div class="nav-group" data-group="customers">
@@ -599,6 +616,36 @@ table.rpt-pivot td.rpt-group-toggle { cursor: pointer; user-select: none; text-a
       </div>
     </div>
     <p class="note">Snapshot, pulled the same manual way as the rest of this tab &mdash; not live.</p>
+  </div>
+</div>
+
+<div class="page" id="page-collectionoverview">
+  <p class="section-title">Collection &mdash; Overview</p>
+  <p class="note" style="margin:-8px 0 0;">A partial port of the separate collections.volta.ge system's Overview tab, fed from this project's own live DB instead. Only current-position KPIs are shown here &mdash; that system's day-over-day trend charts, auto-generated insight cards, and contact-status breakdown all depend on historical daily snapshots this DB doesn't reliably retain (see the Delinquency Buckets tab's note), so they aren't reproduced. <b>DPD</b> (days past due) = days since a loan's next-due installment (<code>instalments.Days_Age</code>); a customer with several active loans is judged by their worst (highest-DPD) loan, with their whole balance attributed there.</p>
+  <div class="kpi-grid" id="collectionOverviewKpis"></div>
+</div>
+
+<div class="page" id="page-collectionbuckets">
+  <p class="section-title">Collection &mdash; Delinquency Buckets</p>
+  <p class="note" style="margin:-8px 0 0;">Current position only, by customer &mdash; a customer holding several active loans is placed in the bucket of their single worst (highest-DPD) loan, with their <i>entire</i> balance across all active loans attributed to that one bucket, matching the source site's own rule. <b>Due today</b> (DPD&nbsp;0) is shown but excluded from &ldquo;% of overdue&rdquo; and from every other tab's overdue KPIs &mdash; it isn't actually late yet. Not reproduced here: the source site's monthly collection-yield-by-bucket table, which needs to know balances as of past dates &mdash; the only table with per-installment due dates (<code>instalment_shedules</code>) turned out not to reliably retain history (compared two real loans: one still-active loan had its paid-off schedule rows deleted, a closed one hadn't), so building that table now risked shipping silently wrong numbers.</p>
+  <div class="table-card">
+    <table id="collectionBucketsTable"><tbody></tbody></table>
+  </div>
+</div>
+
+<div class="page" id="page-collectionfinancials">
+  <p class="section-title">Collection &mdash; Financials</p>
+  <p class="note" style="margin:-8px 0 0;">Loan book position and cash collected, scoped to currently active loans (<code>Active = 1</code>) except the monthly collections table, which is company-wide cash regardless of a loan's current status. One data-quality fix applied here: a single sentinel row in <code>payments</code> (Amount = 99,999,999.99, clearly a placeholder) is excluded from every total on this page.</p>
+  <div class="kpi-grid" id="collectionFinancialsKpis"></div>
+  <p class="section-title" style="margin-top:20px;">Collections by month</p>
+  <p class="note" style="margin:-8px 0 0;">Principal and penalty received, GEL &mdash; the one sentinel payment row excluded, last 13 months.</p>
+  <div class="table-card">
+    <table id="collectionMonthlyTable"><tbody></tbody></table>
+  </div>
+  <p class="section-title" style="margin-top:20px;">Loan-level DPD split</p>
+  <p class="note" style="margin:-8px 0 0;">One row per loan (not per customer, unlike the Delinquency Buckets tab) &mdash; coarser bucket boundaries matching the source site's own "CFO reconciliation view". The two tables agree on grand totals only, never bucket by bucket, since the boundaries differ.</p>
+  <div class="table-card">
+    <table id="collectionLoanBucketsTable"><tbody></tbody></table>
   </div>
 </div>
 
@@ -850,6 +897,9 @@ var riskSegmentation = null;
 var exCustomers = null;
 var neverBorrowedByStatus = null;
 var neverBorrowedDetail = null;
+var collectionsOverview = null;
+var collectionsBuckets = null;
+var collectionsFinancials = null;
 var closedLoansMonthly = null;
 var delinquencyAnalysis = null;
 var rejectionReasonsMonthly = null;
@@ -1896,6 +1946,74 @@ __onSection('neverBorrowedDetail', () => {
   renderNeverBorrowedDetailTable('');
   document.getElementById('neverBorrowedSearch').addEventListener('input', e => renderNeverBorrowedDetailTable(e.target.value));
 });
+
+/* ---------- Collection: partial port of collections.volta.ge (Overview KPIs, Delinquency
+   Buckets, Financials only — see each page's own note for what's not reproduced and why). */
+function kpiTileHtml(label, value, sub) {
+  return `<div class="kpi-tile"><div class="kpi-label">${label}</div><div class="kpi-value">${value}</div><div class="kpi-sub">${sub}</div></div>`;
+}
+
+function renderCollectionOverview() {
+  const d = collectionsOverview;
+  if (!d) return;
+  const html = [
+    kpiTileHtml('Open Loan Book', fmt(d.openLoanBook), `${fmt(d.loanCount)} loans &middot; ${fmt(d.customerCount)} customers`),
+    kpiTileHtml('Penalties', fmt(d.penalties), 'outside the loan balance'),
+    kpiTileHtml('Total Open Debt', fmt(d.totalOpenDebt), 'principal + penalties'),
+    kpiTileHtml('Overdue Balance', fmt(d.overdueBalance), 'principal + penalties, DPD &ge; 1'),
+    kpiTileHtml('Overdue Customers', fmt(d.overdueCustomers), 'DPD &ge; 1'),
+    kpiTileHtml('Collected Today', fmt(d.collectedToday), 'principal + penalty'),
+  ].join('');
+  document.getElementById('collectionOverviewKpis').innerHTML = html;
+}
+__onSection('collectionsOverview', renderCollectionOverview);
+
+function renderCollectionBuckets() {
+  const d = collectionsBuckets;
+  if (!d) return;
+  const rowsHtml = d.rows.map(r =>
+    `<tr><td>${r.bucket}</td><td>${r.stage}</td><td>${fmt(r.customers)}</td><td>${fmt(r.balance)}</td><td>${r.pctOfOverdue === null ? '&mdash;' : pct(r.pctOfOverdue)}</td></tr>`
+  ).join('');
+  const totalCust = d.rows.reduce((s, r) => s + r.customers, 0);
+  const totalBal = d.rows.reduce((s, r) => s + r.balance, 0);
+  const html = `<tr><th>Bucket</th><th>Stage</th><th>Customers</th><th>Balance (GEL)</th><th>% of Overdue</th></tr>`
+    + rowsHtml
+    + `<tr class="total"><td>Total</td><td></td><td>${fmt(totalCust)}</td><td>${fmt(totalBal)}</td><td></td></tr>`;
+  document.getElementById('collectionBucketsTable').querySelector('tbody').innerHTML = html;
+}
+__onSection('collectionsBuckets', renderCollectionBuckets);
+
+function renderCollectionFinancials() {
+  const d = collectionsFinancials;
+  if (!d) return;
+
+  const k = d.kpis;
+  const kpiHtml = [
+    kpiTileHtml('Original Debt', fmt(k.originalDebt), 'total contracted receivable'),
+    kpiTileHtml('Repaid to Date', fmt(k.repaidToDate), `${pct(k.repaidShare)} of original`),
+    kpiTileHtml('Open Loan Book', fmt(k.openLoanBook), 'principal outstanding'),
+    kpiTileHtml('Penalties Accrued', fmt(k.penaltiesAccrued), 'reported separately'),
+    kpiTileHtml('Total Open Debt', fmt(k.totalOpenDebt), `${fmt(k.activeLoans)} active loans`),
+  ].join('');
+  document.getElementById('collectionFinancialsKpis').innerHTML = kpiHtml;
+
+  const monthRows = d.collectionsByMonth.map(m =>
+    `<tr><td>${m.month}</td><td>${fmt(m.principal)}</td><td>${fmt(m.penalty)}</td><td>${fmt(m.principal + m.penalty)}</td></tr>`
+  ).join('');
+  const monthHtml = `<tr><th>Month</th><th>Principal (GEL)</th><th>Penalty (GEL)</th><th>Total (GEL)</th></tr>` + monthRows;
+  document.getElementById('collectionMonthlyTable').querySelector('tbody').innerHTML = monthHtml;
+
+  const bucketRows = d.loanLevelBuckets.map(b =>
+    `<tr><td>${b.bucket}</td><td>${fmt(b.loans)}</td><td>${pct(b.pctLoans)}</td><td>${fmt(b.principal)}</td><td>${fmt(b.penalties)}</td><td>${fmt(b.totalDebt)}</td><td>${pct(b.pctOfDebt)}</td></tr>`
+  ).join('');
+  const totalLoans = d.loanLevelBuckets.reduce((s, b) => s + b.loans, 0);
+  const totalDebt = d.loanLevelBuckets.reduce((s, b) => s + b.totalDebt, 0);
+  const bucketHtml = `<tr><th>Bucket (DPD)</th><th>Loans</th><th>% Loans</th><th>Principal (GEL)</th><th>Penalties (GEL)</th><th>Total Debt (GEL)</th><th>% of Debt</th></tr>`
+    + bucketRows
+    + `<tr class="total"><td>Total</td><td>${fmt(totalLoans)}</td><td>100.0%</td><td></td><td></td><td>${fmt(totalDebt)}</td><td>100.0%</td></tr>`;
+  document.getElementById('collectionLoanBucketsTable').querySelector('tbody').innerHTML = bucketHtml;
+}
+__onSection('collectionsFinancials', renderCollectionFinancials);
 
 function renderExCustomersTable(filterText) {
   const d = exCustomers;

@@ -21,6 +21,7 @@ require __DIR__ . '/../src/ProductClassifier.php';
 require __DIR__ . '/../src/PortfolioRepository.php';
 require __DIR__ . '/../src/IncomeDelinquencyRepository.php';
 require __DIR__ . '/../src/ExCustomerRepository.php';
+require __DIR__ . '/../src/CollectionsRepository.php';
 
 $configPath = __DIR__ . '/../config.php';
 if (!is_file($configPath)) {
@@ -75,6 +76,7 @@ $productClassifier = new ProductClassifier();
 $incomeDelinquencyRepository = new IncomeDelinquencyRepository($pdo);
 $portfolioRepository = new PortfolioRepository($pdo);
 $exCustomerRepository = new ExCustomerRepository($pdo);
+$collectionsRepository = new CollectionsRepository($pdo);
 
 /**
  * Each report, in the order it is streamed. Ordered cheapest-and-most-looked-at first, so the
@@ -92,6 +94,9 @@ $sections = [
     'closedLoansMonthly' => fn () => $portfolioRepository->closedLoansMonthly($monthlyFrom, $yesterdayTo),
     'riskSegmentation' => fn () => $portfolioRepository->riskSegmentation(),
     'delinquencyAnalysis' => fn () => $portfolioRepository->delinquencyAnalysis(),
+    'collectionsOverview' => fn () => $collectionsRepository->overviewKpis(),
+    'collectionsBuckets' => fn () => $collectionsRepository->delinquencyBucketsDistribution(),
+    'collectionsFinancials' => fn () => $collectionsRepository->financials(),
     'rejectionReasonsMonthly' => fn () => $portfolioRepository->reasonsByStatusMonthly($monthlyFrom, $yesterdayTo, 6),
     'clientRefusedReasonsMonthly' => fn () => $portfolioRepository->reasonsByStatusMonthly($monthlyFrom, $yesterdayTo, 12),
     'expiredReasonsMonthly' => fn () => $portfolioRepository->reasonsByStatusMonthly($monthlyFrom, $yesterdayTo, 13),
