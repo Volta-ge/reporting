@@ -110,9 +110,10 @@ $sections = [
     'customerIncomeAnalysis' => fn () => $portfolioRepository->customerIncomeAnalysis(),
     'customerDistrictAnalysis' => fn () => $portfolioRepository->customerDistrictAnalysis(),
     'neverBorrowedByStatus' => fn () => $exCustomerRepository->neverBorrowedByStatus(),
-    // Heaviest report on the page, and the one fewest people open — streamed last so it never
-    // holds up anything above it.
     'exCustomers' => fn () => $exCustomerRepository->exCustomers($productClassifier),
+    // Heaviest report on the page (26,781 rows) and the one fewest people open — streamed last
+    // so it never holds up anything above it.
+    'neverBorrowedDetail' => fn () => $exCustomerRepository->neverBorrowedDetail($productClassifier),
 ];
 
 // Ask nginx not to buffer this response, and make sure PHP holds nothing back either —

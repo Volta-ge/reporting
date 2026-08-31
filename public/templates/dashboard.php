@@ -144,11 +144,12 @@ body {
 .nav-group-title { font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-muted); padding: 3px 7px 6px; }
 .nav-group.active-group .nav-group-title { color: var(--text-primary); }
 .nav-group-items { display: flex; flex-direction: column; gap: 1px; }
-.nav-group-items button {
+.nav-group-items button, .nav-group-items a {
   border: none; background: transparent; color: var(--text-secondary); font: inherit; font-size: 12.5px; font-weight: 600;
   padding: 6px 9px; border-radius: 6px; cursor: pointer; text-align: left; white-space: nowrap;
+  text-decoration: none; display: block;
 }
-.nav-group-items button:hover { background: color-mix(in srgb, var(--text-primary) 6%, transparent); }
+.nav-group-items button:hover, .nav-group-items a:hover { background: color-mix(in srgb, var(--text-primary) 6%, transparent); }
 .nav-group-items button.active { background: var(--text-primary); color: var(--surface-1); }
 
 /* Ex Customers: the one individual-row (PII) table in this project — a plain wide table instead
@@ -353,6 +354,7 @@ table.rpt-pivot td.rpt-group-toggle { cursor: pointer; user-select: none; text-a
       <div class="nav-group-title">Logistics</div>
       <div class="nav-group-items">
         <button data-page="logistics">Logistics Daily</button>
+        <a href="https://volta-ge.github.io/reporting/waybills.html" target="_blank" rel="noopener">CRM Sales &harr; RS Waybills &#8599;</a>
       </div>
     </div>
     <div class="nav-group" data-group="customers">
@@ -697,6 +699,25 @@ table.rpt-pivot td.rpt-group-toggle { cursor: pointer; user-select: none; text-a
       </table>
     </div>
   </div>
+  <p class="section-title" style="margin-top:20px;">Never Became a Customer &mdash; full list</p>
+  <p class="note" style="margin:-8px 0 0;">Same ~26,500 people as the status breakdown above, now with contact detail &mdash; every application they ever submitted was rejected, refused, or expired before disbursement, so there's no closed-loan history to grade (no Grade/Collected %/Purchased/Written Off columns here, unlike the graded list above). <b>Products</b> = what they applied for/expressed interest in, not what they bought. Sorted by most recent application first.</p>
+  <div class="excust-search">
+    <input type="text" id="neverBorrowedSearch" placeholder="Search name, PID, phone, email, product…">
+    <span class="excust-search-count" id="neverBorrowedSearchCount"></span>
+  </div>
+  <div class="report-card">
+    <div class="report-scroll">
+      <table class="excust-table" id="neverBorrowedDetailTable">
+        <thead>
+          <tr>
+            <th>Name</th><th>PID</th><th>Phone</th><th>Email</th><th>City</th>
+            <th>Last Status</th><th>Last Application</th><th class="num">Applications</th><th>Products</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
 </div>
 
 <div class="page" id="page-risksegmentation">
@@ -828,6 +849,7 @@ var customerDistrictAnalysis = null;
 var riskSegmentation = null;
 var exCustomers = null;
 var neverBorrowedByStatus = null;
+var neverBorrowedDetail = null;
 var closedLoansMonthly = null;
 var delinquencyAnalysis = null;
 var rejectionReasonsMonthly = null;
@@ -1847,6 +1869,33 @@ function renderNeverBorrowedByStatus() {
   document.getElementById('neverBorrowedTable').querySelector('tbody').innerHTML = html;
 }
 __onSection('neverBorrowedByStatus', renderNeverBorrowedByStatus);
+
+function renderNeverBorrowedDetailTable(filterText) {
+  const d = neverBorrowedDetail;
+  const table = document.getElementById('neverBorrowedDetailTable');
+  if (!d || !d.rows) {
+    table.querySelector('tbody').innerHTML = '<tr><td>No data.</td></tr>';
+    return;
+  }
+  const needle = (filterText || '').trim().toLowerCase();
+  const rows = needle
+    ? d.rows.filter(r => `${r.name} ${r.pid} ${r.phone} ${r.email} ${r.products}`.toLowerCase().includes(needle))
+    : d.rows;
+
+  const html = rows.map(r => `<tr>
+    <td>${r.name}</td><td>${r.pid}</td><td>${r.phone}</td><td>${r.email}</td><td>${r.city}</td>
+    <td>${r.lastStatus}</td><td>${r.lastAppDate || '&ndash;'}</td>
+    <td class="num">${fmt(r.appCount)}</td><td class="products-cell">${r.products}</td>
+  </tr>`).join('');
+  table.querySelector('tbody').innerHTML = html || '<tr><td colspan="9">No matches.</td></tr>';
+
+  const countEl = document.getElementById('neverBorrowedSearchCount');
+  if (countEl) countEl.textContent = needle ? `${rows.length} of ${d.rows.length}` : `${d.rows.length} customers`;
+}
+__onSection('neverBorrowedDetail', () => {
+  renderNeverBorrowedDetailTable('');
+  document.getElementById('neverBorrowedSearch').addEventListener('input', e => renderNeverBorrowedDetailTable(e.target.value));
+});
 
 function renderExCustomersTable(filterText) {
   const d = exCustomers;
