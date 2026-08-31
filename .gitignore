@@ -1,3 +1,4 @@
 config.php
 data/
 access_permissions.json
+volta-waybills/geo_cache.json
