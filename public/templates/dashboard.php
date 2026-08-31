@@ -169,11 +169,12 @@ body {
 .nav-group-title { font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-muted); padding: 3px 7px 6px; }
 .nav-group.active-group .nav-group-title { color: var(--text-primary); }
 .nav-group-items { display: flex; flex-direction: column; gap: 1px; }
-.nav-group-items button {
+.nav-group-items button, .nav-group-items a {
   border: none; background: transparent; color: var(--text-secondary); font: inherit; font-size: 12.5px; font-weight: 600;
   padding: 6px 9px; border-radius: 6px; cursor: pointer; text-align: left; white-space: nowrap;
+  text-decoration: none; display: block;
 }
-.nav-group-items button:hover { background: color-mix(in srgb, var(--text-primary) 6%, transparent); }
+.nav-group-items button:hover, .nav-group-items a:hover { background: color-mix(in srgb, var(--text-primary) 6%, transparent); }
 .nav-group-items button.active { background: var(--text-primary); color: var(--surface-1); }
 
 /* Ex Customers: the one individual-row (PII) table in this project — a plain wide table instead
@@ -362,6 +363,7 @@ table.rpt-pivot td.rpt-group-toggle { cursor: pointer; user-select: none; text-a
       <div class="nav-group-title">Logistics</div>
       <div class="nav-group-items">
         <button data-page="logistics">Logistics Daily</button>
+        <a href="https://volta-ge.github.io/reporting/waybills.html" target="_blank" rel="noopener">CRM Sales &harr; RS Waybills &#8599;</a>
       </div>
     </div>
     <div class="nav-group" data-group="customers">
