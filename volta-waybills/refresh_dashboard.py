@@ -29,11 +29,15 @@ from zeep import Client
 HERE = Path(__file__).resolve().parent
 GEOCODE_CACHE_PATH = HERE / "geo_cache.json"
 NOMINATIM_USER_AGENT = "VoltaGroupInternalReporting/1.0 (contact: vano.zazadze@gmail.com)"
-# Per-run cap on brand-new Nominatim lookups (cache misses) — bounds worst-case
-# daily runtime to a few minutes even if many new addresses show up in one
-# day. Anything over the cap keeps its keyword-only classification and gets
-# picked up on a later run once it's in the cache-miss queue again.
-GEOCODE_MAX_NEW_PER_RUN = 500
+# Live Nominatim lookups are OFF by default (2026-08-31: too slow/costly for
+# the daily pipeline per explicit user request — a 1,400+ address backfill at
+# Nominatim's mandatory 1 req/sec ate 30+ minutes of session time twice in a
+# row). geo_cache.json is kept and still consulted (cache hits are free,
+# instant, no network) — only brand-new lookups are capped to 0 so no waybill
+# ever triggers a live network call during a normal run. Bump this back up
+# (and rerun backfill_geocode.py directly, not through the daily pipeline) if
+# a future session decides the tradeoff is worth it again.
+GEOCODE_MAX_NEW_PER_RUN = 0
 sys.path.insert(0, str(HERE))
 try:
     from config import SU, SP, INVOICE_USER_ID, INVOICE_UN_ID, DB_HOST, DB_PORT, DB_USER, DB_PASS, DB_NAME
@@ -116,6 +120,46 @@ REGIONAL_CITY_KEYWORDS = [
     "წნორი", "ქარელი", "მაღლაკი", "ურეკი", "სურამი",
 ]
 
+# Street-level fallback, checked only when the address already explicitly
+# says "თბილისი" (so there's zero risk of misattributing a same-named street
+# in a different town — a real concern for common street names, which is
+# exactly why this tier is NOT applied to addresses with no city mentioned at
+# all). Two sources, kept together deliberately: (1) live-geocoded ground
+# truth gathered 2026-08-31 while testing OpenStreetMap/Nominatim before that
+# approach was dropped as too slow/costly for routine use — these are REAL
+# confirmed results, not guesses, pulled from addresses that already said
+# "თბილისი" and got geocoded successfully; (2) a short list of well-known
+# single-district avenues added from general knowledge, kept deliberately
+# small — long avenues that cross multiple districts (გურამიშვილის გამზირი,
+# აღმაშენებლის გამზირი/ხეივანი, კოსტავას) were tested/considered and
+# EXCLUDED on purpose after confirming via real geocode results that they
+# don't resolve to one consistent district. Extend this list only with
+# streets you're genuinely confident are confined to one district — a wrong
+# entry here is worse than leaving an address in "სხვა რაიონი".
+TBILISI_STREET_KEYWORDS = [
+    # confirmed via live geocoding (2026-08-31)
+    ("არაყიშვილის", "ვაკე"),
+    ("ჭავჭავაძის გამზირი", "ვაკე"),
+    ("ალექსანდრე გრიბოედოვის", "სოლოლაკი"),
+    ("ნინოშვილის", "ჩუღურეთი"),
+    ("ცოტნე დადიანის", "ჩუღურეთი"),
+    ("პეტრე ბაგრატიონის", "ჩუღურეთი"),
+    ("წერეთლის", "დიდუბე"),
+    ("ვლადიმერ ჯანჯღავას", "გლდანი"),
+    ("რეზო გაბაშვილის", "მუხიანი"),
+    ("გახოკიძის", "ისანი-სამგორი"),
+    ("ბერი გაბრიელ სალოსის", "ისანი-სამგორი"),
+    ("ჯაფარიძის", "ვერა"),
+    ("ბოგვის ქუჩა", "ნაძალადევი"),
+    ("გვაზაურის ხევი", "ნაძალადევი"),
+    # well-known single-district avenues (general knowledge, not geocoded)
+    ("ვაჟა-ფშაველას გამზირი", "საბურთალო"),
+    ("ვაჟა ფშაველას გამზირი", "საბურთალო"),
+    ("პეკინის გამზირი", "საბურთალო"),
+    ("რუსთაველის გამზირი", "მთაწმინდა"),
+    ("პუშკინის", "მთაწმინდა"),
+]
+
 
 def classify_address(addr):
     """Returns (kind, canonical_name) where kind is 'tbilisi', 'region',
@@ -126,6 +170,9 @@ def classify_address(addr):
         if re.search(r'(?<!\w)' + re.escape(kw), addr):
             return ("tbilisi", canon)
     if "თბილის" in addr:
+        for kw, canon in TBILISI_STREET_KEYWORDS:
+            if re.search(r'(?<!\w)' + re.escape(kw), addr):
+                return ("tbilisi", canon)
         return ("tbilisi", "სხვა რაიონი")
     for city in REGIONAL_CITY_KEYWORDS:
         if re.search(r'(?<!\w)' + re.escape(city), addr):
@@ -143,6 +190,26 @@ def save_geocode_cache(cache):
     GEOCODE_CACHE_PATH.write_text(
         json.dumps(cache, ensure_ascii=False, indent=1, sort_keys=True), encoding="utf-8"
     )
+
+
+UNIT_MARKER_RE = re.compile(r'(ბინა|სართ|სადარბაზო|კორპ|ოთახ)')
+
+
+def clean_for_geocoding(addr):
+    """Strips the apartment/floor/entrance/corpus tail (ბინა 41, სართ.3,
+    კორპუსი 2, etc.) and '#' characters before a house number — both
+    confuse Nominatim's parser into returning zero results even when the
+    street+number alone resolves cleanly. Found by testing directly: e.g.
+    "არაყიშვილის 3, ბინა 2" → nothing, "არაყიშვილის 3" → a clean match one
+    street over. These unit-level details never affect which
+    city/district an address is in anyway, so dropping them costs nothing
+    here."""
+    cleaned = addr.replace("#", " ")
+    m = UNIT_MARKER_RE.search(cleaned)
+    if m:
+        cleaned = cleaned[:m.start()]
+    cleaned = cleaned.rstrip(" ,.")
+    return cleaned or addr
 
 
 def geocode_locality(addr, hint_tbilisi):
@@ -165,6 +232,7 @@ def geocode_locality(addr, hint_tbilisi):
     follows it. Passing the address unchanged avoids that. For the no-known-
     city ("other") case there's no such conflict, and the country suffix
     genuinely helps disambiguate an otherwise bare street name."""
+    addr = clean_for_geocoding(addr)
     query = addr if hint_tbilisi else addr + ", საქართველო"
     params = {"q": query, "format": "jsonv2", "addressdetails": 1, "accept-language": "ka,en", "limit": 1}
     url = "https://nominatim.openstreetmap.org/search?" + urllib.parse.urlencode(params)
