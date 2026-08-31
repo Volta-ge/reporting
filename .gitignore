@@ -2,3 +2,5 @@ config.php
 data/
 access_permissions.json
 volta-waybills/geo_cache.json
+volta-waybills/logistics_status_by_case.json
+volta-waybills/volta_order_management.xlsx

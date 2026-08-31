@@ -1452,7 +1452,7 @@ function drawTrend(svg, buckets, keys){
       const salesHtml = p.sales.length ? p.sales.map(s=>
         "<div class='person-row"+(s.matched?" is-matched":"")+"'>"+
           "<span class='pd'><span class='person-dot' style='background:"+(s.matched?"var(--success)":"var(--danger)")+"'></span>"+fmtDateOnly(s.d)+"</span>"+
-          "<span class='pp' title='"+t("caseIdLabel")+" "+escapeHtml(String(s.id))+"'><span class='num' style='color:var(--faint);margin-right:6px;'>#"+escapeHtml(String(s.id))+"</span>"+escapeHtml(s.prod)+"</span>"+
+          "<span class='pp' title='"+t("caseIdLabel")+" "+escapeHtml(String(s.id))+"'><span class='num' style='color:var(--faint);margin-right:6px;'>#"+escapeHtml(String(s.id))+"</span>"+escapeHtml(s.prod)+(s.logi?" &middot; <span class='num' style='color:var(--muted);'>"+escapeHtml(s.logi)+"</span>":"")+"</span>"+
           "<span class='pa'>"+fmtGel(s.a)+"</span>"+
         "</div>"
       ).join("") : "<div class='person-row'><span class='pp' style='color:var(--faint)'>"+t("noSalesInPeriod")+"</span></div>";

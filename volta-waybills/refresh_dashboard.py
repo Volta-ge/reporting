@@ -542,7 +542,23 @@ def fetch_goods_names_bulk(waybill_ids, max_workers=25):
     return cache
 
 
-def build_reconciliation(crm_rows, waybill_raw):
+LOGISTICS_STATUS_PATH = HERE / "logistics_status_by_case.json"
+
+
+def load_logistics_status():
+    """Case_id (== CRM Instalment_ID) -> logistics status, manually extracted
+    from the "შეკვეთები" sheet of the separate Volta Order Management Google
+    Sheet (see extract_logistics_status.py) — NOT a live connection, this
+    file is a point-in-time snapshot refreshed by re-running that script
+    whenever a fresh pull is needed. Missing file just means no logistics
+    data is shown, not a pipeline error."""
+    if not LOGISTICS_STATUS_PATH.is_file():
+        return {}
+    return json.loads(LOGISTICS_STATUS_PATH.read_text(encoding="utf-8"))
+
+
+def build_reconciliation(crm_rows, waybill_raw, logistics_status=None):
+    logistics_status = logistics_status or {}
     """
     Per-PID bipartite match: each CRM sale is paired with at most one
     waybill on the same buyer TIN, within RECON_DATE_TOL_DAYS days and a
@@ -691,6 +707,7 @@ def build_reconciliation(crm_rows, waybill_raw):
                     "a": float(c["Full_Cost"]),
                     "mgr": c.get("Manager_Name") or "—",
                     "matched": ci in used_ci,
+                    "logi": logistics_status.get(str(c["Instalment_ID"])),
                 }
                 for ci, c in enumerate(sales)
             ],
@@ -1103,7 +1120,9 @@ def main():
     crm_rows = fetch_crm_sales()
     print(f"CRM sales (Order_Status=5, Product_ID>1): {len(crm_rows)}", file=sys.stderr)
 
-    recon = build_reconciliation(crm_rows, raw_wb)
+    logistics_status = load_logistics_status()
+    print(f"logistics status snapshot: {len(logistics_status)} case_ids", file=sys.stderr)
+    recon = build_reconciliation(crm_rows, raw_wb, logistics_status)
     s = recon["summary"]
     print(f"reconciliation (person-level): matched {s['matchedPeople']}, "
           f"missing waybill {s['missingWbPeople']} people ({s['riskAmountWb']:.0f} GEL), "
