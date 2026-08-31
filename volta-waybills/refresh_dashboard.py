@@ -11,6 +11,9 @@ files volta_rsge_api.md / volta_waybill_dashboard.md.
 import json
 import re
 import sys
+import time
+import urllib.parse
+import urllib.request
 from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime
@@ -24,6 +27,13 @@ from openpyxl.utils import get_column_letter
 from zeep import Client
 
 HERE = Path(__file__).resolve().parent
+GEOCODE_CACHE_PATH = HERE / "geo_cache.json"
+NOMINATIM_USER_AGENT = "VoltaGroupInternalReporting/1.0 (contact: vano.zazadze@gmail.com)"
+# Per-run cap on brand-new Nominatim lookups (cache misses) — bounds worst-case
+# daily runtime to a few minutes even if many new addresses show up in one
+# day. Anything over the cap keeps its keyword-only classification and gets
+# picked up on a later run once it's in the cache-miss queue again.
+GEOCODE_MAX_NEW_PER_RUN = 500
 sys.path.insert(0, str(HERE))
 try:
     from config import SU, SP, INVOICE_USER_ID, INVOICE_UN_ID, DB_HOST, DB_PORT, DB_USER, DB_PASS, DB_NAME
@@ -55,7 +65,6 @@ RECON_DATE_TOL_DAYS = 45
 TBILISI_DISTRICT_KEYWORDS = [
     ("ვაკე", "ვაკე"),
     ("საბურთალო", "საბურთალო"),
-    ("სანზონა", "საბურთალო"),
     ("ვერა", "ვერა"),
     ("სოლოლაკი", "სოლოლაკი"),
     ("მთაწმინდა", "მთაწმინდა"),
@@ -124,30 +133,140 @@ def classify_address(addr):
     return ("other", None)
 
 
+def load_geocode_cache():
+    if GEOCODE_CACHE_PATH.is_file():
+        return json.loads(GEOCODE_CACHE_PATH.read_text(encoding="utf-8"))
+    return {}
+
+
+def save_geocode_cache(cache):
+    GEOCODE_CACHE_PATH.write_text(
+        json.dumps(cache, ensure_ascii=False, indent=1, sort_keys=True), encoding="utf-8"
+    )
+
+
+def geocode_locality(addr, hint_tbilisi):
+    """One live Nominatim (OpenStreetMap) lookup for a single address string.
+    Returns a locality string built from the most specific fields available
+    (neighbourhood/quarter beat the official city_district/suburb — this is
+    what lets a colloquial name like "ვარკეთილი" surface instead of only the
+    coarser official "ისანი-სამგორის რაიონი"), or None if nothing was found.
+    Caller is responsible for rate-limiting between calls.
+
+    `hint_tbilisi` controls whether a ", საქართველო" (Georgia) suffix is
+    appended. Counterintuitively, addresses that already contain "თბილისი"
+    (which is every address reaching this function with hint_tbilisi=True —
+    that substring is exactly why classify_address() flagged it "tbilisi,
+    unknown district") parse WORSE with the suffix appended: found by
+    testing directly against Nominatim — a "ქ. თბილისი, [street]" address
+    that resolved correctly on its own returned zero results once
+    ", საქართველო" was tacked onto the end, apparently because a city name
+    appearing before the street confuses the parser when a country token
+    follows it. Passing the address unchanged avoids that. For the no-known-
+    city ("other") case there's no such conflict, and the country suffix
+    genuinely helps disambiguate an otherwise bare street name."""
+    query = addr if hint_tbilisi else addr + ", საქართველო"
+    params = {"q": query, "format": "jsonv2", "addressdetails": 1, "accept-language": "ka,en", "limit": 1}
+    url = "https://nominatim.openstreetmap.org/search?" + urllib.parse.urlencode(params)
+    req = urllib.request.Request(url, headers={"User-Agent": NOMINATIM_USER_AGENT})
+    with urllib.request.urlopen(req, timeout=15) as resp:
+        results = json.loads(resp.read().decode("utf-8"))
+    if not results:
+        return None
+    a = results[0].get("address", {})
+    parts = [a.get(k) for k in (
+        "neighbourhood", "quarter", "suburb", "city_district",
+        "city", "town", "village", "municipality",
+    )]
+    locality = " ".join(p for p in parts if p)
+    return locality or None
+
+
+def resolve_ambiguous_addresses(addr_texts, cache):
+    """For addresses that plain keyword-matching couldn't place (Tbilisi-but-
+    unknown-district, or no recognized city at all), try OpenStreetMap
+    geocoding — real map data beats guessing from an LLM's general knowledge
+    of Tbilisi street names, which is exactly the kind of thing that's often
+    subtly wrong and unverifiable at scale. Persistent JSON cache means only
+    genuinely new addresses ever hit the network on subsequent daily runs.
+    Returns {addr_text: (kind, canon)} for entries a geocode lookup actually
+    improved on — callers should fall back to the original classification for
+    anything not in the returned dict."""
+    resolved = {}
+    new_lookups = 0
+    dirty = False
+    for addr, hint_tbilisi in addr_texts:
+        if addr in cache:
+            locality = cache[addr]
+        else:
+            if new_lookups >= GEOCODE_MAX_NEW_PER_RUN:
+                continue
+            try:
+                locality = geocode_locality(addr, hint_tbilisi)
+            except Exception as e:
+                print(f"  geocode failed for {addr!r}: {e}", file=sys.stderr)
+                continue  # transient failure — not cached, retried next run
+            cache[addr] = locality
+            dirty = True
+            new_lookups += 1
+            # A full backfill can be thousands of requests at 1/sec (an hour
+            # or more) — save every 25 so an interruption partway through
+            # doesn't throw away everything geocoded so far.
+            if new_lookups % 25 == 0:
+                save_geocode_cache(cache)
+                print(f"  ...{new_lookups} geocoded so far", file=sys.stderr)
+            time.sleep(1.1)  # Nominatim usage policy: max 1 request/second
+        if locality:
+            kind, canon = classify_address(locality)
+            if kind in ("tbilisi", "region"):
+                resolved[addr] = (kind, canon)
+    if dirty:
+        save_geocode_cache(cache)
+    if new_lookups:
+        print(f"  geocoded {new_lookups} new addresses via Nominatim", file=sys.stderr)
+    return resolved
+
+
 def build_geo_summary(wb_rows):
     """Aggregates delivery-address geography across all non-cancelled
     waybills (STATUS=-2 excluded — a cancelled waybill never delivered
     anywhere). Returns are kept (their address was still a real delivery
     destination before the return), so amounts are signed the same way as
     everywhere else in this pipeline (return amounts already negated in
-    build_waybill_rows)."""
+    build_waybill_rows).
+
+    Two-pass classification: plain keyword matching first (fast, no
+    network), then anything that landed as "Tbilisi but unknown district" or
+    "has an address but no recognized city at all" gets a second attempt via
+    live OpenStreetMap geocoding (see resolve_ambiguous_addresses) — real map
+    data instead of guessing street-to-district mappings from memory."""
+    live_rows = [r for r in wb_rows if r.get("s") != "-2"]
+    first_pass = [(r, classify_address(r.get("e") or "")) for r in live_rows]
+
+    ambiguous_addrs = {}
+    for r, (kind, canon) in first_pass:
+        if (kind == "tbilisi" and canon == "სხვა რაიონი") or kind == "other":
+            ambiguous_addrs[r.get("e") or ""] = (kind == "tbilisi")
+    cache = load_geocode_cache()
+    resolved = resolve_ambiguous_addresses(list(ambiguous_addrs.items()), cache)
+
     tbilisi = defaultdict(lambda: {"count": 0, "amount": 0.0})
     regions = defaultdict(lambda: {"count": 0, "amount": 0.0})
     # Split "couldn't classify" into two honest buckets: no address recorded
     # at all (nothing to classify — most of this bucket in practice) vs. an
     # address that IS present but doesn't mention a recognized city/district
-    # (a genuine classifier gap).
+    # even after the geocoding pass (a genuine gap).
     no_address_count = 0
     no_address_amount = 0.0
     other_count = 0
     other_amount = 0.0
     total = 0
-    for r in wb_rows:
-        if r.get("s") == "-2":
-            continue
+    for r, (kind, canon) in first_pass:
         total += 1
-        kind, canon = classify_address(r.get("e") or "")
         amt = r.get("a") or 0.0
+        addr = r.get("e") or ""
+        if addr in resolved:
+            kind, canon = resolved[addr]
         if kind == "tbilisi":
             tbilisi[canon]["count"] += 1
             tbilisi[canon]["amount"] += amt
