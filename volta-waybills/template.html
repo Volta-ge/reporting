@@ -259,6 +259,16 @@
   .barlist-fill{ height:100%; border-radius:1px; }
   .barlist-val{ text-align:right; font-size:12px; color:var(--muted); }
 
+  /* ---------- Geography tab ---------- */
+  .geo-grid{ display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+  .geo-list{ display:flex; flex-direction:column; gap:9px; max-height:520px; overflow-y:auto; }
+  .geo-row{ display:grid; grid-template-columns:140px 1fr 56px 96px; gap:10px; align-items:center; }
+  .geo-name{ font-size:12.5px; color:var(--ink); }
+  .geo-track{ background:var(--surface-2); border-radius:2px; height:10px; overflow:hidden; border:1px solid var(--line); }
+  .geo-fill{ height:100%; border-radius:1px; background:var(--accent); }
+  .geo-count{ text-align:right; font-size:12px; color:var(--muted); }
+  .geo-amt{ text-align:right; font-size:11.5px; color:var(--muted); }
+
   /* ---------- Trend chart ---------- */
   .trend-legend{ display:flex; gap:16px; font-size:12px; color:var(--muted); margin-bottom:6px; }
   .legend-dot{ display:inline-block; width:9px; height:9px; border-radius:2px; margin-right:6px; vertical-align:middle; }
@@ -359,6 +369,8 @@
   @media (max-width:640px){
     .kpis, .kpis-5{ grid-template-columns:1fr 1fr; }
     .barlist-row{ grid-template-columns:90px 1fr 50px; }
+    .geo-grid{ grid-template-columns:1fr; }
+    .geo-row{ grid-template-columns:90px 1fr 40px 70px; }
   }
 </style>
 
@@ -373,6 +385,7 @@
       <button class="tabbtn active" data-tab="recon">გაყიდვა ↔ ზედნადები</button>
       <button class="tabbtn" data-tab="wb">ზედნადებები</button>
       <button class="tabbtn" data-tab="inv">ანგარიშ-ფაქტურები</button>
+      <button class="tabbtn" data-tab="geo">გეოგრაფია</button>
     </div>
   </div>
 
@@ -568,12 +581,45 @@
     <footer><span>წყარო: myvolta.info CRM (instalments, Order_Status=5) &middot; RS.ge WayBillService</span><span id="reconGenStamp">—</span></footer>
   </div>
 
+  <!-- ======================= GEOGRAPHY TAB ======================= -->
+  <div class="tabpanel" id="tab-geo">
+
+    <div class="subhead">
+      <div class="brand-block">
+        <div class="subline" id="geoRangeSubline">—</div>
+        <div class="subline" style="font-size:11.5px;opacity:0.75;">კლასიფიკაცია ეფუძნება მისამართის თავისუფალ ტექსტში ქალაქის/რაიონის სახელის ძებნას — არაზუსტი მისამართის ან მხოლოდ ქუჩის სახელის შემთხვევაში ხვდება „დაუზუსტებელი" ჯგუფში, სულაც არ ნიშნავს რომ პროდუქტი ვერ მიაწოდეს</div>
+      </div>
+    </div>
+
+    <div class="kpis kpis-5">
+      <div class="kpi"><span class="kpi-label">სულ ზედნადები</span><span class="kpi-value num" id="geoKpiTotal">—</span><span class="kpi-sub" id="geoKpiTotalSub">&nbsp;</span></div>
+      <div class="kpi"><span class="kpi-label">თბილისი</span><span class="kpi-value num" id="geoKpiTbilisi">—</span><span class="kpi-sub" id="geoKpiTbilisiSub">&nbsp;</span></div>
+      <div class="kpi"><span class="kpi-label">რეგიონები</span><span class="kpi-value num" id="geoKpiRegions">—</span><span class="kpi-sub" id="geoKpiRegionsSub">&nbsp;</span></div>
+      <div class="kpi"><span class="kpi-label">მისამართის გარეშე</span><span class="kpi-value num" id="geoKpiNoAddr">—</span><span class="kpi-sub" id="geoKpiNoAddrSub">&nbsp;</span></div>
+      <div class="kpi"><span class="kpi-label">დაუზუსტებელი</span><span class="kpi-value num" id="geoKpiOther">—</span><span class="kpi-sub" id="geoKpiOtherSub">&nbsp;</span></div>
+    </div>
+
+    <div class="geo-grid">
+      <div class="panel">
+        <div class="panel-head"><span class="panel-title">რეგიონები (თბილისის გარეთ)</span><span class="panel-note">ზედნადებების რაოდენობა &amp; თანხა</span></div>
+        <div class="geo-list" id="geoRegionsList"></div>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><span class="panel-title">თბილისი — უბნების მიხედვით</span><span class="panel-note">ზედნადებების რაოდენობა &amp; თანხა</span></div>
+        <div class="geo-list" id="geoTbilisiList"></div>
+      </div>
+    </div>
+
+    <footer><span>წყარო: შემოსავლების სამსახური &middot; ელექტრონული ზედნადებების სერვისი (RS.ge WayBillService, END_ADDRESS)</span><span id="geoGenStamp">—</span></footer>
+  </div>
+
 </div>
 
 <script>
 const RAW_WB = __DATA_WB__;
 const RAW_INV = __DATA_INV__;
 const RAW_RECON = __DATA_RECON__;
+const RAW_GEO = __DATA_GEO__;
 
 /* ---------- shared helpers ---------- */
 const GE_MONTHS = ["იანვარი","თებერვალი","მარტი","აპრილი","მაისი","ივნისი","ივლისი","აგვისტო","სექტემბერი","ოქტომბერი","ნოემბერი","დეკემბერი"];
@@ -1268,6 +1314,48 @@ function drawTrend(svg, buckets, keys){
   });
 
   applyFilters();
+})();
+
+/* ---------- GEOGRAPHY TAB ---------- */
+(function(){
+  function renderGeoList(containerId, items, totalForShare){
+    const el = document.getElementById(containerId);
+    if (!items.length){
+      el.innerHTML = "<div class='geo-row' style='grid-template-columns:1fr'><span class='geo-name' style='color:var(--faint)'>მონაცემი არ არის</span></div>";
+      return;
+    }
+    const max = items[0].count;
+    el.innerHTML = items.map(it=>
+      "<div class='geo-row'>"+
+        "<span class='geo-name'>"+escapeHtml(it.name)+"</span>"+
+        "<span class='geo-track'><span class='geo-fill' style='width:"+(it.count/max*100)+"%'></span></span>"+
+        "<span class='geo-count num'>"+fmtInt(it.count)+"</span>"+
+        "<span class='geo-amt num'>"+fmtGel(it.amount)+"</span>"+
+      "</div>"
+    ).join("");
+  }
+
+  const geo = RAW_GEO;
+  const classified = geo.tbilisiTotal + geo.regionsTotal;
+  const unclassified = geo.noAddressCount + geo.otherCount;
+
+  document.getElementById("geoKpiTotal").textContent = fmtInt(geo.total);
+  document.getElementById("geoKpiTotalSub").textContent = "ზედნადები (გაუქმებულის გარეშე)";
+  document.getElementById("geoKpiTbilisi").textContent = fmtInt(geo.tbilisiTotal);
+  document.getElementById("geoKpiTbilisiSub").textContent = geo.total ? (geo.tbilisiTotal/geo.total*100).toFixed(1)+"% სულიდან" : " ";
+  document.getElementById("geoKpiRegions").textContent = fmtInt(geo.regionsTotal);
+  document.getElementById("geoKpiRegionsSub").textContent = geo.total ? (geo.regionsTotal/geo.total*100).toFixed(1)+"% სულიდან" : " ";
+  document.getElementById("geoKpiNoAddr").textContent = fmtInt(geo.noAddressCount);
+  document.getElementById("geoKpiNoAddrSub").textContent = geo.total ? (geo.noAddressCount/geo.total*100).toFixed(1)+"% სულიდან · მისამართი საერთოდ არ ჩაწერილა" : " ";
+  document.getElementById("geoKpiOther").textContent = fmtInt(geo.otherCount);
+  document.getElementById("geoKpiOtherSub").textContent = geo.total ? (geo.otherCount/geo.total*100).toFixed(1)+"% სულიდან · მისამართია, მაგრამ ქალაქი/რაიონი ვერ ამოიცნო" : " ";
+
+  renderGeoList("geoRegionsList", geo.regions);
+  renderGeoList("geoTbilisiList", geo.tbilisi);
+
+  document.getElementById("geoRangeSubline").textContent =
+    fmtInt(geo.total) + " ზედნადები შემოწმებული (გაუქმებულის გარეშე) · " + fmtInt(classified) + " კლასიფიცირებული, " + fmtInt(unclassified) + " დაუზუსტებელი";
+  document.getElementById("geoGenStamp").textContent = "გენერირებულია: " + fmtDateTime(new Date().toISOString());
 })();
 
 /* ---------- tab switching ---------- */

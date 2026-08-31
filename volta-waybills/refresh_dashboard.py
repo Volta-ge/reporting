@@ -9,6 +9,7 @@ Credentials and field-mapping quirks are documented in the Claude memory
 files volta_rsge_api.md / volta_waybill_dashboard.md.
 """
 import json
+import re
 import sys
 from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -36,6 +37,149 @@ INVOICE_ENDPOINT = "https://www.revenue.mof.ge/ntosservice/ntosservice.asmx"
 START = datetime(2025, 9, 1)
 
 RECON_DATE_TOL_DAYS = 45
+
+# Best-effort geographic classification of each waybill's free-text delivery
+# address (END_ADDRESS from RS.ge — courier-entered, no fixed format, no
+# separate city/district field). Keyword lists below were tuned against a
+# real sample of ~5,800 unique addresses (2026-08-27): plain substring
+# matching on full city names already covers ~90%; the remainder is mostly
+# either a bare street name with no city/district mention at all (very
+# common for Tbilisi buyers, who often don't bother naming the city), or a
+# village name with no larger municipality mentioned — neither is
+# recoverable without a full address-to-municipality gazetteer, which is out
+# of scope. Those fall into an honest "unclassified" bucket rather than
+# being guessed into Tbilisi. `(?<!\w)` (a negative lookbehind, not a full
+# \b) is used before each keyword so a match can't start mid-word — this
+# matters for short names like "ონი" (Oni) that would otherwise trigger
+# inside unrelated words.
+TBILISI_DISTRICT_KEYWORDS = [
+    ("ვაკე", "ვაკე"),
+    ("საბურთალო", "საბურთალო"),
+    ("სანზონა", "საბურთალო"),
+    ("ვერა", "ვერა"),
+    ("სოლოლაკი", "სოლოლაკი"),
+    ("მთაწმინდა", "მთაწმინდა"),
+    ("ჩუღურეთი", "ჩუღურეთი"),
+    ("ნახალოვკა", "ჩუღურეთი"),
+    ("კუკია", "ჩუღურეთი"),
+    ("დიდუბე", "დიდუბე"),
+    ("ნაძალადევი", "ნაძალადევი"),
+    ("გლდანულა", "გლდანი"),
+    ("გლდან", "გლდანი"),
+    ("თემქა", "თემქა"),
+    ("ზაჰესი", "ზაჰესი"),
+    ("ავჭალა", "ავჭალა"),
+    ("დიდი დიღომი", "დიდი დიღომი"),
+    ("დიღმის", "დიღომი"),
+    ("დიღომი", "დიღომი"),
+    ("ვაშლიჯვარი", "ვაშლიჯვარი"),
+    ("ნუცუბიძ", "ნუცუბიძის ფერდობი"),
+    ("ოქროყანა", "ნუცუბიძის ფერდობი"),
+    ("დელისი", "დელისი"),
+    ("ვაზისუბ", "ვაზისუბანი"),
+    ("სამგორი", "ისანი-სამგორი"),
+    ("ისანი", "ისანი-სამგორი"),
+    ("ავლაბარი", "ავლაბარი"),
+    ("ორთაჭალა", "ორთაჭალა"),
+    ("ფონიჭალა", "ფონიჭალა"),
+    ("ლილო", "ლილო"),
+    ("ვარკეთილი", "ვარკეთილი"),
+    ("აფრიკა", "ვარკეთილი-აფრიკა"),
+    ("მუხიანი", "მუხიანი"),
+    ("კრწანისი", "კრწანისი"),
+    ("წყნეთი", "წყნეთი"),
+    ("ლოტკინი", "ლოტკინი"),
+    ("ზღვის უბანი", "ზღვის უბანი"),
+    ("გლდანი", "გლდანი"),
+]
+
+REGIONAL_CITY_KEYWORDS = [
+    "ბათუმი", "ქუთაისი", "ზუგდიდი", "რუსთავი", "გორი", "ფოთი", "ხაშური",
+    "სამტრედია", "წყალტუბო", "ოზურგეთი", "ზესტაფონი", "თელავი", "მარნეული",
+    "საგარეჯო", "ახალციხე", "ახალქალაქი", "ბორჯომი", "გურჯაანი", "სენაკი",
+    "წალენჯიხა", "ცაგერი", "ამბროლაური", "მესტია", "ლანჩხუთი", "ჩოხატაური",
+    "ხობი", "აბაშა", "ვანი", "ბაღდათი", "ხონი", "თერჯოლა", "საჩხერე",
+    "ჭიათურა", "კასპი", "მცხეთა", "დუშეთი", "თიანეთი", "ყვარელი", "ლაგოდეხი",
+    "სიღნაღი", "დედოფლისწყარო", "ხელვაჩაური", "ქობულეთი", "შუახევი", "ხულო",
+    "ქედა", "გარდაბანი", "წალკა", "დმანისი", "ბოლნისი", "თეთრიწყარო",
+    "ასპინძა", "ადიგენი", "ონი", "ლენტეხი", "ტყიბული", "ხარაგაული",
+    "გუდაური", "სტეფანწმინდა", "ყაზბეგი", "ცხინვალი", "ჩხოროწყუ", "მარტვილი",
+    "წნორი", "ქარელი", "მაღლაკი", "ურეკი", "სურამი",
+]
+
+
+def classify_address(addr):
+    """Returns (kind, canonical_name) where kind is 'tbilisi', 'region',
+    'empty', or 'other' (non-empty but no recognized city/district)."""
+    if not addr or not addr.strip():
+        return ("empty", None)
+    for kw, canon in TBILISI_DISTRICT_KEYWORDS:
+        if re.search(r'(?<!\w)' + re.escape(kw), addr):
+            return ("tbilisi", canon)
+    if "თბილის" in addr:
+        return ("tbilisi", "სხვა რაიონი")
+    for city in REGIONAL_CITY_KEYWORDS:
+        if re.search(r'(?<!\w)' + re.escape(city), addr):
+            return ("region", city)
+    return ("other", None)
+
+
+def build_geo_summary(wb_rows):
+    """Aggregates delivery-address geography across all non-cancelled
+    waybills (STATUS=-2 excluded — a cancelled waybill never delivered
+    anywhere). Returns are kept (their address was still a real delivery
+    destination before the return), so amounts are signed the same way as
+    everywhere else in this pipeline (return amounts already negated in
+    build_waybill_rows)."""
+    tbilisi = defaultdict(lambda: {"count": 0, "amount": 0.0})
+    regions = defaultdict(lambda: {"count": 0, "amount": 0.0})
+    # Split "couldn't classify" into two honest buckets: no address recorded
+    # at all (nothing to classify — most of this bucket in practice) vs. an
+    # address that IS present but doesn't mention a recognized city/district
+    # (a genuine classifier gap).
+    no_address_count = 0
+    no_address_amount = 0.0
+    other_count = 0
+    other_amount = 0.0
+    total = 0
+    for r in wb_rows:
+        if r.get("s") == "-2":
+            continue
+        total += 1
+        kind, canon = classify_address(r.get("e") or "")
+        amt = r.get("a") or 0.0
+        if kind == "tbilisi":
+            tbilisi[canon]["count"] += 1
+            tbilisi[canon]["amount"] += amt
+        elif kind == "region":
+            regions[canon]["count"] += 1
+            regions[canon]["amount"] += amt
+        elif kind == "empty":
+            no_address_count += 1
+            no_address_amount += amt
+        else:
+            other_count += 1
+            other_amount += amt
+
+    def to_sorted_list(d):
+        return sorted(
+            [{"name": k, "count": v["count"], "amount": round(v["amount"], 2)} for k, v in d.items()],
+            key=lambda x: -x["count"],
+        )
+
+    tbilisi_list = to_sorted_list(tbilisi)
+    regions_list = to_sorted_list(regions)
+    return {
+        "total": total,
+        "tbilisi": tbilisi_list,
+        "regions": regions_list,
+        "tbilisiTotal": sum(x["count"] for x in tbilisi_list),
+        "regionsTotal": sum(x["count"] for x in regions_list),
+        "noAddressCount": no_address_count,
+        "noAddressAmount": round(no_address_amount, 2),
+        "otherCount": other_count,
+        "otherAmount": round(other_amount, 2),
+    }
 
 
 def fetch_waybills():
@@ -781,15 +925,22 @@ def main():
     xlsx_path = build_excel_report(recon, wb_rows, inv_rows)
     print(f"wrote {xlsx_path}", file=sys.stderr)
 
+    geo = build_geo_summary(wb_rows)
+    print(f"geography: {geo['tbilisiTotal']} თბილისი, {geo['regionsTotal']} რეგიონები, "
+          f"{geo['noAddressCount']} მისამართის გარეშე, {geo['otherCount']} დაუზუსტებელი "
+          f"(სულ {geo['total']})", file=sys.stderr)
+
     wb_json = json.dumps(wb_rows, ensure_ascii=False, separators=(",", ":"))
     inv_json = json.dumps(inv_rows, ensure_ascii=False, separators=(",", ":"))
     recon_json = json.dumps(recon, ensure_ascii=False, separators=(",", ":"), default=str)
+    geo_json = json.dumps(geo, ensure_ascii=False, separators=(",", ":"))
 
     template = (HERE / "template.html").read_text(encoding="utf-8")
     out_html = (template
                 .replace("__DATA_WB__", wb_json)
                 .replace("__DATA_INV__", inv_json)
-                .replace("__DATA_RECON__", recon_json))
+                .replace("__DATA_RECON__", recon_json)
+                .replace("__DATA_GEO__", geo_json))
     out_path = HERE / "waybill_dashboard.html"
     out_path.write_text(out_html, encoding="utf-8")
     print(f"wrote {out_path} ({len(out_html.encode('utf-8'))} bytes)", file=sys.stderr)
