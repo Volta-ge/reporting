@@ -35,6 +35,7 @@
  * @var array|null $leadStatusesMonthly
  * @var array|null $exCustomers
  * @var array|null $neverBorrowedByStatus
+ * @var array|null $neverBorrowedDetail
  */
 
 declare(strict_types=1);
@@ -705,6 +706,26 @@ table.rpt-pivot td.rpt-group-toggle { cursor: pointer; user-select: none; text-a
       </table>
     </div>
   </div>
+
+  <p class="section-title" style="margin-top:20px;">Never Became a Customer &mdash; full list</p>
+  <p class="note" style="margin:-8px 0 0;">Same ~26,500 people as the status breakdown above, now with contact detail &mdash; every application they ever submitted was rejected, refused, or expired before disbursement, so there's no closed-loan history to grade (no Grade/Collected %/Purchased/Written Off columns here, unlike the graded list above). <b>Products</b> = what they applied for/expressed interest in, not what they bought. Sorted by most recent application first.</p>
+  <div class="excust-search">
+    <input type="text" id="neverBorrowedSearch" placeholder="Search name, PID, phone, email, product…">
+    <span class="excust-search-count" id="neverBorrowedSearchCount"></span>
+  </div>
+  <div class="report-card">
+    <div class="report-scroll">
+      <table class="excust-table" id="neverBorrowedDetailTable">
+        <thead>
+          <tr>
+            <th>Name</th><th>PID</th><th>Phone</th><th>Email</th><th>City</th>
+            <th>Last Status</th><th>Last Application</th><th class="num">Applications</th><th>Products</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
 </div>
 
 <div class="page" id="page-risksegmentation">
@@ -829,6 +850,7 @@ const customerDistrictAnalysis = <?= json_encode($customerDistrictAnalysis, JSON
 const riskSegmentation = <?= json_encode($riskSegmentation, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) ?>;
 const exCustomers = <?= json_encode($exCustomers, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) ?>;
 const neverBorrowedByStatus = <?= json_encode($neverBorrowedByStatus, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) ?>;
+const neverBorrowedDetail = <?= json_encode($neverBorrowedDetail, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) ?>;
 const closedLoansMonthly = <?= json_encode($closedLoansMonthly, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) ?>;
 const delinquencyAnalysis = <?= json_encode($delinquencyAnalysis, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) ?>;
 const rejectionReasonsMonthly = <?= json_encode($rejectionReasonsMonthly, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) ?>;
@@ -1807,6 +1829,31 @@ function renderExCustomersTable(filterText) {
 }
 renderExCustomersTable('');
 document.getElementById('exCustomersSearch').addEventListener('input', e => renderExCustomersTable(e.target.value));
+
+function renderNeverBorrowedDetailTable(filterText) {
+  const d = neverBorrowedDetail;
+  const table = document.getElementById('neverBorrowedDetailTable');
+  if (!d || !d.rows) {
+    table.querySelector('tbody').innerHTML = '<tr><td>No data.</td></tr>';
+    return;
+  }
+  const needle = (filterText || '').trim().toLowerCase();
+  const rows = needle
+    ? d.rows.filter(r => `${r.name} ${r.pid} ${r.phone} ${r.email} ${r.products}`.toLowerCase().includes(needle))
+    : d.rows;
+
+  const html = rows.map(r => `<tr>
+    <td>${r.name}</td><td>${r.pid}</td><td>${r.phone}</td><td>${r.email}</td><td>${r.city}</td>
+    <td>${r.lastStatus}</td><td>${r.lastAppDate || '&ndash;'}</td>
+    <td class="num">${fmt(r.appCount)}</td><td class="products-cell">${r.products}</td>
+  </tr>`).join('');
+  table.querySelector('tbody').innerHTML = html || '<tr><td colspan="9">No matches.</td></tr>';
+
+  const countEl = document.getElementById('neverBorrowedSearchCount');
+  if (countEl) countEl.textContent = needle ? `${rows.length} of ${d.rows.length}` : `${d.rows.length} customers`;
+}
+renderNeverBorrowedDetailTable('');
+document.getElementById('neverBorrowedSearch').addEventListener('input', e => renderNeverBorrowedDetailTable(e.target.value));
 
 function renderClosedLoans() {
   const d = closedLoansMonthly;

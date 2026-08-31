@@ -189,10 +189,10 @@ final class ExCustomerRepository
      * compared this tab's 3,210 against Customer Analysis's own Total (35,894) minus Active
      * (6,126) = 29,768 and asked where the other ~26,558 went — they were never excluded on
      * purpose, just out of scope for a *payment-quality* grade, since someone who never actually
-     * borrowed has no collection history to grade. Kept as an aggregate-only breakdown (no PII)
-     * rather than added to the individual-row list, since there's no meaningful A–E grade for
-     * them and doubling the PII row count wasn't asked for — see the memory note on this
-     * decision (asked the user directly rather than assuming either way).
+     * borrowed has no collection history to grade. Originally kept aggregate-only (no PII) since
+     * there's no A–E grade for them and doubling the PII row count wasn't asked for at the time —
+     * the user later asked for the individual-row detail here too (2026-08-31), see
+     * neverBorrowedDetail() below; this aggregate method is kept as-is for the summary table.
      *
      * Bucketed by each customer's MOST RECENT application's `Order_Status` label (not every
      * application they ever made — a customer can have several rejected attempts over time; the
@@ -234,6 +234,105 @@ final class ExCustomerRepository
         unset($r);
 
         return ['rows' => $result, 'total' => $total];
+    }
+
+    /**
+     * Individual-row detail for the "never became a customer" population (see
+     * neverBorrowedByStatus() docblock for the population definition and why it's separate from
+     * the graded 3,210 — no closed loan, so no payment-quality grade applies). Added 2026-08-31
+     * per explicit user request to see the same level of contact detail for this group as for the
+     * graded ex-customers, at the bottom of the same tab. No `grade`/`collectionRate` fields (not
+     * meaningful here) — instead `lastStatus` (their most recent application's outcome) and
+     * `products` means "what they applied for / expressed interest in", not "what they bought"
+     * (they never actually completed a purchase). 26,777 rows as of this build — confirmed safe
+     * to fetch in full (~3s for both queries combined), same reasoning as exCustomers() above.
+     */
+    public function neverBorrowedDetail(ProductClassifier $classifier): array
+    {
+        $aggStmt = $this->pdo->query(<<<'SQL'
+            SELECT
+                t.Customer_ID AS customer_id,
+                t.last_app_date,
+                os.Order_Status AS status_label,
+                t.app_count
+            FROM (
+                SELECT i.Customer_ID,
+                       MAX(i.Aplication_Date) AS last_app_date,
+                       SUBSTRING_INDEX(GROUP_CONCAT(i.Order_Status ORDER BY i.Aplication_Date DESC), ',', 1) AS latest_status,
+                       COUNT(*) AS app_count
+                FROM instalments i
+                WHERE i.Product_ID > 1
+                  AND i.Customer_ID NOT IN (SELECT Customer_ID FROM instalments WHERE Active = 1 AND Product_ID > 1)
+                  AND i.Customer_ID NOT IN (SELECT Customer_ID FROM instalments WHERE Close_Type IN (1, 2) AND Product_ID > 1)
+                GROUP BY i.Customer_ID
+            ) t
+            LEFT JOIN order_statuses os ON os.Order_Status_ID = t.latest_status
+            SQL);
+        $agg = $aggStmt->fetchAll(PDO::FETCH_ASSOC);
+
+        // Products applied for (interest, not purchase — these people never closed a loan),
+        // deduped per customer, same ProductClassifier translation as exCustomers() above.
+        $modelStmt = $this->pdo->query(<<<'SQL'
+            SELECT DISTINCT i.Customer_ID AS customer_id, p.Model AS model, pc.Category_Name AS category_name
+            FROM instalments i
+            JOIN products p ON p.Product_ID = i.Product_ID
+            LEFT JOIN product_category pc ON pc.Category_ID = p.Category_ID
+            WHERE i.Product_ID > 1
+              AND i.Customer_ID NOT IN (SELECT Customer_ID FROM instalments WHERE Active = 1 AND Product_ID > 1)
+              AND i.Customer_ID NOT IN (SELECT Customer_ID FROM instalments WHERE Close_Type IN (1, 2) AND Product_ID > 1)
+            SQL);
+        $productsByCustomer = [];
+        foreach ($modelStmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
+            $label = $classifier->classify($row['category_name']) ?? $row['model'];
+            $productsByCustomer[(int) $row['customer_id']][$label] = true;
+        }
+
+        $contactStmt = $this->pdo->query(<<<'SQL'
+            SELECT Customer_ID AS customer_id, FullName AS name, PID AS pid, Mobile AS mobile,
+                   Phone1 AS phone1, Email AS email, COALESCE(NULLIF(Fact_City, ''), City) AS city
+            FROM customers
+            WHERE Customer_ID IN (
+                SELECT DISTINCT i.Customer_ID FROM instalments i
+                WHERE i.Product_ID > 1
+                  AND i.Customer_ID NOT IN (SELECT Customer_ID FROM instalments WHERE Active = 1 AND Product_ID > 1)
+                  AND i.Customer_ID NOT IN (SELECT Customer_ID FROM instalments WHERE Close_Type IN (1, 2) AND Product_ID > 1)
+            )
+            SQL);
+        $contactByCustomer = [];
+        foreach ($contactStmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
+            $contactByCustomer[(int) $row['customer_id']] = $row;
+        }
+
+        $rows = [];
+        foreach ($agg as $a) {
+            $customerId = (int) $a['customer_id'];
+            $contact = $contactByCustomer[$customerId] ?? null;
+            $phone = trim((string) ($contact['mobile'] ?? '')) !== ''
+                ? $contact['mobile']
+                : trim((string) ($contact['phone1'] ?? ''));
+            $status = trim((string) $a['status_label']) === '' ? 'Unspecified' : $a['status_label'];
+            $products = isset($productsByCustomer[$customerId])
+                ? implode(', ', array_keys($productsByCustomer[$customerId]))
+                : '';
+
+            $rows[] = [
+                'customerId' => $customerId,
+                'name' => $contact['name'] ?? '',
+                'pid' => $contact['pid'] ?? '',
+                'phone' => $phone,
+                'email' => $contact['email'] ?? '',
+                'city' => $contact['city'] ?? '',
+                'lastStatus' => $status,
+                'lastAppDate' => $a['last_app_date'] !== null ? substr((string) $a['last_app_date'], 0, 10) : null,
+                'appCount' => (int) $a['app_count'],
+                'products' => $products,
+            ];
+        }
+
+        // Most recent application first — the most actionable ones for a fresh follow-up.
+        usort($rows, static fn ($a, $b) => strcmp((string) $b['lastAppDate'], (string) $a['lastAppDate']));
+
+        return ['rows' => $rows, 'total' => count($rows)];
     }
 
     private static function gradeForRate(float $rate): string

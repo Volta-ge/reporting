@@ -12,6 +12,12 @@ namespace Volta\Funnel;
 // sign to revisit query count, not just push the limit further.
 set_time_limit(90);
 
+// This page embeds several large arrays as inline JS consts, including the ~26,800-row
+// neverBorrowedDetail list — on the Accounting-included sibling deployment (which embeds
+// even more data) this exceeded PHP's default 128M and fataled mid-render (confirmed
+// 2026-08-31). Raised here too as a safety margin, same reasoning as set_time_limit above.
+ini_set('memory_limit', '256M');
+
 require __DIR__ . '/../src/Segment.php';
 require __DIR__ . '/../src/SegmentMetrics.php';
 require __DIR__ . '/../src/Database.php';
@@ -93,6 +99,9 @@ try {
     // genuinely closed loan — reconciles this tab's total against Customer Analysis's own
     // Total − Active figure. See ExCustomerRepository::neverBorrowedByStatus() docblock.
     $neverBorrowedByStatus = $exCustomerRepository->neverBorrowedByStatus();
+    // Individual-row detail for that same never-borrowed population (~5s) — added per explicit
+    // user request alongside the aggregate above. See ExCustomerRepository::neverBorrowedDetail().
+    $neverBorrowedDetail = $exCustomerRepository->neverBorrowedDetail($productClassifier);
     $closedLoansMonthly = $portfolioRepository->closedLoansMonthly($monthlyFrom, $yesterdayTo);
     $delinquencyAnalysis = $portfolioRepository->delinquencyAnalysis();
     $rejectionReasonsMonthly = $portfolioRepository->reasonsByStatusMonthly($monthlyFrom, $yesterdayTo, 6);
@@ -125,6 +134,7 @@ try {
     $riskSegmentation = null;
     $exCustomers = null;
     $neverBorrowedByStatus = null;
+    $neverBorrowedDetail = null;
     $closedLoansMonthly = null;
     $delinquencyAnalysis = null;
     $rejectionReasonsMonthly = null;
