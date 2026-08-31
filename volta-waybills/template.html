@@ -735,6 +735,7 @@ const T = {
   noSalesInPeriod: {ka:"ამ პერიოდში გაყიდვა არ არის", en:"No sale in this period"},
   noWaybillsInPeriod: {ka:"ამ პერიოდში ზედნადები არ არის", en:"No waybill in this period"},
   returnTag: {ka:"დაბრუნება", en:"Return"},
+  caseIdLabel: {ka:"საქმის ID", en:"Case ID"},
   personIdShort: {ka:"პ/ნ ", en:"ID "},
   crmLabel: {ka:"CRM ", en:"CRM "},
   waybillLabel: {ka:" / ზედნადები ", en:" / waybill "},
@@ -1451,14 +1452,14 @@ function drawTrend(svg, buckets, keys){
       const salesHtml = p.sales.length ? p.sales.map(s=>
         "<div class='person-row"+(s.matched?" is-matched":"")+"'>"+
           "<span class='pd'><span class='person-dot' style='background:"+(s.matched?"var(--success)":"var(--danger)")+"'></span>"+fmtDateOnly(s.d)+"</span>"+
-          "<span class='pp'>"+escapeHtml(s.prod)+"</span>"+
+          "<span class='pp' title='"+t("caseIdLabel")+" "+escapeHtml(String(s.id))+"'><span class='num' style='color:var(--faint);margin-right:6px;'>#"+escapeHtml(String(s.id))+"</span>"+escapeHtml(s.prod)+"</span>"+
           "<span class='pa'>"+fmtGel(s.a)+"</span>"+
         "</div>"
       ).join("") : "<div class='person-row'><span class='pp' style='color:var(--faint)'>"+t("noSalesInPeriod")+"</span></div>";
       const wbHtml = p.wbs.length ? p.wbs.map(w=>
         "<div class='person-row"+(w.matched?" is-matched":"")+"'>"+
           "<span class='pd'><span class='person-dot' style='background:"+(w.isReturn?"var(--warning)":(w.matched?"var(--success)":"var(--muted)"))+"'></span>"+fmtDateOnly(w.d)+"</span>"+
-          "<span class='pp' title='№"+escapeHtml(w.n)+"'>"+escapeHtml(w.prod)+(w.isReturn?" &middot; <span style='color:var(--warning)'>"+t("returnTag")+"</span>":"")+"</span>"+
+          "<span class='pp' title='№"+escapeHtml(w.n)+"'><span class='num' style='color:var(--faint);margin-right:6px;'>№"+escapeHtml(w.n)+"</span>"+escapeHtml(w.prod)+(w.isReturn?" &middot; <span style='color:var(--warning)'>"+t("returnTag")+"</span>":"")+"</span>"+
           "<span class='pa'>"+fmtGel(w.a)+"</span>"+
         "</div>"
       ).join("") : "<div class='person-row'><span class='pp' style='color:var(--faint)'>"+t("noWaybillsInPeriod")+"</span></div>";
