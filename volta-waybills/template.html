@@ -379,13 +379,14 @@
   <div class="topbar">
     <div class="brand-block">
       <span class="eyebrow">RS.GE &middot; ELECTRONIC RECORDS</span>
-      <h1>ვოლტას სავაჭრო რეესტრები</h1>
+      <h1 data-i18n="title">ვოლტას სავაჭრო რეესტრები</h1>
     </div>
     <div class="tabbar">
-      <button class="tabbtn active" data-tab="recon">გაყიდვა ↔ ზედნადები</button>
-      <button class="tabbtn" data-tab="wb">ზედნადებები</button>
-      <button class="tabbtn" data-tab="inv">ანგარიშ-ფაქტურები</button>
-      <button class="tabbtn" data-tab="geo">გეოგრაფია</button>
+      <button class="tabbtn active" data-tab="recon" data-i18n="tabRecon">გაყიდვა ↔ ზედნადები</button>
+      <button class="tabbtn" data-tab="wb" data-i18n="tabWb">ზედნადებები</button>
+      <button class="tabbtn" data-tab="inv" data-i18n="tabInv">ანგარიშ-ფაქტურები</button>
+      <button class="tabbtn" data-tab="geo" data-i18n="tabGeo">გეოგრაფია</button>
+      <button class="tabbtn" id="langToggle" style="margin-left:6px;">EN</button>
     </div>
   </div>
 
@@ -395,58 +396,58 @@
     <div class="subhead">
       <div class="brand-block">
         <div class="subline" id="wbRangeSubline">—</div>
-        <div class="subline" style="font-size:11.5px;opacity:0.75;">გაუქმებული ან ნომრის მიღებამდე გაუქმებული ზედნადებები (ნომრის გარეშე) რეესტრში არ შედის</div>
+        <div class="subline" style="font-size:11.5px;opacity:0.75;" data-i18n="wbUnnumberedNote">გაუქმებული ან ნომრის მიღებამდე გაუქმებული ზედნადებები (ნომრის გარეშე) რეესტრში არ შედის</div>
       </div>
       <div class="filters">
-        <div class="field"><label for="wbStart">დან</label><input type="date" id="wbStart"></div>
-        <div class="field"><label for="wbEnd">მდე</label><input type="date" id="wbEnd"></div>
-        <div class="field"><label for="wbStatus">სტატუსი</label><select id="wbStatus"><option value="">ყველა</option></select></div>
-        <div class="field"><label for="wbType">ტიპი</label><select id="wbType"><option value="">ყველა</option></select></div>
-        <button class="btn-reset" id="wbReset">ფილტრის გასუფთავება</button>
+        <div class="field"><label for="wbStart" data-i18n="dateFrom">დან</label><input type="date" id="wbStart"></div>
+        <div class="field"><label for="wbEnd" data-i18n="dateTo">მდე</label><input type="date" id="wbEnd"></div>
+        <div class="field"><label for="wbStatus" data-i18n="statusLabel">სტატუსი</label><select id="wbStatus"><option value="">ყველა</option></select></div>
+        <div class="field"><label for="wbType" data-i18n="typeLabel">ტიპი</label><select id="wbType"><option value="">ყველა</option></select></div>
+        <button class="btn-reset" id="wbReset" data-i18n="resetFilters">ფილტრის გასუფთავება</button>
       </div>
     </div>
 
     <div class="kpis">
-      <div class="kpi"><span class="kpi-label">ზედნადებები</span><span class="kpi-value num" id="wbKpiCount">—</span><span class="kpi-sub" id="wbKpiCountSub">&nbsp;</span></div>
-      <div class="kpi"><span class="kpi-label">ჯამური თანხა</span><span class="kpi-value num" id="wbKpiAmount">—</span><span class="kpi-sub" id="wbKpiAmountSub">&nbsp;</span></div>
-      <div class="kpi"><span class="kpi-label">დასრულებული / გაუქმებული</span><span class="kpi-value num" id="wbKpiDoneCancel">—</span><span class="kpi-sub" id="wbKpiDoneCancelSub">&nbsp;</span></div>
-      <div class="kpi"><span class="kpi-label">უნიკალური მყიდველი</span><span class="kpi-value num" id="wbKpiBuyers">—</span><span class="kpi-sub" id="wbKpiBuyersSub">&nbsp;</span></div>
+      <div class="kpi"><span class="kpi-label" data-i18n="wbKpiCount">ზედნადებები</span><span class="kpi-value num" id="wbKpiCount">—</span><span class="kpi-sub" id="wbKpiCountSub">&nbsp;</span></div>
+      <div class="kpi"><span class="kpi-label" data-i18n="wbKpiAmount">ჯამური თანხა</span><span class="kpi-value num" id="wbKpiAmount">—</span><span class="kpi-sub" id="wbKpiAmountSub">&nbsp;</span></div>
+      <div class="kpi"><span class="kpi-label" data-i18n="wbKpiDoneCancel">დასრულებული / გაუქმებული</span><span class="kpi-value num" id="wbKpiDoneCancel">—</span><span class="kpi-sub" id="wbKpiDoneCancelSub">&nbsp;</span></div>
+      <div class="kpi"><span class="kpi-label" data-i18n="wbKpiBuyers">უნიკალური მყიდველი</span><span class="kpi-value num" id="wbKpiBuyers">—</span><span class="kpi-sub" id="wbKpiBuyersSub">&nbsp;</span></div>
     </div>
 
     <div class="grid-main">
       <div class="panel">
-        <div class="panel-head"><span class="panel-title">კვირეული მოცულობა</span><span class="panel-note">ზედნადებების რაოდენობა &amp; თანხა</span></div>
-        <div class="trend-legend"><span><span class="legend-dot" style="background:var(--accent)"></span>რაოდენობა</span><span><span class="legend-dot" style="background:var(--warm)"></span>თანხა (₾)</span></div>
+        <div class="panel-head"><span class="panel-title" data-i18n="wbWeeklyVolume">კვირეული მოცულობა</span><span class="panel-note" data-i18n="countAmountNote">ზედნადებების რაოდენობა &amp; თანხა</span></div>
+        <div class="trend-legend"><span><span class="legend-dot" style="background:var(--accent)"></span><span data-i18n="quantity">რაოდენობა</span></span><span><span class="legend-dot" style="background:var(--warm)"></span><span data-i18n="amountGel">თანხა (₾)</span></span></div>
         <svg class="trend-svg" id="wbTrendChart" viewBox="0 0 960 230" preserveAspectRatio="none"></svg>
       </div>
       <div class="side-stack">
-        <div class="panel"><div class="panel-head"><span class="panel-title">სტატუსების მიხედვით</span></div><div class="barlist" id="wbStatusBars"></div></div>
-        <div class="panel"><div class="panel-head"><span class="panel-title">ტიპების მიხედვით</span></div><div class="barlist" id="wbTypeBars"></div></div>
+        <div class="panel"><div class="panel-head"><span class="panel-title" data-i18n="byStatus">სტატუსების მიხედვით</span></div><div class="barlist" id="wbStatusBars"></div></div>
+        <div class="panel"><div class="panel-head"><span class="panel-title" data-i18n="byType">ტიპების მიხედვით</span></div><div class="barlist" id="wbTypeBars"></div></div>
       </div>
     </div>
 
     <div class="panel">
-      <div class="panel-head"><span class="panel-title">მსხვილი მყიდველები</span><span class="panel-note">ტოპ 12, ჯამური თანხით</span></div>
+      <div class="panel-head"><span class="panel-title" data-i18n="topBuyers">მსხვილი მყიდველები</span><span class="panel-note" data-i18n="top12ByAmount">ტოპ 12, ჯამური თანხით</span></div>
       <div class="rank-list" id="wbRankList"></div>
     </div>
 
     <div class="panel">
       <div class="table-toolbar">
-        <span class="panel-title">ზედნადებების რეესტრი</span>
-        <input class="search-input" id="wbSearchBox" placeholder="ძებნა: მყიდველი, ს/ნ, ნომერი, მანქანა…">
+        <span class="panel-title" data-i18n="wbRegistry">ზედნადებების რეესტრი</span>
+        <input class="search-input" id="wbSearchBox" placeholder="ძებნა: მყიდველი, ს/ნ, ნომერი, მანქანა…" data-i18n-ph="wbSearchPh">
       </div>
       <div class="table-scroll">
         <table>
           <thead><tr>
-            <th><button data-k="d">ტრანსპ. დაწყება</button></th>
-            <th><button data-k="n">ზედნადების №</button></th>
-            <th><button data-k="b">მყიდველი</button></th>
-            <th><button data-k="t">ს/ნ</button></th>
-            <th><button data-k="e">დანიშნულება</button></th>
-            <th><button data-k="c">მანქანა</button></th>
-            <th><button data-k="y">ტიპი</button></th>
-            <th><button data-k="s">სტატუსი</button></th>
-            <th><button data-k="a">თანხა (₾)</button></th>
+            <th><button data-k="d" data-i18n="colTransportStart">ტრანსპ. დაწყება</button></th>
+            <th><button data-k="n" data-i18n="colWaybillNo">ზედნადების №</button></th>
+            <th><button data-k="b" data-i18n="colBuyer">მყიდველი</button></th>
+            <th><button data-k="t" data-i18n="colTin">ს/ნ</button></th>
+            <th><button data-k="e" data-i18n="colDestination">დანიშნულება</button></th>
+            <th><button data-k="c" data-i18n="colVehicle">მანქანა</button></th>
+            <th><button data-k="y" data-i18n="colType">ტიპი</button></th>
+            <th><button data-k="s" data-i18n="colStatus">სტატუსი</button></th>
+            <th><button data-k="a" data-i18n="colAmount">თანხა (₾)</button></th>
           </tr></thead>
           <tbody id="wbTbody"></tbody>
         </table>
@@ -457,7 +458,7 @@
       </div>
     </div>
 
-    <footer><span>წყარო: შემოსავლების სამსახური &middot; ელექტრონული ზედნადებების სერვისი (RS.ge WayBillService)</span><span id="wbGenStamp">—</span></footer>
+    <footer><span data-i18n="wbFooterSource">წყარო: შემოსავლების სამსახური &middot; ელექტრონული ზედნადებების სერვისი (RS.ge WayBillService)</span><span id="wbGenStamp">—</span></footer>
   </div>
 
   <!-- ======================= INVOICES TAB ======================= -->
@@ -466,55 +467,55 @@
     <div class="subhead">
       <div class="brand-block">
         <div class="subline" id="invRangeSubline">—</div>
-        <div class="subline" style="font-size:11.5px;opacity:0.75;">თარიღი აღნიშნავს ოპერაციის პერიოდს (თვის დასაწყისი), არა რეგისტრაციის დღეს</div>
+        <div class="subline" style="font-size:11.5px;opacity:0.75;" data-i18n="invDateNote">თარიღი აღნიშნავს ოპერაციის პერიოდს (თვის დასაწყისი), არა რეგისტრაციის დღეს</div>
       </div>
       <div class="filters">
-        <div class="field"><label for="invStart">დან</label><input type="date" id="invStart"></div>
-        <div class="field"><label for="invEnd">მდე</label><input type="date" id="invEnd"></div>
-        <div class="field"><label for="invStatus">სტატუსი</label><select id="invStatus"><option value="">ყველა</option></select></div>
-        <button class="btn-reset" id="invReset">ფილტრის გასუფთავება</button>
+        <div class="field"><label for="invStart" data-i18n="dateFrom">დან</label><input type="date" id="invStart"></div>
+        <div class="field"><label for="invEnd" data-i18n="dateTo">მდე</label><input type="date" id="invEnd"></div>
+        <div class="field"><label for="invStatus" data-i18n="statusLabel">სტატუსი</label><select id="invStatus"><option value="">ყველა</option></select></div>
+        <button class="btn-reset" id="invReset" data-i18n="resetFilters">ფილტრის გასუფთავება</button>
       </div>
     </div>
 
     <div class="kpis">
-      <div class="kpi"><span class="kpi-label">ფაქტურები</span><span class="kpi-value num" id="invKpiCount">—</span><span class="kpi-sub" id="invKpiCountSub">&nbsp;</span></div>
-      <div class="kpi"><span class="kpi-label">ჯამური თანხა</span><span class="kpi-value num" id="invKpiAmount">—</span><span class="kpi-sub" id="invKpiAmountSub">&nbsp;</span></div>
-      <div class="kpi"><span class="kpi-label">ჯამური დღგ</span><span class="kpi-value num" id="invKpiVat">—</span><span class="kpi-sub" id="invKpiVatSub">&nbsp;</span></div>
-      <div class="kpi"><span class="kpi-label">უნიკალური მყიდველი</span><span class="kpi-value num" id="invKpiBuyers">—</span><span class="kpi-sub" id="invKpiBuyersSub">&nbsp;</span></div>
+      <div class="kpi"><span class="kpi-label" data-i18n="invKpiCount">ფაქტურები</span><span class="kpi-value num" id="invKpiCount">—</span><span class="kpi-sub" id="invKpiCountSub">&nbsp;</span></div>
+      <div class="kpi"><span class="kpi-label" data-i18n="wbKpiAmount">ჯამური თანხა</span><span class="kpi-value num" id="invKpiAmount">—</span><span class="kpi-sub" id="invKpiAmountSub">&nbsp;</span></div>
+      <div class="kpi"><span class="kpi-label" data-i18n="invKpiVat">ჯამური დღგ</span><span class="kpi-value num" id="invKpiVat">—</span><span class="kpi-sub" id="invKpiVatSub">&nbsp;</span></div>
+      <div class="kpi"><span class="kpi-label" data-i18n="wbKpiBuyers">უნიკალური მყიდველი</span><span class="kpi-value num" id="invKpiBuyers">—</span><span class="kpi-sub" id="invKpiBuyersSub">&nbsp;</span></div>
     </div>
 
     <div class="grid-main">
       <div class="panel">
-        <div class="panel-head"><span class="panel-title">თვიური მოცულობა</span><span class="panel-note">ფაქტურების რაოდენობა &amp; თანხა</span></div>
-        <div class="trend-legend"><span><span class="legend-dot" style="background:var(--accent)"></span>რაოდენობა</span><span><span class="legend-dot" style="background:var(--warm)"></span>თანხა (₾)</span></div>
+        <div class="panel-head"><span class="panel-title" data-i18n="invMonthlyVolume">თვიური მოცულობა</span><span class="panel-note" data-i18n="invCountAmountNote">ფაქტურების რაოდენობა &amp; თანხა</span></div>
+        <div class="trend-legend"><span><span class="legend-dot" style="background:var(--accent)"></span><span data-i18n="quantity">რაოდენობა</span></span><span><span class="legend-dot" style="background:var(--warm)"></span><span data-i18n="amountGel">თანხა (₾)</span></span></div>
         <svg class="trend-svg" id="invTrendChart" viewBox="0 0 960 230" preserveAspectRatio="none"></svg>
       </div>
       <div class="side-stack">
-        <div class="panel"><div class="panel-head"><span class="panel-title">სტატუსების მიხედვით</span></div><div class="barlist" id="invStatusBars"></div></div>
+        <div class="panel"><div class="panel-head"><span class="panel-title" data-i18n="byStatus">სტატუსების მიხედვით</span></div><div class="barlist" id="invStatusBars"></div></div>
       </div>
     </div>
 
     <div class="panel">
-      <div class="panel-head"><span class="panel-title">მსხვილი მყიდველები</span><span class="panel-note">ტოპ 12, ჯამური თანხით</span></div>
+      <div class="panel-head"><span class="panel-title" data-i18n="topBuyers">მსხვილი მყიდველები</span><span class="panel-note" data-i18n="top12ByAmount">ტოპ 12, ჯამური თანხით</span></div>
       <div class="rank-list" id="invRankList"></div>
     </div>
 
     <div class="panel">
       <div class="table-toolbar">
-        <span class="panel-title">ფაქტურების რეესტრი</span>
-        <input class="search-input" id="invSearchBox" placeholder="ძებნა: მყიდველი, ს/ნ, სერია/№…">
+        <span class="panel-title" data-i18n="invRegistry">ფაქტურების რეესტრი</span>
+        <input class="search-input" id="invSearchBox" placeholder="ძებნა: მყიდველი, ს/ნ, სერია/№…" data-i18n-ph="invSearchPh">
       </div>
       <div class="table-scroll">
         <table>
           <thead><tr>
-            <th><button data-k="d">ოპერაცია</button></th>
-            <th><button data-k="r">რეგისტრაცია</button></th>
-            <th><button data-k="f">სერია / №</button></th>
-            <th><button data-k="b">მყიდველი</button></th>
-            <th><button data-k="t">ს/ნ</button></th>
-            <th><button data-k="s">სტატუსი</button></th>
-            <th><button data-k="v">დღგ (₾)</button></th>
-            <th><button data-k="a">თანხა (₾)</button></th>
+            <th><button data-k="d" data-i18n="colOperation">ოპერაცია</button></th>
+            <th><button data-k="r" data-i18n="colRegistration">რეგისტრაცია</button></th>
+            <th><button data-k="f" data-i18n="colSeriesNo">სერია / №</button></th>
+            <th><button data-k="b" data-i18n="colBuyer">მყიდველი</button></th>
+            <th><button data-k="t" data-i18n="colTin">ს/ნ</button></th>
+            <th><button data-k="s" data-i18n="colStatus">სტატუსი</button></th>
+            <th><button data-k="v" data-i18n="colVat">დღგ (₾)</button></th>
+            <th><button data-k="a" data-i18n="colAmount">თანხა (₾)</button></th>
           </tr></thead>
           <tbody id="invTbody"></tbody>
         </table>
@@ -525,7 +526,7 @@
       </div>
     </div>
 
-    <footer><span>წყარო: შემოსავლების სამსახური &middot; ელექტრონული ანგარიშ-ფაქტურის სერვისი (RS.ge NtosService)</span><span id="invGenStamp">—</span></footer>
+    <footer><span data-i18n="invFooterSource">წყარო: შემოსავლების სამსახური &middot; ელექტრონული ანგარიშ-ფაქტურის სერვისი (RS.ge NtosService)</span><span id="invGenStamp">—</span></footer>
   </div>
 
   <!-- ======================= RECONCILIATION TAB ======================= -->
@@ -534,42 +535,42 @@
     <div class="subhead">
       <div class="brand-block">
         <div class="subline" id="reconRangeSubline">—</div>
-        <div class="subline" style="font-size:11.5px;opacity:0.75;">CRM-ის რეალური გაყიდვები (Order_Status=5) დაწყვილებულია იმავე მყიდველის ზედნადებთან &plusmn;45 დღისა და თანხის &plusmn;5%/50&#8382; ტოლერანტობით — პირის CRM/ზედნადები ჯამების სხვაობა დადებითია, თუ ზედნადები აკლია (გაყიდვა ჩაწერილია, ზედნადები არა) და უარყოფითია, თუ გაყიდვა აკლია (ზედნადები არსებობს, CRM-ში ჩანაწერი არა)</div>
+        <div class="subline" style="font-size:11.5px;opacity:0.75;" data-i18n="reconExplainer">CRM-ის რეალური გაყიდვები (Order_Status=5) დაწყვილებულია იმავე მყიდველის ზედნადებთან &plusmn;45 დღისა და თანხის &plusmn;5%/50&#8382; ტოლერანტობით — პირის CRM/ზედნადები ჯამების სხვაობა დადებითია, თუ ზედნადები აკლია (გაყიდვა ჩაწერილია, ზედნადები არა) და უარყოფითია, თუ გაყიდვა აკლია (ზედნადები არსებობს, CRM-ში ჩანაწერი არა)</div>
       </div>
       <div class="filters">
-        <div class="field"><label for="reconStart">დან</label><input type="date" id="reconStart"></div>
-        <div class="field"><label for="reconEnd">მდე</label><input type="date" id="reconEnd"></div>
+        <div class="field"><label for="reconStart" data-i18n="dateFrom">დან</label><input type="date" id="reconStart"></div>
+        <div class="field"><label for="reconEnd" data-i18n="dateTo">მდე</label><input type="date" id="reconEnd"></div>
         <div class="field">
-          <label for="reconStatus">სტატუსი</label>
+          <label for="reconStatus" data-i18n="statusLabel">სტატუსი</label>
           <select id="reconStatus">
-            <option value="all">ყველა</option>
-            <option value="matched">დაწყვილებული</option>
-            <option value="missing_wb" selected>აკლია ზედნადები</option>
-            <option value="missing_sale">აკლია გაყიდვა</option>
+            <option value="all" data-i18n="reconStatusAll">ყველა</option>
+            <option value="matched" data-i18n="reconStatusMatched">დაწყვილებული</option>
+            <option value="missing_wb" selected data-i18n="reconStatusMissingWb">აკლია ზედნადები</option>
+            <option value="missing_sale" data-i18n="reconStatusMissingSale">აკლია გაყიდვა</option>
           </select>
         </div>
-        <button class="btn-reset" id="reconReset">ფილტრის გასუფთავება</button>
+        <button class="btn-reset" id="reconReset" data-i18n="resetFilters">ფილტრის გასუფთავება</button>
       </div>
     </div>
 
     <div class="kpis kpis-5">
-      <div class="kpi"><span class="kpi-label">სულ გაყიდვა</span><span class="kpi-value num" id="reconKpiTotal">—</span><span class="kpi-sub" id="reconKpiTotalSub">&nbsp;</span></div>
-      <div class="kpi"><span class="kpi-label">დაწყვილებული</span><span class="kpi-value num" id="reconKpiMatched">—</span><span class="kpi-sub" id="reconKpiMatchedSub">&nbsp;</span></div>
-      <div class="kpi"><span class="kpi-label">აკლია ზედნადები</span><span class="kpi-value num" id="reconKpiMissing">—</span><span class="kpi-sub" id="reconKpiMissingSub">&nbsp;</span></div>
-      <div class="kpi"><span class="kpi-label">აკლია გაყიდვა</span><span class="kpi-value num" id="reconKpiMissingSale">—</span><span class="kpi-sub" id="reconKpiMissingSaleSub">&nbsp;</span></div>
-      <div class="kpi"><span class="kpi-label">რისკის ქვეშ თანხა</span><span class="kpi-value num" id="reconKpiAmount">—</span><span class="kpi-sub" id="reconKpiAmountSub">&nbsp;</span></div>
+      <div class="kpi"><span class="kpi-label" data-i18n="reconKpiTotal">სულ გაყიდვა</span><span class="kpi-value num" id="reconKpiTotal">—</span><span class="kpi-sub" id="reconKpiTotalSub">&nbsp;</span></div>
+      <div class="kpi"><span class="kpi-label" data-i18n="reconKpiMatched">დაწყვილებული</span><span class="kpi-value num" id="reconKpiMatched">—</span><span class="kpi-sub" id="reconKpiMatchedSub">&nbsp;</span></div>
+      <div class="kpi"><span class="kpi-label" data-i18n="reconKpiMissing">აკლია ზედნადები</span><span class="kpi-value num" id="reconKpiMissing">—</span><span class="kpi-sub" id="reconKpiMissingSub">&nbsp;</span></div>
+      <div class="kpi"><span class="kpi-label" data-i18n="reconKpiMissingSale">აკლია გაყიდვა</span><span class="kpi-value num" id="reconKpiMissingSale">—</span><span class="kpi-sub" id="reconKpiMissingSaleSub">&nbsp;</span></div>
+      <div class="kpi"><span class="kpi-label" data-i18n="reconKpiAmount">რისკის ქვეშ თანხა</span><span class="kpi-value num" id="reconKpiAmount">—</span><span class="kpi-sub" id="reconKpiAmountSub">&nbsp;</span></div>
     </div>
 
     <div class="panel">
-      <div class="panel-head"><span class="panel-title" id="reconTrendTitle">აკლია ზედნადები — თვიური დინამიკა</span><span class="panel-note">გაყიდვების რაოდენობა &amp; თანხა</span></div>
-      <div class="trend-legend"><span><span class="legend-dot" style="background:var(--accent)"></span>რაოდენობა</span><span><span class="legend-dot" style="background:var(--warm)"></span>თანხა (₾)</span></div>
+      <div class="panel-head"><span class="panel-title" id="reconTrendTitle">აკლია ზედნადები — თვიური დინამიკა</span><span class="panel-note" data-i18n="salesCountAmountNote">გაყიდვების რაოდენობა &amp; თანხა</span></div>
+      <div class="trend-legend"><span><span class="legend-dot" style="background:var(--accent)"></span><span data-i18n="quantity">რაოდენობა</span></span><span><span class="legend-dot" style="background:var(--warm)"></span><span data-i18n="amountGel">თანხა (₾)</span></span></div>
       <svg class="trend-svg" id="reconTrendChart" viewBox="0 0 960 230" preserveAspectRatio="none"></svg>
     </div>
 
     <div class="panel" id="reconGroupPanel">
       <div class="table-toolbar">
-        <span class="panel-title">გაყიდვები პირადობის მიხედვით</span>
-        <input class="search-input" id="reconGroupSearchBox" placeholder="ძებნა: მყიდველი, ს/ნ…">
+        <span class="panel-title" data-i18n="reconGroupTitle">გაყიდვები პირადობის მიხედვით</span>
+        <input class="search-input" id="reconGroupSearchBox" placeholder="ძებნა: მყიდველი, ს/ნ…" data-i18n-ph="reconGroupSearchPh">
       </div>
       <div id="reconGroupList" class="person-scroll"></div>
       <div class="pager">
@@ -578,7 +579,7 @@
       </div>
     </div>
 
-    <footer><span>წყარო: myvolta.info CRM (instalments, Order_Status=5) &middot; RS.ge WayBillService</span><span id="reconGenStamp">—</span></footer>
+    <footer><span data-i18n="reconFooterSource">წყარო: myvolta.info CRM (instalments, Order_Status=5) &middot; RS.ge WayBillService</span><span id="reconGenStamp">—</span></footer>
   </div>
 
   <!-- ======================= GEOGRAPHY TAB ======================= -->
@@ -587,30 +588,30 @@
     <div class="subhead">
       <div class="brand-block">
         <div class="subline" id="geoRangeSubline">—</div>
-        <div class="subline" style="font-size:11.5px;opacity:0.75;">კლასიფიკაცია ეფუძნება მისამართის თავისუფალ ტექსტში ქალაქის/რაიონის სახელის ძებნას — არაზუსტი მისამართის ან მხოლოდ ქუჩის სახელის შემთხვევაში ხვდება „დაუზუსტებელი" ჯგუფში, სულაც არ ნიშნავს რომ პროდუქტი ვერ მიაწოდეს</div>
+        <div class="subline" style="font-size:11.5px;opacity:0.75;" data-i18n="geoNote">კლასიფიკაცია ეფუძნება მისამართის თავისუფალ ტექსტში ქალაქის/რაიონის სახელის ძებნას — არაზუსტი მისამართის ან მხოლოდ ქუჩის სახელის შემთხვევაში ხვდება „დაუზუსტებელი" ჯგუფში, სულაც არ ნიშნავს რომ პროდუქტი ვერ მიაწოდეს</div>
       </div>
     </div>
 
     <div class="kpis kpis-5">
-      <div class="kpi"><span class="kpi-label">სულ ზედნადები</span><span class="kpi-value num" id="geoKpiTotal">—</span><span class="kpi-sub" id="geoKpiTotalSub">&nbsp;</span></div>
-      <div class="kpi"><span class="kpi-label">თბილისი</span><span class="kpi-value num" id="geoKpiTbilisi">—</span><span class="kpi-sub" id="geoKpiTbilisiSub">&nbsp;</span></div>
-      <div class="kpi"><span class="kpi-label">რეგიონები</span><span class="kpi-value num" id="geoKpiRegions">—</span><span class="kpi-sub" id="geoKpiRegionsSub">&nbsp;</span></div>
-      <div class="kpi"><span class="kpi-label">მისამართის გარეშე</span><span class="kpi-value num" id="geoKpiNoAddr">—</span><span class="kpi-sub" id="geoKpiNoAddrSub">&nbsp;</span></div>
-      <div class="kpi"><span class="kpi-label">დაუზუსტებელი</span><span class="kpi-value num" id="geoKpiOther">—</span><span class="kpi-sub" id="geoKpiOtherSub">&nbsp;</span></div>
+      <div class="kpi"><span class="kpi-label" data-i18n="geoKpiTotal">სულ ზედნადები</span><span class="kpi-value num" id="geoKpiTotal">—</span><span class="kpi-sub" id="geoKpiTotalSub">&nbsp;</span></div>
+      <div class="kpi"><span class="kpi-label" data-i18n="geoTbilisi">თბილისი</span><span class="kpi-value num" id="geoKpiTbilisi">—</span><span class="kpi-sub" id="geoKpiTbilisiSub">&nbsp;</span></div>
+      <div class="kpi"><span class="kpi-label" data-i18n="geoRegions">რეგიონები</span><span class="kpi-value num" id="geoKpiRegions">—</span><span class="kpi-sub" id="geoKpiRegionsSub">&nbsp;</span></div>
+      <div class="kpi"><span class="kpi-label" data-i18n="geoNoAddr">მისამართის გარეშე</span><span class="kpi-value num" id="geoKpiNoAddr">—</span><span class="kpi-sub" id="geoKpiNoAddrSub">&nbsp;</span></div>
+      <div class="kpi"><span class="kpi-label" data-i18n="geoOther">დაუზუსტებელი</span><span class="kpi-value num" id="geoKpiOther">—</span><span class="kpi-sub" id="geoKpiOtherSub">&nbsp;</span></div>
     </div>
 
     <div class="geo-grid">
       <div class="panel">
-        <div class="panel-head"><span class="panel-title">რეგიონები (თბილისის გარეთ)</span><span class="panel-note">ზედნადებების რაოდენობა &amp; თანხა</span></div>
+        <div class="panel-head"><span class="panel-title" data-i18n="regionsOutsideTbilisi">რეგიონები (თბილისის გარეთ)</span><span class="panel-note" data-i18n="countAmountNote">ზედნადებების რაოდენობა &amp; თანხა</span></div>
         <div class="geo-list" id="geoRegionsList"></div>
       </div>
       <div class="panel">
-        <div class="panel-head"><span class="panel-title">თბილისი — უბნების მიხედვით</span><span class="panel-note">ზედნადებების რაოდენობა &amp; თანხა</span></div>
+        <div class="panel-head"><span class="panel-title" data-i18n="tbilisiByDistrict">თბილისი — უბნების მიხედვით</span><span class="panel-note" data-i18n="countAmountNote">ზედნადებების რაოდენობა &amp; თანხა</span></div>
         <div class="geo-list" id="geoTbilisiList"></div>
       </div>
     </div>
 
-    <footer><span>წყარო: შემოსავლების სამსახური &middot; ელექტრონული ზედნადებების სერვისი (RS.ge WayBillService, END_ADDRESS)</span><span id="geoGenStamp">—</span></footer>
+    <footer><span data-i18n="geoFooterSource">წყარო: შემოსავლების სამსახური &middot; ელექტრონული ზედნადებების სერვისი (RS.ge WayBillService, END_ADDRESS)</span><span id="geoGenStamp">—</span></footer>
   </div>
 
 </div>
@@ -621,8 +622,160 @@ const RAW_INV = __DATA_INV__;
 const RAW_RECON = __DATA_RECON__;
 const RAW_GEO = __DATA_GEO__;
 
+/* ---------- i18n ---------- */
+let LANG = localStorage.getItem("voltaLang") || "ka";
+const RERENDER_FNS = [];
+function onRerender(fn){ RERENDER_FNS.push(fn); }
+function t(key){
+  const row = T[key];
+  if (!row) return key;
+  return row[LANG] !== undefined ? row[LANG] : row.ka;
+}
+const T = {
+  title: {ka:"ვოლტას სავაჭრო რეესტრები", en:"Volta Trade Registers"},
+  tabRecon: {ka:"გაყიდვა ↔ ზედნადები", en:"Sale ↔ Waybill"},
+  tabWb: {ka:"ზედნადებები", en:"Waybills"},
+  tabInv: {ka:"ანგარიშ-ფაქტურები", en:"Invoices"},
+  tabGeo: {ka:"გეოგრაფია", en:"Geography"},
+
+  dateFrom: {ka:"დან", en:"From"},
+  dateTo: {ka:"მდე", en:"To"},
+  statusLabel: {ka:"სტატუსი", en:"Status"},
+  typeLabel: {ka:"ტიპი", en:"Type"},
+  all: {ka:"ყველა", en:"All"},
+  resetFilters: {ka:"ფილტრის გასუფთავება", en:"Clear filters"},
+  generatedAt: {ka:"გენერირებულია: ", en:"Generated: "},
+  noRecords: {ka:"ჩანაწერი არ მოიძებნა", en:"No records found"},
+  noPeople: {ka:"პირი არ მოიძებნა", en:"No buyers found"},
+  noData: {ka:"მონაცემი არ არის", en:"No data"},
+  quantity: {ka:"რაოდენობა", en:"Count"},
+  amountGel: {ka:"თანხა (₾)", en:"Amount (₾)"},
+  countAmountNote: {ka:"ზედნადებების რაოდენობა & თანხა", en:"Waybill count & amount"},
+  invCountAmountNote: {ka:"ფაქტურების რაოდენობა & თანხა", en:"Invoice count & amount"},
+
+  // waybills tab
+  wbUnnumberedNote: {ka:"გაუქმებული ან ნომრის მიღებამდე გაუქმებული ზედნადებები (ნომრის გარეშე) რეესტრში არ შედის", en:"Cancelled or cancelled-before-numbering waybills (no number) are excluded from the register"},
+  wbSearchPh: {ka:"ძებნა: მყიდველი, ს/ნ, ნომერი, მანქანა…", en:"Search: buyer, ID, number, vehicle…"},
+  wbKpiCount: {ka:"ზედნადებები", en:"Waybills"},
+  wbKpiAmount: {ka:"ჯამური თანხა", en:"Total amount"},
+  wbKpiDoneCancel: {ka:"დასრულებული / გაუქმებული", en:"Completed / Cancelled"},
+  wbKpiBuyers: {ka:"უნიკალური მყიდველი", en:"Unique buyers"},
+  wbWeeklyVolume: {ka:"კვირეული მოცულობა", en:"Weekly volume"},
+  byStatus: {ka:"სტატუსების მიხედვით", en:"By status"},
+  byType: {ka:"ტიპების მიხედვით", en:"By type"},
+  topBuyers: {ka:"მსხვილი მყიდველები", en:"Top buyers"},
+  top12ByAmount: {ka:"ტოპ 12, ჯამური თანხით", en:"Top 12 by total amount"},
+  wbRegistry: {ka:"ზედნადებების რეესტრი", en:"Waybill register"},
+  colTransportStart: {ka:"ტრანსპ. დაწყება", en:"Transport start"},
+  colWaybillNo: {ka:"ზედნადების №", en:"Waybill №"},
+  colBuyer: {ka:"მყიდველი", en:"Buyer"},
+  colTin: {ka:"ს/ნ", en:"ID"},
+  colDestination: {ka:"დანიშნულება", en:"Destination"},
+  colVehicle: {ka:"მანქანა", en:"Vehicle"},
+  colType: {ka:"ტიპი", en:"Type"},
+  colStatus: {ka:"სტატუსი", en:"Status"},
+  colAmount: {ka:"თანხა (₾)", en:"Amount (₾)"},
+  wbFooterSource: {ka:"წყარო: შემოსავლების სამსახური · ელექტრონული ზედნადებების სერვისი (RS.ge WayBillService)", en:"Source: Revenue Service · Electronic Waybill Service (RS.ge WayBillService)"},
+  wbStatusDone: {ka:"დასრულებული", en:"Completed"},
+  wbStatusActive: {ka:"აქტიური", en:"Active"},
+  wbStatusCarrier: {ka:"გადამზიდავთან", en:"With carrier"},
+  wbStatusCancelled: {ka:"გაუქმებული", en:"Cancelled"},
+  wbStatusSaved: {ka:"შენახული", en:"Saved"},
+  wbStatusDeleted: {ka:"წაშლილი", en:"Deleted"},
+  wbTypeInternal: {ka:"შიდა გადაზიდვა", en:"Internal transport"},
+  wbTypeDeliveryTransport: {ka:"მიწოდება ტრანსპორტირებით", en:"Delivery, transported"},
+  wbTypeDeliveryNoTransport: {ka:"მიწოდება ტრანსპორტირების გარეშე", en:"Delivery, not transported"},
+  wbTypeDistribution: {ka:"დისტრიბუცია", en:"Distribution"},
+  wbTypeReturn: {ka:"საქონლის დაბრუნება", en:"Goods return"},
+  wbTypeSub: {ka:"ქვე-ზედნადები", en:"Sub-waybill"},
+
+  // invoices tab
+  invDateNote: {ka:"თარიღი აღნიშნავს ოპერაციის პერიოდს (თვის დასაწყისი), არა რეგისტრაციის დღეს", en:"Date is the operation period (start of month), not the filing day"},
+  invSearchPh: {ka:"ძებნა: მყიდველი, ს/ნ, სერია/№…", en:"Search: buyer, ID, series/№…"},
+  invKpiCount: {ka:"ფაქტურები", en:"Invoices"},
+  invKpiVat: {ka:"ჯამური დღგ", en:"Total VAT"},
+  invMonthlyVolume: {ka:"თვიური მოცულობა", en:"Monthly volume"},
+  invRegistry: {ka:"ფაქტურების რეესტრი", en:"Invoice register"},
+  colOperation: {ka:"ოპერაცია", en:"Operation"},
+  colRegistration: {ka:"რეგისტრაცია", en:"Registration"},
+  colSeriesNo: {ka:"სერია / №", en:"Series / №"},
+  colVat: {ka:"დღგ (₾)", en:"VAT (₾)"},
+  invFooterSource: {ka:"წყარო: შემოსავლების სამსახური · ელექტრონული ანგარიშ-ფაქტურის სერვისი (RS.ge NtosService)", en:"Source: Revenue Service · Electronic Invoice Service (RS.ge NtosService)"},
+  invStatus0: {ka:"ახალი", en:"New"},
+  invStatus1: {ka:"დასადასტურებელი", en:"Pending confirmation"},
+  invStatus2: {ka:"დადასტურებული", en:"Confirmed"},
+  invStatus3: {ka:"კორექტირებული (პირველადი)", en:"Amended (original)"},
+  invStatus4: {ka:"ახალი კორექტირება", en:"New amendment"},
+  invStatus5: {ka:"კორექტ. დასადასტურებელი", en:"Amendment pending confirmation"},
+  invStatus8: {ka:"კორექტ. დადასტურებული", en:"Amendment confirmed"},
+  invStatus6: {ka:"გაუქმებული", en:"Cancelled"},
+  invStatus7: {ka:"გაუქმ. დადასტურებული", en:"Cancellation confirmed"},
+
+  // reconciliation tab
+  reconExplainer: {ka:"CRM-ის რეალური გაყიდვები (Order_Status=5) დაწყვილებულია იმავე მყიდველის ზედნადებთან ±45 დღისა და თანხის ±5%/50₾ ტოლერანტობით — პირის CRM/ზედნადები ჯამების სხვაობა დადებითია, თუ ზედნადები აკლია (გაყიდვა ჩაწერილია, ზედნადები არა) და უარყოფითია, თუ გაყიდვა აკლია (ზედნადები არსებობს, CRM-ში ჩანაწერი არა)", en:"Real CRM sales (Order_Status=5) are matched to the same buyer's waybill within ±45 days and ±5%/50₾ amount tolerance — a buyer's CRM/waybill total difference is positive when a waybill is missing (sale recorded, no waybill) and negative when a sale is missing (waybill exists, no CRM record)"},
+  reconStatusAll: {ka:"სულ გაყიდვები", en:"All sales"},
+  reconStatusMatched: {ka:"დაწყვილებული", en:"Matched"},
+  reconStatusMissingWb: {ka:"აკლია ზედნადები", en:"Missing waybill"},
+  reconStatusMissingSale: {ka:"აკლია გაყიდვა", en:"Missing sale"},
+  reconKpiTotal: {ka:"სულ გაყიდვა", en:"Total sales"},
+  reconKpiMatched: {ka:"დაწყვილებული", en:"Matched"},
+  reconKpiMissing: {ka:"აკლია ზედნადები", en:"Missing waybill"},
+  reconKpiMissingSale: {ka:"აკლია გაყიდვა", en:"Missing sale"},
+  reconKpiAmount: {ka:"რისკის ქვეშ თანხა", en:"Amount at risk"},
+  monthlyDynamics: {ka:" — თვიური დინამიკა", en:" — monthly trend"},
+  salesCountAmountNote: {ka:"გაყიდვების რაოდენობა & თანხა", en:"Sale count & amount"},
+  reconGroupTitle: {ka:"გაყიდვები პირადობის მიხედვით", en:"Sales by buyer"},
+  reconGroupSearchPh: {ka:"ძებნა: მყიდველი, ს/ნ…", en:"Search: buyer, ID…"},
+  reconFooterSource: {ka:"წყარო: myvolta.info CRM (instalments, Order_Status=5) · RS.ge WayBillService", en:"Source: myvolta.info CRM (instalments, Order_Status=5) · RS.ge WayBillService"},
+  buyersInPeriod: {ka:"მყიდველი მიმდინარე პერიოდში", en:"Buyers in current period"},
+  coverageRate: {ka:"% დაფარვა (ჯამური თანხით)", en:"% covered (by total amount)"},
+  fromBuyers: {ka:"% მყიდველიდან", en:"% of buyers"},
+  crmSalesN: {ka:"CRM გაყიდვები (", en:"CRM sales ("},
+  waybillsN: {ka:"ზედნადებები (", en:"Waybills ("},
+  noSalesInPeriod: {ka:"ამ პერიოდში გაყიდვა არ არის", en:"No sale in this period"},
+  noWaybillsInPeriod: {ka:"ამ პერიოდში ზედნადები არ არის", en:"No waybill in this period"},
+  returnTag: {ka:"დაბრუნება", en:"Return"},
+  personIdShort: {ka:"პ/ნ ", en:"ID "},
+  crmLabel: {ka:"CRM ", en:"CRM "},
+  waybillLabel: {ka:" / ზედნადები ", en:" / waybill "},
+  diffLabel: {ka:" · სხვაობა ", en:" · diff "},
+  peopleShown: {ka:" პირი", en:" buyer(s)"},
+  showing: {ka:"ნაჩვენებია ", en:"Showing "},
+  wbRecordsNote: {ka:" ჩანაწერი · თარიღი: ტრანსპორტირების დაწყება", en:" records · date: transport start"},
+  recordsSuffix: {ka:" ჩანაწერი", en:" records"},
+  salesChecked: {ka:" გაყიდვა შემოწმებული", en:" sales checked"},
+  avgPrefix: {ka:"საშ. ", en:"Avg. "},
+  perWaybill: {ka:" / ზედნადებზე", en:" / waybill"},
+  perInvoice: {ka:" / ფაქტურაზე", en:" / invoice"},
+  completionRate: {ka:"% დასრულების წილი", en:"% completion rate"},
+  waybillsPerBuyer: {ka:" ზედნადები / მყიდველი", en:" waybills / buyer"},
+  invoicesPerBuyer: {ka:" ფაქტურა / მყიდველი", en:" invoices / buyer"},
+  waybillsWord: {ka:" ზედნადები", en:" waybills"},
+  invoicesWord: {ka:" ფაქტურა", en:" invoices"},
+
+  // geography tab
+  geoNote: {ka:"კლასიფიკაცია ეფუძნება მისამართის თავისუფალ ტექსტში ქალაქის/რაიონის სახელის ძებნას — არაზუსტი მისამართის ან მხოლოდ ქუჩის სახელის შემთხვევაში ხვდება „დაუზუსტებელი\" ჯგუფში, სულაც არ ნიშნავს რომ პროდუქტი ვერ მიაწოდეს", en:"Classification is based on keyword-matching a city/district name in the free-text address — an imprecise address or a bare street name falls into the \"unclassified\" group, which does NOT mean the product wasn't delivered"},
+  geoKpiTotal: {ka:"სულ ზედნადები", en:"Total waybills"},
+  geoWaybillsNoCancel: {ka:"ზედნადები (გაუქმებულის გარეშე)", en:"waybills (excluding cancelled)"},
+  geoTbilisi: {ka:"თბილისი", en:"Tbilisi"},
+  geoRegions: {ka:"რეგიონები", en:"Regions"},
+  geoNoAddr: {ka:"მისამართის გარეშე", en:"No address"},
+  geoOther: {ka:"დაუზუსტებელი", en:"Unclassified"},
+  ofTotal: {ka:"% სულიდან", en:"% of total"},
+  noAddrDetail: {ka:" · მისამართი საერთოდ არ ჩაწერილა", en:" · no address recorded at all"},
+  otherDetail: {ka:" · მისამართია, მაგრამ ქალაქი/რაიონი ვერ ამოიცნო", en:" · has an address, but city/district wasn't recognized"},
+  regionsOutsideTbilisi: {ka:"რეგიონები (თბილისის გარეთ)", en:"Regions (outside Tbilisi)"},
+  tbilisiByDistrict: {ka:"თბილისი — უბნების მიხედვით", en:"Tbilisi — by district"},
+  geoFooterSource: {ka:"წყარო: შემოსავლების სამსახური · ელექტრონული ზედნადებების სერვისი (RS.ge WayBillService, END_ADDRESS)", en:"Source: Revenue Service · Electronic Waybill Service (RS.ge WayBillService, END_ADDRESS)"},
+  waybillsChecked: {ka:" ზედნადები შემოწმებული (გაუქმებულის გარეშე) · ", en:" waybills checked (excluding cancelled) · "},
+  classifiedN: {ka:" კლასიფიცირებული, ", en:" classified, "},
+  unclassifiedN: {ka:" დაუზუსტებელი", en:" unclassified"},
+};
+
 /* ---------- shared helpers ---------- */
 const GE_MONTHS = ["იანვარი","თებერვალი","მარტი","აპრილი","მაისი","ივნისი","ივლისი","აგვისტო","სექტემბერი","ოქტომბერი","ნოემბერი","დეკემბერი"];
+const EN_MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+function MONTHS(){ return LANG === "en" ? EN_MONTHS : GE_MONTHS; }
 function pad2(n){ return String(n).padStart(2,"0"); }
 function fmtDateTime(dstr){
   const d = new Date(dstr);
@@ -634,19 +787,21 @@ function fmtDateOnly(dstr){
 }
 function fmtDateLong(dstr){
   const d = new Date(dstr);
-  return d.getDate()+" "+GE_MONTHS[d.getMonth()]+", "+d.getFullYear();
+  return d.getDate()+" "+MONTHS()[d.getMonth()]+", "+d.getFullYear();
 }
 function fmtMonthLong(dstr){
   const d = new Date(dstr);
-  return GE_MONTHS[d.getMonth()]+", "+d.getFullYear();
+  return MONTHS()[d.getMonth()]+", "+d.getFullYear();
 }
-function fmtInt(n){ return Math.round(n).toLocaleString("ka-GE"); }
-function fmtGel(n){ return Math.round(n).toLocaleString("ka-GE") + " ₾"; }
+function fmtInt(n){ return Math.round(n).toLocaleString(LANG === "en" ? "en-US" : "ka-GE"); }
+function fmtGel(n){ return Math.round(n).toLocaleString(LANG === "en" ? "en-US" : "ka-GE") + " ₾"; }
 function fmtGelShort(n){
   const sign = n < 0 ? "-" : "";
   const abs = Math.abs(n);
-  if (abs >= 1000000) return sign + (abs/1000000).toFixed(1).replace(".0","") + "მლნ ₾";
-  if (abs >= 1000) return sign + (abs/1000).toFixed(0) + "ათ ₾";
+  const mln = LANG === "en" ? "M ₾" : "მლნ ₾";
+  const th = LANG === "en" ? "K ₾" : "ათ ₾";
+  if (abs >= 1000000) return sign + (abs/1000000).toFixed(1).replace(".0","") + mln;
+  if (abs >= 1000) return sign + (abs/1000).toFixed(0) + th;
   return sign + Math.round(abs) + " ₾";
 }
 function escapeHtml(s){
@@ -722,7 +877,7 @@ function drawTrend(svg, buckets, keys){
       const x = padL + i*bw + bw/2;
       const t = el("text", {x, y:H-6, "text-anchor":"middle", class:"axis-label"});
       const wd = new Date(k.length===7 ? k+"-01T00:00:00" : k+"T00:00:00");
-      t.textContent = k.length===7 ? GE_MONTHS[wd.getMonth()].slice(0,3)+" "+wd.getFullYear() : wd.getDate()+" "+GE_MONTHS[wd.getMonth()].slice(0,3);
+      t.textContent = k.length===7 ? MONTHS()[wd.getMonth()].slice(0,3)+" "+wd.getFullYear() : wd.getDate()+" "+MONTHS()[wd.getMonth()].slice(0,3);
       svg.appendChild(t);
     }
   });
@@ -746,32 +901,41 @@ function drawTrend(svg, buckets, keys){
    WAYBILLS TAB
    ========================================================= */
 (function(){
-  const STATUS_MAP = {
-    "2": {label:"დასრულებული", cls:"tag-completed", color:"var(--success)"},
-    "1": {label:"აქტიური", cls:"tag-active", color:"var(--accent)"},
-    "8": {label:"გადამზიდავთან", cls:"tag-carrier", color:"var(--warning)"},
-    "-2": {label:"გაუქმებული", cls:"tag-cancelled", color:"var(--danger)"},
-    "0": {label:"შენახული", cls:"tag-other", color:"var(--muted)"},
-    "-1": {label:"წაშლილი", cls:"tag-other", color:"var(--muted)"}
-  };
-  const TYPE_MAP = {
-    "1": "შიდა გადაზიდვა", "2": "მიწოდება ტრანსპორტირებით", "3": "მიწოდება ტრანსპორტირების გარეშე",
-    "4": "დისტრიბუცია", "5": "საქონლის დაბრუნება", "6": "ქვე-ზედნადები"
-  };
-  function statusInfo(s){ return STATUS_MAP[s] || {label:"სხვა ("+s+")", cls:"tag-other", color:"var(--muted)"}; }
-  function typeLabel(t){ return TYPE_MAP[t] || ("ტიპი "+t); }
+  function STATUS_MAP(){ return {
+    "2": {label:t("wbStatusDone"), cls:"tag-completed", color:"var(--success)"},
+    "1": {label:t("wbStatusActive"), cls:"tag-active", color:"var(--accent)"},
+    "8": {label:t("wbStatusCarrier"), cls:"tag-carrier", color:"var(--warning)"},
+    "-2": {label:t("wbStatusCancelled"), cls:"tag-cancelled", color:"var(--danger)"},
+    "0": {label:t("wbStatusSaved"), cls:"tag-other", color:"var(--muted)"},
+    "-1": {label:t("wbStatusDeleted"), cls:"tag-other", color:"var(--muted)"}
+  }; }
+  function TYPE_MAP(){ return {
+    "1": t("wbTypeInternal"), "2": t("wbTypeDeliveryTransport"), "3": t("wbTypeDeliveryNoTransport"),
+    "4": t("wbTypeDistribution"), "5": t("wbTypeReturn"), "6": t("wbTypeSub")
+  }; }
+  function statusInfo(s){ return STATUS_MAP()[s] || {label:(LANG==="en"?"Other (":"სხვა (")+s+")", cls:"tag-other", color:"var(--muted)"}; }
+  function typeLabel(k){ return TYPE_MAP()[k] || ((LANG==="en"?"Type ":"ტიპი ")+k); }
 
   const allDates = RAW_WB.map(r => r.d).sort();
   const minDate = allDates[0] || new Date().toISOString();
   const maxDate = allDates[allDates.length-1] || new Date().toISOString();
   document.getElementById("wbStart").value = minDate.slice(0,10);
   document.getElementById("wbEnd").value = maxDate.slice(0,10);
-  document.getElementById("wbRangeSubline").textContent =
-    fmtDateLong(minDate) + " — " + fmtDateLong(maxDate) + " · " + RAW_WB.length.toLocaleString("ka-GE") + " ჩანაწერი · თარიღი: ტრანსპორტირების დაწყება";
-  document.getElementById("wbGenStamp").textContent = "გენერირებულია: " + fmtDateTime(new Date().toISOString());
 
-  function populateSelect(id, map, extra){
+  function renderHeader(){
+    document.getElementById("wbRangeSubline").textContent =
+      fmtDateLong(minDate) + " — " + fmtDateLong(maxDate) + " · " + fmtInt(RAW_WB.length) + t("wbRecordsNote");
+    document.getElementById("wbGenStamp").textContent = t("generatedAt") + fmtDateTime(new Date().toISOString());
+  }
+
+  function populateSelect(id, mapFn, extra){
     const sel = document.getElementById(id);
+    const prevVal = sel.value;
+    sel.innerHTML = "";
+    const allOpt = document.createElement("option");
+    allOpt.value = ""; allOpt.textContent = t("all");
+    sel.appendChild(allOpt);
+    const map = mapFn ? mapFn() : null;
     const keys = Object.keys(extra || {});
     keys.sort((a,b)=> extra[b]-extra[a]);
     keys.forEach(k=>{
@@ -780,11 +944,15 @@ function drawTrend(svg, buckets, keys){
       opt.textContent = map ? (map[k] ? map[k].label || map[k] : k) : k;
       sel.appendChild(opt);
     });
+    sel.value = prevVal;
   }
   const statusCounts0 = {}; RAW_WB.forEach(r => statusCounts0[r.s] = (statusCounts0[r.s]||0)+1);
   const typeCounts0 = {}; RAW_WB.forEach(r => typeCounts0[r.y] = (typeCounts0[r.y]||0)+1);
-  populateSelect("wbStatus", STATUS_MAP, statusCounts0);
-  populateSelect("wbType", TYPE_MAP, typeCounts0);
+  function populateSelects(){
+    populateSelect("wbStatus", STATUS_MAP, statusCounts0);
+    populateSelect("wbType", TYPE_MAP, typeCounts0);
+  }
+  populateSelects();
 
   let sortKey = "d", sortDir = "desc", page = 0;
   const PAGE_SIZE = 50;
@@ -821,10 +989,10 @@ function drawTrend(svg, buckets, keys){
     document.getElementById("wbKpiDoneCancel").innerHTML =
       '<span style="color:var(--success)">'+fmtInt(done)+'</span> / <span style="color:var(--danger)">'+fmtInt(cancelled)+'</span>';
     const rate = count ? ((done/count)*100).toFixed(1) : "0.0";
-    document.getElementById("wbKpiDoneCancelSub").textContent = rate + "% დასრულების წილი";
+    document.getElementById("wbKpiDoneCancelSub").textContent = rate + t("completionRate");
     document.getElementById("wbKpiBuyers").textContent = fmtInt(buyers);
-    document.getElementById("wbKpiCountSub").textContent = count ? "საშ. " + fmtGel(amount/count) + " / ზედნადებზე" : " ";
-    document.getElementById("wbKpiBuyersSub").textContent = count ? (count/buyers).toFixed(1) + " ზედნადები / მყიდველი" : " ";
+    document.getElementById("wbKpiCountSub").textContent = count ? t("avgPrefix") + fmtGel(amount/count) + t("perWaybill") : " ";
+    document.getElementById("wbKpiBuyersSub").textContent = count ? (count/buyers).toFixed(1) + t("waybillsPerBuyer") : " ";
   }
 
   function renderBreakdowns(){
@@ -849,7 +1017,7 @@ function drawTrend(svg, buckets, keys){
       row.className = "rank-row";
       row.innerHTML =
         '<span class="rank-num num">'+(idx+1)+'</span>'+
-        '<span><span class="rank-name">'+escapeHtml(b.name)+'</span><br><span class="rank-meta num">ს/ნ '+b.tin+' &middot; '+b.count+' ზედნადები</span></span>'+
+        '<span><span class="rank-name">'+escapeHtml(b.name)+'</span><br><span class="rank-meta num">'+t("personIdShort")+b.tin+' &middot; '+b.count+t("waybillsWord")+'</span></span>'+
         '<span class="rank-amt num">'+fmtGel(b.amount)+'</span>';
       el.appendChild(row);
     });
@@ -893,15 +1061,15 @@ function drawTrend(svg, buckets, keys){
       "</tr>";
     }).join("");
     document.getElementById("wbPagerInfo").textContent =
-      sorted.length === 0 ? "ჩანაწერი არ მოიძებნა" :
-      "ნაჩვენებია " + (start+1) + "–" + Math.min(start+PAGE_SIZE, sorted.length) + " / " + sorted.length.toLocaleString("ka-GE");
+      sorted.length === 0 ? t("noRecords") :
+      t("showing") + (start+1) + "–" + Math.min(start+PAGE_SIZE, sorted.length) + " / " + fmtInt(sorted.length);
     document.getElementById("wbPFirst").disabled = page===0;
     document.getElementById("wbPPrev").disabled = page===0;
     document.getElementById("wbPNext").disabled = page>=totalPages-1;
     document.getElementById("wbPLast").disabled = page>=totalPages-1;
   }
 
-  function renderAll(){ renderKPIs(); renderBreakdowns(); renderRankList(); renderTrend(); renderTable(); }
+  function renderAll(){ renderHeader(); renderKPIs(); renderBreakdowns(); renderRankList(); renderTrend(); renderTable(); }
 
   document.querySelectorAll("#tab-wb thead button").forEach(btn=>{
     btn.addEventListener("click", ()=>{
@@ -926,6 +1094,7 @@ function drawTrend(svg, buckets, keys){
     applyFilters();
   });
 
+  onRerender(()=>{ populateSelects(); applyFilters(); });
   applyFilters();
 })();
 
@@ -933,30 +1102,39 @@ function drawTrend(svg, buckets, keys){
    INVOICES TAB
    ========================================================= */
 (function(){
-  const STATUS_MAP = {
-    "0": {label:"ახალი", cls:"tag-other", color:"var(--muted)"},
-    "1": {label:"დასადასტურებელი", cls:"tag-active", color:"var(--accent)"},
-    "2": {label:"დადასტურებული", cls:"tag-completed", color:"var(--success)"},
-    "3": {label:"კორექტირებული (პირველადი)", cls:"tag-carrier", color:"var(--warning)"},
-    "4": {label:"ახალი კორექტირება", cls:"tag-other", color:"var(--muted)"},
-    "5": {label:"კორექტ. დასადასტურებელი", cls:"tag-active", color:"var(--accent)"},
-    "8": {label:"კორექტ. დადასტურებული", cls:"tag-completed", color:"var(--success)"},
-    "6": {label:"გაუქმებული", cls:"tag-cancelled", color:"var(--danger)"},
-    "7": {label:"გაუქმ. დადასტურებული", cls:"tag-cancelled", color:"var(--danger)"}
-  };
-  function statusInfo(s){ return STATUS_MAP[s] || {label:"სხვა ("+s+")", cls:"tag-other", color:"var(--muted)"}; }
+  function STATUS_MAP(){ return {
+    "0": {label:t("invStatus0"), cls:"tag-other", color:"var(--muted)"},
+    "1": {label:t("invStatus1"), cls:"tag-active", color:"var(--accent)"},
+    "2": {label:t("invStatus2"), cls:"tag-completed", color:"var(--success)"},
+    "3": {label:t("invStatus3"), cls:"tag-carrier", color:"var(--warning)"},
+    "4": {label:t("invStatus4"), cls:"tag-other", color:"var(--muted)"},
+    "5": {label:t("invStatus5"), cls:"tag-active", color:"var(--accent)"},
+    "8": {label:t("invStatus8"), cls:"tag-completed", color:"var(--success)"},
+    "6": {label:t("invStatus6"), cls:"tag-cancelled", color:"var(--danger)"},
+    "7": {label:t("invStatus7"), cls:"tag-cancelled", color:"var(--danger)"}
+  }; }
+  function statusInfo(s){ return STATUS_MAP()[s] || {label:(LANG==="en"?"Other (":"სხვა (")+s+")", cls:"tag-other", color:"var(--muted)"}; }
 
   const allDates = RAW_INV.map(r => r.d).sort();
   const minDate = allDates[0] || new Date().toISOString();
   const maxDate = allDates[allDates.length-1] || new Date().toISOString();
   document.getElementById("invStart").value = minDate.slice(0,10);
   document.getElementById("invEnd").value = maxDate.slice(0,10);
-  document.getElementById("invRangeSubline").textContent =
-    fmtMonthLong(minDate) + " — " + fmtMonthLong(maxDate) + " · " + RAW_INV.length.toLocaleString("ka-GE") + " ჩანაწერი";
-  document.getElementById("invGenStamp").textContent = "გენერირებულია: " + fmtDateTime(new Date().toISOString());
 
-  function populateSelect(id, map, extra){
+  function renderHeader(){
+    document.getElementById("invRangeSubline").textContent =
+      fmtMonthLong(minDate) + " — " + fmtMonthLong(maxDate) + " · " + fmtInt(RAW_INV.length) + t("recordsSuffix");
+    document.getElementById("invGenStamp").textContent = t("generatedAt") + fmtDateTime(new Date().toISOString());
+  }
+
+  function populateSelect(id, mapFn, extra){
     const sel = document.getElementById(id);
+    const prevVal = sel.value;
+    sel.innerHTML = "";
+    const allOpt = document.createElement("option");
+    allOpt.value = ""; allOpt.textContent = t("all");
+    sel.appendChild(allOpt);
+    const map = mapFn();
     const keys = Object.keys(extra || {});
     keys.sort((a,b)=> extra[b]-extra[a]);
     keys.forEach(k=>{
@@ -965,9 +1143,11 @@ function drawTrend(svg, buckets, keys){
       opt.textContent = map[k] ? map[k].label : k;
       sel.appendChild(opt);
     });
+    sel.value = prevVal;
   }
   const statusCounts0 = {}; RAW_INV.forEach(r => statusCounts0[r.s] = (statusCounts0[r.s]||0)+1);
-  populateSelect("invStatus", STATUS_MAP, statusCounts0);
+  function populateSelects(){ populateSelect("invStatus", STATUS_MAP, statusCounts0); }
+  populateSelects();
 
   let sortKey = "d", sortDir = "desc", page = 0;
   const PAGE_SIZE = 50;
@@ -1001,8 +1181,8 @@ function drawTrend(svg, buckets, keys){
     document.getElementById("invKpiVat").textContent = fmtGelShort(vat);
     document.getElementById("invKpiVatSub").innerHTML = fmtGel(vat);
     document.getElementById("invKpiBuyers").textContent = fmtInt(buyers);
-    document.getElementById("invKpiCountSub").textContent = count ? "საშ. " + fmtGel(amount/count) + " / ფაქტურაზე" : " ";
-    document.getElementById("invKpiBuyersSub").textContent = count ? (count/buyers).toFixed(1) + " ფაქტურა / მყიდველი" : " ";
+    document.getElementById("invKpiCountSub").textContent = count ? t("avgPrefix") + fmtGel(amount/count) + t("perInvoice") : " ";
+    document.getElementById("invKpiBuyersSub").textContent = count ? (count/buyers).toFixed(1) + t("invoicesPerBuyer") : " ";
   }
 
   function renderBreakdowns(){
@@ -1025,7 +1205,7 @@ function drawTrend(svg, buckets, keys){
       row.className = "rank-row";
       row.innerHTML =
         '<span class="rank-num num">'+(idx+1)+'</span>'+
-        '<span><span class="rank-name">'+escapeHtml(b.name)+'</span><br><span class="rank-meta num">ს/ნ '+b.tin+' &middot; '+b.count+' ფაქტურა</span></span>'+
+        '<span><span class="rank-name">'+escapeHtml(b.name)+'</span><br><span class="rank-meta num">'+t("personIdShort")+b.tin+' &middot; '+b.count+t("invoicesWord")+'</span></span>'+
         '<span class="rank-amt num">'+fmtGel(b.amount)+'</span>';
       el.appendChild(row);
     });
@@ -1068,15 +1248,15 @@ function drawTrend(svg, buckets, keys){
       "</tr>";
     }).join("");
     document.getElementById("invPagerInfo").textContent =
-      sorted.length === 0 ? "ჩანაწერი არ მოიძებნა" :
-      "ნაჩვენებია " + (start+1) + "–" + Math.min(start+PAGE_SIZE, sorted.length) + " / " + sorted.length.toLocaleString("ka-GE");
+      sorted.length === 0 ? t("noRecords") :
+      t("showing") + (start+1) + "–" + Math.min(start+PAGE_SIZE, sorted.length) + " / " + fmtInt(sorted.length);
     document.getElementById("invPFirst").disabled = page===0;
     document.getElementById("invPPrev").disabled = page===0;
     document.getElementById("invPNext").disabled = page>=totalPages-1;
     document.getElementById("invPLast").disabled = page>=totalPages-1;
   }
 
-  function renderAll(){ renderKPIs(); renderBreakdowns(); renderRankList(); renderTrend(); renderTable(); }
+  function renderAll(){ renderHeader(); renderKPIs(); renderBreakdowns(); renderRankList(); renderTrend(); renderTable(); }
 
   document.querySelectorAll("#tab-inv thead button").forEach(btn=>{
     btn.addEventListener("click", ()=>{
@@ -1100,6 +1280,7 @@ function drawTrend(svg, buckets, keys){
     applyFilters();
   });
 
+  onRerender(()=>{ populateSelects(); applyFilters(); });
   applyFilters();
 })();
 
@@ -1118,11 +1299,14 @@ function drawTrend(svg, buckets, keys){
   const maxDate = allDates[allDates.length-1] || new Date().toISOString();
   document.getElementById("reconStart").value = minDate.slice(0,10);
   document.getElementById("reconEnd").value = maxDate.slice(0,10);
-  document.getElementById("reconRangeSubline").textContent =
-    fmtDateLong(minDate) + " — " + fmtDateLong(maxDate) + " · " + summary.total.toLocaleString("ka-GE") + " გაყიდვა შემოწმებული";
-  document.getElementById("reconGenStamp").textContent = "გენერირებულია: " + fmtDateTime(new Date().toISOString());
 
-  const statusLabel = {all:"სულ გაყიდვები", matched:"დაწყვილებული", missing_wb:"აკლია ზედნადები", missing_sale:"აკლია გაყიდვა"};
+  function renderHeader(){
+    document.getElementById("reconRangeSubline").textContent =
+      fmtDateLong(minDate) + " — " + fmtDateLong(maxDate) + " · " + fmtInt(summary.total) + t("salesChecked");
+    document.getElementById("reconGenStamp").textContent = t("generatedAt") + fmtDateTime(new Date().toISOString());
+  }
+
+  function statusLabel(){ return {all:t("reconStatusAll"), matched:t("reconStatusMatched"), missing_wb:t("reconStatusMissingWb"), missing_sale:t("reconStatusMissingSale")}; }
   const NET_TOL = 1; // ₾ — below this, a person's CRM/waybill totals count as fully reconciled
 
   function inRange(dstr, start, end){
@@ -1175,6 +1359,7 @@ function drawTrend(svg, buckets, keys){
   }
 
   function applyFilters(){
+    renderHeader();
     renderKPIs();
     renderTrend();
     groupPage = 0;
@@ -1199,14 +1384,14 @@ function drawTrend(svg, buckets, keys){
     const riskAmount = riskAmountWb + riskAmountSale;
 
     document.getElementById("reconKpiTotal").textContent = fmtInt(people.length);
-    document.getElementById("reconKpiTotalSub").textContent = "მყიდველი მიმდინარე პერიოდში";
+    document.getElementById("reconKpiTotalSub").textContent = t("buyersInPeriod");
     document.getElementById("reconKpiMatched").textContent = fmtInt(matchedPeople);
     const rate = people.length ? ((matchedPeople/people.length)*100).toFixed(1) : "0.0";
-    document.getElementById("reconKpiMatchedSub").textContent = rate + "% დაფარვა (ჯამური თანხით)";
+    document.getElementById("reconKpiMatchedSub").textContent = rate + t("coverageRate");
     document.getElementById("reconKpiMissing").textContent = fmtInt(missingWb.length);
-    document.getElementById("reconKpiMissingSub").innerHTML = people.length ? ((missingWb.length/people.length)*100).toFixed(1)+"% მყიდველიდან &middot; "+fmtGel(riskAmountWb) : " ";
+    document.getElementById("reconKpiMissingSub").innerHTML = people.length ? ((missingWb.length/people.length)*100).toFixed(1)+t("fromBuyers")+" &middot; "+fmtGel(riskAmountWb) : " ";
     document.getElementById("reconKpiMissingSale").textContent = fmtInt(missingSale.length);
-    document.getElementById("reconKpiMissingSaleSub").innerHTML = people.length ? ((missingSale.length/people.length)*100).toFixed(1)+"% მყიდველიდან &middot; "+fmtGel(riskAmountSale) : " ";
+    document.getElementById("reconKpiMissingSaleSub").innerHTML = people.length ? ((missingSale.length/people.length)*100).toFixed(1)+t("fromBuyers")+" &middot; "+fmtGel(riskAmountSale) : " ";
     document.getElementById("reconKpiAmount").textContent = fmtGelShort(riskAmount);
     document.getElementById("reconKpiAmountSub").innerHTML = fmtGel(riskAmount);
   }
@@ -1232,7 +1417,7 @@ function drawTrend(svg, buckets, keys){
     });
     const months = Object.keys(byMonth).sort();
     drawTrend(document.getElementById("reconTrendChart"), byMonth, months);
-    document.getElementById("reconTrendTitle").textContent = statusLabel[status] + " — თვიური დინამიკა";
+    document.getElementById("reconTrendTitle").textContent = statusLabel()[status] + t("monthlyDynamics");
   }
 
   /* ---- grouped-by-person view (the tab's main/only table) ---- */
@@ -1262,37 +1447,37 @@ function drawTrend(svg, buckets, keys){
       const diff = p.netDiff;
       const diffColor = p.status === "matched" ? "var(--success)" : (p.status === "missing_wb" ? "var(--danger)" : "var(--warning)");
       const statusTag = p.status === "matched" ? "" :
-        " &middot; <span style='color:"+diffColor+"'>"+statusLabel[p.status]+"</span>";
+        " &middot; <span style='color:"+diffColor+"'>"+statusLabel()[p.status]+"</span>";
       const salesHtml = p.sales.length ? p.sales.map(s=>
         "<div class='person-row"+(s.matched?" is-matched":"")+"'>"+
           "<span class='pd'><span class='person-dot' style='background:"+(s.matched?"var(--success)":"var(--danger)")+"'></span>"+fmtDateOnly(s.d)+"</span>"+
           "<span class='pp'>"+escapeHtml(s.prod)+"</span>"+
           "<span class='pa'>"+fmtGel(s.a)+"</span>"+
         "</div>"
-      ).join("") : "<div class='person-row'><span class='pp' style='color:var(--faint)'>ამ პერიოდში გაყიდვა არ არის</span></div>";
+      ).join("") : "<div class='person-row'><span class='pp' style='color:var(--faint)'>"+t("noSalesInPeriod")+"</span></div>";
       const wbHtml = p.wbs.length ? p.wbs.map(w=>
         "<div class='person-row"+(w.matched?" is-matched":"")+"'>"+
           "<span class='pd'><span class='person-dot' style='background:"+(w.isReturn?"var(--warning)":(w.matched?"var(--success)":"var(--muted)"))+"'></span>"+fmtDateOnly(w.d)+"</span>"+
-          "<span class='pp' title='№"+escapeHtml(w.n)+"'>"+escapeHtml(w.prod)+(w.isReturn?" &middot; <span style='color:var(--warning)'>დაბრუნება</span>":"")+"</span>"+
+          "<span class='pp' title='№"+escapeHtml(w.n)+"'>"+escapeHtml(w.prod)+(w.isReturn?" &middot; <span style='color:var(--warning)'>"+t("returnTag")+"</span>":"")+"</span>"+
           "<span class='pa'>"+fmtGel(w.a)+"</span>"+
         "</div>"
-      ).join("") : "<div class='person-row'><span class='pp' style='color:var(--faint)'>ამ პერიოდში ზედნადები არ არის</span></div>";
+      ).join("") : "<div class='person-row'><span class='pp' style='color:var(--faint)'>"+t("noWaybillsInPeriod")+"</span></div>";
       return "<div class='person-card'>"+
         "<div class='person-head'>"+
           "<span class='person-name'>"+escapeHtml(p.b)+"</span>"+
-          "<span class='person-meta'>პ/ნ "+p.t+" &middot; CRM "+fmtGel(p.salesTotal)+" / ზედნადები "+fmtGel(p.wbTotal)+
-            " &middot; სხვაობა <span style='color:"+diffColor+"'>"+fmtGel(diff)+"</span>"+statusTag+"</span>"+
+          "<span class='person-meta'>"+t("personIdShort")+p.t+" &middot; "+t("crmLabel")+fmtGel(p.salesTotal)+t("waybillLabel")+fmtGel(p.wbTotal)+
+            t("diffLabel")+"<span style='color:"+diffColor+"'>"+fmtGel(diff)+"</span>"+statusTag+"</span>"+
         "</div>"+
         "<div class='person-cols'>"+
-          "<div class='person-col'><div class='person-col-title'>CRM გაყიდვები ("+p.sales.length+")</div>"+salesHtml+"</div>"+
-          "<div class='person-col'><div class='person-col-title'>ზედნადებები ("+p.wbs.length+")</div>"+wbHtml+"</div>"+
+          "<div class='person-col'><div class='person-col-title'>"+t("crmSalesN")+p.sales.length+")</div>"+salesHtml+"</div>"+
+          "<div class='person-col'><div class='person-col-title'>"+t("waybillsN")+p.wbs.length+")</div>"+wbHtml+"</div>"+
         "</div>"+
       "</div>";
     }).join("");
 
     document.getElementById("reconGroupPagerInfo").textContent =
-      people.length === 0 ? "პირი არ მოიძებნა" :
-      "ნაჩვენებია " + (pageStart+1) + "–" + Math.min(pageStart+GROUP_PAGE_SIZE, people.length) + " / " + people.length.toLocaleString("ka-GE") + " პირი";
+      people.length === 0 ? t("noPeople") :
+      t("showing") + (pageStart+1) + "–" + Math.min(pageStart+GROUP_PAGE_SIZE, people.length) + " / " + fmtInt(people.length) + t("peopleShown");
     document.getElementById("reconGPFirst").disabled = groupPage===0;
     document.getElementById("reconGPPrev").disabled = groupPage===0;
     document.getElementById("reconGPNext").disabled = groupPage>=totalPages-1;
@@ -1313,15 +1498,16 @@ function drawTrend(svg, buckets, keys){
     applyFilters();
   });
 
+  onRerender(applyFilters);
   applyFilters();
 })();
 
 /* ---------- GEOGRAPHY TAB ---------- */
 (function(){
-  function renderGeoList(containerId, items, totalForShare){
+  function renderGeoList(containerId, items){
     const el = document.getElementById(containerId);
     if (!items.length){
-      el.innerHTML = "<div class='geo-row' style='grid-template-columns:1fr'><span class='geo-name' style='color:var(--faint)'>მონაცემი არ არის</span></div>";
+      el.innerHTML = "<div class='geo-row' style='grid-template-columns:1fr'><span class='geo-name' style='color:var(--faint)'>"+t("noData")+"</span></div>";
       return;
     }
     const max = items[0].count;
@@ -1339,32 +1525,54 @@ function drawTrend(svg, buckets, keys){
   const classified = geo.tbilisiTotal + geo.regionsTotal;
   const unclassified = geo.noAddressCount + geo.otherCount;
 
-  document.getElementById("geoKpiTotal").textContent = fmtInt(geo.total);
-  document.getElementById("geoKpiTotalSub").textContent = "ზედნადები (გაუქმებულის გარეშე)";
-  document.getElementById("geoKpiTbilisi").textContent = fmtInt(geo.tbilisiTotal);
-  document.getElementById("geoKpiTbilisiSub").textContent = geo.total ? (geo.tbilisiTotal/geo.total*100).toFixed(1)+"% სულიდან" : " ";
-  document.getElementById("geoKpiRegions").textContent = fmtInt(geo.regionsTotal);
-  document.getElementById("geoKpiRegionsSub").textContent = geo.total ? (geo.regionsTotal/geo.total*100).toFixed(1)+"% სულიდან" : " ";
-  document.getElementById("geoKpiNoAddr").textContent = fmtInt(geo.noAddressCount);
-  document.getElementById("geoKpiNoAddrSub").textContent = geo.total ? (geo.noAddressCount/geo.total*100).toFixed(1)+"% სულიდან · მისამართი საერთოდ არ ჩაწერილა" : " ";
-  document.getElementById("geoKpiOther").textContent = fmtInt(geo.otherCount);
-  document.getElementById("geoKpiOtherSub").textContent = geo.total ? (geo.otherCount/geo.total*100).toFixed(1)+"% სულიდან · მისამართია, მაგრამ ქალაქი/რაიონი ვერ ამოიცნო" : " ";
+  function render(){
+    document.getElementById("geoKpiTotal").textContent = fmtInt(geo.total);
+    document.getElementById("geoKpiTotalSub").textContent = t("geoWaybillsNoCancel");
+    document.getElementById("geoKpiTbilisi").textContent = fmtInt(geo.tbilisiTotal);
+    document.getElementById("geoKpiTbilisiSub").textContent = geo.total ? (geo.tbilisiTotal/geo.total*100).toFixed(1)+t("ofTotal") : " ";
+    document.getElementById("geoKpiRegions").textContent = fmtInt(geo.regionsTotal);
+    document.getElementById("geoKpiRegionsSub").textContent = geo.total ? (geo.regionsTotal/geo.total*100).toFixed(1)+t("ofTotal") : " ";
+    document.getElementById("geoKpiNoAddr").textContent = fmtInt(geo.noAddressCount);
+    document.getElementById("geoKpiNoAddrSub").textContent = geo.total ? (geo.noAddressCount/geo.total*100).toFixed(1)+t("ofTotal")+t("noAddrDetail") : " ";
+    document.getElementById("geoKpiOther").textContent = fmtInt(geo.otherCount);
+    document.getElementById("geoKpiOtherSub").textContent = geo.total ? (geo.otherCount/geo.total*100).toFixed(1)+t("ofTotal")+t("otherDetail") : " ";
 
-  renderGeoList("geoRegionsList", geo.regions);
-  renderGeoList("geoTbilisiList", geo.tbilisi);
+    renderGeoList("geoRegionsList", geo.regions);
+    renderGeoList("geoTbilisiList", geo.tbilisi);
 
-  document.getElementById("geoRangeSubline").textContent =
-    fmtInt(geo.total) + " ზედნადები შემოწმებული (გაუქმებულის გარეშე) · " + fmtInt(classified) + " კლასიფიცირებული, " + fmtInt(unclassified) + " დაუზუსტებელი";
-  document.getElementById("geoGenStamp").textContent = "გენერირებულია: " + fmtDateTime(new Date().toISOString());
+    document.getElementById("geoRangeSubline").textContent =
+      fmtInt(geo.total) + t("waybillsChecked") + fmtInt(classified) + t("classifiedN") + fmtInt(unclassified) + t("unclassifiedN");
+    document.getElementById("geoGenStamp").textContent = t("generatedAt") + fmtDateTime(new Date().toISOString());
+  }
+
+  onRerender(render);
+  render();
 })();
 
 /* ---------- tab switching ---------- */
-document.querySelectorAll(".tabbtn").forEach(btn=>{
+document.querySelectorAll(".tabbtn[data-tab]").forEach(btn=>{
   btn.addEventListener("click", ()=>{
-    document.querySelectorAll(".tabbtn").forEach(b=>b.classList.remove("active"));
+    document.querySelectorAll(".tabbtn[data-tab]").forEach(b=>b.classList.remove("active"));
     document.querySelectorAll(".tabpanel").forEach(p=>p.classList.remove("active"));
     btn.classList.add("active");
     document.getElementById("tab-"+btn.dataset.tab).classList.add("active");
   });
 });
+
+/* ---------- language toggle ---------- */
+function applyStaticI18n(){
+  document.title = t("title");
+  document.querySelectorAll("[data-i18n]").forEach(el=>{ el.textContent = t(el.dataset.i18n); });
+  document.querySelectorAll("[data-i18n-ph]").forEach(el=>{ el.placeholder = t(el.dataset.i18nPh); });
+  document.getElementById("langToggle").textContent = LANG === "ka" ? "EN" : "ქარ";
+  document.documentElement.lang = LANG;
+}
+function setLang(lang){
+  LANG = lang;
+  localStorage.setItem("voltaLang", lang);
+  applyStaticI18n();
+  RERENDER_FNS.forEach(fn=>fn());
+}
+document.getElementById("langToggle").addEventListener("click", ()=>{ setLang(LANG === "ka" ? "en" : "ka"); });
+applyStaticI18n();
 </script>
