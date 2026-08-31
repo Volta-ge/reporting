@@ -56,8 +56,57 @@ final class PortfolioRepository
      * least one real application (Product_ID > 1) — never exposes individual customer PII,
      * only counts/segments. "New" = exactly one loan ever; "Repeat" = 2+.
      */
+    private ?string $customerScope = null;
+
+    /**
+     * The `FROM` fragment every customer-demographics report scopes itself with: customers who
+     * hold at least one non-lead instalment. Ten reports each spelled this out as a join of
+     * `customers` to `instalments` on `Customer_ID` with `Product_ID > 1`, which fans every
+     * customer out to one row per loan and then needs COUNT(DISTINCT) to undo the fan-out
+     * again — ten times per page load, over ~44k customers.
+     *
+     * Materialising the scoped set once into a temporary table turns that into a single scan
+     * plus ten cheap reads of a small local table, and lets the unindexable predicates those
+     * reports rely on (`FactAddress LIKE '%...%'`, `Comment REGEXP ...`, `TRIM(SUBSTRING(...))`)
+     * run against ~36k rows instead of driving a join. The temporary table lives and dies with
+     * this connection, i.e. with this page load — the data is still read live on every request.
+     *
+     * If the DB user lacks CREATE TEMPORARY TABLES the report must not break, so it falls back
+     * to an inline derived table with the same contents. Both forms keep the callers' existing
+     * `COUNT(DISTINCT c.Customer_ID)`, so a duplicate Customer_ID in `customers` would still be
+     * counted once, exactly as before.
+     */
+    private function customerScope(): string
+    {
+        if ($this->customerScope !== null) {
+            return $this->customerScope;
+        }
+
+        $select = <<<SQL
+            SELECT c.Customer_ID, c.City, c.Gender, c.BirthDay, c.Workshop, c.Workpos,
+                   c.Comment, c.FactAddress
+            FROM customers c
+            WHERE EXISTS (
+                SELECT 1 FROM instalments i
+                WHERE i.Customer_ID = c.Customer_ID AND i.Product_ID > 1
+            )
+            SQL;
+
+        try {
+            // No DROP first, and the index is declared inline: the connection is new on every
+            // page load, so each extra statement is only another round trip.
+            $this->pdo->exec("CREATE TEMPORARY TABLE scoped_customers (KEY (Customer_ID)) AS {$select}");
+            $this->customerScope = 'scoped_customers c';
+        } catch (\PDOException) {
+            $this->customerScope = "({$select}) c";
+        }
+
+        return $this->customerScope;
+    }
+
     public function customerAnalysis(): array
     {
+        $scope = $this->customerScope();
         $totalCustomers = (int) $this->pdo->query(
             'SELECT COUNT(DISTINCT Customer_ID) AS n FROM instalments WHERE Product_ID > 1'
         )->fetch()['n'];
@@ -97,8 +146,7 @@ final class PortfolioRepository
 
         $byCity = $this->pdo->query(<<<SQL
             SELECT c.City AS label, COUNT(DISTINCT c.Customer_ID) AS n
-            FROM customers c
-            JOIN instalments i ON i.Customer_ID = c.Customer_ID AND i.Product_ID > 1
+            FROM {$scope}
             GROUP BY c.City ORDER BY n DESC
             SQL)->fetchAll(PDO::FETCH_ASSOC);
 
@@ -106,8 +154,7 @@ final class PortfolioRepository
             SELECT
                 CASE WHEN c.Gender IN ('მდედრ.', 'მამრ.') THEN c.Gender ELSE 'N/A' END AS label,
                 COUNT(DISTINCT c.Customer_ID) AS n
-            FROM customers c
-            JOIN instalments i ON i.Customer_ID = c.Customer_ID AND i.Product_ID > 1
+            FROM {$scope}
             GROUP BY label ORDER BY n DESC
             SQL)->fetchAll(PDO::FETCH_ASSOC);
 
@@ -151,6 +198,7 @@ final class PortfolioRepository
      */
     public function customerAgeGenderAnalysis(): array
     {
+        $scope = $this->customerScope();
         $rows = $this->pdo->query(<<<SQL
             SELECT
                 CASE
@@ -164,8 +212,7 @@ final class PortfolioRepository
                 END AS bucket,
                 CASE WHEN c.Gender IN ('მდედრ.', 'მამრ.') THEN c.Gender ELSE 'N/A' END AS gender,
                 COUNT(DISTINCT c.Customer_ID) AS n
-            FROM customers c
-            JOIN instalments i ON i.Customer_ID = c.Customer_ID AND i.Product_ID > 1
+            FROM {$scope}
             GROUP BY bucket, gender
             SQL)->fetchAll(PDO::FETCH_ASSOC);
 
@@ -223,13 +270,13 @@ final class PortfolioRepository
      */
     private function groupedTextFieldReport(string $column, int $topN): array
     {
+        $scope = $this->customerScope();
         $raw = "COALESCE(c.{$column}, '')";
         $expr = "CASE WHEN {$raw} LIKE ',%' THEN TRIM(SUBSTRING({$raw}, 2)) ELSE TRIM({$raw}) END";
 
         $top = $this->pdo->query(<<<SQL
             SELECT {$expr} AS label, COUNT(DISTINCT c.Customer_ID) AS n
-            FROM customers c
-            JOIN instalments i ON i.Customer_ID = c.Customer_ID AND i.Product_ID > 1
+            FROM {$scope}
             WHERE {$expr} <> ''
             GROUP BY label
             ORDER BY n DESC
@@ -242,8 +289,7 @@ final class PortfolioRepository
                 COUNT(DISTINCT CASE WHEN {$expr} = '' THEN c.Customer_ID END) AS blankN,
                 COUNT(DISTINCT CASE WHEN {$expr} <> '' THEN {$expr} END) AS distinctValues,
                 COUNT(DISTINCT CASE WHEN {$expr} <> '' THEN c.Customer_ID END) AS nonBlankCustomers
-            FROM customers c
-            JOIN instalments i ON i.Customer_ID = c.Customer_ID AND i.Product_ID > 1
+            FROM {$scope}
             SQL)->fetch(PDO::FETCH_ASSOC);
 
         $total = (int) $totals['total'];
@@ -291,6 +337,7 @@ final class PortfolioRepository
      */
     public function customerIncomeAnalysis(): array
     {
+        $scope = $this->customerScope();
         $buckets = [
             '0-500' => [0, 500], '500-1000' => [500, 1000], '1000-1500' => [1000, 1500],
             '1500-2000' => [1500, 2000], '2000-3000' => [2000, 3000], '3000-5000' => [3000, 5000],
@@ -309,8 +356,7 @@ final class PortfolioRepository
             SELECT
                 CASE {$bucketCase} ELSE '5000+' END AS bucket,
                 COUNT(DISTINCT c.Customer_ID) AS n
-            FROM customers c
-            JOIN instalments i ON i.Customer_ID = c.Customer_ID AND i.Product_ID > 1
+            FROM {$scope}
             WHERE c.Comment REGEXP '^[0-9]+$'
             GROUP BY bucket
             SQL)->fetchAll(PDO::FETCH_ASSOC);
@@ -319,12 +365,11 @@ final class PortfolioRepository
         }
 
         $total = (int) $this->pdo->query(
-            'SELECT COUNT(DISTINCT c.Customer_ID) AS n FROM customers c JOIN instalments i ON i.Customer_ID = c.Customer_ID AND i.Product_ID > 1'
+            "SELECT COUNT(DISTINCT c.Customer_ID) AS n FROM {$scope}"
         )->fetch()['n'];
         $unspecified = (int) $this->pdo->query(<<<SQL
             SELECT COUNT(DISTINCT c.Customer_ID) AS n
-            FROM customers c
-            JOIN instalments i ON i.Customer_ID = c.Customer_ID AND i.Product_ID > 1
+            FROM {$scope}
             WHERE c.Comment IS NULL OR c.Comment = ''
             SQL)->fetch()['n'];
 
@@ -334,8 +379,7 @@ final class PortfolioRepository
         // `SELECT DISTINCT Comment` would collapse them into one row and silently undercount.
         $messyRows = $this->pdo->query(<<<SQL
             SELECT c.Comment, COUNT(DISTINCT c.Customer_ID) AS n
-            FROM customers c
-            JOIN instalments i ON i.Customer_ID = c.Customer_ID AND i.Product_ID > 1
+            FROM {$scope}
             WHERE c.Comment IS NOT NULL AND c.Comment <> '' AND c.Comment NOT REGEXP '^[0-9]+$'
             GROUP BY c.Comment
             SQL)->fetchAll(PDO::FETCH_ASSOC);
@@ -382,6 +426,7 @@ final class PortfolioRepository
      */
     public function customerDistrictAnalysis(): array
     {
+        $scope = $this->customerScope();
         static $districts = [
             'ზემო ფონიჭალა', 'ქვემო ფონიჭალა', 'დიდი დიღომი', 'დიღმის მასივი', 'ვარკეთილის ზემო პლატო',
             'ვარკეთილი', 'გლდანი', 'საბურთალო', 'ნაძალადევი', 'თემქა', 'ისანი', 'სანზონა', 'სამგორი',
@@ -402,8 +447,7 @@ final class PortfolioRepository
             SELECT
                 CASE {$whenClauses} ELSE 'ვერ დადგინდა' END AS district,
                 COUNT(DISTINCT c.Customer_ID) AS n
-            FROM customers c
-            JOIN instalments i ON i.Customer_ID = c.Customer_ID AND i.Product_ID > 1
+            FROM {$scope}
             WHERE c.FactAddress LIKE '%თბილისი%'
             GROUP BY district
             SQL)->fetchAll(PDO::FETCH_ASSOC);
@@ -432,10 +476,30 @@ final class PortfolioRepository
     /**
      * Risk Segmentation tab: current active portfolio (Active = 1) broken down by Risk_Status.
      */
-    public function riskSegmentation(): array
+    /** @var array<int, array<string, mixed>>|null */
+    private ?array $activeLoanAggregatesCache = null;
+
+    /**
+     * Shared fetch behind riskSegmentation() and delinquencyAnalysis(). Both scan exactly the
+     * same rows (`instalments WHERE Active = 1`) and differ only in the CASE expression they
+     * group by, so they are issued as one UNION ALL — one round trip instead of two, with each
+     * branch keeping its own GROUP BY so Debt and Penalty are still summed by the database at
+     * the grain each report consumes, rather than re-added in PHP.
+     *
+     * Row order within a branch is irrelevant here: both callers impose their own fixed
+     * ordering afterwards (risk-ascending, and the Current/1-30/.../90+ bucket list).
+     *
+     * Per-page-load memo only — not a cache; every page load runs this fresh.
+     */
+    private function activeLoanAggregates(): array
     {
-        $rows = $this->pdo->query(<<<SQL
+        if ($this->activeLoanAggregatesCache !== null) {
+            return $this->activeLoanAggregatesCache;
+        }
+
+        $this->activeLoanAggregatesCache = $this->pdo->query(<<<SQL
             SELECT
+                'risk' AS dimension,
                 CASE WHEN Risk_Status IN ('დაბალი', 'საშუალო', 'მაღალი') THEN Risk_Status ELSE 'Not Scored' END AS label,
                 COUNT(*) AS n,
                 SUM(Debt) AS debt,
@@ -443,7 +507,44 @@ final class PortfolioRepository
             FROM instalments
             WHERE Active = 1
             GROUP BY label
+            UNION ALL
+            SELECT
+                'delinquency' AS dimension,
+                CASE
+                    WHEN Days_Age IS NULL OR Days_Age <= 0 THEN 'Current'
+                    WHEN Days_Age BETWEEN 1 AND 30 THEN '1-30'
+                    WHEN Days_Age BETWEEN 31 AND 60 THEN '31-60'
+                    WHEN Days_Age BETWEEN 61 AND 90 THEN '61-90'
+                    ELSE '90+'
+                END AS label,
+                COUNT(*) AS n,
+                SUM(Debt) AS debt,
+                SUM(Penalty) AS penalty
+            FROM instalments
+            WHERE Active = 1
+            GROUP BY label
             SQL)->fetchAll(PDO::FETCH_ASSOC);
+
+        return $this->activeLoanAggregatesCache;
+    }
+
+    /** One dimension's rows out of activeLoanAggregates(), keyed as that report expects. */
+    private function activeLoanRows(string $dimension, string $labelKey): array
+    {
+        $out = [];
+        foreach ($this->activeLoanAggregates() as $row) {
+            if ($row['dimension'] !== $dimension) {
+                continue;
+            }
+            $out[] = [$labelKey => $row['label'], 'n' => $row['n'], 'debt' => $row['debt'], 'penalty' => $row['penalty']];
+        }
+
+        return $out;
+    }
+
+    public function riskSegmentation(): array
+    {
+        $rows = $this->activeLoanRows('risk', 'label');
 
         $totalN = 0;
         $totalDebt = 0.0;
@@ -531,22 +632,7 @@ final class PortfolioRepository
      */
     public function delinquencyAnalysis(): array
     {
-        $rows = $this->pdo->query(<<<SQL
-            SELECT
-                CASE
-                    WHEN Days_Age IS NULL OR Days_Age <= 0 THEN 'Current'
-                    WHEN Days_Age BETWEEN 1 AND 30 THEN '1-30'
-                    WHEN Days_Age BETWEEN 31 AND 60 THEN '31-60'
-                    WHEN Days_Age BETWEEN 61 AND 90 THEN '61-90'
-                    ELSE '90+'
-                END AS bucket,
-                COUNT(*) AS n,
-                SUM(Debt) AS debt,
-                SUM(Penalty) AS penalty
-            FROM instalments
-            WHERE Active = 1
-            GROUP BY bucket
-            SQL)->fetchAll(PDO::FETCH_ASSOC);
+        $rows = $this->activeLoanRows('delinquency', 'bucket');
 
         $byBucket = [];
         $totalN = 0;
@@ -582,6 +668,56 @@ final class PortfolioRepository
         ];
     }
 
+    /** @var array<string, array> */
+    private array $applicationOutcomeCache = [];
+
+    /**
+     * Shared fetch behind reasonsByStatusMonthly() and applicationStatusesMonthly() — one row
+     * per (month, Order_Status code, status label, Reason) over the same
+     * `Aplication_Date`-in-window, no-other-filter scope both of them already used. The five
+     * committee-outcome reason tables and the full application-status table were six separate
+     * scans of exactly the same rows; this makes them one, with the split done in PHP.
+     *
+     * `ORDER BY period, status_label, reason` reproduces the row order MySQL's own implicit
+     * GROUP BY ordering gave each of the six original queries: a status code maps to exactly
+     * one label, so filtering these rows to one code leaves them ordered by (period, reason)
+     * as `GROUP BY period, reason` did, while reading them for the status table gives labels
+     * in (period, label) order as `GROUP BY period, status_label` did. That matters because
+     * both consumers sort ties by insertion order (PHP's sort is stable).
+     *
+     * Memoized for the request, since all six consumers ask for the identical window — this is
+     * per-page-load only, not a cache: every page load still runs the query fresh.
+     */
+    private function applicationOutcomeRows(DateTimeImmutable $from, DateTimeImmutable $to): array
+    {
+        $cacheKey = $from->format('Y-m-d H:i:s') . '|' . $to->format('Y-m-d H:i:s');
+        if (isset($this->applicationOutcomeCache[$cacheKey])) {
+            return $this->applicationOutcomeCache[$cacheKey];
+        }
+
+        $stmt = $this->pdo->prepare(<<<SQL
+            SELECT
+                DATE_FORMAT(i.Aplication_Date, '%Y-%m') AS period,
+                i.Order_Status AS status_code,
+                os.Order_Status AS status_label,
+                i.Reason AS reason,
+                COUNT(*) AS n
+            FROM instalments i
+            LEFT JOIN order_statuses os ON os.Order_Status_ID = i.Order_Status
+            WHERE i.Aplication_Date >= :from AND i.Aplication_Date < :to
+            GROUP BY period, status_code, status_label, reason
+            ORDER BY period, status_label, reason
+            SQL);
+        $stmt->execute([
+            'from' => $from->format('Y-m-d H:i:s'),
+            'to' => $to->format('Y-m-d H:i:s'),
+        ]);
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $this->applicationOutcomeCache[$cacheKey] = $rows;
+
+        return $rows;
+    }
+
     /**
      * Reason breakdown for one committee/admin-panel outcome status, month-by-month, keyed to
      * Aplication_Date (same as the rest of the funnel's application-stage metrics). Blank Reason
@@ -602,25 +738,14 @@ final class PortfolioRepository
      */
     public function reasonsByStatusMonthly(DateTimeImmutable $from, DateTimeImmutable $to, int $orderStatus): array
     {
-        $rows = $this->pdo->prepare(<<<SQL
-            SELECT
-                DATE_FORMAT(Aplication_Date, '%Y-%m') AS period,
-                Reason AS reason,
-                COUNT(*) AS n
-            FROM instalments
-            WHERE Order_Status = :orderStatus
-              AND Aplication_Date >= :from AND Aplication_Date < :to
-            GROUP BY period, reason
-            SQL);
-        $rows->execute([
-            'orderStatus' => $orderStatus,
-            'from' => $from->format('Y-m-d H:i:s'),
-            'to' => $to->format('Y-m-d H:i:s'),
-        ]);
+        $rows = array_filter(
+            $this->applicationOutcomeRows($from, $to),
+            static fn (array $r) => (int) $r['status_code'] === $orderStatus,
+        );
 
         $periodsSeen = [];
         $byReason = [];
-        foreach ($rows->fetchAll(PDO::FETCH_ASSOC) as $r) {
+        foreach ($rows as $r) {
             $period = $r['period'];
             $periodsSeen[$period] = true;
             $reason = trim((string) $r['reason']) === '' ? 'Unspecified' : $r['reason'];
@@ -683,24 +808,9 @@ final class PortfolioRepository
      */
     public function applicationStatusesMonthly(DateTimeImmutable $from, DateTimeImmutable $to): array
     {
-        $rows = $this->pdo->prepare(<<<SQL
-            SELECT
-                DATE_FORMAT(i.Aplication_Date, '%Y-%m') AS period,
-                os.Order_Status AS status_label,
-                COUNT(*) AS n
-            FROM instalments i
-            LEFT JOIN order_statuses os ON os.Order_Status_ID = i.Order_Status
-            WHERE i.Aplication_Date >= :from AND i.Aplication_Date < :to
-            GROUP BY period, status_label
-            SQL);
-        $rows->execute([
-            'from' => $from->format('Y-m-d H:i:s'),
-            'to' => $to->format('Y-m-d H:i:s'),
-        ]);
-
         $periodsSeen = [];
         $byStatus = [];
-        foreach ($rows->fetchAll(PDO::FETCH_ASSOC) as $r) {
+        foreach ($this->applicationOutcomeRows($from, $to) as $r) {
             $period = $r['period'];
             $periodsSeen[$period] = true;
             $status = trim((string) $r['status_label']) === '' ? 'Unspecified' : $r['status_label'];
