@@ -36,6 +36,14 @@ $now = new \DateTimeImmutable('now');
 $monthlyFrom = new \DateTimeImmutable($now->format('Y') . '-01-01');
 $dailyFrom = new \DateTimeImmutable($now->format('Y') . '-06-01');
 
+// On the 1st of a month, yesterday belongs to the PREVIOUS month — MTD ("1st of this month
+// through yesterday") then legitimately covers zero complete days, but naively formatting
+// "{month start}–{yesterday's day number}" produced a nonsensical label (e.g. "Sep 1–31, 2026"
+// on 2026-09-01, borrowing August's day count into a September range). Confirmed live 2026-09-01.
+$mtdRangeLabel = $yesterdayFrom >= $mtdFrom
+    ? $mtdFrom->format('M j') . '–' . $yesterdayFrom->format('j, Y')
+    : $mtdFrom->format('M j, Y') . ', no complete days yet';
+
 // Everything the page shell needs is derived without touching the database, so the shell can be
 // sent and painted before the first query runs.
 $targets = [
@@ -44,7 +52,7 @@ $targets = [
     'workingDaysLeft' => DateHelper::remainingWorkingDays($now),
 ];
 $headerYesterday = $yesterdayFrom->format('M j, Y');
-$headerMtdRange = $mtdFrom->format('M j') . '–' . $yesterdayFrom->format('j, Y');
+$headerMtdRange = $mtdRangeLabel;
 $generatedAt = $now->format(\DateTimeInterface::ATOM);
 
 // Loan Applications — Pending (Order_Status=4) tab: written daily by bin/capture_pending_status.php
@@ -160,7 +168,7 @@ foreach ($sections as $name => $load) {
             $yestFigures = FunnelRepository::periodFigures($loaded['dailyStats'], $yesterdayFrom->format('Y-m-d'));
             echo '<script>__section("data",' . json_encode([
                 'mtd' => [
-                    'label' => sprintf('MTD (%s–%s)', $mtdFrom->format('M j'), $yesterdayFrom->format('j, Y')),
+                    'label' => "MTD ($mtdRangeLabel)",
                     'A' => $mtdFigures['A'],
                     'B' => $mtdFigures['B'],
                 ],
