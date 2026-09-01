@@ -36,13 +36,10 @@ $now = new \DateTimeImmutable('now');
 $monthlyFrom = new \DateTimeImmutable($now->format('Y') . '-01-01');
 $dailyFrom = new \DateTimeImmutable($now->format('Y') . '-06-01');
 
-// On the 1st of a month, yesterday belongs to the PREVIOUS month — MTD ("1st of this month
-// through yesterday") then legitimately covers zero complete days, but naively formatting
-// "{month start}–{yesterday's day number}" produced a nonsensical label (e.g. "Sep 1–31, 2026"
-// on 2026-09-01, borrowing August's day count into a September range). Confirmed live 2026-09-01.
-$mtdRangeLabel = $yesterdayFrom >= $mtdFrom
-    ? $mtdFrom->format('M j') . '–' . $yesterdayFrom->format('j, Y')
-    : $mtdFrom->format('M j, Y') . ', no complete days yet';
+// DateHelper::monthToDateRange() keys "the month" off yesterday, not today, so $mtdFrom and
+// $yesterdayFrom are always in the same month by construction (see its own docblock) — no
+// month-boundary special-casing needed here.
+$mtdRangeLabel = $mtdFrom->format('M j') . '–' . $yesterdayFrom->format('j, Y');
 
 // Everything the page shell needs is derived without touching the database, so the shell can be
 // sent and painted before the first query runs.
