@@ -46,14 +46,28 @@ final class DateHelper
     }
 
     /**
-     * Every calendar day from today through month-end, inclusive of today. No days are
-     * excluded (confirmed with the business — not a 5- or 6-day work week calculation).
+     * Every calendar day AFTER yesterday through month-end (no days excluded — confirmed with
+     * the business, not a 5- or 6-day work week calculation). Anchored on yesterday, not today,
+     * for the same reason as monthToDateRange() above: yesterday is the last day this page
+     * actually has data for, so "days remaining" and the Budget & Pacing figures built on top of
+     * it (Required Daily Sales, Attainment %) should read as "days left to hit the target given
+     * what's landed so far," not include a today that has zero sales recorded yet.
+     *
+     * On every normal day this produces the exact same number as the old today-anchored formula
+     * (daysInMonth - dayOfMonth(today) + 1 == daysInMonth - dayOfMonth(yesterday), since
+     * dayOfMonth(today) = dayOfMonth(yesterday) + 1 when they share a month) — it only differs at
+     * a month boundary, where it now correctly reads 0 on the last day of a month instead of
+     * resetting to a full month's count against a brand-new month nothing has been sold in yet.
+     * User confirmed directly: "რეპორტი ხომ არის გუშინდელი თარიღით 31/08/2026, შესაბამისად თვის
+     * ბოლომდე 0 დღე არის დარჩენილი" (the report is dated yesterday, Aug 31 — so 0 days remain
+     * until month-end, since August has 31 days). Verified live 2026-09-01.
      */
     public static function remainingWorkingDays(DateTimeImmutable $now): int
     {
-        $daysInMonth = (int) $now->format('t');
-        $dayOfMonth = (int) $now->format('j');
+        $yesterday = $now->setTime(0, 0)->modify('-1 day');
+        $daysInMonth = (int) $yesterday->format('t');
+        $dayOfMonth = (int) $yesterday->format('j');
 
-        return $daysInMonth - $dayOfMonth + 1;
+        return $daysInMonth - $dayOfMonth;
     }
 }
