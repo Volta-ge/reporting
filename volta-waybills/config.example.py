@@ -15,3 +15,11 @@ DB_PORT = 3306
 DB_USER = "your_readonly_user"
 DB_PASS = "your_password"
 DB_NAME = "myvolta8_voltadb"
+
+# VoltaStoreDB ("Volta Database Gia's" in MySQL Workbench) — new Volta DB, replacing
+# myvolta.info going forward. AWS RDS, IP-allowlisted security group.
+GIA_DB_HOST = "your.rds.endpoint"
+GIA_DB_PORT = 3306
+GIA_DB_USER = "your_readonly_user"
+GIA_DB_PASS = "your_password"
+GIA_DB_NAME = "VoltaStoreDB"
