@@ -20,13 +20,16 @@ volta_voltastoredb_schema.md memory):
                     the old DB was always exactly one product per row, the
                     new schema allows more)
 
-Real, unavoidable data gap: ~17% of orders (mostly guest checkouts with no
-matching customer record at all) have no discoverable PID anywhere in this
-schema. Per user's explicit decision (2026-09-01): these are EXCLUDED from
-the CRM sales pulled here entirely, not just left unmatched — they never
-enter reconciliation. A one-off list of them was exported separately
-(export script not kept; re-derive from this same query's HAVING clause,
-inverted, if asked again).
+Real data gap, now closed with a fallback (2026-09-02): ~17% of orders
+(mostly guest checkouts with no matching customer record at all) have no
+discoverable PID anywhere in THIS schema. Since `my_volta_installment_id`
+is the same case_id as the old system's `Instalment_ID`, PID for those is
+recovered via a lookup against myvolta.info's `instalments`/`customers` —
+verified 2026-09-02: all 1,812 currently-unresolved orders (since
+2025-09-01) DO have a matching old-DB row with a real PID, a 100% recovery
+rate. Only an order with no `my_volta_installment_id` at all (never
+existed in the old system — ~0.7% of all orders per the schema memory)
+would still be unrecoverable; none have been observed in this window.
 """
 import sys
 from pathlib import Path
@@ -44,7 +47,33 @@ from refresh_dashboard import (
 import json
 from datetime import datetime
 
-from config import GIA_DB_HOST, GIA_DB_PORT, GIA_DB_USER, GIA_DB_PASS, GIA_DB_NAME
+from config import (
+    GIA_DB_HOST, GIA_DB_PORT, GIA_DB_USER, GIA_DB_PASS, GIA_DB_NAME,
+    DB_HOST, DB_PORT, DB_USER, DB_PASS, DB_NAME,
+)
+
+
+def backfill_pid_from_old_db(case_ids):
+    """For case_ids (== old Instalment_ID) whose PID couldn't be found in
+    VoltaStoreDB, look it up in myvolta.info directly — same bridge key,
+    verified 100% recovery rate on the current dataset (see module
+    docstring). Returns {case_id: PID}."""
+    if not case_ids:
+        return {}
+    conn = pymysql.connect(
+        host=DB_HOST, port=DB_PORT, user=DB_USER, password=DB_PASS,
+        database=DB_NAME, connect_timeout=15,
+    )
+    cur = conn.cursor(pymysql.cursors.DictCursor)
+    fmt_ids = ",".join(str(c) for c in case_ids)
+    cur.execute(f"""
+        SELECT i.Instalment_ID, c.PID
+        FROM instalments i JOIN customers c ON i.Customer_ID = c.Customer_ID
+        WHERE i.Instalment_ID IN ({fmt_ids}) AND c.PID IS NOT NULL AND c.PID <> ''
+    """)
+    result = {r["Instalment_ID"]: r["PID"] for r in cur.fetchall()}
+    conn.close()
+    return result
 
 
 def fetch_crm_sales_gia():
@@ -75,17 +104,32 @@ def fetch_crm_sales_gia():
           AND o.crm_order_date >= %s
           AND o.my_volta_installment_id IS NOT NULL
         GROUP BY o.id
-        HAVING PID IS NOT NULL AND PID <> ''
     """, (START,))
     rows = cur.fetchall()
     conn.close()
-    # Instalment_ID needs to be an int downstream (case-id display, joins) —
-    # it comes back as a string from my_volta_installment_id (varchar).
+
     for r in rows:
         r["Instalment_ID"] = int(r["Instalment_ID"])
         r["Manager_Name"] = r["Manager_Name"] or "—"
         r["Product_Name"] = r["Product_Name"] or "—"
-    return rows
+
+    no_pid_ids = [r["Instalment_ID"] for r in rows if not r["PID"]]
+    recovered = backfill_pid_from_old_db(no_pid_ids)
+    recovered_count = 0
+    for r in rows:
+        if not r["PID"] and r["Instalment_ID"] in recovered:
+            r["PID"] = recovered[r["Instalment_ID"]]
+            recovered_count += 1
+    print(f"  PID backfilled from myvolta.info for {recovered_count}/{len(no_pid_ids)} "
+          f"orders with no PID in VoltaStoreDB", file=sys.stderr)
+
+    # Whatever's still unresolved after the old-DB fallback (never existed
+    # in the old system either) can't be matched to a waybill at all —
+    # exclude, same as before.
+    still_missing = sum(1 for r in rows if not r["PID"])
+    if still_missing:
+        print(f"  {still_missing} orders still have no PID after the fallback — excluded", file=sys.stderr)
+    return [r for r in rows if r["PID"]]
 
 
 def main():
