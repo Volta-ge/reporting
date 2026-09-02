@@ -10,9 +10,9 @@ refresh_dashboard.py.
 Field mapping (verified against a known ground-truth case, see
 volta_voltastoredb_schema.md memory):
   Instalment_ID -> orders.my_volta_installment_id
-  PID           -> customers.id_number, via orders.customer_id when present
-                    (76% of orders), else via orders.customer_email =
-                    customers.email (guest orders, resolves ~30% of those)
+  PID           -> customers.id_number, via orders.customer_id ONLY
+                    (a real FK, ID-to-ID) — deliberately NOT via email or
+                    any other fuzzy match (see below)
   Order_Date    -> orders.crm_order_date
   Full_Cost     -> orders.grand_total
   Manager_Name  -> crm_users (via orders.crm_sales_manager_id)
@@ -20,16 +20,23 @@ volta_voltastoredb_schema.md memory):
                     the old DB was always exactly one product per row, the
                     new schema allows more)
 
-Real data gap, now closed with a fallback (2026-09-02): ~17% of orders
-(mostly guest checkouts with no matching customer record at all) have no
-discoverable PID anywhere in THIS schema. Since `my_volta_installment_id`
-is the same case_id as the old system's `Instalment_ID`, PID for those is
-recovered via a lookup against myvolta.info's `instalments`/`customers` —
-verified 2026-09-02: all 1,812 currently-unresolved orders (since
-2025-09-01) DO have a matching old-DB row with a real PID, a 100% recovery
-rate. Only an order with no `my_volta_installment_id` at all (never
-existed in the old system — ~0.7% of all orders per the schema memory)
-would still be unrecoverable; none have been observed in this window.
+IMPORTANT — matching is ID-only, never email (2026-09-02, per explicit user
+requirement): an earlier version of this script fell back to `orders.
+customer_email = customers.email` for guest orders (orders.customer_id IS
+NULL). That was removed — email is not an identifier, it's contact info,
+and matching on it risks pulling in the wrong customer (e.g. a shared
+family email, a typo, a reused address). Every PID here now comes from one
+of exactly two ID-based bridges: (1) `orders.customer_id = customers.id`
+(a real FK) when VoltaStoreDB has it, or (2) `orders.
+my_volta_installment_id = <old Instalment_ID>` -> myvolta.info's
+`instalments.Customer_ID = customers.Customer_ID` -> `customers.PID` for
+everything else. Verified 2026-09-02: this ID-only path still recovers
+100% of the ~17% of orders VoltaStoreDB alone can't resolve (1,812/1,812
+on the 2025-09-01+ window) — losing the email fallback cost nothing, the
+old-DB bridge alone was already sufficient. Only an order with no
+`my_volta_installment_id` at all (never existed in the old system — ~0.7%
+of all orders per the schema memory) would still be unrecoverable; none
+observed in this window.
 """
 import sys
 from pathlib import Path
@@ -85,10 +92,9 @@ def fetch_crm_sales_gia():
     cur.execute("""
         SELECT
             o.my_volta_installment_id AS Instalment_ID,
-            ANY_VALUE(COALESCE(c1.id_number, c2.id_number)) AS PID,
+            ANY_VALUE(c1.id_number) AS PID,
             ANY_VALUE(COALESCE(
                 NULLIF(TRIM(CONCAT(c1.first_name, ' ', c1.last_name)), ''),
-                NULLIF(TRIM(CONCAT(c2.first_name, ' ', c2.last_name)), ''),
                 CONCAT(o.customer_first_name, ' ', o.customer_last_name)
             )) AS FullName,
             ANY_VALUE(o.crm_order_date) AS Order_Date,
@@ -97,7 +103,6 @@ def fetch_crm_sales_gia():
             GROUP_CONCAT(DISTINCT oi.name SEPARATOR '; ') AS Product_Name
         FROM orders o
         LEFT JOIN customers c1 ON o.customer_id = c1.id
-        LEFT JOIN customers c2 ON o.customer_id IS NULL AND o.customer_email = c2.email
         LEFT JOIN crm_users cu ON o.crm_sales_manager_id = cu.id
         LEFT JOIN order_items oi ON oi.order_id = o.id
         WHERE o.crm_order_status = 5
