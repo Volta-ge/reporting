@@ -294,9 +294,14 @@
   .pivot-tin{ display:block; font-size:10.5px; color:var(--faint); }
   .pivot-empty{ color:var(--faint); padding:14px; text-align:left; }
   /* per-product breakdown rows under an expanded vendor */
-  .pivot-toggle{ all:unset; cursor:pointer; color:var(--muted); font-size:12px; width:16px; display:inline-block; text-align:center; margin-right:4px; vertical-align:top; line-height:1.6; }
-  .pivot-toggle:hover{ color:var(--accent); }
-  .pivot-vcell{ display:inline-block; vertical-align:top; max-width:calc(100% - 22px); }
+  .pivot-toggle{
+    all:unset; box-sizing:border-box; cursor:pointer; display:inline-flex; align-items:center; justify-content:center;
+    width:26px; height:26px; margin-right:8px; vertical-align:top; border-radius:var(--radius);
+    background:var(--accent-soft); color:var(--accent-ink); border:1px solid var(--accent); font-size:15px; line-height:1;
+  }
+  .pivot-toggle:hover{ background:var(--accent); color:var(--surface); }
+  .pivot-toggle[aria-expanded="true"]{ background:var(--accent); color:var(--surface); }
+  .pivot-vcell{ display:inline-block; vertical-align:top; max-width:calc(100% - 36px); }
   .pivot-scroll tr.pivot-sub td{ background:var(--surface-2); color:var(--muted); font-size:11.5px; padding:5px 10px; }
   .pivot-scroll tr.pivot-sub td.pivot-sticky{ padding-left:32px; background:var(--surface-2); color:var(--muted); font-weight:400; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .pivot-scroll tr.pivot-sub td.pivot-total{ background:var(--accent-soft); color:var(--accent-ink); font-weight:500; }
