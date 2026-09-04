@@ -1226,7 +1226,11 @@ def main():
                 # Vendors (purchases) tab is only built for the Gia's-DB copy
                 # (refresh_dashboard_gia.py) per the 2026-09-04 request; null
                 # here makes template.html hide that tab entirely.
-                .replace("__DATA_VEND__", "null"))
+                .replace("__DATA_VEND__", "null")
+                # <title> names the Artifact in the gallery; the user renamed
+                # this one "RS_Old DB" (2026-09-04) — keep the tag in sync so a
+                # daily republish doesn't revert the name.
+                .replace("<title>ვოლტას ზედნადებები და ფაქტურები</title>", "<title>RS_Old DB</title>"))
     out_path = HERE / "waybill_dashboard.html"
     out_path.write_text(out_html, encoding="utf-8")
     print(f"wrote {out_path} ({len(out_html.encode('utf-8'))} bytes)", file=sys.stderr)

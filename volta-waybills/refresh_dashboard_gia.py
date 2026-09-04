@@ -201,6 +201,11 @@ def main():
                 .replace("__DATA_RECON__", recon_json)
                 .replace("__DATA_GEO__", geo_json)
                 .replace("__DATA_VEND__", vend_json)
+                # The <title> tag is what names the Artifact in the gallery —
+                # every republish overwrote the user's manual rename until the
+                # tag itself was set (2026-09-04). Keep in sync with the name
+                # the user chose: "RS_New DB".
+                .replace("<title>ვოლტას ზედნადებები და ფაქტურები</title>", "<title>RS_New DB</title>")
                 .replace("ვოლტას სავაჭრო რეესტრები", "ვოლტას სავაჭრო რეესტრები (Gia's DB)")
                 .replace("Volta Trade Registers", "Volta Trade Registers (Gia's DB)"))
     out_path = HERE / "waybill_dashboard_gia.html"
