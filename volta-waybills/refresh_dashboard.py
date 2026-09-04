@@ -491,6 +491,59 @@ def build_purchase_rows(raw):
     return rows, skipped
 
 
+def fetch_purchase_goods():
+    """
+    Line items for every buyer-side waybill in one call —
+    get_buyer_waybilll_goods_list (sic, RS.ge's own triple-l spelling) returns
+    one <WAYBILL> element PER GOODS LINE (waybill header fields repeated on
+    each, plus W_NAME/QUANTITY/PRICE/AMOUNT), so unlike the seller side no
+    per-waybill get_waybill() loop is needed. Same create_date-only filtering
+    quirk as fetch_purchase_waybills(). Verified 2026-09-04 on the full
+    window: every waybill's SUM(AMOUNT) equals its FULL_AMOUNT exactly
+    (0 mismatches over 4,931 waybills / 9,966 lines).
+    """
+    client = Client(WAYBILL_WSDL)
+    end = datetime.now()
+    result = client.service.get_buyer_waybilll_goods_list(
+        su=SU, sp=SP,
+        itypes=None, seller_tin=None, statuses=None, car_number=None,
+        begin_date_s=None, begin_date_e=None,
+        create_date_s=START, create_date_e=end,
+        driver_tin=None,
+        delivery_date_s=None, delivery_date_e=None,
+        full_amount=None, waybill_number=None,
+        close_date_s=None, close_date_e=None,
+        s_user_ids=None, comment=None,
+    )
+    items = []
+    for el in result.findall("WAYBILL"):
+        items.append({child.tag: (child.text or "") for child in el})
+    return items
+
+
+def build_purchase_items(raw_items, vend_rows):
+    """
+    Compact [waybill_number, product_name, qty, amount] lines for the Vendors
+    tab's per-product breakdown, restricted to waybills that survived
+    build_purchase_rows() (so cancelled/internal lines never leak in) and
+    with the amount sign following the waybill's (negative for TYPE=5
+    returns to the vendor). Product names are trimmed with inner whitespace
+    collapsed — RS.ge free text, the same product often arrives with a
+    stray double space.
+    """
+    sign_by_wb = {r["n"]: (-1.0 if r["a"] < 0 else 1.0) for r in vend_rows}
+    out = []
+    for it in raw_items:
+        n = it.get("WAYBILL_NUMBER") or ""
+        if n not in sign_by_wb:
+            continue
+        name = " ".join((it.get("W_NAME") or "").split()) or "—"
+        qty = float(it["QUANTITY"]) if it.get("QUANTITY") else 0.0
+        amount = float(it["AMOUNT"]) if it.get("AMOUNT") else 0.0
+        out.append([n, name, qty, sign_by_wb[n] * amount])
+    return out
+
+
 def fetch_invoices():
     """
     get_seller_invoices returns a DataTable as an ADO.NET diffgram whose row
@@ -1227,6 +1280,7 @@ def main():
                 # (refresh_dashboard_gia.py) per the 2026-09-04 request; null
                 # here makes template.html hide that tab entirely.
                 .replace("__DATA_VEND__", "null")
+                .replace("__DATA_VEND_ITEMS__", "null")
                 # <title> names the Artifact in the gallery; the user renamed
                 # this one "RS_Old DB" (2026-09-04) — keep the tag in sync so a
                 # daily republish doesn't revert the name.

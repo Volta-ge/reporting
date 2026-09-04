@@ -66,6 +66,7 @@ from refresh_dashboard import (
     START, fetch_waybills, build_waybill_rows, fetch_invoices, build_invoice_rows,
     build_reconciliation, build_geo_summary, load_logistics_status,
     fetch_purchase_waybills, build_purchase_rows,
+    fetch_purchase_goods, build_purchase_items,
 )
 import json
 from datetime import datetime
@@ -170,6 +171,10 @@ def main():
     print(f"purchases: fetched {len(raw_pur)}, kept {len(vend_rows)}, skipped {pur_skipped} "
           f"(cancelled/unnumbered/internal); {len({r['t'] for r in vend_rows})} vendors, "
           f"net {sum(r['a'] for r in vend_rows):,.0f} GEL", file=sys.stderr)
+    raw_goods = fetch_purchase_goods()
+    vend_items = build_purchase_items(raw_goods, vend_rows)
+    print(f"purchase goods lines: fetched {len(raw_goods)}, kept {len(vend_items)}, "
+          f"{len({it[1] for it in vend_items})} distinct products", file=sys.stderr)
 
     print(f"[{datetime.now()}] fetching CRM sales from VoltaStoreDB (Gia's)...", file=sys.stderr)
     crm_rows = fetch_crm_sales_gia()
@@ -193,6 +198,7 @@ def main():
     recon_json = json.dumps(recon, ensure_ascii=False, separators=(",", ":"), default=str)
     geo_json = json.dumps(geo, ensure_ascii=False, separators=(",", ":"))
     vend_json = json.dumps(vend_rows, ensure_ascii=False, separators=(",", ":"))
+    vend_items_json = json.dumps(vend_items, ensure_ascii=False, separators=(",", ":"))
 
     template = (HERE / "template.html").read_text(encoding="utf-8")
     out_html = (template
@@ -201,6 +207,7 @@ def main():
                 .replace("__DATA_RECON__", recon_json)
                 .replace("__DATA_GEO__", geo_json)
                 .replace("__DATA_VEND__", vend_json)
+                .replace("__DATA_VEND_ITEMS__", vend_items_json)
                 # The <title> tag is what names the Artifact in the gallery —
                 # every republish overwrote the user's manual rename until the
                 # tag itself was set (2026-09-04). Keep in sync with the name
