@@ -684,21 +684,20 @@
       <div class="kpi"><span class="kpi-label" data-i18n="vendKpiReturns">დაბრუნება მომწოდებელთან</span><span class="kpi-value num" id="vendKpiReturns">—</span><span class="kpi-sub" id="vendKpiReturnsSub">&nbsp;</span></div>
     </div>
 
-    <div class="grid-main">
+    <div class="panel">
+      <div class="panel-head"><span class="panel-title" data-i18n="vendMonthlyVolume">თვიური შესყიდვები</span><span class="panel-note" data-i18n="countAmountNote">ზედნადებების რაოდენობა &amp; თანხა</span></div>
+      <div class="trend-legend"><span><span class="legend-dot" style="background:var(--accent)"></span><span data-i18n="quantity">რაოდენობა</span></span><span><span class="legend-dot" style="background:var(--warm)"></span><span data-i18n="amountGel">თანხა (₾)</span></span></div>
+      <svg class="trend-svg" id="vendTrendChart" viewBox="0 0 960 230" preserveAspectRatio="none"></svg>
+    </div>
+
+    <div class="geo-grid">
       <div class="panel">
-        <div class="panel-head"><span class="panel-title" data-i18n="vendMonthlyVolume">თვიური შესყიდვები</span><span class="panel-note" data-i18n="countAmountNote">ზედნადებების რაოდენობა &amp; თანხა</span></div>
-        <div class="trend-legend"><span><span class="legend-dot" style="background:var(--accent)"></span><span data-i18n="quantity">რაოდენობა</span></span><span><span class="legend-dot" style="background:var(--warm)"></span><span data-i18n="amountGel">თანხა (₾)</span></span></div>
-        <svg class="trend-svg" id="vendTrendChart" viewBox="0 0 960 230" preserveAspectRatio="none"></svg>
+        <div class="panel-head"><span class="panel-title" data-i18n="topVendors">მსხვილი მომწოდებლები</span><span class="panel-note" data-i18n="top12ByAmount">ტოპ 12, ჯამური თანხით</span></div>
+        <div class="rank-list" id="vendRankList"></div>
       </div>
-      <div class="side-stack">
-        <div class="panel">
-          <div class="panel-head"><span class="panel-title" data-i18n="topVendors">მსხვილი მომწოდებლები</span><span class="panel-note" data-i18n="top12ByAmount">ტოპ 12, ჯამური თანხით</span></div>
-          <div class="rank-list" id="vendRankList"></div>
-        </div>
-        <div class="panel">
-          <div class="panel-head"><span class="panel-title" data-i18n="topProducts">ტოპ პროდუქტები</span><span class="panel-note" data-i18n="top12ByAmount">ტოპ 12, ჯამური თანხით</span></div>
-          <div class="rank-list" id="vendProdRankList"></div>
-        </div>
+      <div class="panel">
+        <div class="panel-head"><span class="panel-title" data-i18n="topProducts">ტოპ პროდუქტები</span><span class="panel-note" data-i18n="top12ByAmount">ტოპ 12, ჯამური თანხით</span></div>
+        <div class="rank-list" id="vendProdRankList"></div>
       </div>
     </div>
 
