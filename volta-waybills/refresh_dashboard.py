@@ -415,6 +415,82 @@ def build_waybill_rows(raw):
     return rows, skipped
 
 
+OWN_TIN = SU.split(":")[-1]  # "API:402145362" -> company TIN, see volta_rsge_api.md
+
+
+def fetch_purchase_waybills():
+    """
+    Buyer-side register: every waybill where Volta is the BUYER (i.e. Volta's
+    purchases from its suppliers), via get_buyer_waybills. Two quirks found by
+    testing directly against the live API (2026-09-04):
+      - the buyer-side call ignores begin_date_s/e entirely (returned 0 rows
+        for any begin_date window) and only filters on create_date_s/e — so
+        the window is passed as create_date here. In practice CREATE_DATE ==
+        BEGIN_DATE for every one of the ~4,900 rows in the current window, so
+        the dashboard still displays BEGIN_DATE for consistency with the
+        seller-side tab.
+      - the response schema differs from get_waybills: the counterparty is
+        SELLER_NAME/SELLER_TIN (BUYER_* is always Volta itself), plus extra
+        IS_CONFIRMED / INVOICE_ID / WAYBILL_COMMENT fields.
+    """
+    client = Client(WAYBILL_WSDL)
+    end = datetime.now()
+    result = client.service.get_buyer_waybills(
+        su=SU, sp=SP,
+        itypes=None, seller_tin=None, statuses=None, car_number=None,
+        begin_date_s=None, begin_date_e=None,
+        create_date_s=START, create_date_e=end,
+        driver_tin=None,
+        delivery_date_s=None, delivery_date_e=None,
+        full_amount=None, waybill_number=None,
+        close_date_s=None, close_date_e=None,
+        s_user_ids=None, comment=None,
+    )
+    waybills = []
+    for wb in result.findall("WAYBILL"):
+        row = {child.tag: (child.text or "") for child in wb if child.tag not in ("SUB_WAYBILLS", "GOODS_LIST")}
+        waybills.append(row)
+    return waybills
+
+
+def build_purchase_rows(raw):
+    """
+    Compact rows for the Vendors (მომწოდებლები) tab. Excluded up front, not
+    just filtered client-side, because the tab is a purchases pivot and none
+    of these are purchases: cancelled waybills (STATUS=-2 — never delivered),
+    unnumbered ones (same rule as the seller-side register), and Volta→Volta
+    internal transfers (SELLER_TIN == own TIN, TYPE=1, zero amount — warehouse
+    moves that happen to show up on the buyer side too). TYPE=5 (goods
+    return) rows here are issued by the VENDOR with Volta as buyer — i.e.
+    Volta sending goods back to the supplier — so the amount is negated
+    (purchase reduction), mirroring the validated sign convention for Volta's
+    own customer returns on the seller-side tab. Checked 2026-09-04: every
+    TYPE=5 seller in the window is one of the known suppliers, none are
+    retail customers, so negating them is a pure vendor-netting effect.
+    """
+    rows = []
+    skipped = 0
+    for r in raw:
+        if not r.get("WAYBILL_NUMBER") or r.get("STATUS") == "-2" or r.get("SELLER_TIN") == OWN_TIN:
+            skipped += 1
+            continue
+        amount = float(r["FULL_AMOUNT"]) if r.get("FULL_AMOUNT") else 0.0
+        if r.get("TYPE") == "5":
+            amount = -amount
+        rows.append({
+            "i": r.get("ID", ""),
+            "n": r.get("WAYBILL_NUMBER", ""),
+            "d": r.get("BEGIN_DATE") or r.get("CREATE_DATE") or "",
+            "v": (r.get("SELLER_NAME") or "დაუდგენელი").strip(),
+            "t": r.get("SELLER_TIN", ""),
+            "a": amount,
+            "s": r.get("STATUS", ""),
+            "y": r.get("TYPE", ""),
+            "c": (r.get("WAYBILL_COMMENT") or "").strip(),
+        })
+    return rows, skipped
+
+
 def fetch_invoices():
     """
     get_seller_invoices returns a DataTable as an ADO.NET diffgram whose row
@@ -1146,7 +1222,11 @@ def main():
                 .replace("__DATA_WB__", wb_json)
                 .replace("__DATA_INV__", inv_json)
                 .replace("__DATA_RECON__", recon_json)
-                .replace("__DATA_GEO__", geo_json))
+                .replace("__DATA_GEO__", geo_json)
+                # Vendors (purchases) tab is only built for the Gia's-DB copy
+                # (refresh_dashboard_gia.py) per the 2026-09-04 request; null
+                # here makes template.html hide that tab entirely.
+                .replace("__DATA_VEND__", "null"))
     out_path = HERE / "waybill_dashboard.html"
     out_path.write_text(out_html, encoding="utf-8")
     print(f"wrote {out_path} ({len(out_html.encode('utf-8'))} bytes)", file=sys.stderr)

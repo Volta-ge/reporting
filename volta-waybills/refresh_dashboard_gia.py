@@ -50,6 +50,7 @@ sys.path.insert(0, str(HERE))
 from refresh_dashboard import (
     START, fetch_waybills, build_waybill_rows, fetch_invoices, build_invoice_rows,
     build_reconciliation, build_geo_summary, load_logistics_status,
+    fetch_purchase_waybills, build_purchase_rows,
 )
 import json
 from datetime import datetime
@@ -148,6 +149,13 @@ def main():
     inv_rows = build_invoice_rows(raw_inv)
     print(f"invoices: fetched {len(inv_rows)}", file=sys.stderr)
 
+    print(f"[{datetime.now()}] fetching purchase (buyer-side) waybills from RS.ge...", file=sys.stderr)
+    raw_pur = fetch_purchase_waybills()
+    vend_rows, pur_skipped = build_purchase_rows(raw_pur)
+    print(f"purchases: fetched {len(raw_pur)}, kept {len(vend_rows)}, skipped {pur_skipped} "
+          f"(cancelled/unnumbered/internal); {len({r['t'] for r in vend_rows})} vendors, "
+          f"net {sum(r['a'] for r in vend_rows):,.0f} GEL", file=sys.stderr)
+
     print(f"[{datetime.now()}] fetching CRM sales from VoltaStoreDB (Gia's)...", file=sys.stderr)
     crm_rows = fetch_crm_sales_gia()
     print(f"CRM sales (crm_order_status=5, PID resolvable): {len(crm_rows)}", file=sys.stderr)
@@ -169,6 +177,7 @@ def main():
     inv_json = json.dumps(inv_rows, ensure_ascii=False, separators=(",", ":"))
     recon_json = json.dumps(recon, ensure_ascii=False, separators=(",", ":"), default=str)
     geo_json = json.dumps(geo, ensure_ascii=False, separators=(",", ":"))
+    vend_json = json.dumps(vend_rows, ensure_ascii=False, separators=(",", ":"))
 
     template = (HERE / "template.html").read_text(encoding="utf-8")
     out_html = (template
@@ -176,6 +185,7 @@ def main():
                 .replace("__DATA_INV__", inv_json)
                 .replace("__DATA_RECON__", recon_json)
                 .replace("__DATA_GEO__", geo_json)
+                .replace("__DATA_VEND__", vend_json)
                 .replace("ვოლტას სავაჭრო რეესტრები", "ვოლტას სავაჭრო რეესტრები (Gia's DB)")
                 .replace("Volta Trade Registers", "Volta Trade Registers (Gia's DB)"))
     out_path = HERE / "waybill_dashboard_gia.html"

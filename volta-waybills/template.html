@@ -160,7 +160,7 @@
     font-size:10.5px; letter-spacing:0.08em; text-transform:uppercase;
     color:var(--muted); font-family:"IBM Plex Mono",monospace;
   }
-  .field select, .field input[type="date"]{
+  .field select, .field input[type="date"], .field input[type="month"]{
     font:inherit;
     font-family:"Noto Sans Georgian",sans-serif;
     font-size:13px;
@@ -268,6 +268,31 @@
   .geo-fill{ height:100%; border-radius:1px; background:var(--accent); }
   .geo-count{ text-align:right; font-size:12px; color:var(--muted); }
   .geo-amt{ text-align:right; font-size:11.5px; color:var(--muted); }
+
+  /* ---------- Vendors pivot (vendor × month) ---------- */
+  .pivot-scroll{ overflow:auto; max-height:620px; border:1px solid var(--line); border-radius:var(--radius); }
+  .pivot-scroll table{ width:max-content; min-width:100%; }
+  .pivot-scroll thead th{ text-align:right; z-index:2; }
+  .pivot-scroll th.pivot-sticky, .pivot-scroll td.pivot-sticky{
+    position:sticky; left:0; background:var(--surface); color:var(--ink); text-align:left; z-index:1;
+    min-width:230px; max-width:300px; white-space:normal; box-shadow:1px 0 0 var(--line);
+  }
+  .pivot-scroll thead th.pivot-sticky{ z-index:3; background:var(--surface-2); color:var(--muted); }
+  .pivot-scroll tbody td{ text-align:right; padding:7px 10px; }
+  .pivot-scroll tbody tr:hover td.pivot-sticky{ background:var(--surface-2); }
+  .pivot-scroll td.pivot-total, .pivot-scroll th.pivot-total{ background:var(--accent-soft); color:var(--accent-ink); font-weight:600; }
+  .pivot-scroll thead th.pivot-total{ color:var(--accent-ink); }
+  .pivot-scroll td.pivot-zero{ color:var(--faint); }
+  .pivot-scroll tfoot td{
+    position:sticky; bottom:0; background:var(--surface-2); color:var(--ink); font-weight:700;
+    border-top:2px solid var(--ink); text-align:right; padding:8px 10px; white-space:nowrap; z-index:1;
+  }
+  .pivot-scroll tfoot td.pivot-sticky{ text-align:left; z-index:2; background:var(--surface-2); }
+  .pivot-scroll tfoot td.pivot-total{ background:var(--accent-soft); color:var(--accent-ink); }
+  .pivot-vendor{ all:unset; cursor:pointer; color:var(--ink); font-size:12.5px; display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:270px; }
+  .pivot-vendor:hover{ color:var(--accent); text-decoration:underline; }
+  .pivot-tin{ display:block; font-size:10.5px; color:var(--faint); }
+  .pivot-empty{ color:var(--faint); padding:14px; text-align:left; }
 
   /* ---------- Trend chart ---------- */
   .trend-legend{ display:flex; gap:16px; font-size:12px; color:var(--muted); margin-bottom:6px; }
@@ -387,6 +412,7 @@
       <button class="tabbtn" data-tab="wb" data-i18n="tabWb">ზედნადებები</button>
       <button class="tabbtn" data-tab="inv" data-i18n="tabInv">ანგარიშ-ფაქტურები</button>
       <button class="tabbtn" data-tab="geo" data-i18n="tabGeo">გეოგრაფია</button>
+      <button class="tabbtn" data-tab="vend" id="tabBtnVend" data-i18n="tabVend">მომწოდებლები</button>
       <button class="tabbtn" id="langToggle" style="margin-left:6px;">EN</button>
     </div>
   </div>
@@ -615,6 +641,90 @@
     <footer><span data-i18n="geoFooterSource">წყარო: შემოსავლების სამსახური &middot; ელექტრონული ზედნადებების სერვისი (RS.ge WayBillService, END_ADDRESS)</span><span id="geoGenStamp">—</span></footer>
   </div>
 
+  <!-- ======================= VENDORS (PURCHASES) TAB ======================= -->
+  <div class="tabpanel" id="tab-vend">
+
+    <div class="subhead">
+      <div class="brand-block">
+        <div class="subline" id="vendRangeSubline">—</div>
+        <div class="subline" style="font-size:11.5px;opacity:0.75;" data-i18n="vendNote">შესყიდვები = ზედნადებები, სადაც ვოლტა მყიდველია (RS.ge get_buyer_waybills). გაუქმებული და ვოლტას შიდა გადაზიდვები არ შედის; მომწოდებელთან დაბრუნება (ტიპი „საქონლის დაბრუნება") უარყოფითი ნიშნითაა</div>
+      </div>
+      <div class="filters">
+        <div class="field"><label for="vendStart" data-i18n="monthFrom">თვიდან</label><input type="month" id="vendStart"></div>
+        <div class="field"><label for="vendEnd" data-i18n="monthTo">თვემდე</label><input type="month" id="vendEnd"></div>
+        <div class="field"><label for="vendVendor" data-i18n="vendorLabel">მომწოდებელი</label><select id="vendVendor" style="max-width:260px;"><option value="">ყველა</option></select></div>
+        <div class="field"><label for="vendType" data-i18n="typeLabel">ტიპი</label><select id="vendType"><option value="">ყველა</option></select></div>
+        <div class="field"><label for="vendStatus" data-i18n="statusLabel">სტატუსი</label><select id="vendStatus"><option value="">ყველა</option></select></div>
+        <div class="field"><label for="vendMetric" data-i18n="metricLabel">მაჩვენებელი</label><select id="vendMetric"><option value="amount" data-i18n="metricAmount">თანხა (₾)</option><option value="count" data-i18n="metricCount">რაოდენობა</option></select></div>
+        <button class="btn-reset" id="vendReset" data-i18n="resetFilters">ფილტრის გასუფთავება</button>
+      </div>
+    </div>
+
+    <div class="kpis kpis-5">
+      <div class="kpi"><span class="kpi-label" data-i18n="vendKpiNet">შესყიდვები (ნეტო)</span><span class="kpi-value num" id="vendKpiNet">—</span><span class="kpi-sub" id="vendKpiNetSub">&nbsp;</span></div>
+      <div class="kpi"><span class="kpi-label" data-i18n="vendKpiCount">ზედნადებები</span><span class="kpi-value num" id="vendKpiCount">—</span><span class="kpi-sub" id="vendKpiCountSub">&nbsp;</span></div>
+      <div class="kpi"><span class="kpi-label" data-i18n="vendKpiVendors">მომწოდებელი</span><span class="kpi-value num" id="vendKpiVendors">—</span><span class="kpi-sub" id="vendKpiVendorsSub">&nbsp;</span></div>
+      <div class="kpi"><span class="kpi-label" data-i18n="vendKpiMonthly">საშ. თვეში</span><span class="kpi-value num" id="vendKpiMonthly">—</span><span class="kpi-sub" id="vendKpiMonthlySub">&nbsp;</span></div>
+      <div class="kpi"><span class="kpi-label" data-i18n="vendKpiReturns">დაბრუნება მომწოდებელთან</span><span class="kpi-value num" id="vendKpiReturns">—</span><span class="kpi-sub" id="vendKpiReturnsSub">&nbsp;</span></div>
+    </div>
+
+    <div class="grid-main">
+      <div class="panel">
+        <div class="panel-head"><span class="panel-title" data-i18n="vendMonthlyVolume">თვიური შესყიდვები</span><span class="panel-note" data-i18n="countAmountNote">ზედნადებების რაოდენობა &amp; თანხა</span></div>
+        <div class="trend-legend"><span><span class="legend-dot" style="background:var(--accent)"></span><span data-i18n="quantity">რაოდენობა</span></span><span><span class="legend-dot" style="background:var(--warm)"></span><span data-i18n="amountGel">თანხა (₾)</span></span></div>
+        <svg class="trend-svg" id="vendTrendChart" viewBox="0 0 960 230" preserveAspectRatio="none"></svg>
+      </div>
+      <div class="side-stack">
+        <div class="panel">
+          <div class="panel-head"><span class="panel-title" data-i18n="topVendors">მსხვილი მომწოდებლები</span><span class="panel-note" data-i18n="top12ByAmount">ტოპ 12, ჯამური თანხით</span></div>
+          <div class="rank-list" id="vendRankList"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="table-toolbar">
+        <span><span class="panel-title" data-i18n="vendPivotTitle">მომწოდებლები თვეების ჭრილში</span><br><span class="panel-note" id="vendPivotNote"></span></span>
+        <input class="search-input" id="vendPivotSearchBox" placeholder="ძებნა: მომწოდებელი, ს/კ…" data-i18n-ph="vendPivotSearchPh">
+      </div>
+      <div class="pivot-scroll">
+        <table>
+          <thead id="vendPivotHead"></thead>
+          <tbody id="vendPivotBody"></tbody>
+          <tfoot id="vendPivotFoot"></tfoot>
+        </table>
+      </div>
+    </div>
+
+    <div class="panel" id="vendRegistryPanel">
+      <div class="table-toolbar">
+        <span class="panel-title" data-i18n="vendRegistry">შესყიდვების რეესტრი</span>
+        <input class="search-input" id="vendSearchBox" placeholder="ძებნა: მომწოდებელი, ს/კ, ნომერი, კომენტარი…" data-i18n-ph="vendSearchPh">
+      </div>
+      <div class="table-scroll">
+        <table>
+          <thead><tr>
+            <th><button data-k="d" data-i18n="colTransportStart">ტრანსპ. დაწყება</button></th>
+            <th><button data-k="n" data-i18n="colWaybillNo">ზედნადების №</button></th>
+            <th><button data-k="v" data-i18n="colVendor">მომწოდებელი</button></th>
+            <th><button data-k="t" data-i18n="colTinCompany">ს/კ</button></th>
+            <th><button data-k="y" data-i18n="colType">ტიპი</button></th>
+            <th><button data-k="s" data-i18n="colStatus">სტატუსი</button></th>
+            <th><button data-k="c" data-i18n="colComment">კომენტარი</button></th>
+            <th><button data-k="a" data-i18n="colAmount">თანხა (₾)</button></th>
+          </tr></thead>
+          <tbody id="vendTbody"></tbody>
+        </table>
+      </div>
+      <div class="pager">
+        <span id="vendPagerInfo">—</span>
+        <div class="pager-btns"><button id="vendPFirst">&laquo;</button><button id="vendPPrev">&lsaquo;</button><button id="vendPNext">&rsaquo;</button><button id="vendPLast">&raquo;</button></div>
+      </div>
+    </div>
+
+    <footer><span data-i18n="vendFooterSource">წყარო: შემოსავლების სამსახური &middot; ელექტრონული ზედნადებების სერვისი (RS.ge WayBillService, get_buyer_waybills)</span><span id="vendGenStamp">—</span></footer>
+  </div>
+
 </div>
 
 <script>
@@ -622,6 +732,8 @@ const RAW_WB = __DATA_WB__;
 const RAW_INV = __DATA_INV__;
 const RAW_RECON = __DATA_RECON__;
 const RAW_GEO = __DATA_GEO__;
+// null when the build doesn't include purchases (the myvolta.info-based copy) — the tab hides itself.
+const RAW_VEND = __DATA_VEND__;
 
 /* ---------- i18n ---------- */
 let LANG = localStorage.getItem("voltaLang") || "ka";
@@ -773,6 +885,42 @@ const T = {
   waybillsChecked: {ka:" ზედნადები შემოწმებული (გაუქმებულის გარეშე) · ", en:" waybills checked (excluding cancelled) · "},
   classifiedN: {ka:" კლასიფიცირებული, ", en:" classified, "},
   unclassifiedN: {ka:" დაუზუსტებელი", en:" unclassified"},
+
+  // vendors (purchases) tab
+  tabVend: {ka:"მომწოდებლები", en:"Vendors"},
+  vendNote: {ka:"შესყიდვები = ზედნადებები, სადაც ვოლტა მყიდველია (RS.ge get_buyer_waybills). გაუქმებული და ვოლტას შიდა გადაზიდვები არ შედის; მომწოდებელთან დაბრუნება (ტიპი „საქონლის დაბრუნება\") უარყოფითი ნიშნითაა", en:"Purchases = waybills where Volta is the buyer (RS.ge get_buyer_waybills). Cancelled waybills and Volta's internal transfers are excluded; returns to a vendor (type \"goods return\") carry a negative sign"},
+  monthFrom: {ka:"თვიდან", en:"From month"},
+  monthTo: {ka:"თვემდე", en:"To month"},
+  vendorLabel: {ka:"მომწოდებელი", en:"Vendor"},
+  metricLabel: {ka:"მაჩვენებელი", en:"Metric"},
+  metricAmount: {ka:"თანხა (₾)", en:"Amount (₾)"},
+  metricCount: {ka:"რაოდენობა", en:"Count"},
+  vendKpiNet: {ka:"შესყიდვები (ნეტო)", en:"Purchases (net)"},
+  vendKpiCount: {ka:"ზედნადებები", en:"Waybills"},
+  vendKpiVendors: {ka:"მომწოდებელი", en:"Vendors"},
+  vendKpiMonthly: {ka:"საშ. თვეში", en:"Avg. per month"},
+  vendKpiReturns: {ka:"დაბრუნება მომწოდებელთან", en:"Returns to vendors"},
+  grossLabel: {ka:"ბრუტო ", en:"gross "},
+  topVendorShare: {ka:"ტოპ მომწოდებლის წილი ", en:"Top vendor share "},
+  monthsWord: {ka:" თვე", en:" months"},
+  ofGross: {ka:"% ბრუტო შესყიდვებიდან", en:"% of gross purchases"},
+  vendMonthlyVolume: {ka:"თვიური შესყიდვები", en:"Monthly purchases"},
+  topVendors: {ka:"მსხვილი მომწოდებლები", en:"Top vendors"},
+  vendPivotTitle: {ka:"მომწოდებლები თვეების ჭრილში", en:"Vendors by month"},
+  vendPivotNoteAmount: {ka:"₾, ნეტო · წლის ბოლო სვეტი = იმ წლის ჯამი · დააჭირე მომწოდებელს გასაფილტრად", en:"₾ net · column after each year = that year's total · click a vendor to filter"},
+  vendPivotNoteCount: {ka:"ზედნადებების რაოდენობა · წლის ბოლო სვეტი = იმ წლის ჯამი · დააჭირე მომწოდებელს გასაფილტრად", en:"Waybill count · column after each year = that year's total · click a vendor to filter"},
+  vendPivotSearchPh: {ka:"ძებნა: მომწოდებელი, ს/კ…", en:"Search: vendor, TIN…"},
+  colVendor: {ka:"მომწოდებელი", en:"Vendor"},
+  colTinCompany: {ka:"ს/კ", en:"TIN"},
+  colComment: {ka:"კომენტარი", en:"Comment"},
+  yearTotalSuffix: {ka:" ჯამი", en:" total"},
+  grandTotal: {ka:"სულ", en:"Total"},
+  vendorsWord: {ka:" მომწოდებელი", en:" vendors"},
+  vendRegistry: {ka:"შესყიდვების რეესტრი", en:"Purchase register"},
+  vendSearchPh: {ka:"ძებნა: მომწოდებელი, ს/კ, ნომერი, კომენტარი…", en:"Search: vendor, TIN, number, comment…"},
+  vendFooterSource: {ka:"წყარო: შემოსავლების სამსახური · ელექტრონული ზედნადებების სერვისი (RS.ge WayBillService, get_buyer_waybills)", en:"Source: Revenue Service · Electronic Waybill Service (RS.ge WayBillService, get_buyer_waybills)"},
+  vendRecordsNote: {ka:" შესყიდვის ზედნადები · თარიღი: ტრანსპორტირების დაწყება", en:" purchase waybills · date: transport start"},
+  invalidRange: {ka:"აირჩიე სწორი პერიოდი (საწყისი თვე ბოლოზე გვიან არ უნდა იყოს)", en:"Pick a valid period (start month must not be after end month)"},
 };
 
 /* ---------- shared helpers ---------- */
@@ -1297,9 +1445,18 @@ function drawTrend(svg, buckets, keys){
   const all = missing.concat(matchedList);
   const summary = RAW_RECON.summary;
 
-  const allDates = all.map(r => r.d).sort();
-  const minDate = allDates[0] || new Date().toISOString();
-  const maxDate = allDates[allDates.length-1] || new Date().toISOString();
+  // maxDate must cover waybill dates too, not just CRM sale dates: a waybill
+  // issued after the most recent confirmed sale (sale confirmation lags a
+  // few days behind waybill issuance) would otherwise fall outside the
+  // default [reconStart, reconEnd] window and get silently excluded from
+  // that person's wbTotal by personRowsInRange() below — making a person
+  // who already got their waybill look like "აკლია ზედნადები" just because
+  // the window's default end date hadn't caught up yet.
+  const saleDates = all.map(r => r.d).sort();
+  const wbDates = byPerson.flatMap(p => p.waybills.map(w => w.d)).sort();
+  const minDate = saleDates[0] || new Date().toISOString();
+  const maxDate = [saleDates[saleDates.length-1], wbDates[wbDates.length-1]]
+    .filter(Boolean).sort().pop() || new Date().toISOString();
   document.getElementById("reconStart").value = minDate.slice(0,10);
   document.getElementById("reconEnd").value = maxDate.slice(0,10);
 
@@ -1551,6 +1708,324 @@ function drawTrend(svg, buckets, keys){
 
   onRerender(render);
   render();
+})();
+
+/* =========================================================
+   VENDORS TAB (purchases — waybills where Volta is the buyer)
+   ========================================================= */
+(function(){
+  if (!RAW_VEND){
+    document.getElementById("tabBtnVend").hidden = true;
+    return;
+  }
+  function STATUS_MAP(){ return {
+    "2": {label:t("wbStatusDone"), cls:"tag-completed", color:"var(--success)"},
+    "1": {label:t("wbStatusActive"), cls:"tag-active", color:"var(--accent)"},
+    "8": {label:t("wbStatusCarrier"), cls:"tag-carrier", color:"var(--warning)"},
+    "0": {label:t("wbStatusSaved"), cls:"tag-other", color:"var(--muted)"}
+  }; }
+  function TYPE_MAP(){ return {
+    "1": t("wbTypeInternal"), "2": t("wbTypeDeliveryTransport"), "3": t("wbTypeDeliveryNoTransport"),
+    "4": t("wbTypeDistribution"), "5": t("wbTypeReturn"), "6": t("wbTypeSub")
+  }; }
+  function statusInfo(s){ return STATUS_MAP()[s] || {label:(LANG==="en"?"Other (":"სხვა (")+s+")", cls:"tag-other", color:"var(--muted)"}; }
+  function typeLabel(k){ return TYPE_MAP()[k] || ((LANG==="en"?"Type ":"ტიპი ")+k); }
+
+  const allDates = RAW_VEND.map(r => r.d).sort();
+  const minDate = allDates[0] || new Date().toISOString();
+  const maxDate = allDates[allDates.length-1] || new Date().toISOString();
+  const minMonth = minDate.slice(0,7), maxMonth = maxDate.slice(0,7);
+  document.getElementById("vendStart").value = minMonth;
+  document.getElementById("vendEnd").value = maxMonth;
+
+  // Whole-dataset vendor totals: drive the vendor <select> ordering so the
+  // biggest suppliers are at the top regardless of the current period filter.
+  const vendorTotals = {};
+  RAW_VEND.forEach(r=>{
+    if (!vendorTotals[r.t]) vendorTotals[r.t] = {name:r.v, amount:0, count:0};
+    vendorTotals[r.t].amount += r.a;
+    vendorTotals[r.t].count += 1;
+  });
+
+  function renderHeader(){
+    document.getElementById("vendRangeSubline").textContent =
+      fmtDateLong(minDate) + " — " + fmtDateLong(maxDate) + " · " + fmtInt(RAW_VEND.length) + t("vendRecordsNote");
+    document.getElementById("vendGenStamp").textContent = t("generatedAt") + fmtDateTime(new Date().toISOString());
+  }
+
+  function populateSelect(id, mapFn, extra){
+    const sel = document.getElementById(id);
+    const prevVal = sel.value;
+    sel.innerHTML = "";
+    const allOpt = document.createElement("option");
+    allOpt.value = ""; allOpt.textContent = t("all");
+    sel.appendChild(allOpt);
+    const map = mapFn();
+    const keys = Object.keys(extra || {});
+    keys.sort((a,b)=> extra[b]-extra[a]);
+    keys.forEach(k=>{
+      const opt = document.createElement("option");
+      opt.value = k;
+      opt.textContent = map[k] ? (map[k].label || map[k]) : k;
+      sel.appendChild(opt);
+    });
+    sel.value = prevVal;
+  }
+  function populateVendorSelect(){
+    const sel = document.getElementById("vendVendor");
+    const prevVal = sel.value;
+    sel.innerHTML = "";
+    const allOpt = document.createElement("option");
+    allOpt.value = ""; allOpt.textContent = t("all");
+    sel.appendChild(allOpt);
+    Object.entries(vendorTotals).sort((a,b)=>b[1].amount-a[1].amount).forEach(([tin,v])=>{
+      const opt = document.createElement("option");
+      opt.value = tin;
+      opt.textContent = v.name + " · " + fmtGelShort(v.amount);
+      sel.appendChild(opt);
+    });
+    sel.value = prevVal;
+  }
+  const statusCounts0 = {}; RAW_VEND.forEach(r => statusCounts0[r.s] = (statusCounts0[r.s]||0)+1);
+  const typeCounts0 = {}; RAW_VEND.forEach(r => typeCounts0[r.y] = (typeCounts0[r.y]||0)+1);
+  function populateSelects(){
+    populateVendorSelect();
+    populateSelect("vendStatus", STATUS_MAP, statusCounts0);
+    populateSelect("vendType", TYPE_MAP, typeCounts0);
+  }
+  populateSelects();
+
+  function monthRange(){
+    return [document.getElementById("vendStart").value, document.getElementById("vendEnd").value];
+  }
+  function monthsBetween(ms, me){
+    if (!ms || !me || ms > me) return [];
+    const out = [];
+    let [y, m] = ms.split("-").map(Number);
+    const [ey, em] = me.split("-").map(Number);
+    while (y < ey || (y === ey && m <= em)){
+      out.push(y + "-" + pad2(m));
+      m++; if (m > 12){ m = 1; y++; }
+    }
+    return out;
+  }
+
+  let sortKey = "d", sortDir = "desc", page = 0;
+  const PAGE_SIZE = 50;
+  let filtered = RAW_VEND;
+
+  function applyFilters(){
+    const [ms, me] = monthRange();
+    const vend = document.getElementById("vendVendor").value;
+    const st = document.getElementById("vendStatus").value;
+    const ty = document.getElementById("vendType").value;
+    filtered = RAW_VEND.filter(r=>{
+      const mk = r.d.slice(0,7);
+      if (ms && mk < ms) return false;
+      if (me && mk > me) return false;
+      if (vend && r.t !== vend) return false;
+      if (st && r.s !== st) return false;
+      if (ty && r.y !== ty) return false;
+      return true;
+    });
+    page = 0;
+    renderAll();
+  }
+
+  function renderKPIs(){
+    const count = filtered.length;
+    const net = filtered.reduce((s,r)=>s+r.a,0);
+    const returns = filtered.filter(r=>r.y==="5").reduce((s,r)=>s+r.a,0); // already negative
+    const gross = net - returns;
+    const vendors = new Set(filtered.map(r=>r.t)).size;
+    const [ms, me] = monthRange();
+    const months = monthsBetween(ms, me);
+    const nMonths = months.length || new Set(filtered.map(r=>r.d.slice(0,7))).size;
+    const byV = {}; filtered.forEach(r=> byV[r.t] = (byV[r.t]||0) + r.a);
+    const topAmt = Object.values(byV).reduce((m,x)=> x>m ? x : m, 0);
+
+    document.getElementById("vendKpiNet").textContent = fmtGelShort(net);
+    document.getElementById("vendKpiNetSub").innerHTML = fmtGel(net) + (returns ? " &middot; " + t("grossLabel") + fmtGel(gross) : "");
+    document.getElementById("vendKpiCount").textContent = fmtInt(count);
+    document.getElementById("vendKpiCountSub").textContent = count ? t("avgPrefix") + fmtGel(net/count) + t("perWaybill") : " ";
+    document.getElementById("vendKpiVendors").textContent = fmtInt(vendors);
+    document.getElementById("vendKpiVendorsSub").textContent = net > 0 ? t("topVendorShare") + (topAmt/net*100).toFixed(1) + "%" : " ";
+    document.getElementById("vendKpiMonthly").textContent = nMonths ? fmtGelShort(net/nMonths) : "—";
+    document.getElementById("vendKpiMonthlySub").textContent = nMonths ? nMonths + t("monthsWord") : " ";
+    document.getElementById("vendKpiReturns").textContent = fmtGelShort(returns);
+    document.getElementById("vendKpiReturnsSub").textContent = gross ? (Math.abs(returns)/gross*100).toFixed(1) + t("ofGross") : " ";
+  }
+
+  function renderRankList(){
+    const byVendor = {};
+    filtered.forEach(r=>{
+      if (!byVendor[r.t]) byVendor[r.t] = {name:r.v, tin:r.t, amount:0, count:0};
+      byVendor[r.t].amount += r.a;
+      byVendor[r.t].count += 1;
+    });
+    const top = Object.values(byVendor).sort((a,b)=>b.amount-a.amount).slice(0,12);
+    const el = document.getElementById("vendRankList");
+    el.innerHTML = "";
+    top.forEach((b,idx)=>{
+      const row = document.createElement("div");
+      row.className = "rank-row";
+      row.innerHTML =
+        '<span class="rank-num num">'+(idx+1)+'</span>'+
+        '<span><span class="rank-name">'+escapeHtml(b.name)+'</span><br><span class="rank-meta num">'+t("colTinCompany")+' '+b.tin+' &middot; '+b.count+t("waybillsWord")+'</span></span>'+
+        '<span class="rank-amt num">'+fmtGel(b.amount)+'</span>';
+      el.appendChild(row);
+    });
+  }
+
+  function renderTrend(){
+    const byMonth = {};
+    filtered.forEach(r=>{
+      const mk = monthKey(r.d);
+      if (!byMonth[mk]) byMonth[mk] = {count:0, amount:0};
+      byMonth[mk].count += 1;
+      byMonth[mk].amount += r.a;
+    });
+    const months = Object.keys(byMonth).sort();
+    drawTrend(document.getElementById("vendTrendChart"), byMonth, months);
+  }
+
+  /* ---- vendor × month pivot, with a year-total column after each year ---- */
+  function renderPivot(){
+    const [ms, me] = monthRange();
+    const metric = document.getElementById("vendMetric").value;
+    const q = document.getElementById("vendPivotSearchBox").value.trim().toLowerCase();
+    const head = document.getElementById("vendPivotHead");
+    const body = document.getElementById("vendPivotBody");
+    const foot = document.getElementById("vendPivotFoot");
+    document.getElementById("vendPivotNote").textContent = metric === "count" ? t("vendPivotNoteCount") : t("vendPivotNoteAmount");
+
+    const months = monthsBetween(ms, me);
+    if (!months.length){
+      head.innerHTML = ""; foot.innerHTML = "";
+      body.innerHTML = "<tr><td class='pivot-empty'>"+t("invalidRange")+"</td></tr>";
+      return;
+    }
+    const cols = [];
+    months.forEach((mk,i)=>{
+      cols.push({kind:"m", key:mk});
+      const y = mk.slice(0,4);
+      const next = months[i+1];
+      if (!next || next.slice(0,4) !== y) cols.push({kind:"y", key:y});
+    });
+    const years = [...new Set(months.map(m=>m.slice(0,4)))];
+    if (years.length > 1) cols.push({kind:"g", key:"total"});
+
+    const vendors = {};
+    filtered.forEach(r=>{
+      const mk = r.d.slice(0,7);
+      let v = vendors[r.t];
+      if (!v) v = vendors[r.t] = {name:r.v, tin:r.t, m:{}, y:{}, total:0};
+      const val = metric === "count" ? 1 : r.a;
+      v.m[mk] = (v.m[mk]||0) + val;
+      const yk = mk.slice(0,4);
+      v.y[yk] = (v.y[yk]||0) + val;
+      v.total += val;
+    });
+    let rows = Object.values(vendors);
+    if (q) rows = rows.filter(v => v.name.toLowerCase().includes(q) || v.tin.includes(q));
+    rows.sort((a,b)=> b.total - a.total || a.name.localeCompare(b.name));
+
+    const colLabel = c => c.kind === "m"
+      ? MONTHS()[+c.key.slice(5,7)-1].slice(0,3) + " " + c.key.slice(0,4)
+      : c.kind === "y" ? c.key + t("yearTotalSuffix") : t("grandTotal");
+    const colCls = c => c.kind === "m" ? "" : " pivot-total";
+    const cellVal = (v,c) => c.kind === "m" ? v.m[c.key] : c.kind === "y" ? v.y[c.key] : v.total;
+    const fmtCell = x => x ? fmtInt(x) : "—";
+
+    head.innerHTML = "<tr><th class='pivot-sticky'>"+t("colVendor")+"</th>"+
+      cols.map(c=>"<th class='num"+colCls(c)+"'>"+colLabel(c)+"</th>").join("")+"</tr>";
+
+    body.innerHTML = rows.length ? rows.map(v=>
+      "<tr>"+
+        "<td class='pivot-sticky'><button class='pivot-vendor' data-tin='"+escapeHtml(v.tin)+"' title='"+escapeHtml(v.name)+"'>"+escapeHtml(v.name)+"</button><span class='pivot-tin num'>"+escapeHtml(v.tin)+"</span></td>"+
+        cols.map(c=>{ const x = cellVal(v,c); return "<td class='num"+colCls(c)+(x ? "" : " pivot-zero")+"'>"+fmtCell(x)+"</td>"; }).join("")+
+      "</tr>"
+    ).join("") : "<tr><td class='pivot-empty' colspan='"+(cols.length+1)+"'>"+t("noData")+"</td></tr>";
+
+    const tot = {};
+    rows.forEach(v=> cols.forEach(c=>{ const k = c.kind + c.key; tot[k] = (tot[k]||0) + (cellVal(v,c)||0); }));
+    foot.innerHTML = "<tr><td class='pivot-sticky'>"+t("grandTotal")+" · "+fmtInt(rows.length)+t("vendorsWord")+"</td>"+
+      cols.map(c=>"<td class='num"+colCls(c)+"'>"+fmtCell(tot[c.kind + c.key])+"</td>").join("")+"</tr>";
+
+    body.querySelectorAll(".pivot-vendor").forEach(b=> b.addEventListener("click", ()=>{
+      document.getElementById("vendVendor").value = b.dataset.tin;
+      applyFilters();
+    }));
+  }
+
+  function renderTable(){
+    const q = document.getElementById("vendSearchBox").value.trim().toLowerCase();
+    const rows = q ? filtered.filter(r =>
+      r.v.toLowerCase().includes(q) || r.t.includes(q) || r.n.includes(q) || r.c.toLowerCase().includes(q)) : filtered;
+    const sorted = [...rows].sort((a,b)=>{
+      let av = a[sortKey], bv = b[sortKey];
+      if (sortKey === "a"){ av = +av; bv = +bv; }
+      const cmp = av < bv ? -1 : av > bv ? 1 : 0;
+      return sortDir === "asc" ? cmp : -cmp;
+    });
+    const totalPages = Math.max(1, Math.ceil(sorted.length / PAGE_SIZE));
+    page = Math.min(page, totalPages-1);
+    const start = page*PAGE_SIZE;
+    const pageRows = sorted.slice(start, start+PAGE_SIZE);
+    document.getElementById("vendTbody").innerHTML = pageRows.map(r=>{
+      const si = statusInfo(r.s);
+      return "<tr>"+
+        "<td class='num'>"+fmtDateTime(r.d)+"</td>"+
+        "<td class='num'>"+r.n+"</td>"+
+        "<td>"+escapeHtml(r.v)+"</td>"+
+        "<td class='num'>"+r.t+"</td>"+
+        "<td>"+typeLabel(r.y)+(r.y==="5" ? " <span style='color:var(--warning)'>&minus;</span>" : "")+"</td>"+
+        "<td><span class='tag "+si.cls+"'>"+si.label+"</span></td>"+
+        "<td class='addr'>"+escapeHtml(r.c||"—")+"</td>"+
+        "<td class='amt num'"+(r.a < 0 ? " style='color:var(--warning)'" : "")+">"+fmtGel(r.a)+"</td>"+
+      "</tr>";
+    }).join("");
+    document.getElementById("vendPagerInfo").textContent =
+      sorted.length === 0 ? t("noRecords") :
+      t("showing") + (start+1) + "–" + Math.min(start+PAGE_SIZE, sorted.length) + " / " + fmtInt(sorted.length);
+    document.getElementById("vendPFirst").disabled = page===0;
+    document.getElementById("vendPPrev").disabled = page===0;
+    document.getElementById("vendPNext").disabled = page>=totalPages-1;
+    document.getElementById("vendPLast").disabled = page>=totalPages-1;
+  }
+
+  function renderAll(){ renderHeader(); renderKPIs(); renderRankList(); renderTrend(); renderPivot(); renderTable(); }
+
+  document.querySelectorAll("#tab-vend thead button").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      const k = btn.dataset.k;
+      if (sortKey === k){ sortDir = sortDir === "asc" ? "desc" : "asc"; }
+      else { sortKey = k; sortDir = (k==="a"||k==="d") ? "desc" : "asc"; }
+      renderTable();
+    });
+  });
+  document.getElementById("vendPFirst").addEventListener("click", ()=>{ page=0; renderTable(); });
+  document.getElementById("vendPPrev").addEventListener("click", ()=>{ page=Math.max(0,page-1); renderTable(); });
+  document.getElementById("vendPNext").addEventListener("click", ()=>{ page=page+1; renderTable(); });
+  document.getElementById("vendPLast").addEventListener("click", ()=>{ page=1e9; renderTable(); });
+  ["vendStart","vendEnd","vendVendor","vendStatus","vendType"].forEach(id=>{ document.getElementById(id).addEventListener("change", applyFilters); });
+  document.getElementById("vendMetric").addEventListener("change", renderPivot);
+  document.getElementById("vendPivotSearchBox").addEventListener("input", renderPivot);
+  document.getElementById("vendSearchBox").addEventListener("input", ()=>{ page=0; renderTable(); });
+  document.getElementById("vendReset").addEventListener("click", ()=>{
+    document.getElementById("vendStart").value = minMonth;
+    document.getElementById("vendEnd").value = maxMonth;
+    document.getElementById("vendVendor").value = "";
+    document.getElementById("vendStatus").value = "";
+    document.getElementById("vendType").value = "";
+    document.getElementById("vendMetric").value = "amount";
+    document.getElementById("vendPivotSearchBox").value = "";
+    document.getElementById("vendSearchBox").value = "";
+    applyFilters();
+  });
+
+  onRerender(()=>{ populateSelects(); applyFilters(); });
+  applyFilters();
 })();
 
 /* ---------- tab switching ---------- */
