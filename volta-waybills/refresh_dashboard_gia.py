@@ -14,7 +14,7 @@ volta_voltastoredb_schema.md memory):
                     (a real FK, ID-to-ID) — deliberately NOT via email or
                     any other fuzzy match (see below)
   Order_Date    -> orders.crm_order_date
-  Full_Cost     -> orders.grand_total
+  Full_Cost     -> orders.base_grand_total (NOT grand_total — see below)
   Manager_Name  -> crm_users (via orders.crm_sales_manager_id)
   Product_Name  -> order_items.name (concatenated if an order has >1 item —
                     the old DB was always exactly one product per row, the
@@ -37,6 +37,21 @@ old-DB bridge alone was already sufficient. Only an order with no
 `my_volta_installment_id` at all (never existed in the old system — ~0.7%
 of all orders per the schema memory) would still be unrecoverable; none
 observed in this window.
+
+Sale amount is `base_grand_total`, not `grand_total` (2026-09-04): on
+2026-09-04, between the 10:15Z scheduled build and a 14:35 local rebuild,
+`orders.grand_total` was lowered for 275 status-5 orders in this window
+(mostly to ~0.90x, some far lower) by a direct DB update — `updated_at` was
+not touched — while `base_grand_total`, `sub_total`, `order_items.total`
+and myvolta's `Full_Cost` all kept the original full price. The effect on
+this dashboard was 204 buyers flipping from "matched" to a false "აკლია
+გაყიდვა" (their sale now looked smaller than their waybill). Checked
+against the old DB over the whole window: base_grand_total == Full_Cost
+for 99.7% of orders (grand_total only 96.1% after the change), and the
+waybill FULL_AMOUNT is the goods value, i.e. the full price — so
+base_grand_total is the right field for this comparison regardless of what
+grand_total now means (unknown: not a discount, down payment, loan
+principal or current catalog price — ask the developer).
 """
 import sys
 from pathlib import Path
@@ -99,7 +114,7 @@ def fetch_crm_sales_gia():
                 CONCAT(o.customer_first_name, ' ', o.customer_last_name)
             )) AS FullName,
             ANY_VALUE(o.crm_order_date) AS Order_Date,
-            ANY_VALUE(o.grand_total) AS Full_Cost,
+            ANY_VALUE(o.base_grand_total) AS Full_Cost,
             ANY_VALUE(NULLIF(TRIM(CONCAT(cu.first_name, ' ', cu.last_name)), '')) AS Manager_Name,
             GROUP_CONCAT(DISTINCT oi.name SEPARATOR '; ') AS Product_Name
         FROM orders o
