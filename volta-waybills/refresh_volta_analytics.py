@@ -61,18 +61,52 @@ def strip_for_artifact(raw: str) -> str:
     assert head_m and body_m, "expected a full <head>/<body> document from PHP"
     head, body = head_m.group(1), body_m.group(1)
 
-    title_m = re.search(r"<title>.*?</title>", head, re.S)
     links = re.findall(r"<link\b[^>]*>", head)
-    style_m = re.search(r"<style>.*?</style>", head, re.S)
+    # dashboard.php's <head> now has TWO <style> blocks (its own base CSS,
+    # plus the .acct-scope-scoped Accounting CSS injected right after it —
+    # see the volta_php_accounting_port memory) — re.search would keep only
+    # the first and silently drop Accounting's own styling. A first publish
+    # did exactly that: the page loaded with correct data but zero styling
+    # on every Accounting tab specifically, caught via a user screenshot,
+    # not by re-checking after publishing. findall() is required here.
+    styles = re.findall(r"<style>.*?</style>", head, re.S)
+
+    body = drop_never_borrowed_detail(body)
 
     pieces = []
-    if title_m:
-        pieces.append(title_m.group(0))
+    # The <title> tag is what names the Artifact in the gallery, and every
+    # republish (this daily one included) overwrote the user's manual rename
+    # until the tag itself carried it (2026-09-04). The user's chosen name for
+    # artifact 8c1cd133 is "Volta_Analytics_Old DB" — Artifact output only,
+    # the live PHP deployments keep dashboard.php's own title.
+    pieces.append("<title>Volta_Analytics_Old DB</title>")
     pieces.extend(links)
-    if style_m:
-        pieces.append(style_m.group(0))
+    pieces.extend(styles)
     pieces.append(body)
     return "\n".join(pieces)
+
+
+def drop_never_borrowed_detail(body: str) -> str:
+    """The `neverBorrowedDetail` const (individual-row detail for the ~26,800 never-became-a-
+    customer population, see volta_portfolio_analysis memory) alone runs ~8.4MB of embedded JSON
+    — combined with Accounting's RAW_RECON/RAW_WB (~7.9MB) and exCustomers (~1MB), the full render
+    now exceeds the Artifact tool's 16MB publish limit outright (measured 2026-08-31: 19.5MB whole,
+    a publish attempt fails hard, not degraded). Dropped to `null` for the Artifact specifically —
+    the page's own JS already null-checks this (renders "No data." instead of crashing), and the
+    table/search box are still visible, just empty. Both live PHP deployments keep the real data
+    untouched; this trim is Artifact-publish-only. If this function ever needs to drop something
+    else instead (e.g. if a different const grows past this one), re-measure with the same
+    marker-to-next-const byte-slicing approach used to find this — regex-matching nested JSON by
+    `.*?` is unreliable and undercounts real size."""
+    marker = "const neverBorrowedDetail = "
+    start = body.find(marker)
+    if start == -1:
+        return body
+    value_start = start + len(marker)
+    end = body.find("\nconst ", value_start)
+    if end == -1:
+        return body
+    return body[:start] + "const neverBorrowedDetail = null;" + body[end:]
 
 
 def main():
