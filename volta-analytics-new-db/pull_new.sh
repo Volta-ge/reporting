@@ -11,9 +11,18 @@ Q() { "$MYSQL_BIN" -h "$NEWDB_HOST" -P 3306 -u "$NEWDB_USER" -D "$NEWDB_NAME" --
 # base_grand_total is the fixed sale amount; grand_total is the remaining balance and shrinks as payments post.
 SEG="CASE WHEN EXISTS (SELECT 1 FROM order_items oi JOIN product_flat pf ON pf.product_id=oi.product_id AND pf.locale='ka_GE' WHERE oi.order_id=o.id AND (pf.name LIKE 'ტელეფონი%' OR pf.name LIKE 'ტელევიზორ%')) OR o.base_grand_total>2500 THEN 'A' ELSE 'B' END"
 
-# Deals Closed / Amount Sold — keyed to the order (disbursement) date, active orders only
-Q "SELECT DATE(o.crm_creator_date) d, $SEG seg, COUNT(*) deals, SUM(o.base_grand_total) amount
-   FROM orders o WHERE o.crm_active=1 AND DATE(o.crm_creator_date) BETWEEN '$CUTOVER' AND '$END' GROUP BY d, seg ORDER BY d, seg;" > "$S/new_daily_seg.tsv"
+# Deals Closed / Amount Sold — keyed to the order (disbursement) date, active orders only.
+# amount = the full installment amount the customer pays (product price + financing markup) = the payment
+# schedule total; the advance is added only when the schedule was built net of it (schedule + advance <= price),
+# because in the other convention the advance is already posted against the first schedule row.
+# price = product price (base_grand_total), kept for reference / the Segment A rule.
+Q "SELECT DATE(o.crm_creator_date) d, $SEG seg, COUNT(*) deals,
+   SUM(CASE WHEN s.tot IS NULL THEN o.base_grand_total
+            WHEN s.tot + COALESCE(o.crm_advance_amount,0) <= o.base_grand_total + 0.01 THEN s.tot + COALESCE(o.crm_advance_amount,0)
+            ELSE s.tot END) amount,
+   SUM(o.base_grand_total) price, SUM(s.tot IS NULL) no_schedule
+   FROM orders o LEFT JOIN (SELECT installment_id, SUM(schedule_amount) tot FROM crm_installment_schedules GROUP BY installment_id) s ON s.installment_id=o.id
+   WHERE o.crm_active=1 AND DATE(o.crm_creator_date) BETWEEN '$CUTOVER' AND '$END' GROUP BY d, seg ORDER BY d, seg;" > "$S/new_daily_seg.tsv"
 
 # Applications / Terms / Underwriting / Downpayment — keyed to the application date (created_at)
 Q "SELECT DATE(o.created_at) d, $SEG seg, COUNT(*) applications, SUM(o.crm_underwriter_status_id IS NOT NULL) terms,
