@@ -1,0 +1,2490 @@
+period	category	brand	deal_type	sales	cogs	qty
+2026-01	none	none	installment	285170.00	167430.00	291
+2026-01	აეროგრილი	AZRUM	installment	490.00	299.00	1
+2026-01	აეროგრილი	FRANKO	installment	1830.00	956.00	4
+2026-01	აეროგრილი	Hisense	installment	270.00	160.00	1
+2026-01	აეროგრილი	MIDEA	installment	1740.00	1050.00	3
+2026-01	აეროგრილი	Ninja	installment	2450.00	1480.00	3
+2026-01	აეროგრილი	NUTRIBULLET	installment	590.00	303.00	1
+2026-01	აეროგრილი	Panasonic	installment	1040.00	587.00	2
+2026-01	აეროგრილი	Zilan	installment	210.00	125.00	1
+2026-01	ავეჯი	N/A	installment	7370.00	4491.00	7
+2026-01	ავეჯი	ბრენდის გარეშე	installment	2800.00	1660.00	3
+2026-01	ბლენდერი	ARDESTO	installment	120.00	67.00	1
+2026-01	ბლენდერი	Ninja	installment	670.00	400.00	1
+2026-01	ბლენდერი	SENCOR	installment	150.00	89.00	1
+2026-01	გაზის გამათბობელი	AKOG	installment	4880.00	2920.00	4
+2026-01	გაზის გამათბობელი	ERSEL	installment	5860.00	3280.00	5
+2026-01	გაზის წყლის გამაცხელებელი	INNOVITA	installment	980.00	532.00	1
+2026-01	გაზის წყლის გამაცხელებელი	KARIZZMA	installment	2160.00	1310.00	2
+2026-01	გაზის წყლის გამაცხელებელი	MARAZZI	installment	9490.00	5620.00	13
+2026-01	გაზის წყლის გამაცხელებელი	MIDEA	installment	4010.00	2400.00	4
+2026-01	გაზქურა	BEKO	installment	5270.00	2789.00	3
+2026-01	გაზქურა	DIXI	installment	3330.00	1900.00	4
+2026-01	გაზქურა	Simfer	installment	6100.00	3575.00	6
+2026-01	გამწოვი	BEKO	installment	570.00	295.00	1
+2026-01	გამწოვი	Simfer	installment	530.00	1.00	1
+2026-01	დანების ნაკრები	ARDESTO	installment	270.00	127.00	3
+2026-01	დენის წყლის გამაცხელებელი	MIDEA	installment	750.00	450.00	1
+2026-01	დინამიკი	FRANKO	installment	580.00	297.00	1
+2026-01	ელ. გამათბობელი	VOX	installment	210.00	100.00	1
+2026-01	ელექტრო გამათბობელი	SENCOR	installment	490.00	249.00	1
+2026-01	ელექტრო გამათბობელი	Zilan	installment	330.00	180.00	1
+2026-01	ელექტრო სკუტერი	FRANKO	installment	5260.00	2848.00	4
+2026-01	ელექტრო ღუმელი	AZRUM	installment	640.00	391.00	1
+2026-01	ელექტრო ღუმელი	Hisense	installment	490.00	230.00	1
+2026-01	ელექტრო ღუმელი	SCHAUB	installment	450.00	270.00	1
+2026-01	ელექტრო ღუმელი	Schaub Lorenz	installment	725.00	430.00	2
+2026-01	ელექტრო ჩაიდანი	FRANKO	installment	320.00	171.00	2
+2026-01	ელექტრო ჩაიდანი	SENCOR	installment	100.00	41.00	1
+2026-01	ელქტერო გამათბობელი	BEKO	installment	180.00	110.00	1
+2026-01	ვაფლის აპარატი	FRANKO	installment	140.00	69.00	1
+2026-01	თმის გამასწორებელი	PHILIPS	installment	290.00	155.00	1
+2026-01	თმის და წვერის საჭრელი	PHILIPS	installment	240.00	134.00	1
+2026-01	თმის დასახვევი	REMINGTON	installment	160.00	129.00	1
+2026-01	თმის საკრეჭი	FRANKO	installment	100.00	52.00	1
+2026-01	თმის საკრეჭი	Panasonic	installment	220.00	126.00	1
+2026-01	თმის საშრობი	Camry	installment	90.00	37.00	1
+2026-01	თმის საშრობი	FRANKO	installment	250.00	139.00	1
+2026-01	თმის საშრობი	REMINGTON	installment	510.00	227.00	2
+2026-01	თმის საჭრელი	Panasonic	installment	240.00	134.00	1
+2026-01	თმის საჭრელი	PHILIPS	installment	310.00	159.00	1
+2026-01	თმის სტაილერი	FRANKO	installment	1680.00	924.00	6
+2026-01	თმის სტაილერი	SHARK	installment	7930.00	4800.00	7
+2026-01	თმის უთო	Camry	installment	180.00	75.00	1
+2026-01	თმის უთო	PHILIPS	installment	820.00	500.00	2
+2026-01	თმის უთო	REMINGTON	installment	200.00	86.00	1
+2026-01	კარავი	Bestway	installment	150.00	83.00	1
+2026-01	კონდენციონერი	Millen	installment	830.00	552.00	1
+2026-01	კონდიციონერი	MARAZZI	installment	3810.00	2300.00	3
+2026-01	კონდიციონერი	MIDEA	installment	5950.00	4150.00	1
+2026-01	კონდიციონერი	MIDEA	single	1180.00	1110.00	1
+2026-01	მაცივარი	ARDESTO	installment	1540.00	940.00	1
+2026-01	მაცივარი	BEKO	installment	2440.00	1326.00	1
+2026-01	მაცივარი	CHIGO	installment	680.00	325.00	1
+2026-01	მაცივარი	Hisense	installment	8190.00	4710.00	5
+2026-01	მაცივარი	LG	installment	3530.00	2160.00	2
+2026-01	მაცივარი	MARAZZI	installment	4100.00	2579.00	3
+2026-01	მაცივარი	MIDEA	installment	7640.00	4570.00	4
+2026-01	მიკროტალღური ღუმელი	BEKO	installment	350.00	197.00	1
+2026-01	მიკროტალღური ღუმელი	Hisense	installment	2160.00	1235.00	5
+2026-01	მიკროტალღური ღუმელი	MIDEA	installment	340.00	195.00	1
+2026-01	მიკროტალღური ღუმელი	MIDEA	single	657.00	465.00	3
+2026-01	მიკროტალღური ღუმელი	Panasonic	installment	440.00	248.00	1
+2026-01	მიკროტალღური ღუმელი	Toshiba	installment	605.00	320.00	2
+2026-01	მიქსერი	FRANKO	installment	320.00	164.00	1
+2026-01	მიქსერი	MIDEA	single	299.00	155.00	1
+2026-01	მტვერსასრუტი	BEKO	installment	1720.00	1033.00	4
+2026-01	მტვერსასრუტი	Camry	installment	250.00	130.00	1
+2026-01	მტვერსასრუტი	FRANKO	installment	1540.00	839.00	4
+2026-01	მტვერსასრუტი	Hisense	installment	1470.00	690.00	3
+2026-01	მტვერსასრუტი	MIDEA	installment	2890.00	1740.00	3
+2026-01	მტვერსასრუტი	SAMSUNG	installment	1010.00	551.00	2
+2026-01	მტვერსასრუტი	SENCOR	installment	4230.00	2496.00	3
+2026-01	მტვერსასრუტი	SHARK	installment	7240.00	4400.00	6
+2026-01	მტვერსასრუტი	Zilan	installment	160.00	95.00	1
+2026-01	პურის საცხობი	FRANKO	installment	450.00	235.00	1
+2026-01	რობოტი მტვერსასრუტი	MIDEA	installment	6040.00	3660.00	4
+2026-01	სარეცხი მანქანა	BEKO	installment	7620.00	4392.00	5
+2026-01	სარეცხი მანქანა	HAGEN	installment	1600.00	894.00	2
+2026-01	სარეცხი მანქანა	Hisense	installment	13680.00	8045.00	14
+2026-01	სარეცხი მანქანა	LG	installment	1440.00	840.00	1
+2026-01	სარეცხი მანქანა	MARAZZI	installment	4860.00	3000.00	4
+2026-01	სარეცხი მანქანა	MIDEA	installment	8260.00	5035.00	7
+2026-01	სარეცხი მანქანა	SAMSUNG	installment	4980.00	3040.00	3
+2026-01	სარეცხი მანქანა	SHARP	installment	2210.00	1400.00	1
+2026-01	სარეცხი მანქანა საშრობით	Hisense	installment	1480.00	900.00	1
+2026-01	სარეცხი მანქანა საშრობით	LG	installment	2180.00	1263.00	1
+2026-01	სარეცხი მანქანა საშრობით	SAMSUNG	installment	5080.00	3100.00	2
+2026-01	სარეცხი მანქანა+შრობა	MARAZZI	installment	1810.00	1100.00	1
+2026-01	სარეცხის საშრობი	BEKO	installment	3630.00	1946.00	2
+2026-01	სარეცხის საშრობი	Hisense	installment	1290.00	790.00	1
+2026-01	სასწორი	FRANKO	installment	180.00	98.00	2
+2026-01	საყინულე	Hisense	installment	850.00	470.00	1
+2026-01	სენდვიჩის აპარატი	BRAUN	installment	965.00	608.00	1
+2026-01	სკუტერი	FRANKO	installment	7530.00	4172.00	5
+2026-01	სკუტერი	MIQILONG	installment	245.00	70.00	1
+2026-01	ტაფა	ARDESTO	installment	100.00	44.00	1
+2026-01	ტაფა	BERLLONG	installment	200.00	106.00	1
+2026-01	ტაფა-ქვაბი	BERLLONG	installment	150.00	72.00	1
+2026-01	ტელევიზორი 	2E	installment	6930.00	4222.00	6
+2026-01	ტელევიზორი 	BEKO	installment	3430.00	1974.00	3
+2026-01	ტელევიზორი 	FRANKO	installment	6110.00	3587.00	10
+2026-01	ტელევიზორი 	Hisense	installment	25650.00	15179.00	20
+2026-01	ტელევიზორი 	Hisense	single	499.00	329.00	1
+2026-01	ტელევიზორი 	iFFALCON	installment	910.00	491.00	1
+2026-01	ტელევიზორი 	LG	installment	7910.00	4545.00	3
+2026-01	ტელევიზორი 	MARAZZI	installment	3080.00	1878.00	3
+2026-01	ტელევიზორი 	SAMSUNG	installment	23235.00	14053.00	12
+2026-01	ტელევიზორი 	SAMSUNG	single	1040.00	919.00	1
+2026-01	ტელევიზორი 	SHARP	installment	1620.00	900.00	1
+2026-01	ტელევიზორი 	SKYWORTH	installment	760.00	425.00	1
+2026-01	ტელევიზორი 	SKYWORTH	single	300.00	285.00	1
+2026-01	ტელევიზორი 	Sunny	installment	570.00	307.00	1
+2026-01	ტელევიზორი 	VOX	installment	1100.00	608.00	1
+2026-01	ტელეფონი	Apple	installment	12060.00	4138.00	3
+2026-01	ტელეფონი	HONOR	installment	23740.00	14344.00	19
+2026-01	ტელეფონი	ბრენდის გარეშე	installment	650.00	379.00	1
+2026-01	ტენის ამომშრობი	MIDEA	installment	850.00	510.00	1
+2026-01	ტოსტერი	BRAUN	installment	205.00	125.00	1
+2026-01	ტოსტერი	FRANKO	installment	600.00	320.00	4
+2026-01	უთო	ARDESTO	installment	110.00	47.00	1
+2026-01	უთო	Camry	installment	200.00	110.00	2
+2026-01	უთო	FRANKO	installment	170.00	86.00	1
+2026-01	უთო	Panasonic	installment	140.00	53.00	1
+2026-01	უთო	PHILIPS	installment	300.00	65.00	1
+2026-01	ქვაბების ნაკრები	ARDESTO	installment	1280.00	701.00	5
+2026-01	ქვაბი	BERLLONG	installment	930.00	450.00	5
+2026-01	ქიმწმენდის აპარატი	SHARK	installment	1580.00	960.00	2
+2026-01	ყავის აპარატი	ARZUM	installment	350.00	217.00	1
+2026-01	ყავის აპარატი	BEKO	installment	2720.00	1653.00	4
+2026-01	ყავის აპარატი	DELONGHI	installment	5560.00	3400.00	2
+2026-01	ყავის აპარატი	Grundig	installment	1350.00	787.00	2
+2026-01	ყავის აპარატი	SENCOR	installment	610.00	320.00	1
+2026-01	ყინულის აპარატი	Camry	installment	670.00	350.00	1
+2026-01	ჩაიდანი	Adler	installment	100.00	39.00	1
+2026-01	ჩაიდანი	FRANKO	installment	110.00	60.00	1
+2026-01	ჩაიდანი	MIDEA	installment	90.00	48.00	1
+2026-01	ჩასაშენებელი ელექტრო ქურა	MIDEA	installment	610.00	380.00	1
+2026-01	ჩასაშენებელი ზედაპირი	MIDEA	installment	1750.00	1060.00	2
+2026-01	ჩასაშენებელი ზედაპირი	Simfer	installment	370.00	210.00	1
+2026-01	ჩასაშენებელი ინდუქციური ქურა	HANSA	installment	930.00	544.00	1
+2026-01	ჩასაშენებელი ღუმელი	MIDEA	installment	1570.00	960.00	1
+2026-01	ჩასაშენებელი ღუმელი	Millen	installment	720.00	431.00	1
+2026-01	ჩირის აპარატი	FRANKO	installment	210.00	109.00	1
+2026-01	ჩოფერი	FRANKO	installment	260.00	132.00	2
+2026-01	ცენტრალური გათბობის ქვაბი	ARISTON	installment	7465.00	4425.00	2
+2026-01	ცენტრალური გათბობის ქვაბი	MIDEA	installment	9910.00	6265.00	4
+2026-01	წვენსაწური	FRANKO	installment	220.00	116.00	1
+2026-01	წვენსაწური	Panasonic	installment	610.00	342.00	1
+2026-01	წვერსაპარსი	Panasonic	installment	370.00	165.00	1
+2026-01	წვერსაპარსი	PHILIPS	installment	690.00	404.00	2
+2026-01	წყლის გამაცხელებელი	MIDEA	installment	1070.00	640.00	1
+2026-01	წყლის დისპენსერი	Millen	installment	620.00	375.00	1
+2026-01	ჭურჭლის სარეცხი მანქანა	BEKO	installment	7140.00	4139.00	4
+2026-01	ჭურჭლის სარეცხი მანქანა	GALANZ	installment	1975.00	1199.00	2
+2026-01	ჭურჭლის სარეცხი მანქანა	MARAZZI	installment	6970.00	4149.00	6
+2026-01	ჭურჭლის სარეცხი მანქანა	SAMSUNG	installment	6620.00	3785.00	4
+2026-01	ჭურჭლის სარეცხი მანქანა	SHARP	installment	1480.00	880.00	1
+2026-01	ხელის ბლენდერი	Adler	installment	75.00	23.00	1
+2026-01	ხელის ბლენდერი	BRAUN	installment	1320.00	712.00	5
+2026-01	ხორცსაკეპი	FRANKO	installment	340.00	185.00	1
+2026-01	ხორცსაკეპი	KENWOOD	installment	760.00	399.00	1
+2026-01	ხორცსაკეპი მანქანა	FRANKO	installment	460.00	111.00	1
+2026-01	ჰაერის გამწმენდი	BEKO	installment	380.00	224.00	1
+2026-02	none	none	installment	228935.00	130714.00	225
+2026-02	აეროგრილი	BEKO	installment	620.00	319.00	1
+2026-02	აეროგრილი	Hisense	installment	350.00	160.00	1
+2026-02	აეროგრილი	MIDEA	installment	4490.00	2513.00	10
+2026-02	აეროგრილი	MIDEA	single	170.00	122.00	1
+2026-02	აეროგრილი	Ninja	installment	3890.00	2280.00	4
+2026-02	აეროგრილი	Ninja	single	720.00	680.00	1
+2026-02	ავეჯი	N/A	installment	12850.00	7490.00	14
+2026-02	ავეჯი	ბრენდის გარეშე	installment	2860.00	1725.00	2
+2026-02	აკუმულატორი	MUTLU	installment	490.00	245.00	1
+2026-02	აკუმულატორი	N/A	installment	350.00	185.00	1
+2026-02	ბლენდერი	Adler	installment	180.00	75.00	1
+2026-02	ბლენდერი	ARZUM	installment	170.00	68.00	1
+2026-02	ბლენდერი	BRAUN	installment	390.00	230.00	1
+2026-02	ბლენდერი	FRANKO	installment	240.00	119.00	1
+2026-02	ბლენდერი	MIDEA	installment	530.00	275.00	3
+2026-02	ბლენდერი	Panasonic	installment	370.00	135.00	1
+2026-02	ბუდე საქანელა	N/A	installment	290.00	152.00	1
+2026-02	გაზის გამათბობელი	ERSEL	installment	3630.00	2060.00	3
+2026-02	გაზის წყლის გამაცხელებელი	INNOVITA	installment	980.00	592.00	1
+2026-02	გაზის წყლის გამაცხელებელი	MARAZZI	installment	9930.00	5750.00	13
+2026-02	გაზის წყლის გამაცხელებელი	MIDEA	installment	6080.00	3620.00	6
+2026-02	გაზქურა	BEKO	installment	1850.00	1026.00	1
+2026-02	გაზქურა	DIXI	installment	2470.00	1385.00	3
+2026-02	გაზქურა	Simfer	installment	12230.00	7063.00	10
+2026-02	გამწოვი	MIDEA	installment	830.00	480.00	2
+2026-02	გამწოვი	SAMSUNG	installment	1010.00	601.00	2
+2026-02	გამწოვი	Simfer	installment	700.00	360.00	2
+2026-02	დანების ნაკრები	ARDESTO	installment	390.00	207.00	3
+2026-02	დენის წყლის გამაცხელებელი	MIDEA	installment	3030.00	1800.00	4
+2026-02	დინამიკი	FRANKO	installment	1470.00	734.00	2
+2026-02	ელ. გამათბობელი	Zilan	installment	330.00	181.00	1
+2026-02	ელექტრო სავარცხელი	PHILIPS	installment	340.00	195.00	1
+2026-02	ელექტრო სკუტერი	FRANKO	installment	7210.00	3838.00	5
+2026-02	ელექტრო ღუმელი	ARZUM	installment	650.00	374.00	1
+2026-02	ელექტრო ღუმელი	FRANKO	installment	420.00	222.00	1
+2026-02	ელექტრო ღუმელი	SCHAUB	installment	720.00	409.00	3
+2026-02	ელექტრო ღუმელი	Schaub Lorenz	installment	240.00	145.00	1
+2026-02	ეპილატორი	FRANKO	installment	170.00	93.00	1
+2026-02	ესპრესოს ავტომატური ყავის აპარატი	DELONGHI	installment	650.00	370.00	1
+2026-02	ესპრესოს აპარატი	BEKO	installment	1540.00	799.00	1
+2026-02	ველოსიპედი	TRINX	installment	590.00	355.00	1
+2026-02	თმის და წვერის საჭრელი	PHILIPS	installment	220.00	120.00	1
+2026-02	თმის საშრობი	BABYLISS	installment	210.00	98.00	1
+2026-02	თმის საჭრელი	PHILIPS	installment	300.00	159.00	1
+2026-02	თმის სტაილერი	FRANKO	installment	1140.00	616.00	4
+2026-02	თმის სტაილერი	FRANKO	single	230.00	154.00	1
+2026-02	თმის უთო	REMINGTON	installment	410.00	195.00	2
+2026-02	კარკასული აუზი	Bestway	installment	510.00	296.00	1
+2026-02	კონდიციონერი	CHIGO	installment	4140.00	2420.00	2
+2026-02	კონდიციონერი	Hisense	installment	3860.00	2305.00	3
+2026-02	კონდიციონერი	MARAZZI	installment	5290.00	3014.00	4
+2026-02	კონდიციონერი	MIDEA	installment	7777.00	5710.00	5
+2026-02	კონდიციონერი	MIDEA	single	2430.00	2120.00	1
+2026-02	მაცივარი	FRANKO	installment	1230.00	715.00	1
+2026-02	მაცივარი	Hisense	installment	10480.00	6140.00	9
+2026-02	მაცივარი	LG	installment	4540.00	2580.00	2
+2026-02	მაცივარი	MARAZZI	installment	2220.00	111.00	1
+2026-02	მაცივარი	MIDEA	installment	5400.00	3125.00	3
+2026-02	მიკროტალღური ღუმელი	BEKO	installment	370.00	197.00	1
+2026-02	მიკროტალღური ღუმელი	LG	installment	500.00	300.00	1
+2026-02	მიკროტალღური ღუმელი	MIDEA	installment	1070.00	605.00	4
+2026-02	მიქსერი	Camry	installment	510.00	235.00	1
+2026-02	მიქსერი	FRANKO	installment	340.00	178.00	2
+2026-02	მიქსერი	MIDEA	installment	140.00	80.00	1
+2026-02	მტვერსასრუტი	BEKO	installment	830.00	438.00	2
+2026-02	მტვერსასრუტი	Hisense	installment	250.00	145.00	1
+2026-02	მტვერსასრუტი	KARCHER	installment	1580.00	825.00	2
+2026-02	მტვერსასრუტი	MIDEA	installment	10290.00	5910.00	11
+2026-02	მტვერსასრუტი	SAMSUNG	installment	510.00	283.00	1
+2026-02	მტვერსასრუტი	SHARK	installment	1230.00	720.00	1
+2026-02	მტვერსასრუტი	Zilan	installment	170.00	97.00	1
+2026-02	პოპკორნის აპარატი	FRANKO	installment	100.00	49.00	1
+2026-02	რობოტი მტვერსასრუტი	MIDEA	installment	9710.00	5745.00	5
+2026-02	რობოტი მტვერსასრუტი	SENCOR	installment	3380.00	1950.00	2
+2026-02	როლიკი	NEON	installment	220.00	111.00	1
+2026-02	საბურავი	NANKANG	installment	1720.00	980.00	4
+2026-02	საბურავი	NEXEN	installment	1840.00	1052.00	4
+2026-02	საბურავი	ROYALBLACK	installment	580.00	296.00	2
+2026-02	საკერავი მანქანა	Janome	installment	860.00	540.00	1
+2026-02	სამზარეულოს კომბაინი	Ninja	single	470.00	440.00	1
+2026-02	სარეცხი მანქანა	BEKO	installment	3310.00	1806.00	2
+2026-02	სარეცხი მანქანა	BEKO	single	829.00	591.00	1
+2026-02	სარეცხი მანქანა	CHIGO	installment	1110.00	675.00	1
+2026-02	სარეცხი მანქანა	Hisense	installment	12900.00	7355.00	12
+2026-02	სარეცხი მანქანა	LG	installment	11170.00	6474.00	7
+2026-02	სარეცხი მანქანა	MARAZZI	installment	2130.00	1290.00	2
+2026-02	სარეცხი მანქანა	MIDEA	installment	24628.00	14920.00	18
+2026-02	სარეცხი მანქანა	SAMSUNG	installment	5740.00	3355.00	3
+2026-02	სარეცხი მანქანა	SHARP	installment	1370.00	825.00	1
+2026-02	სარეცხი მანქანა საშრობით	Hisense	installment	3490.00	2070.00	2
+2026-02	სარეცხი მანქანა საშრობით	SAMSUNG	installment	2700.00	1580.00	1
+2026-02	სარეცხი მანქანა+შრობა	MARAZZI	installment	1830.00	1050.00	1
+2026-02	სარეცხის საშრობი	Hisense	installment	3100.00	1840.00	2
+2026-02	სარეცხის საშრობი	MIDEA	installment	3600.00	2470.00	2
+2026-02	სარწყავი მილი	2E	installment	200.00	77.00	1
+2026-02	სასწორი	FRANKO	installment	80.00	38.00	1
+2026-02	საყინულე	CHIGO	installment	1130.00	650.00	1
+2026-02	საყინულე	MARAZZI	installment	1070.00	594.00	1
+2026-02	სენდვიჩის აპარატი	TEFAL	installment	240.00	85.00	1
+2026-02	სლაშის აპარატი	Ninja	installment	1440.00	880.00	1
+2026-02	ტაფა	ARDESTO	installment	310.00	144.00	4
+2026-02	ტაფა	TEFAL	installment	270.00	156.00	1
+2026-02	ტაფა ქვაბი	BERLLONG	installment	180.00	90.00	1
+2026-02	ტელევიზორი 	BEKO	installment	6290.00	3429.00	4
+2026-02	ტელევიზორი 	FRANKO	installment	10080.00	5940.00	14
+2026-02	ტელევიზორი 	Hisense	installment	18080.00	10558.00	12
+2026-02	ტელევიზორი 	MARAZZI	installment	920.00	560.00	1
+2026-02	ტელევიზორი 	SAMSUNG	installment	8710.00	5259.00	4
+2026-02	ტელევიზორი 	SAMSUNG	single	11120.00	10560.00	8
+2026-02	ტელევიზორი 	SKYWORTH	installment	2260.00	1305.00	3
+2026-02	ტელეფონი	Apple	installment	14500.00	8575.00	4
+2026-02	ტელეფონი	HONOR	installment	144510.00	85248.00	134
+2026-02	ტელეფონი	SAMSUNG	installment	8700.00	4530.00	19
+2026-02	ტოსტერი	Camry	installment	100.00	45.00	1
+2026-02	ტოსტერი	CUISINART	installment	350.00	197.00	1
+2026-02	ტრიმერი	PHILIPS	installment	120.00	57.00	1
+2026-02	უთო	Adler	installment	60.00	25.00	1
+2026-02	უთო	BRAUN	installment	950.00	500.00	3
+2026-02	უთო	FRANKO	installment	365.00	189.00	1
+2026-02	უთო	Panasonic	installment	265.00	118.00	2
+2026-02	უთო	TEFAL	installment	200.00	115.00	1
+2026-02	ქვაბების ნაკრები	ARDESTO	installment	180.00	75.00	1
+2026-02	ქვაბი	ARDESTO	installment	170.00	66.00	2
+2026-02	ქიმწმენდის აპარატი	SHARK	installment	1610.00	960.00	2
+2026-02	ყავის აპარატი	BEKO	installment	1720.00	879.00	1
+2026-02	ყურსასმენი	JBL	installment	220.00	169.00	1
+2026-02	ყურსასმენი	OnePlus	installment	154.00	118.00	1
+2026-02	ყურსასმენი	SAMSUNG	installment	200.00	114.00	1
+2026-02	ყურსასმენი	SONY	installment	980.00	564.00	2
+2026-02	ჩაიდანი	BRAUN	installment	155.00	65.00	1
+2026-02	ჩაიდანი	MIDEA	installment	130.00	67.00	2
+2026-02	ჩაიდანი	Ninja	single	260.00	240.00	1
+2026-02	ჩასაშენებელი ზედაპირი	DIXI	installment	280.00	150.00	1
+2026-02	ჩასაშენებელი ზედაპირი	FRANKO	installment	780.00	443.00	1
+2026-02	ჩასაშენებელი ზედაპირი	MIDEA	installment	870.00	510.00	1
+2026-02	ჩასაშენებელი ზედაპირი	Simfer	installment	1430.00	825.00	2
+2026-02	ჩასაშენებელი ღუმელი	HANSA	installment	1300.00	710.00	1
+2026-02	ჩასაშენებელი ღუმელი	MIDEA	installment	2650.00	1570.00	2
+2026-02	ჩასაშენებელი ღუმელი	Simfer	installment	2120.00	1185.00	3
+2026-02	ჩასაშენებელი ჭურჭლის სარეცხი მანქანა	MARAZZI	installment	2350.00	1373.00	1
+2026-02	ჩასაშენებელი ჭურჭლის სარეცხი მანქანა	MIDEA	installment	1050.00	610.00	1
+2026-02	ჩოფერი	Adler	installment	100.00	50.00	1
+2026-02	ჩოფერი	FRANKO	installment	130.00	61.00	1
+2026-02	ცენტრალური გათბობის ქვაბი	ARISTON	installment	4020.00	2350.00	1
+2026-02	ცენტრალური გათბობის ქვაბი	MIDEA	installment	4880.00	3095.00	2
+2026-02	წვენსაწური	FRANKO	installment	290.00	156.00	1
+2026-02	წვენსაწური	MESKO	installment	390.00	170.00	2
+2026-02	წვერსაპარსი	MESKO	installment	90.00	35.00	1
+2026-02	წვერსაპარსი	Panasonic	installment	360.00	165.00	1
+2026-02	წვერსაპარსი	PHILIPS	installment	710.00	410.00	3
+2026-02	წყლის დისპენსერი	DIXI	installment	700.00	400.00	1
+2026-02	ჭურჭლის სარეცხი მანქანა	BEKO	installment	7510.00	3891.00	4
+2026-02	ჭურჭლის სარეცხი მანქანა	GALANZ	installment	1060.00	619.00	1
+2026-02	ჭურჭლის სარეცხი მანქანა	MARAZZI	installment	3260.00	1900.00	3
+2026-02	ჭურჭლის სარეცხი მანქანა	MIDEA	installment	2840.00	1520.00	2
+2026-02	ჭურჭლის სარეცხი მანქანა	SAMSUNG	installment	3660.00	2040.00	2
+2026-02	ხორცსაკეპი	Adler	installment	450.00	260.00	2
+2026-03	N/A	N/A	installment	1150.00	680.00	1
+2026-03	none	48	installment	1240.00	713.00	1
+2026-03	none	none	installment	150295.00	84722.55	153
+2026-03	აეროგრილი	BRAUN	installment	440.00	239.00	1
+2026-03	აეროგრილი	DREAME	installment	880.00	487.02	1
+2026-03	აეროგრილი	FRANKO	installment	660.00	349.00	2
+2026-03	აეროგრილი	MIDEA	installment	2650.00	1457.00	7
+2026-03	აეროგრილი	Ninja	installment	2980.00	1720.00	3
+2026-03	აეროგრილი	Ninja	single	645.00	612.00	1
+2026-03	აეროგრილი	NUTRIBULLET	installment	1620.00	846.00	3
+2026-03	აეროგრილი	Panasonic	installment	570.00	318.00	1
+2026-03	აეროგრილი	SENCOR	installment	480.00	281.00	1
+2026-03	ავეჯი	Comfort Room	installment	230.00	120.00	1
+2026-03	ავეჯი	N/A	installment	24630.00	14216.92	25
+2026-03	ავეჯი	ბრენდის გარეშე	installment	2980.00	1682.25	3
+2026-03	აკუმულატორი	MUTLU	installment	940.00	520.00	1
+2026-03	ბატუტი	N/A	installment	870.00	406.00	2
+2026-03	ბაღის ავეჯის კომპლექტი	N/A	installment	220.00	103.55	1
+2026-03	ბაღის საქანელა	N/A	installment	2360.00	1339.12	6
+2026-03	ბლენდერი	Adler	installment	80.00	23.00	1
+2026-03	ბლენდერი	AZRUM	installment	220.00	118.00	1
+2026-03	ბლენდერი	BRAUN	installment	240.00	129.00	1
+2026-03	ბლენდერი	MIDEA	installment	220.00	115.00	1
+2026-03	ბლინის ტაფა	FRANKO	installment	160.00	74.00	2
+2026-03	ბუდე საქანელა	N/A	installment	2070.00	994.27	6
+2026-03	ბუდე საქანელა	ბრენდის გარეშე	installment	1310.00	793.20	3
+2026-03	გაზის გამათბობელი	AKOG	installment	2440.00	1355.00	2
+2026-03	გაზის გამათბობელი	ERSEL	installment	1200.00	660.00	1
+2026-03	გაზის წყლის გამაცხელებელი	MARAZZI	installment	11170.00	6480.00	15
+2026-03	გაზის წყლის გამაცხელებელი	MIDEA	installment	10500.00	6080.00	10
+2026-03	გაზქურა	BEKO	installment	10140.00	5075.00	6
+2026-03	გაზქურა	BEKO	single	1850.00	1026.00	1
+2026-03	გაზქურა	DIXI	installment	3440.00	1860.00	4
+2026-03	გაზქურა	Simfer	installment	13480.00	7514.00	12
+2026-03	გამწოვი	BEKO	installment	2230.00	1166.00	3
+2026-03	გამწოვი	FRANKO	installment	430.00	218.00	1
+2026-03	გამწოვი	HANSA	installment	460.00	215.00	1
+2026-03	გამწოვი	MIDEA	installment	840.00	480.00	2
+2026-03	გამწოვი	MIDEA	single	275.00	260.00	1
+2026-03	გამწოვი	SABBLO	installment	320.00	150.00	1
+2026-03	გამწოვი	SAMSUNG	installment	1140.00	632.00	1
+2026-03	გამწოვი	Simfer	installment	2330.00	1335.00	6
+2026-03	დანების ნაკრები	ARDESTO	installment	70.00	29.00	1
+2026-03	დენის წყლის გამაცხელებელი	MIDEA	installment	2500.00	1385.00	4
+2026-03	დენის წყლის გამაცხელებელი	VOX	installment	780.00	419.00	1
+2026-03	დინამიკი	2E	installment	100.00	36.58	1
+2026-03	დისპენსერი	DIXI	single	579.00	420.00	1
+2026-03	დრელი	Bosch	installment	300.00	229.08	1
+2026-03	ელ. გამათბობელი	VOX	installment	220.00	99.00	1
+2026-03	ელექტრო გამათბობელი	SENCOR	installment	570.00	261.00	3
+2026-03	ელექტრო სავარცხელი	Adler	installment	150.00	55.00	1
+2026-03	ელექტრო სავარცხელი	BABYLISS	installment	1680.00	872.00	4
+2026-03	ელექტრო სკუტერი	FRANKO	installment	8440.00	4532.00	6
+2026-03	ელექტრო ღუმელი	FRANKO	installment	1340.00	720.00	4
+2026-03	ელექტრო ღუმელი	Hisense	installment	510.00	230.00	1
+2026-03	ელექტრო ღუმელი	SCHAUB	installment	1380.00	778.00	4
+2026-03	ელექტრო ღუმელი	Schaub Lorenz	installment	250.00	145.00	1
+2026-03	ესპრესოს ავტომატური ყავის აპარატი	DELONGHI	installment	1270.00	745.00	2
+2026-03	ესპრესოს აპარატი	Ninja	installment	2460.00	1439.00	1
+2026-03	ვაფლის აპარატი	FRANKO	installment	280.00	138.00	2
+2026-03	ზეთის რადიატორი	BEKO	installment	340.00	110.00	1
+2026-03	თმის და წვერის საჭრელი	PHILIPS	installment	440.00	240.00	2
+2026-03	თმის დასახვევი	BABYLISS	installment	460.00	254.00	2
+2026-03	თმის საკრეჭი	Panasonic	installment	200.00	110.00	1
+2026-03	თმის საშრობი	BABYLISS	installment	250.00	119.00	1
+2026-03	თმის სტაილერი	DREAME	installment	7595.00	4570.00	7
+2026-03	თმის სტაილერი	PHILIPS	single	205.00	192.00	1
+2026-03	თმის სტაილერი	SHARK	installment	1040.00	600.00	1
+2026-03	თმის უთო	FRANKO	installment	240.00	119.00	2
+2026-03	კაპუჩინატორი	FRANKO	installment	170.00	83.00	1
+2026-03	კარკასული აუზი	Bestway	installment	420.00	245.00	1
+2026-03	კიბე	NV	installment	160.00	117.00	1
+2026-03	კომპრესორი	none	installment	2260.00	1220.84	1
+2026-03	კონდიციონერი	CHIGO	installment	3650.00	2043.00	1
+2026-03	კონდიციონერი	GREE	installment	1590.00	930.00	1
+2026-03	კონდიციონერი	Hisense	installment	9800.00	5605.00	6
+2026-03	კონდიციონერი	MARAZZI	installment	2400.00	1400.00	2
+2026-03	კონდიციონერი	MIDEA	installment	11120.00	6420.00	5
+2026-03	კონდიციონერი	MIDEA	single	1300.00	1230.00	1
+2026-03	მატრასები	N/A	installment	2400.00	1245.00	3
+2026-03	მაღალი წნევით რეცხვის აპარატი 	KARCHER	installment	1670.00	863.00	1
+2026-03	მაცივარი	FRANKO	installment	4370.00	2562.00	3
+2026-03	მაცივარი	Hisense	installment	9930.00	5690.00	7
+2026-03	მაცივარი	LG	installment	3930.00	2230.00	2
+2026-03	მაცივარი	MARAZZI	installment	10000.00	5840.00	7
+2026-03	მაცივარი	MIDEA	installment	21740.00	12440.00	13
+2026-03	მაცივარი	MIDEA	single	1220.00	1160.00	1
+2026-03	მაცივარი	VOX	installment	8450.00	3813.00	3
+2026-03	მიკროტალღური ღუმელი	BEKO	installment	910.00	460.00	2
+2026-03	მიკროტალღური ღუმელი	DIXI	installment	580.00	330.00	2
+2026-03	მიკროტალღური ღუმელი	Hisense	installment	380.00	190.00	1
+2026-03	მიკროტალღური ღუმელი	MARAZZI	installment	280.00	168.00	1
+2026-03	მიკროტალღური ღუმელი	MIDEA	installment	1270.00	726.00	4
+2026-03	მიკროტალღური ღუმელი	SAMSUNG	installment	930.00	501.00	2
+2026-03	მიკროტალღური ღუმელი	Toshiba	installment	320.00	158.00	1
+2026-03	მინის საწმენდი	KARCHER	installment	430.00	225.00	1
+2026-03	მიქსერი	BEKO	installment	150.00	88.00	1
+2026-03	მიქსერი	Camry	installment	510.00	235.00	1
+2026-03	მიქსერი	FRANKO	installment	990.00	555.00	1
+2026-03	მიქსერი	KENWOOD	installment	210.00	80.00	1
+2026-03	მიქსერი	MESKO	installment	270.00	155.00	1
+2026-03	მიქსერი	Panasonic	installment	200.00	119.00	1
+2026-03	მტვერსასრუტი	BEKO	installment	440.00	135.00	1
+2026-03	მტვერსასრუტი	DREAME	installment	9700.00	5468.72	3
+2026-03	მტვერსასრუტი	DREAME	single	3250.00	3092.00	1
+2026-03	მტვერსასრუტი	FRANKO	installment	570.00	297.00	3
+2026-03	მტვერსასრუტი	KARCHER	installment	6810.00	3341.40	5
+2026-03	მტვერსასრუტი	MIDEA	installment	6045.00	3355.00	7
+2026-03	მტვერსასრუტი	SAMSUNG	installment	3750.00	2071.00	6
+2026-03	მტვერსასრუტი	SENCOR	installment	880.00	498.00	1
+2026-03	მტვერსასრუტი	SHARK	installment	1380.00	800.00	1
+2026-03	ორთქლით საწმენდი	FRANKO	installment	1780.00	951.00	3
+2026-03	ორთქლით საწმენდი	KARCHER	installment	6560.00	3615.10	8
+2026-03	ორთქლით საწმენდი	KARCHER	single	525.00	500.00	1
+2026-03	ორთქლის გენერატორი	FRANKO	installment	760.00	386.00	1
+2026-03	პურის საცხობი	FRANKO	installment	630.00	334.00	1
+2026-03	პურის საცხობი	MESKO	installment	380.00	220.00	1
+2026-03	პურის შესანახი	BERLLONG	installment	180.00	85.00	1
+2026-03	რობოტი მტვერსასრუტი	DREAME	installment	9410.00	5495.00	3
+2026-03	რობოტი მტვერსასრუტი	MIDEA	installment	2840.00	1600.00	1
+2026-03	საათი	Casio	installment	800.00	449.00	3
+2026-03	საბურავები	N/A	installment	1000.00	540.00	4
+2026-03	საკერავი მანქანა	Janome	installment	860.00	500.00	1
+2026-03	სარეცხი მანქანა	BEKO	installment	7670.00	3513.00	4
+2026-03	სარეცხი მანქანა	CHIGO	installment	3400.00	1975.00	3
+2026-03	სარეცხი მანქანა	Hisense	installment	33120.00	18945.00	33
+2026-03	სარეცხი მანქანა	LG	installment	17460.00	9555.00	10
+2026-03	სარეცხი მანქანა	LG	single	1100.00	960.00	1
+2026-03	სარეცხი მანქანა	MIDEA	installment	25110.00	14505.00	19
+2026-03	სარეცხი მანქანა	MIDEA	single	910.00	865.00	1
+2026-03	სარეცხი მანქანა	SAMSUNG	installment	3430.00	1870.00	2
+2026-03	სარეცხი მანქანა	Toshiba	installment	3680.00	1761.00	2
+2026-03	სარეცხი მანქანა საშრობით	Hisense	installment	1670.00	970.00	1
+2026-03	სარეცხი მანქანა საშრობით	SAMSUNG	installment	2700.00	1580.00	1
+2026-03	სარეცხი მანქანა+შრობა	MARAZZI	installment	1830.00	1050.00	1
+2026-03	სარეცხის საშრობი	Hisense	installment	2700.00	1580.00	2
+2026-03	სარეცხის საშრობი	MIDEA	installment	1650.00	970.00	1
+2026-03	სასწორი	FRANKO	installment	80.00	38.00	1
+2026-03	საქანელა	ბრენდის გარეშე	installment	2700.00	1560.59	4
+2026-03	საყინულე	FRANKO	installment	630.00	350.00	1
+2026-03	საყინულე	Hisense	installment	950.00	550.00	1
+2026-03	სეკატორი	Fiskars	installment	100.00	74.52	1
+2026-03	სლაშის აპარატი	Ninja	installment	1500.00	879.00	1
+2026-03	ტაფა	BERLLONG	installment	635.00	298.00	3
+2026-03	ტაფა-ქვაბი	BERLLONG	installment	270.00	127.00	1
+2026-03	ტელევიზორი 	BEKO	installment	5690.00	2998.00	4
+2026-03	ტელევიზორი 	FRANKO	installment	10970.00	6343.00	14
+2026-03	ტელევიზორი 	Hisense	installment	16040.00	9225.00	15
+2026-03	ტელევიზორი 	iFFALCON	installment	1510.00	778.00	1
+2026-03	ტელევიზორი 	LG	installment	6290.00	3116.00	4
+2026-03	ტელევიზორი 	MARAZZI	installment	1390.00	800.00	1
+2026-03	ტელევიზორი 	SAMSUNG	installment	32550.00	18240.00	15
+2026-03	ტელევიზორი 	SHARP	installment	2680.00	1571.00	1
+2026-03	ტელევიზორი 	SKYWORTH	installment	3750.00	2175.00	5
+2026-03	ტელევიზორი 	Sunny	installment	1720.00	998.00	2
+2026-03	ტელეფონი	Apple	installment	17930.00	12396.00	4
+2026-03	ტელეფონი	HONOR	installment	183330.00	107109.00	161
+2026-03	ტელეფონი	OPPO	installment	14600.00	8414.00	13
+2026-03	ტელეფონი	SAMSUNG	installment	18510.00	10353.00	32
+2026-03	ტენის ამომშრობი	MIDEA	installment	660.00	370.00	1
+2026-03	ტოსტერი	FRANKO	installment	730.00	349.00	4
+2026-03	ტრიმერი	FRANKO	installment	130.00	66.00	1
+2026-03	ტრიმერი	Panasonic	installment	60.00	23.00	1
+2026-03	ტრიმერი ელექტრო	Raider	installment	300.00	220.00	1
+2026-03	უთო	AZRUM	installment	190.00	103.00	1
+2026-03	უთო	BRAUN	installment	360.00	172.00	1
+2026-03	უთო	FRANKO	installment	450.00	214.00	3
+2026-03	უთო	PHILIPS	installment	650.00	360.00	2
+2026-03	ურიკა	Pretul	installment	190.00	145.00	1
+2026-03	ქვაბი	BERLLONG	installment	510.00	238.00	2
+2026-03	ქიმწმენდის აპარატი	KARCHER	installment	4450.00	2276.00	3
+2026-03	ღუმელი( ჩასაშენებელი )	MIDEA	single	585.00	557.00	1
+2026-03	ყავის აპარატი	BEKO	installment	3560.00	2134.00	4
+2026-03	ყავის აპარატი	DELONGHI	installment	760.00	438.00	1
+2026-03	ყავის აპარატი	Ninja	installment	3400.00	1999.00	1
+2026-03	ყავის აპარატი	Zilan	installment	60.00	29.00	1
+2026-03	ყურსასმენი	SONY	installment	2480.00	1471.00	5
+2026-03	ჩაიდანი	Camry	installment	120.00	45.00	1
+2026-03	ჩაიდანი	MIDEA	installment	280.00	147.00	3
+2026-03	ჩასამონტაჟებელი ჭურჭლის სარეცხი მანქანა	MIDEA	installment	960.00	560.00	1
+2026-03	ჩასამონტაჟებელი ჭურჭლის სარეცხი მანქანა	MIDEA	single	620.00	590.00	1
+2026-03	ჩასაშენებელი ელექტრო ღუმელი	Simfer	installment	660.00	365.00	1
+2026-03	ჩასაშენებელი ზედაპირი	BEKO	installment	570.00	295.00	1
+2026-03	ჩასაშენებელი ზედაპირი	DIXI	installment	280.00	150.00	1
+2026-03	ჩასაშენებელი ზედაპირი	Simfer	installment	3950.00	2265.00	7
+2026-03	ჩასაშენებელი ზედაპირი	Simfer	single	445.00	420.00	1
+2026-03	ჩასაშენებელი მიკროტალღური ღუმელი	FRANKO	installment	670.00	391.00	1
+2026-03	ჩასაშენებელი ღუმელი	BEKO	installment	6500.00	3709.00	6
+2026-03	ჩასაშენებელი ღუმელი	MIDEA	installment	2640.00	1500.00	3
+2026-03	ჩასაშენებელი ღუმელი	MIDEA	single	530.00	500.00	1
+2026-03	ჩასაშენებელი ღუმელი	Simfer	installment	1000.00	580.00	1
+2026-03	ჩასაშენებელი ჭურჭლის სარეცხი მანქანა	MIDEA	installment	1530.00	890.00	1
+2026-03	ჩასაშენებელი ჭურჭლის სარეცხი მანქანა	MIDEA	single	665.00	590.00	1
+2026-03	ჩირის აპარატი	FRANKO	installment	220.00	109.00	1
+2026-03	ჩოფერი	FRANKO	installment	130.00	63.00	1
+2026-03	წვენსაწური	FRANKO	installment	230.00	116.00	1
+2026-03	წვენსაწური	NUTRIBULLET	installment	320.00	155.00	1
+2026-03	წვენსაწური	Panasonic	installment	590.00	350.00	1
+2026-03	წყლის დისპენსერი	CHIGO	installment	510.00	290.00	1
+2026-03	წყლის დისპენსერი	DIXI	installment	470.00	255.00	1
+2026-03	ჭურჭლის სარეცხი	SAMSUNG	installment	1640.00	891.00	1
+2026-03	ჭურჭლის სარეცხი მანქანა	BEKO	installment	3890.00	1972.00	2
+2026-03	ჭურჭლის სარეცხი მანქანა	GALANZ	installment	3150.00	1827.00	3
+2026-03	ჭურჭლის სარეცხი მანქანა	MARAZZI	installment	5750.00	3250.00	4
+2026-03	ჭურჭლის სარეცხი მანქანა	SAMSUNG	installment	2020.00	1095.00	1
+2026-03	ჭურჭლის სარეცხი მანქანა	SHARP	installment	1430.00	810.00	1
+2026-03	ხელის ბლენდერი	ARDESTO	installment	130.00	58.00	1
+2026-03	ხელის ბლენდერი	BRAUN	installment	1490.00	715.00	3
+2026-03	ხელის მტვერსასრუტი	KARCHER	single	190.00	145.00	1
+2026-03	ხორცსაკეპი	Adler	installment	550.00	305.00	2
+2026-03	ხორცსაკეპი	FRANKO	installment	1860.00	966.00	5
+2026-03	ხორცსაკეპი	KENWOOD	installment	470.00	216.00	1
+2026-03	ხორცსაკეპი	TEFAL	installment	470.00	250.00	1
+2026-03	ხორცსაკეპი მანქანა	FRANKO	installment	890.00	463.00	2
+2026-04		54	installment	900.00	496.00	1
+2026-04		none	installment	1670.00	971.00	1
+2026-04	none	none	installment	10810.00	6146.00	14
+2026-04	აეროგრილი	BRAUN	installment	440.00	253.00	1
+2026-04	აეროგრილი	Hisense	installment	310.00	170.00	1
+2026-04	აეროგრილი	MIDEA	installment	870.00	501.00	3
+2026-04	აეროგრილი	Ninja	installment	5120.00	2960.00	6
+2026-04	აეროგრილი	NUTRIBULLET	installment	580.00	301.00	1
+2026-04	აეროგრილი	SENCOR	installment	1210.00	712.00	3
+2026-04	ავეჯი	N/A	installment	15040.00	8673.00	13
+2026-04	ავეჯი	ბრენდის გარეშე	installment	3310.00	1921.62	4
+2026-04	ავეჯი,გარე ავეჯი,ბაღის საქანელები	none	installment	1650.00	789.00	5
+2026-04	ავეჯი,გარე ავეჯი,ბაღის საქანელები	none	single	199.00	145.00	1
+2026-04	ავეჯი,გარე ავეჯი,გარე ავეჯის კომპლექტი	1478	installment	230.00	120.00	1
+2026-04	ავეჯი,გარე ავეჯი,გარე ავეჯის კომპლექტი	N/A	installment	2350.00	1381.14	2
+2026-04	ავეჯი,გარე ავეჯი,გარე ავეჯის კომპლექტი	none	installment	4970.00	2912.64	8
+2026-04	ავეჯი,გარე ავეჯი,გარე სკამი	none	installment	560.00	304.00	8
+2026-04	ავეჯი,გარე ავეჯი,პავილიონი & ტენტი	none	installment	1300.00	825.00	1
+2026-04	ავეჯი,დივანი	none	installment	9840.00	5747.00	6
+2026-04	ავეჯი,მატრასი	none	installment	1150.00	671.00	1
+2026-04	ავეჯი,საწოლი	none	installment	2300.00	1360.00	2
+2026-04	აკუმულატორი	MUTLU	installment	340.00	198.00	1
+2026-04	აუზი	Bestway	installment	1840.00	900.00	1
+2026-04	აქსესუარები,საათები,მამაკაცის საათები	1367	installment	870.00	509.00	1
+2026-04	აქსესუარები,საათები,უნისექსი	1363	installment	230.00	127.00	1
+2026-04	აქსესუარები,საათები,ქალის საათები	1363	installment	640.00	347.00	3
+2026-04	აქსესუარები,საათები,ქალის საათები	Casio	installment	240.00	135.00	1
+2026-04	აქსესუარები,სამაჯური,ქალის სამაჯური	1385	installment	380.00	206.00	2
+2026-04	ბალახის სათიბი	Bosch	installment	240.00	135.00	1
+2026-04	ბარის მაცივარი	FRANKO	installment	460.00	264.00	1
+2026-04	ბატუტი	N/A	installment	3620.00	2101.00	7
+2026-04	ბაღის ავეჯის კომპლექტი	N/A	installment	1140.00	641.91	2
+2026-04	ბაღის საქანელა	N/A	installment	1780.00	990.77	7
+2026-04	ბლენდერი	BRAUN	installment	500.00	226.00	1
+2026-04	ბლენდერი	FRANKO	installment	540.00	271.00	1
+2026-04	ბლენდერი	Ninja	installment	1040.00	600.00	1
+2026-04	ბლენდერი	SENCOR	installment	170.00	101.00	1
+2026-04	ბუდე საქანელა	N/A	installment	5010.00	2844.00	12
+2026-04	ბუდე საქანელა	ბრენდის გარეშე	installment	2080.00	1185.00	5
+2026-04	გაზის გამათბობელი	ERSEL	installment	1110.00	740.00	1
+2026-04	გაზის წყლის გამაცხელებელი	INNOVITA	installment	1050.00	675.00	1
+2026-04	გაზის წყლის გამაცხელებელი	MARAZZI	installment	4680.00	2713.00	7
+2026-04	გაზის წყლის გამაცხელებელი	MIDEA	installment	3730.00	2240.00	4
+2026-04	გაზქურა	BEKO	installment	4950.00	2779.00	3
+2026-04	გაზქურა	DIXI	installment	1720.00	850.00	2
+2026-04	გაზქურა	Simfer	installment	7060.00	3945.00	8
+2026-04	გამწოვი	BEKO	installment	610.00	331.00	1
+2026-04	გამწოვი	MIDEA	installment	670.00	385.00	1
+2026-04	გამწოვი	Simfer	installment	1080.00	600.00	3
+2026-04	გარე ავეჯი,ბაღის საქანელები	none	installment	420.00	237.00	1
+2026-04	გეიმინგი,სათამაშო კონსოლი	PlayStation	installment	880.00	480.00	1
+2026-04	გეიმინგი,ფლეისთეიშენი	1391	installment	10020.00	5813.00	3
+2026-04	გეიმინგი,ფლეისთეიშენი	Playstation 5	installment	4060.00	2356.00	1
+2026-04	დენის წყლის გამაცხელებელი	VOX	installment	780.00	449.00	1
+2026-04	დინამიკი	FRANKO	installment	1410.00	747.00	2
+2026-04	ელექტრო სავარცხელი	BABYLISS	installment	420.00	239.00	1
+2026-04	ელექტრო სავარცხელი	PHILIPS	installment	370.00	210.00	1
+2026-04	ელექტრო სკუტერი	FRANKO	installment	2960.00	1580.00	2
+2026-04	ელექტრო ღუმელი	FRANKO	installment	1220.00	693.00	4
+2026-04	ელექტრო ღუმელი	Hisense	installment	510.00	230.00	1
+2026-04	ელექტრო ღუმელი	Schaub Lorenz	installment	250.00	145.00	1
+2026-04	ესპრესოს აპარატი	Ninja	installment	3400.00	1999.00	1
+2026-04	ველოსიპედი	TRINX	installment	2330.00	1355.00	2
+2026-04	ვენტილატორი	MIDEA	installment	270.00	150.00	1
+2026-04	თმის და წვერის საჭრელი	PHILIPS	installment	220.00	120.00	1
+2026-04	თმის საკრეჭი	Panasonic	installment	200.00	110.00	1
+2026-04	თმის საშრობი	DREAME	installment	570.00	309.25	1
+2026-04	თმის საშრობი	REMINGTON	installment	310.00	131.00	1
+2026-04	თმის სტაილერი	DREAME	installment	6300.00	3430.80	5
+2026-04	თმის სტაილერი	SHARK	installment	820.00	480.00	1
+2026-04	თმის უთო	FRANKO	installment	140.00	66.00	1
+2026-04	თმის უთო	PHILIPS	installment	430.00	270.00	1
+2026-04	თმის უთო	REMINGTON	installment	410.00	173.00	2
+2026-04	იატაკი & საფარები,ლამინირებული იატაკი	none	installment	6360.00	3387.23	53
+2026-04	კარ-ფანჯარა & ფურნიტურა,შიდა კარები	none	installment	1590.00	894.95	5
+2026-04	კონდინციონერი	Hisense	installment	1960.00	1145.00	1
+2026-04	კონდიციონერი	BEKO	installment	960.00	519.00	1
+2026-04	კონდიციონერი	Hisense	installment	8380.00	4746.00	4
+2026-04	კონდიციონერი	MIDEA	installment	5090.00	2990.00	2
+2026-04	კონდიციონერი	MIDEA	single	2900.00	2520.00	2
+2026-04	კონდიციონერი	TCL	installment	1960.00	1052.00	2
+2026-04	მატრასები	N/A	installment	430.00	245.00	1
+2026-04	მატრასები	ბრენდის გარეშე	installment	2020.00	1167.00	4
+2026-04	მაღალი წნევით რეცხვის აპარატი 	KARCHER	installment	1300.00	716.00	1
+2026-04	მაცივარი	GORENJE	installment	2020.00	1120.00	1
+2026-04	მაცივარი	Hisense	installment	8630.00	4890.00	9
+2026-04	მაცივარი	Hisense	single	830.00	770.00	1
+2026-04	მაცივარი	LG	installment	1530.00	835.00	1
+2026-04	მაცივარი	MARAZZI	installment	3260.00	1900.00	2
+2026-04	მაცივარი	MIDEA	installment	6920.00	4040.00	4
+2026-04	მაცივარი	SAMSUNG	installment	2350.00	1275.00	1
+2026-04	მიკროტალღური ღუმელი	Hisense	installment	940.00	540.00	2
+2026-04	მიკროტალღური ღუმელი	MARAZZI	installment	290.00	168.00	1
+2026-04	მიკროტალღური ღუმელი	MIDEA	installment	2480.00	1325.00	7
+2026-04	მიკროტალღური ღუმელი	Toshiba	installment	320.00	126.00	1
+2026-04	მიქსერი	ARDESTO	installment	1340.00	676.94	3
+2026-04	მიქსერი	BEKO	installment	260.00	62.00	2
+2026-04	მიქსერი	Camry	installment	1020.00	470.00	2
+2026-04	მიქსერი	FRANKO	installment	1860.00	968.00	4
+2026-04	მიქსერი	MESKO	installment	270.00	155.00	1
+2026-04	მიქსერი	MIDEA	installment	350.00	155.00	1
+2026-04	მობილურები & აქსესუარები,სმარტფონები	48	installment	18710.00	10812.00	18
+2026-04	მობილურები & აქსესუარები,სმარტფონები	84	installment	7570.00	4155.00	10
+2026-04	მობილურები & აქსესუარები,სმარტფონები	HONOR	installment	4680.00	2718.00	4
+2026-04	მობილურები & აქსესუარები,სმარტფონები	none	installment	10020.00	5795.00	7
+2026-04	მობილურები & აქსესუარები,სმარტფონები	SAMSUNG	installment	780.00	410.00	1
+2026-04	მსხვილი ტექნიკა,გაზქურა	25	installment	1720.00	1000.00	1
+2026-04	მსხვილი ტექნიკა,გაზქურა	89	installment	620.00	360.00	1
+2026-04	მსხვილი ტექნიკა,კლიმატური ტექნიკა,კონდიციონერი	47	installment	940.00	545.00	1
+2026-04	მსხვილი ტექნიკა,კლიმატური ტექნიკა,კონდიციონერი	66	installment	7500.00	4550.00	3
+2026-04	მსხვილი ტექნიკა,კლიმატური ტექნიკა,კონდიციონერი	MARAZZI	installment	2470.00	1450.00	1
+2026-04	მსხვილი ტექნიკა,კლიმატური ტექნიკა,პანელური რადიატორი	none	installment	1750.00	753.20	35
+2026-04	მსხვილი ტექნიკა,კლიმატური ტექნიკა,ცენტრალური გათბობის ქვაბი	20	installment	6510.00	3650.00	2
+2026-04	მსხვილი ტექნიკა,კლიმატური ტექნიკა,წყლის გამაცხელებელი	VOX	installment	720.00	419.00	1
+2026-04	მსხვილი ტექნიკა,მაცივარი	40	installment	2940.00	1673.00	1
+2026-04	მსხვილი ტექნიკა,მაცივარი	66	installment	4070.00	2410.00	3
+2026-04	მსხვილი ტექნიკა,მაცივარი	84	installment	1920.00	1275.00	1
+2026-04	მსხვილი ტექნიკა,მაცივარი	none	installment	860.00	499.00	1
+2026-04	მსხვილი ტექნიკა,სარეცხი მანქანა	66	installment	1040.00	600.00	1
+2026-04	მსხვილი ტექნიკა,სარეცხი მანქანა,სარეცხი მანქანა საშრობით,სარეცხი მანქანები	47	installment	1540.00	900.00	1
+2026-04	მსხვილი ტექნიკა,სარეცხი მანქანა,სარეცხი მანქანა საშრობით,სარეცხი მანქანები	66	installment	1880.00	1100.00	1
+2026-04	მსხვილი ტექნიკა,სარეცხი მანქანა,სარეცხი მანქანები	1475	installment	920.00	540.00	1
+2026-04	მსხვილი ტექნიკა,სარეცხი მანქანა,სარეცხი მანქანები	25	installment	2900.00	1645.00	2
+2026-04	მსხვილი ტექნიკა,სარეცხი მანქანა,სარეცხი მანქანები	47	installment	3700.00	2050.00	3
+2026-04	მსხვილი ტექნიკა,სარეცხი მანქანა,სარეცხი მანქანები	61	installment	3550.00	2075.00	2
+2026-04	მსხვილი ტექნიკა,სარეცხი მანქანა,სარეცხი მანქანები	66	installment	6760.00	3960.00	5
+2026-04	მსხვილი ტექნიკა,სარეცხი მანქანა,სარეცხი მანქანები	84	installment	3320.00	2010.00	2
+2026-04	მსხვილი ტექნიკა,სარეცხი მანქანა,სარეცხი მანქანები	BEKO	installment	1520.00	879.00	1
+2026-04	მსხვილი ტექნიკა,სარეცხი მანქანა,სარეცხი მანქანები	Hisense	installment	890.00	515.00	1
+2026-04	მსხვილი ტექნიკა,სარეცხი მანქანა,სარეცხი მანქანები	MIDEA	installment	910.00	530.00	1
+2026-04	მსხვილი ტექნიკა,საყინულე	66	installment	1880.00	1100.00	1
+2026-04	მსხვილი ტექნიკა,ჩასაშენებელი ტექნიკა,გაზქურის ზედაპირი	Simfer	installment	540.00	315.00	1
+2026-04	მსხვილი ტექნიკა,ჩასაშენებელი ტექნიკა,ჩასაშენებელი ელექტრო ღუმელი	MIDEA	installment	630.00	400.00	1
+2026-04	მსხვილი ტექნიკა,ჩასაშენებელი ტექნიკა,ჩასაშენებელი ჭურჭლის სარეცხი მანქანა	25	installment	1490.00	764.00	1
+2026-04	მსხვილი ტექნიკა,ჭურჭლის სარეცხი მანქანა	25	installment	3980.00	2327.00	2
+2026-04	მსხვილი ტექნიკა,ჭურჭლის სარეცხი მანქანა	64	installment	1140.00	650.00	1
+2026-04	მსხვილი ტექნიკა,ჭურჭლის სარეცხი მანქანა	66	installment	910.00	530.00	1
+2026-04	მსხვილი ტექნიკა,ჭურჭლის სარეცხი მანქანა	84	installment	1510.00	885.00	1
+2026-04	მტვერსასრუტი	BEKO	installment	640.00	406.00	2
+2026-04	მტვერსასრუტი	Camry	installment	250.00	130.00	1
+2026-04	მტვერსასრუტი	DREAME	installment	6930.00	3588.64	2
+2026-04	მტვერსასრუტი	KARCHER	installment	3910.00	2144.00	4
+2026-04	მტვერსასრუტი	MIDEA	installment	5480.00	3180.00	8
+2026-04	მტვერსასრუტი	SAMSUNG	installment	3810.00	2126.00	7
+2026-04	მტვერსასრუტი	Zilan	installment	420.00	206.00	2
+2026-04	მტვერსასრუტი ბაღის	BLACK+DECKER	installment	780.00	455.40	1
+2026-04	ნაყინის აპარატი	Ninja	installment	1640.00	960.00	1
+2026-04	ორთქლის აპარატი	KARCHER	installment	1800.00	992.00	2
+2026-04	ორთქლის გენერატორი	FRANKO	installment	760.00	386.00	1
+2026-04	ორთქლის უთო	ARZUM	installment	190.00	103.00	1
+2026-04	პავილიონი	ბრენდის გარეშე	installment	1710.00	965.00	1
+2026-04	პლინტუსების კოლექცია	VOX	installment	145.00	94.10	35
+2026-04	პურის საცხობი	FRANKO	installment	470.00	235.00	1
+2026-04	პურის საცხობი	MESKO	installment	380.00	220.00	1
+2026-04	რობოტი მტვერსასრუტი	MAMIBOT	installment	510.00	290.00	1
+2026-04	რობოტი მტვერსასრუტი	MIDEA	installment	1680.00	960.00	1
+2026-04	რობოტი მტვერსასრუტი	SENCOR	installment	1260.00	776.00	1
+2026-04	საათი	Casio	installment	600.00	339.00	2
+2026-04	საათი	Cluse	installment	960.00	625.00	2
+2026-04	საბურავი	LANVIGATOR	installment	2000.00	1120.00	8
+2026-04	სათამაშო კონსოლი	PlayStation	installment	1480.00	807.00	2
+2026-04	სათამაშო კონსოლი	SONY	installment	1220.00	672.00	2
+2026-04	საკერავი მანქანა	Janome	installment	2150.00	1250.00	2
+2026-04	სარეცხი მანქანა	ARDESTO	installment	990.00	563.55	1
+2026-04	სარეცხი მანქანა	BEKO	installment	3320.00	1935.00	2
+2026-04	სარეცხი მანქანა	Hisense	installment	14530.00	8280.00	13
+2026-04	სარეცხი მანქანა	LG	installment	6800.00	4005.00	4
+2026-04	სარეცხი მანქანა	MARAZZI	installment	900.00	520.00	1
+2026-04	სარეცხი მანქანა	MIDEA	installment	28370.00	16070.00	20
+2026-04	სარეცხი მანქანა	SAMSUNG	installment	2270.00	1320.00	1
+2026-04	სარეცხი მანქანა საშრობით	Hisense	installment	4750.00	2770.00	3
+2026-04	სარეცხი მანქანა საშრობით	SAMSUNG	installment	2700.00	1580.00	1
+2026-04	სარეცხის საშრობი	MARAZZI	installment	4200.00	2460.00	2
+2026-04	სარეცხის საშრობი	MIDEA	installment	3290.00	1920.00	2
+2026-04	სარკე	N/A	installment	175.00	134.19	1
+2026-04	საქანელა	ბრენდის გარეშე	installment	5130.00	2635.00	9
+2026-04	საქანელა	ბრენდის გარეშე	single	200.00	145.00	1
+2026-04	საღებავი	Eskaro	installment	30.00	22.79	1
+2026-04	საყინულე	FRANKO	installment	3540.00	1969.00	5
+2026-04	საყინულე	GORENJE	installment	1150.00	620.00	1
+2026-04	საყინულე	Hisense	installment	850.00	495.00	1
+2026-04	საყინულე	MIDEA	installment	3020.00	1760.00	2
+2026-04	საყინულე მაცივარი	FRANKO	installment	630.00	350.00	1
+2026-04	სახლი & ეზო,აუზი,აუზი & აქსესუარები	27	installment	830.00	440.00	1
+2026-04	სახლი & ეზო,ბატუტი	27	installment	870.00	500.00	1
+2026-04	სახლი & ეზო,ბატუტი	none	installment	380.00	220.00	1
+2026-04	სახლი & ეზო,განათება,ჭაღები	none	installment	480.00	280.44	1
+2026-04	სახლი & ეზო,მაღალი წნევით რეცხვის აპარატი	54	installment	1300.00	716.00	1
+2026-04	სახლი & ეზო,საკერავი მანქანა	52	installment	860.00	500.00	1
+2026-04	სახლი & ეზო,უთო	78	installment	320.00	170.00	1
+2026-04	სილამაზე,თავის მოვლა,თმის სტაილერი	35	installment	6300.00	3430.80	5
+2026-04	სილამაზე,თავის მოვლა,თმის სტაილერი	DREAME	installment	2520.00	1367.28	2
+2026-04	სილამაზე,თავის მოვლა,თმის უთო	78	installment	470.00	270.00	1
+2026-04	სილამაზე,თავის მოვლა,სასწორი	FRANKO	installment	100.00	51.00	1
+2026-04	სკუტერი	FRANKO	installment	1480.00	790.00	1
+2026-04	სპორტი & ფიტნესი,სპორტი,ველოსპორტი,ველოსიპედი	TRINX	installment	1100.00	640.00	1
+2026-04	ტაფა	ARDESTO	installment	100.00	44.97	1
+2026-04	ტაფა	BERLLONG	installment	130.00	61.00	1
+2026-04	ტელევიზორები & აუდიო,ტელევიზორები	25	installment	1320.00	766.00	2
+2026-04	ტელევიზორები & აუდიო,ტელევიზორები	40	installment	860.00	500.00	1
+2026-04	ტელევიზორები & აუდიო,ტელევიზორები	47	installment	6150.00	3505.00	5
+2026-04	ტელევიზორები & აუდიო,ტელევიზორები	49	installment	800.00	465.00	1
+2026-04	ტელევიზორები & აუდიო,ტელევიზორები	84	installment	10340.00	6055.00	4
+2026-04	ტელევიზორები & აუდიო,ტელევიზორები	Hisense	installment	1690.00	985.00	2
+2026-04	ტელევიზორი 	BEKO	installment	2380.00	1381.00	3
+2026-04	ტელევიზორი 	FRANKO	installment	2450.00	1412.00	3
+2026-04	ტელევიზორი 	Grundig	installment	2240.00	1304.00	2
+2026-04	ტელევიზორი 	Hisense	installment	12000.00	6950.00	10
+2026-04	ტელევიზორი 	iFFALCON	installment	5970.00	3456.00	3
+2026-04	ტელევიზორი 	SAMSUNG	installment	10810.00	6323.00	5
+2026-04	ტელევიზორი 	SKYWORTH	installment	750.00	435.00	1
+2026-04	ტელევიზორი 	Sunny	installment	1680.00	966.00	2
+2026-04	ტელევიზორი 	TCL	installment	1360.00	799.00	1
+2026-04	ტელეფონი	HONOR	installment	144790.00	83878.00	111
+2026-04	ტელეფონი	OPPO	installment	7440.00	4347.00	6
+2026-04	ტელეფონი	SAMSUNG	installment	41730.00	22075.00	53
+2026-04	ტოსტერი	FRANKO	installment	310.00	149.00	1
+2026-04	ტოსტერი	MIDEA	installment	130.00	66.00	1
+2026-04	უთო	FRANKO	installment	910.00	450.00	5
+2026-04	ფენი	BABYLISS	installment	210.00	98.00	1
+2026-04	ფენი	Camry	installment	100.00	37.00	1
+2026-04	ფლეისთეიშენი	SONY	installment	15980.00	9268.00	5
+2026-04	ქვაბების ნაკრები	ARDESTO	installment	190.00	76.28	1
+2026-04	ქვაბების ნაკრები,სახლი & ეზო,სამზარეულო & სერვირება	19	installment	360.00	153.90	1
+2026-04	ქიმწმენდის აპარატი	KARCHER	installment	2060.00	1136.00	1
+2026-04	ყავის აპარატი	ARDESTO	installment	550.00	303.20	2
+2026-04	ყავის აპარატი	BEKO	installment	1900.00	1204.00	2
+2026-04	ყავის აპარატი	DELONGHI	installment	5080.00	2905.00	4
+2026-04	ყავის აპარატი	Grundig	installment	1620.00	924.00	1
+2026-04	ყავის აპარატი	SENCOR	installment	700.00	392.00	1
+2026-04	შედუღების აპარატი	MEAKIDA	installment	1450.00	850.00	1
+2026-04	შპალერი	Comfort	installment	280.00	215.20	8
+2026-04	შპალერი	Lanita	installment	390.00	273.96	6
+2026-04	შპალერი	Modern	installment	520.00	397.28	8
+2026-04	შპალერი	Vogue	installment	285.00	208.98	3
+2026-04	ჩაიდანი	MIDEA	installment	60.00	29.00	1
+2026-04	ჩაიდანი	SENCOR	installment	250.00	149.00	1
+2026-04	ჩაიდანი	TEFAL	installment	240.00	109.00	1
+2026-04	ჩასაშენებელი ზედაპირი	FRANKO	installment	780.00	443.00	1
+2026-04	ჩასაშენებელი ზედაპირი	Simfer	installment	920.00	535.00	2
+2026-04	ჩასაშენებელი ღუმელი	BEKO	installment	1170.00	687.00	1
+2026-04	ჩასაშენებელი ღუმელი	MIDEA	installment	860.00	500.00	1
+2026-04	ჩასაშენებელი ღუმელი	Simfer	installment	1640.00	905.00	2
+2026-04	ჩასაშენებელი ღუმელი	Simfer	single	729.00	520.00	1
+2026-04	ჩოფერი	MIDEA	installment	100.00	53.00	1
+2026-04	ცენტრალური გათბობის ქვაბი	ARISTON	installment	3290.00	1850.00	1
+2026-04	ცენტრალური გათბობის ქვაბი	Bosch	installment	5780.00	3590.00	2
+2026-04	ცენტრალური გათბობის ქვაბი	Ferroli	installment	2650.00	1555.00	1
+2026-04	ცენტრალური გათბობის ქვაბი	MIDEA	installment	2090.00	1280.00	1
+2026-04	წებო	Pufas	installment	120.00	91.80	3
+2026-04	წვენსაწური	FRANKO	installment	880.00	502.00	2
+2026-04	წვრილი ტექნიკა,ბლენდერი,ხელის ბლენდერი	86	installment	360.00	219.00	1
+2026-04	წვრილი ტექნიკა,კაპუჩინატორი	40	installment	170.00	83.00	1
+2026-04	წვრილი ტექნიკა,მიქსერი	66	installment	280.00	155.00	1
+2026-04	წვრილი ტექნიკა,მტვერსასრუტი	25	installment	1120.00	638.00	2
+2026-04	წვრილი ტექნიკა,მტვერსასრუტი	35	installment	1070.00	602.40	1
+2026-04	წვრილი ტექნიკა,მტვერსასრუტი	40	installment	190.00	99.00	1
+2026-04	წვრილი ტექნიკა,მტვერსასრუტი	54	installment	4350.00	2388.00	3
+2026-04	წვრილი ტექნიკა,მტვერსასრუტი	66	installment	2070.00	1195.00	3
+2026-04	წვრილი ტექნიკა,მტვერსასრუტი	FRANKO	installment	510.00	280.00	1
+2026-04	წვრილი ტექნიკა,რობოტი მტვერსასრუტი	35	installment	3030.00	1678.35	1
+2026-04	წვრილი ტექნიკა,რობოტი მტვერსასრუტი	66	installment	1680.00	960.00	1
+2026-04	წვრილი ტექნიკა,სამზარეულოს აქსესუარების ნაკრები,დანა-ჩანგლის ნაკრები	26	installment	290.00	138.00	1
+2026-04	წვრილი ტექნიკა,სამზარეულოს წვრილი ტექნიკა,აეროგრილი	66	installment	510.00	289.00	2
+2026-04	წვრილი ტექნიკა,სამზარეულოს წვრილი ტექნიკა,აეროგრილი	74	installment	3960.00	2279.00	5
+2026-04	წვრილი ტექნიკა,სამზარეულოს წვრილი ტექნიკა,აეროგრილი	FRANKO	installment	360.00	184.00	1
+2026-04	წვრილი ტექნიკა,სამზარეულოს წვრილი ტექნიკა,ბლენდერი	74	installment	1730.00	1000.00	2
+2026-04	წვრილი ტექნიკა,სამზარეულოს წვრილი ტექნიკა,გრილ ტოსტერი	40	installment	670.00	330.00	1
+2026-04	წვრილი ტექნიკა,სამზარეულოს წვრილი ტექნიკა,ელექტრო ღუმელი	40	installment	260.00	138.00	1
+2026-04	წვრილი ტექნიკა,სამზარეულოს წვრილი ტექნიკა,ელექტრო ჩაიდანი	29	installment	300.00	105.00	1
+2026-04	წვრილი ტექნიკა,სამზარეულოს წვრილი ტექნიკა,ელექტრო ჩაიდანი	66	installment	90.00	43.00	1
+2026-04	წვრილი ტექნიკა,სამზარეულოს წვრილი ტექნიკა,მიკროტალღური ღუმელი	47	installment	510.00	285.00	1
+2026-04	წვრილი ტექნიკა,სამზარეულოს წვრილი ტექნიკა,მიკროტალღური ღუმელი	64	installment	290.00	168.00	1
+2026-04	წვრილი ტექნიკა,სამზარეულოს წვრილი ტექნიკა,მიკროტალღური ღუმელი	66	installment	470.00	210.00	1
+2026-04	წვრილი ტექნიკა,სამზარეულოს წვრილი ტექნიკა,მიკროტალღური ღუმელი	BEKO	installment	460.00	252.00	1
+2026-04	წვრილი ტექნიკა,სამზარეულოს წვრილი ტექნიკა,მიქსერი	40	installment	510.00	268.00	1
+2026-04	წვრილი ტექნიკა,სამზარეულოს წვრილი ტექნიკა,მიქსერი	65	installment	270.00	155.00	1
+2026-04	წვრილი ტექნიკა,სამზარეულოს წვრილი ტექნიკა,მიქსერი	66	installment	180.00	76.00	1
+2026-04	წვრილი ტექნიკა,სამზარეულოს წვრილი ტექნიკა,მიქსერი	ARDESTO	installment	490.00	231.64	1
+2026-04	წვრილი ტექნიკა,სამზარეულოს წვრილი ტექნიკა,ტოსტერი	32	installment	420.00	234.00	1
+2026-04	წვრილი ტექნიკა,სამზარეულოს წვრილი ტექნიკა,ტოსტერი	86	installment	170.00	97.00	1
+2026-04	წვრილი ტექნიკა,სამზარეულოს წვრილი ტექნიკა,ყავის აპარატი	33	installment	610.00	370.00	1
+2026-04	წვრილი ტექნიკა,სამზარეულოს წვრილი ტექნიკა,წვენსაწური	86	installment	270.00	148.00	1
+2026-04	წვრილი ტექნიკა,სამზარეულოს წვრილი ტექნიკა,ხორცსაკეპი	102	installment	460.00	258.00	1
+2026-04	წვრილი ტექნიკა,სამზარეულოს წვრილი ტექნიკა,ხორცსაკეპი	FRANKO	installment	700.00	370.00	1
+2026-04	წვრილი ტექნიკა,ტაფა	26	installment	270.00	127.00	1
+2026-04	წვრილი ტექნიკა,უთო,ორთქლის უთო	40	installment	310.00	150.00	2
+2026-04	წყლის დისპენსერი	FRANKO	installment	370.00	210.00	1
+2026-04	ჭურჭლის სარეცხი მანქანა	BEKO	installment	11250.00	6366.00	7
+2026-04	ჭურჭლის სარეცხი მანქანა	MARAZZI	installment	1140.00	650.00	1
+2026-04	ჭურჭლის სარეცხი მანქანა	MIDEA	installment	3220.00	1880.00	2
+2026-04	ჭურჭლის სარეცხი მანქანა	SAMSUNG	installment	6952.00	3928.00	4
+2026-04	ხელის ბლენდერი	Adler	installment	80.00	23.00	1
+2026-04	ხელის ბლენდერი	FRANKO	installment	250.00	132.00	1
+2026-04	ხელის ბლენდერი	MIDEA	installment	170.00	85.00	1
+2026-04	ხელის მოტობლოკი	ROYAL	installment	1910.00	1150.00	1
+2026-04	ხელსაწყოები,ბაღის ხელსაწყოები,ბაღის მოტო და ელექტრო ინსტრუმენტები	none	installment	580.00	339.70	1
+2026-04	ხელსაწყოები,ბაღის ხელსაწყოები,ხელის მოტობლოკი	1393	installment	4780.00	2850.00	3
+2026-04	ხორცის მანქანა	KENWOOD	installment	730.00	388.00	1
+2026-04	ხორცსაკეპი	FRANKO	installment	660.00	344.00	2
+2026-04	ხორცსაკეპი მანქანა	ARDESTO	installment	750.00	477.04	3
+2026-04	ხორცსაკეპი მანქანა	FRANKO	installment	360.00	185.00	1
+2026-04	ჰაერის კომპრესორი	INGCO	installment	140.00	80.64	1
+2026-05		none	installment	3155.00	2080.00	2
+2026-05		SAMSUNG	installment	540.00	272.00	1
+2026-05	none	N/A	single	90.00	84.00	1
+2026-05	none	none	installment	840.00	484.00	2
+2026-05	Root	ბრენდის გარეშე	installment	270.00	150.00	1
+2026-05	აეროგრილი	BEKO	installment	320.00	183.00	1
+2026-05	აეროგრილი	FRANKO	installment	290.00	149.00	1
+2026-05	აეროგრილი	Grundig	installment	620.00	359.00	1
+2026-05	აეროგრილი	MIDEA	installment	1400.00	818.00	5
+2026-05	აეროგრილი	Ninja	installment	7230.00	4200.00	7
+2026-05	ავეჯი	Comfort Room	installment	1890.00	850.00	1
+2026-05	ავეჯი	N/A	installment	26770.00	15040.71	29
+2026-05	ავეჯი	N/A	single	520.00	339.00	1
+2026-05	ავეჯი	ბრენდის გარეშე	installment	520.00	272.22	1
+2026-05	ავეჯი,გარე ავეჯი,ბაღის საქანელები	N/A	installment	1020.00	450.00	1
+2026-05	ავეჯი,გარე ავეჯი,გარე ავეჯის კომპლექტი	N/A	installment	3910.00	2054.15	4
+2026-05	ავეჯი,გარე ავეჯი,გარე ავეჯის კომპლექტი	none	installment	7080.00	3956.00	10
+2026-05	ავეჯი,გარე ავეჯი,გარე სკამი	Comfort Room	installment	380.00	160.00	2
+2026-05	ავეჯი,გარე ავეჯი,პავილიონი & ტენტი	Comfort Room	installment	3780.00	1950.00	3
+2026-05	ავეჯი,დივანი	none	installment	1090.00	635.00	1
+2026-05	ავეჯი,მაგიდა	N/A	installment	460.00	220.00	1
+2026-05	ავეჯი,მატრასი,საძინებელი	none	installment	2110.00	1220.00	4
+2026-05	ავეჯი,პუფი,რბილი ავეჯი	none	installment	180.00	100.80	2
+2026-05	ავეჯი,საოფისე ავეჯი	none	installment	650.00	370.14	1
+2026-05	ავეჯი,სეიფი	none	installment	240.00	122.10	1
+2026-05	ავეჯი,სკამი	N/A	installment	150.00	81.88	1
+2026-05	ავეჯი,სკამი	none	installment	450.00	285.00	3
+2026-05	ავეჯი,ყავის მაგიდა,რბილი ავეჯი,მისაღები,მაგიდა პუფებით	none	installment	1120.00	600.00	2
+2026-05	ავტო აქსესუარები,აკუმულატორი	DURACELL	installment	460.00	262.00	1
+2026-05	ავტო აქსესუარები,აკუმულატორი	MUTLU	installment	420.00	240.00	1
+2026-05	ავტო აქსესუარები,საბურავი	TRIANGLE	installment	1440.00	800.00	4
+2026-05	აკუმულატორი	MUTLU	installment	600.00	345.00	1
+2026-05	აკუმულატორი	SONIC	installment	230.00	130.00	1
+2026-05	აუზი	Bestway	installment	2360.00	1235.00	4
+2026-05	აუზი	INTEX	installment	760.00	380.00	2
+2026-05	აუზის კიბე	Bestway	installment	220.00	90.00	1
+2026-05	აქსესუარები,საათები,მამაკაცის საათები	Casio	installment	640.00	345.00	2
+2026-05	აქსესუარები,საათები,უნისექსი	Casio	installment	230.00	119.00	1
+2026-05	აქსესუარები,საათები,ქალის საათები	Casio	installment	600.00	337.00	2
+2026-05	აქსესუარები,საყურე	PDPAOLA	installment	440.00	239.00	1
+2026-05	ბალიში	N/A	installment	70.00	31.32	1
+2026-05	ბატუტი	N/A	installment	4090.00	2116.00	6
+2026-05	ბაღის ავეჯის კომპლექტი	N/A	installment	480.00	203.67	1
+2026-05	ბაღის ავეჯის კომპლექტი	ბრენდის გარეშე	installment	730.00	470.05	1
+2026-05	ბაღის საქანელა	N/A	installment	500.00	296.00	2
+2026-05	ბენზოხერხი	N/A	installment	440.00	254.84	1
+2026-05	ბლენდერი	Bosch	installment	240.00	143.00	1
+2026-05	ბლენდერი	MIDEA	installment	140.00	74.00	1
+2026-05	ბლენდერი	Ninja	installment	1170.00	760.00	2
+2026-05	ბლენდერი	SENCOR	installment	210.00	115.00	1
+2026-05	ბუდე საქანელა	N/A	installment	1260.00	600.00	3
+2026-05	ბუდე საქანელა	ბრენდის გარეშე	installment	585.00	175.00	1
+2026-05	გაზის წყლის გამაცხელებელი	MARAZZI	installment	3850.00	2322.00	6
+2026-05	გაზის წყლის გამაცხელებელი	MIDEA	installment	1920.00	1120.00	2
+2026-05	გაზქურა	DIXI	installment	1590.00	845.00	2
+2026-05	გაზქურა	Millen	installment	990.00	573.00	1
+2026-05	გაზქურა	Simfer	installment	6310.00	3530.00	7
+2026-05	გამწოვი	SABBLO	installment	250.00	145.00	1
+2026-05	გამწოვი	Simfer	installment	830.00	465.00	2
+2026-05	გარე ავეჯი,ბაღის საქანელები	none	installment	4380.00	2070.00	8
+2026-05	გეიმინგი,გეიმინგ სავარძელი	Marvo	installment	510.00	294.00	1
+2026-05	გეიმინგი,ფლეისთეიშენი	SONY	installment	18290.00	10363.00	6
+2026-05	დანების ნაკრები	ARDESTO	installment	115.00	74.65	1
+2026-05	დინამიკი	LG	installment	1300.00	755.00	1
+2026-05	ელექტრო სკუტერი	FRANKO	installment	8370.00	4725.00	6
+2026-05	ელექტრო ღუმელი	FRANKO	installment	260.00	138.00	1
+2026-05	ელექტრო ღუმელი	Millen	installment	180.00	98.00	1
+2026-05	ელექტრო ღუმელი	SCHAUB	installment	250.00	145.00	1
+2026-05	ელექტრო ღუმელი	Schaub Lorenz	installment	250.00	145.00	1
+2026-05	ეპილატორი	FRANKO	installment	180.00	93.00	1
+2026-05	ესპრესოს აპარატი	BEKO	installment	1510.00	799.00	1
+2026-05	ველოსიპედი	TRINX	installment	3910.00	2277.00	4
+2026-05	ვენტილატორი	SENCOR	installment	700.00	403.00	1
+2026-05	თმის და წვერის საჭრელი	PHILIPS	installment	480.00	254.00	2
+2026-05	თმის დასახვევი	BABYLISS	installment	260.00	120.00	2
+2026-05	თმის ელექტრო სავარცხელი	Camry	installment	180.00	35.00	1
+2026-05	თმის საშრობი	PHILIPS	installment	250.00	150.00	1
+2026-05	თმის საშრობი	REMINGTON	installment	430.00	217.00	2
+2026-05	თმის სტაილერი	DREAME	installment	6300.00	3418.21	5
+2026-05	თმის სტაილერი	REMINGTON	installment	230.00	129.00	1
+2026-05	თმის სტაილერი	SHARK	installment	6400.00	3720.00	6
+2026-05	თმის უთო	FRANKO	installment	100.00	53.00	1
+2026-05	თმის უთო	PHILIPS	installment	470.00	270.00	1
+2026-05	თმის უთო	REMINGTON	installment	770.00	411.00	3
+2026-05	იატაკი & საფარები,ლამინირებული იატაკი	none	installment	1240.00	616.90	31
+2026-05	კამერა	Insta360	installment	3040.00	1784.00	1
+2026-05	კარ-ფანჯარა & ფურნიტურა,შიდა კარები	none	installment	1080.00	604.84	4
+2026-05	კარკასული აუზი	Bestway	installment	1000.00	575.00	2
+2026-05	კომპიუტერები & აქსესუარები,მონიტორები	Lenovo	installment	510.00	289.00	1
+2026-05	კომპიუტერები & აქსესუარები,მონიტორები	LG	installment	520.00	298.00	1
+2026-05	კომპიუტერები & აქსესუარები,მონიტორები	SAMSUNG	installment	4780.00	2793.00	1
+2026-05	კონდინციონერი	Hisense	installment	1960.00	1170.00	1
+2026-05	კონდიციონერი	ARDESTO	installment	1240.00	762.65	1
+2026-05	კონდიციონერი	Hisense	installment	21180.00	12245.00	15
+2026-05	კონდიციონერი	MARAZZI	installment	2650.00	1550.00	2
+2026-05	კონდიციონერი	MIDEA	installment	20480.00	11620.00	8
+2026-05	კონდიციონერი	TCL	installment	2580.00	1499.00	2
+2026-05	კონდიციონერი	TCL	single	1280.00	1.00	1
+2026-05	კონდიციონერი,კონდიციონერი & გაგრილება	TCL	installment	1190.00	942.00	1
+2026-05	მაგიდა 6 სკამით (ღია ყავისფერი)	N/A	installment	560.00	300.00	1
+2026-05	მანქანის ხელის უსადენო მტვერსასრუტი	KARCHER	installment	260.00	142.40	1
+2026-05	მატრასები	N/A	installment	1230.00	705.00	2
+2026-05	მატრასები	ბრენდის გარეშე	installment	2800.00	1545.00	5
+2026-05	მაღალი წნევით რეცხვის აპარატი 	K 4	installment	1450.00	796.00	1
+2026-05	მაღალი წნევით რეცხვის აპარატი 	KARCHER	installment	1450.00	796.00	1
+2026-05	მაცივარი	ARDESTO	installment	840.00	477.28	1
+2026-05	მაცივარი	FRANKO	installment	460.00	264.00	1
+2026-05	მაცივარი	GORENJE	installment	1450.00	650.00	1
+2026-05	მაცივარი	Hisense	installment	13590.00	7855.00	13
+2026-05	მაცივარი	Hisense	single	480.00	415.00	1
+2026-05	მაცივარი	MARAZZI	installment	1720.00	1000.00	2
+2026-05	მაცივარი	MIDEA	installment	10560.00	6010.00	5
+2026-05	მაცივარი	MIDEA	single	950.00	850.00	1
+2026-05	მაცივარი	SAMSUNG	installment	3390.00	1964.00	1
+2026-05	მაცივარი	Toshiba	installment	2800.00	1338.00	1
+2026-05	მაცივარი	VOX	installment	1990.00	1169.00	1
+2026-05	მიკროტალღური ღუმელი	SAMSUNG	installment	1500.00	904.00	3
+2026-05	მიქსერი	ARDESTO	installment	920.00	434.00	2
+2026-05	მიქსერი	FRANKO	installment	1020.00	536.00	2
+2026-05	მიქსერი	KENWOOD	installment	130.00	73.00	1
+2026-05	მიქსერი	MIDEA	installment	360.00	152.00	2
+2026-05	მიქსერი	SENCOR	installment	120.00	61.00	1
+2026-05	მობილურები & აქსესუარები,სმარტფონები	HONOR	installment	40410.00	22887.00	37
+2026-05	მობილურები & აქსესუარები,სმარტფონები	none	installment	8750.00	4872.00	9
+2026-05	მობილურები & აქსესუარები,სმარტფონები	OPPO	installment	1890.00	1104.00	1
+2026-05	მობილურები & აქსესუარები,სმარტფონები	Oukitel	installment	1530.00	892.00	1
+2026-05	მობილურები & აქსესუარები,სმარტფონები	SAMSUNG	installment	31820.00	18445.00	33
+2026-05	მობილურები & აქსესუარები,ყურსასმენები,Buds	none	installment	1300.00	598.00	2
+2026-05	მონიტორი	LG	installment	520.00	298.00	1
+2026-05	მოტობლოკი	ROYAL ECO	installment	1450.00	850.00	1
+2026-05	მოტოცელი	N/A	installment	390.00	227.05	1
+2026-05	მოტოცელი	Raider	installment	1260.00	779.30	3
+2026-05	მრგვალი კარკასული აუზი	Bestway	installment	540.00	270.00	1
+2026-05	მსხვილი ტექნიკა	MARAZZI	installment	1260.00	730.00	1
+2026-05	მსხვილი ტექნიკა	MIDEA	installment	1040.00	600.00	1
+2026-05	მსხვილი ტექნიკა,გაზქურა	BEKO	installment	1640.00	947.00	1
+2026-05	მსხვილი ტექნიკა,გაზქურა	Millen	installment	1126.00	573.00	1
+2026-05	მსხვილი ტექნიკა,გაზქურა	Simfer	installment	1560.00	905.00	2
+2026-05	მსხვილი ტექნიკა,გამწოვი	BEKO	installment	1070.00	623.00	1
+2026-05	მსხვილი ტექნიკა,გამწოვი	MIDEA	installment	670.00	345.00	1
+2026-05	მსხვილი ტექნიკა,კლიმატური ტექნიკა,დენის წყლის გამაცხელებელი	MIDEA	installment	500.00	285.00	1
+2026-05	მსხვილი ტექნიკა,კლიმატური ტექნიკა,ვენტილატორი	none	installment	380.00	282.00	2
+2026-05	მსხვილი ტექნიკა,კლიმატური ტექნიკა,კონდიციონერი	BEKO	installment	2590.00	1558.00	2
+2026-05	მსხვილი ტექნიკა,კლიმატური ტექნიკა,კონდიციონერი	GORENJE	installment	1530.00	580.00	1
+2026-05	მსხვილი ტექნიკა,კლიმატური ტექნიკა,კონდიციონერი	Hisense	installment	6760.00	3930.00	5
+2026-05	მსხვილი ტექნიკა,კლიმატური ტექნიკა,კონდიციონერი	MARAZZI	installment	4330.00	2605.00	3
+2026-05	მსხვილი ტექნიკა,კლიმატური ტექნიკა,კონდიციონერი	MIDEA	installment	4350.00	2550.00	2
+2026-05	მსხვილი ტექნიკა,კლიმატური ტექნიკა,კონდიციონერი	TCL	installment	850.00	481.00	1
+2026-05	მსხვილი ტექნიკა,კლიმატური ტექნიკა,ცენტრალური გათბობის ქვაბი	MARAZZI	installment	2380.00	1380.00	1
+2026-05	მსხვილი ტექნიკა,კლიმატური ტექნიკა,ცენტრალური გათბობის ქვაბი	MIDEA	installment	4360.00	2470.00	2
+2026-05	მსხვილი ტექნიკა,კლიმატური ტექნიკა,წყლის გამაცხელებელი	MARAZZI	installment	2020.00	1175.00	3
+2026-05	მსხვილი ტექნიკა,მაცივარი	ARDESTO	installment	1530.00	850.00	1
+2026-05	მსხვილი ტექნიკა,მაცივარი	Hisense	installment	5170.00	3010.00	5
+2026-05	მსხვილი ტექნიკა,მაცივარი	MIDEA	installment	12100.00	6990.00	6
+2026-05	მსხვილი ტექნიკა,მაცივარი	SAMSUNG	installment	5600.00	3147.00	2
+2026-05	მსხვილი ტექნიკა,მაცივარი	VOX	installment	1990.00	1259.00	1
+2026-05	მსხვილი ტექნიკა,სარეცხი მანქანა	BEKO	installment	1570.00	879.00	1
+2026-05	მსხვილი ტექნიკა,სარეცხი მანქანა	GORENJE	installment	1170.00	600.00	1
+2026-05	მსხვილი ტექნიკა,სარეცხი მანქანა	Hisense	installment	3380.00	1975.00	4
+2026-05	მსხვილი ტექნიკა,სარეცხი მანქანა	MIDEA	installment	8610.00	4885.00	7
+2026-05	მსხვილი ტექნიკა,სარეცხი მანქანა	SAMSUNG	installment	1620.00	947.00	1
+2026-05	მსხვილი ტექნიკა,სარეცხი მანქანა	TCL	installment	1140.00	610.00	1
+2026-05	მსხვილი ტექნიკა,სარეცხი მანქანა საშრობით,სარეცხი მანქანა	Hisense	installment	4880.00	2840.00	3
+2026-05	მსხვილი ტექნიკა,სარეცხი მანქანა საშრობით,სარეცხი მანქანა	MARAZZI	installment	1890.00	1100.00	1
+2026-05	მსხვილი ტექნიკა,სარეცხი მანქანა საშრობით,სარეცხი მანქანა	MIDEA	installment	2130.00	1250.00	1
+2026-05	მსხვილი ტექნიკა,სარეცხი მანქანა საშრობით,სარეცხი მანქანა	SAMSUNG	installment	8000.00	4440.00	3
+2026-05	მსხვილი ტექნიკა,საყინულე	MIDEA	installment	2660.00	1410.00	2
+2026-05	მსხვილი ტექნიკა,ჩასაშენებელი მიკროტალღური,ჩასაშენებელი ზედაპირი	BEKO	installment	800.00	465.00	1
+2026-05	მსხვილი ტექნიკა,ჩასაშენებელი ტექნიკა,გაზქურის ზედაპირი	Simfer	installment	1260.00	700.00	2
+2026-05	მსხვილი ტექნიკა,ჩასაშენებელი ტექნიკა,ჩასაშენებელი გამწოვი	MIDEA	installment	480.00	240.00	1
+2026-05	მსხვილი ტექნიკა,ჩასაშენებელი ტექნიკა,ჩასაშენებელი ელექტრო ღუმელი	BEKO	installment	3080.00	1694.00	2
+2026-05	მსხვილი ტექნიკა,ჩასაშენებელი ტექნიკა,ჩასაშენებელი ელექტრო ღუმელი	MIDEA	installment	1200.00	680.00	1
+2026-05	მსხვილი ტექნიკა,ჩასაშენებელი ტექნიკა,ჩასაშენებელი ელექტრო ღუმელი	Simfer	installment	730.00	385.00	1
+2026-05	მსხვილი ტექნიკა,ჩასაშენებელი ტექნიკა,ჩასაშენებელი მიკროტალღური	BEKO	installment	860.00	671.00	1
+2026-05	მსხვილი ტექნიკა,წყლის დისპენსერი	FRANKO	installment	410.00	230.00	1
+2026-05	მსხვილი ტექნიკა,ჭურჭლის სარეცხი მანქანა	MARAZZI	installment	1140.00	650.00	1
+2026-05	მსხვილი ტექნიკა,ჭურჭლის სარეცხი მანქანა	SAMSUNG	installment	3230.00	1770.00	2
+2026-05	მტვერსასრუტი	BEKO	installment	2390.00	1372.00	4
+2026-05	მტვერსასრუტი	DREAME	installment	1070.00	595.78	1
+2026-05	მტვერსასრუტი	FRANKO	installment	910.00	487.00	3
+2026-05	მტვერსასრუტი	GORENJE	installment	900.00	465.00	1
+2026-05	მტვერსასრუტი	KARCHER	installment	4550.00	2519.00	4
+2026-05	მტვერსასრუტი	MIDEA	installment	6320.00	3670.00	8
+2026-05	მტვერსასრუტი	SAMSUNG	installment	1920.00	1037.00	5
+2026-05	მტვერსასრუტი	SENCOR	installment	1330.00	770.00	1
+2026-05	ნაყინის აპარატი	Ninja	installment	1640.00	960.00	1
+2026-05	ორთქლის აპარატი	KARCHER	installment	2790.00	1587.99	3
+2026-05	ორთქლის უთო	ARZUM	installment	190.00	87.00	1
+2026-05	პავილიონი	ბრენდის გარეშე	installment	1410.00	771.00	1
+2026-05	პირსახოცის საშრობი	Florad	installment	170.00	88.35	1
+2026-05	პლანშეტი	Blackview	installment	6050.00	3483.00	10
+2026-05	პურის საცხობი	FRANKO	installment	310.00	235.00	1
+2026-05	რადიატორი	Decorall	installment	310.00	172.00	1
+2026-05	რადიატორი	SOLARIS	installment	1050.00	591.85	7
+2026-05	რობოტი მტვერსასრუტი	DREAME	installment	880.00	481.09	1
+2026-05	რობოტი მტვერსასრუტი	MAMIBOT	installment	1090.00	690.00	1
+2026-05	საათი	Casio	installment	320.00	178.00	1
+2026-05	საბავშვო ხალიჩა	N/A	installment	100.00	51.59	1
+2026-05	საბურავი	N/A	installment	1040.00	708.00	4
+2026-05	სათამაშო კონსოლი	PlayStation	installment	340.00	191.00	1
+2026-05	საკერავი მანქანა	Janome	installment	820.00	480.00	1
+2026-05	სამზარეულო კომბაინი	SENCOR	installment	720.00	412.00	1
+2026-05	სამზარეულოს კომბაინი	FRANKO	installment	430.00	225.00	1
+2026-05	სარბენი ბილიკი	Walke W-FIT	installment	1540.00	900.00	1
+2026-05	სარეცხი მანქანა	ARDESTO	installment	2000.00	1106.14	2
+2026-05	სარეცხი მანქანა	BEKO	installment	3090.00	1789.00	2
+2026-05	სარეცხი მანქანა	Hisense	installment	20200.00	11655.00	21
+2026-05	სარეცხი მანქანა	LG	installment	11656.00	6688.00	7
+2026-05	სარეცხი მანქანა	MARAZZI	installment	5940.00	3670.00	4
+2026-05	სარეცხი მანქანა	MIDEA	installment	22430.00	12610.00	17
+2026-05	სარეცხი მანქანა	SAMSUNG	installment	10970.00	6043.00	6
+2026-05	სარეცხი მანქანა საშრობით	Hisense	installment	3340.00	1940.00	2
+2026-05	სარეცხი მანქანა+შრობა	SAMSUNG	installment	2650.00	1448.00	1
+2026-05	სარწყავი მილი	2E	installment	120.00	54.87	1
+2026-05	საქანელა	N/A	installment	1020.00	450.00	1
+2026-05	საქანელა	ბრენდის გარეშე	installment	1350.00	635.00	2
+2026-05	საღებავსაფრქვეველი	Wagner	installment	510.00	326.70	1
+2026-05	საყინულე	FRANKO	installment	1610.00	923.00	2
+2026-05	საყინულე	Hisense	installment	2550.00	1485.00	3
+2026-05	საყინულე	MARAZZI	installment	1480.00	909.00	1
+2026-05	საყინულე	MIDEA	installment	1140.00	660.00	1
+2026-05	საყინულე	VOX	installment	1340.00	779.00	1
+2026-05	საყურე	N/A	installment	730.00	424.00	1
+2026-05	საყურე	Zag	installment	140.00	86.00	1
+2026-05	სახლი & ეზო,აუზი,აუზი & აქსესუარები	Bestway	installment	1800.00	920.00	2
+2026-05	სახლი & ეზო,აუზი,აუზი & აქსესუარები	INTEX	installment	180.00	70.00	1
+2026-05	სახლი & ეზო,ბატუტი	none	installment	2610.00	1307.00	3
+2026-05	სახლი & ეზო,მაღალი წნევით რეცხვის აპარატი	KARCHER GEORGIA	installment	1450.00	796.00	1
+2026-05	სახლი & ეზო,ორთქლით საწმენდი აპარატი,სახლის მოვლა	KARCHER GEORGIA	installment	1710.00	992.00	2
+2026-05	სახლი & ეზო,საკერავი მანქანა	Janome	installment	860.00	500.00	1
+2026-05	სილამაზე,თავის მოვლა,თმის და წვერის საჭრელი	FRANKO	installment	150.00	73.00	1
+2026-05	სილამაზე,თავის მოვლა,თმის და წვერის საჭრელი	none	installment	240.00	127.00	1
+2026-05	სილამაზე,თავის მოვლა,თმის და წვერის საჭრელი	Panasonic	installment	240.00	135.00	1
+2026-05	სილამაზე,თავის მოვლა,თმის და წვერის საჭრელი	PHILIPS	installment	320.00	159.00	1
+2026-05	სილამაზე,თავის მოვლა,თმის საშრობი	BABYLISS	installment	510.00	240.00	1
+2026-05	სილამაზე,თავის მოვლა,თმის საშრობი	FRANKO	installment	470.00	237.00	3
+2026-05	სილამაზე,თავის მოვლა,თმის სტაილერი	DREAME	installment	15120.00	8183.61	12
+2026-05	სილამაზე,თავის მოვლა,თმის სტაილერი	REMINGTON	installment	230.00	129.00	1
+2026-05	სილამაზე,თავის მოვლა,თმის სტაილერი	SHARK	installment	10480.00	6609.00	12
+2026-05	სილამაზე,თავის მოვლა,თმის უთო	PHILIPS	installment	940.00	540.00	2
+2026-05	სილამაზე,თავის მოვლა,სასწორი	FRANKO	installment	120.00	55.00	1
+2026-05	სილამაზე,თავის მოვლა,ტრიმერი	Panasonic	installment	80.00	38.00	1
+2026-05	სკუტერი	FRANKO	installment	5110.00	3056.00	4
+2026-05	სკუტერი	MIQILONG	installment	250.00	93.34	1
+2026-05	სკუტერი	Segway	installment	3490.00	2051.10	1
+2026-05	სლაშის აპარატი	Ninja	installment	2640.00	1758.00	2
+2026-05	სპორტი & ფიტნესი,სპორტი,ველოსპორტი,ველოსიპედი	TRINX	installment	1400.00	820.00	1
+2026-05	სპორტი & ფიტნესი,სპორტი,ველოსპორტი,სკუტერი	FRANKO	installment	14860.00	8429.00	9
+2026-05	სპორტი & ფიტნესი,სპორტი,ველოსპორტი,სკუტერი	SENCOR	installment	2450.00	1429.00	1
+2026-05	სპორტი & ფიტნესი,სპორტი,სკუტერი	FRANKO	installment	3940.00	2359.00	3
+2026-05	ტაფა	BERLLONG	installment	170.00	78.00	1
+2026-05	ტაფა,სახლი & ეზო,სამზარეულო & სერვირება	none	installment	250.00	131.00	1
+2026-05	ტელევიზორები & აუდიო,აუდიო სისტემები	Eden	installment	370.00	210.00	1
+2026-05	ტელევიზორები & აუდიო,ტელევიზორები	2E	installment	870.00	552.43	2
+2026-05	ტელევიზორები & აუდიო,ტელევიზორები	Hisense	installment	4260.00	2355.00	4
+2026-05	ტელევიზორები & აუდიო,ტელევიზორები	iFFALCON	installment	3920.00	2398.00	2
+2026-05	ტელევიზორები & აუდიო,ტელევიზორები	SAMSUNG	installment	9830.00	5744.00	4
+2026-05	ტელევიზორები & აუდიო,ტელევიზორები	Sunny	installment	1360.00	839.00	1
+2026-05	ტელევიზორები & აუდიო,ტელევიზორები	TCL	installment	2020.00	1218.00	2
+2026-05	ტელევიზორი 	2E	installment	1480.00	821.41	3
+2026-05	ტელევიზორი 	BEKO	installment	620.00	368.00	1
+2026-05	ტელევიზორი 	FRANKO	installment	3500.00	2041.00	4
+2026-05	ტელევიზორი 	Hisense	installment	8870.00	5170.00	10
+2026-05	ტელევიზორი 	iFFALCON	installment	800.00	491.00	1
+2026-05	ტელევიზორი 	LG	installment	3240.00	1900.00	1
+2026-05	ტელევიზორი 	MARAZZI	installment	960.00	560.00	1
+2026-05	ტელევიზორი 	SAMSUNG	installment	15490.00	9189.00	7
+2026-05	ტელევიზორი 	TCL	installment	3040.00	1848.00	2
+2026-05	ტელეფონი	HONOR	installment	98830.00	56796.00	79
+2026-05	ტელეფონი	OPPO	installment	13130.00	7628.00	10
+2026-05	ტელეფონი	Oukitel	installment	2990.00	1740.00	3
+2026-05	ტელეფონი	SAMSUNG	installment	64990.00	37658.00	51
+2026-05	ტენტი	Bestway	installment	150.00	35.00	1
+2026-05	ტოსტერი	SENCOR	installment	180.00	97.00	1
+2026-05	უთო	BRAUN	installment	310.00	175.00	1
+2026-05	უთო	FRANKO	installment	270.00	128.00	2
+2026-05	უთო,ორთქლის უთო	BRAUN	installment	220.00	118.00	1
+2026-05	ფენი	FRANKO	single	119.00	73.00	1
+2026-05	ფილტრი	Bestway	installment	240.00	75.00	1
+2026-05	ფლეისთეიშენი	SONY	installment	6410.00	3454.00	2
+2026-05	ფოტო & ვიდეო,დრონი	DJI	installment	3530.00	2069.10	1
+2026-05	ქვაბების ნაკრები,სახლი & ეზო,სამზარეულო & სერვირება	ARDESTO	installment	720.00	298.04	2
+2026-05	ქვაბი	BERLLONG	installment	230.00	125.00	1
+2026-05	ქიმწმენდის აპარატი	SHARK	installment	3280.00	1920.00	4
+2026-05	ყავის აპარატი	BEKO	installment	650.00	369.00	1
+2026-05	ყავის აპარატი	DELONGHI	installment	3630.00	2146.00	2
+2026-05	ყავის აპარატი	MIDEA	installment	1580.00	920.00	1
+2026-05	ჩაიდანი	SENCOR	installment	100.00	40.00	1
+2026-05	ჩასაშენებელი ზედაპირი	FRANKO	installment	720.00	443.00	1
+2026-05	ჩასაშენებელი ზედაპირი	Simfer	installment	2820.00	1760.00	5
+2026-05	ჩასაშენებელი ღუმელი	Simfer	installment	910.00	520.00	1
+2026-05	ჩასაშენებელი ჭურჭლის სარეცხი მანქანა	MIDEA	installment	1050.00	610.00	1
+2026-05	ჩირის აპარატი	SENCOR	installment	310.00	175.00	1
+2026-05	ცენტრალური გათბობის ქვაბი	ARISTON	installment	10640.00	6015.00	3
+2026-05	ცენტრალური გათბობის ქვაბი	MARAZZI	installment	2380.00	1380.00	1
+2026-05	ცენტრალური გათბობის ქვაბი	MIDEA	installment	6540.00	3660.00	3
+2026-05	წვენსაწური	FRANKO	installment	230.00	116.00	1
+2026-05	წვენსაწური	Ninja	installment	900.00	520.00	1
+2026-05	წვერსაპარსი	PHILIPS	installment	480.00	280.00	1
+2026-05	წვრილი ტექნიკა,მტვერსასრუტი	BEKO	installment	870.00	470.00	2
+2026-05	წვრილი ტექნიკა,მტვერსასრუტი	Bosch	installment	2410.00	1374.00	1
+2026-05	წვრილი ტექნიკა,მტვერსასრუტი	DREAME	installment	3970.00	2102.76	2
+2026-05	წვრილი ტექნიკა,მტვერსასრუტი	FRANKO	installment	1600.00	835.00	4
+2026-05	წვრილი ტექნიკა,მტვერსასრუტი	Hisense	installment	670.00	390.00	1
+2026-05	წვრილი ტექნიკა,მტვერსასრუტი	KARCHER GEORGIA	installment	1970.00	1100.00	3
+2026-05	წვრილი ტექნიკა,მტვერსასრუტი	MIDEA	installment	3560.00	2060.00	6
+2026-05	წვრილი ტექნიკა,მტვერსასრუტი	SAMSUNG	installment	1620.00	886.00	4
+2026-05	წვრილი ტექნიკა,მტვერსასრუტი	SENCOR	installment	1260.00	495.00	1
+2026-05	წვრილი ტექნიკა,პურის საცხობი	FRANKO	installment	1170.00	668.00	2
+2026-05	წვრილი ტექნიკა,რობოტი მტვერსასრუტი	BEKO	installment	760.00	439.00	1
+2026-05	წვრილი ტექნიკა,რობოტი მტვერსასრუტი	DREAME	installment	5670.00	3160.51	2
+2026-05	წვრილი ტექნიკა,რობოტი მტვერსასრუტი	MAMIBOT	installment	510.00	290.00	1
+2026-05	წვრილი ტექნიკა,რობოტი მტვერსასრუტი	MIDEA	installment	2040.00	1040.00	2
+2026-05	წვრილი ტექნიკა,რობოტი მტვერსასრუტი	SENCOR	installment	1330.00	770.00	1
+2026-05	წვრილი ტექნიკა,სამზარეულოს წვრილი ტექნიკა,აეროგრილი	Grundig	installment	620.00	359.00	1
+2026-05	წვრილი ტექნიკა,სამზარეულოს წვრილი ტექნიკა,აეროგრილი	MIDEA	installment	580.00	334.00	2
+2026-05	წვრილი ტექნიკა,სამზარეულოს წვრილი ტექნიკა,აეროგრილი	Ninja	installment	3240.00	1880.00	3
+2026-05	წვრილი ტექნიკა,სამზარეულოს წვრილი ტექნიკა,აეროგრილი	NUTRIBULLET	installment	580.00	303.00	1
+2026-05	წვრილი ტექნიკა,სამზარეულოს წვრილი ტექნიკა,ბლენდერი	MIDEA	installment	270.00	144.00	2
+2026-05	წვრილი ტექნიკა,სამზარეულოს წვრილი ტექნიკა,ბლენდერი	Ninja	installment	1570.00	912.00	3
+2026-05	წვრილი ტექნიკა,სამზარეულოს წვრილი ტექნიკა,ბლენდერი,ხელის ბლენდერი	ARDESTO	installment	310.00	165.27	1
+2026-05	წვრილი ტექნიკა,სამზარეულოს წვრილი ტექნიკა,ბლენდერი,ხელის ბლენდერი	Bosch	installment	240.00	110.00	1
+2026-05	წვრილი ტექნიკა,სამზარეულოს წვრილი ტექნიკა,დანების კომპლექტი,სამზარეულო & სერვირება	ARDESTO	installment	70.00	31.05	1
+2026-05	წვრილი ტექნიკა,სამზარეულოს წვრილი ტექნიკა,ელექტრო ღუმელი	FRANKO	installment	540.00	287.00	1
+2026-05	წვრილი ტექნიკა,სამზარეულოს წვრილი ტექნიკა,ელექტრო ჩაიდანი	BRAUN	installment	370.00	135.00	2
+2026-05	წვრილი ტექნიკა,სამზარეულოს წვრილი ტექნიკა,ელექტრო ჩაიდანი	FRANKO	installment	120.00	60.00	1
+2026-05	წვრილი ტექნიკა,სამზარეულოს წვრილი ტექნიკა,ელექტრო ჩაიდანი	Ninja	installment	420.00	240.00	1
+2026-05	წვრილი ტექნიკა,სამზარეულოს წვრილი ტექნიკა,ელექტრო ჩაიდანი	SENCOR	installment	130.00	69.00	1
+2026-05	წვრილი ტექნიკა,სამზარეულოს წვრილი ტექნიკა,მიკროტალღური ღუმელი	BEKO	installment	350.00	205.00	1
+2026-05	წვრილი ტექნიკა,სამზარეულოს წვრილი ტექნიკა,მიკროტალღური ღუმელი	MIDEA	installment	430.00	250.00	1
+2026-05	წვრილი ტექნიკა,სამზარეულოს წვრილი ტექნიკა,მიკროტალღური ღუმელი	SAMSUNG	installment	460.00	263.00	1
+2026-05	წვრილი ტექნიკა,სამზარეულოს წვრილი ტექნიკა,მიქსერი	FRANKO	installment	510.00	268.00	1
+2026-05	წვრილი ტექნიკა,სამზარეულოს წვრილი ტექნიკა,მტვერსასრუტი	KARCHER GEORGIA	installment	870.00	476.00	1
+2026-05	წვრილი ტექნიკა,სამზარეულოს წვრილი ტექნიკა,ნაყინის აპარატი	Ninja	installment	1640.00	960.00	1
+2026-05	წვრილი ტექნიკა,სამზარეულოს წვრილი ტექნიკა,პოპკორნის აპარატი	FRANKO	installment	200.00	98.00	2
+2026-05	წვრილი ტექნიკა,სამზარეულოს წვრილი ტექნიკა,სამზარეულოს აქსესუარების ნაკრები,სამზარეულო & სერვირება	TEFAL	installment	170.00	60.00	1
+2026-05	წვრილი ტექნიკა,სამზარეულოს წვრილი ტექნიკა,ტოსტერი,გრილ ტოსტერი	FRANKO	installment	310.00	149.00	1
+2026-05	წვრილი ტექნიკა,სამზარეულოს წვრილი ტექნიკა,ყავის აპარატი	SENCOR	installment	700.00	402.00	1
+2026-05	წვრილი ტექნიკა,სამზარეულოს წვრილი ტექნიკა,ყინულის აპარატი	Camry	installment	610.00	350.00	1
+2026-05	წვრილი ტექნიკა,სამზარეულოს წვრილი ტექნიკა,ჩოფერი	FRANKO	installment	140.00	72.00	1
+2026-05	წვრილი ტექნიკა,სამზარეულოს წვრილი ტექნიკა,ხორცსაკეპი	Panasonic	installment	680.00	396.00	1
+2026-05	წვრილი ტექნიკა,უთო,ორთქლის გენერატორი	FRANKO	installment	180.00	86.00	1
+2026-05	წვრილი ტექნიკა,უთო,ორთქლის უთო	PHILIPS	installment	140.00	65.00	1
+2026-05	წვრილი ტექნიკა,ქვაბი,სამზარეულო & სერვირება	BERLLONG	installment	130.00	43.00	1
+2026-05	წვრილი ტექნიკა,ქვაბი,სამზარეულო & სერვირება	TEFAL	installment	220.00	82.00	1
+2026-05	წვრილი ტექნიკა,ყავის აპარატი	BEKO	installment	330.00	184.00	1
+2026-05	წვრილი ტექნიკა,ყავის აპარატი	MIDEA	installment	1580.00	920.00	1
+2026-05	წვრილი ტექნიკა,ყავის აპარატი,ყავის საფქვავი	DELONGHI	installment	230.00	132.00	1
+2026-05	წვრილი ტექნიკა,წვენსაწური	FRANKO	installment	310.00	156.00	1
+2026-05	წვრილი ტექნიკა,წვენსაწური	Ninja	installment	900.00	520.00	1
+2026-05	წყლის დისპენსერი	FRANKO	installment	280.00	210.00	1
+2026-05	ჭაღი	Bella Mita	installment	150.00	83.16	1
+2026-05	ჭკვიანი სახლი,ჭკვიანი კამერები	none	installment	300.00	169.10	2
+2026-05	ჭკვიანი სახლი,ჭკვიანი საკეტები	none	installment	1880.00	1050.52	2
+2026-05	ჭურჭლის სარეცხი მანქანა	MARAZZI	installment	1140.00	650.00	1
+2026-05	ჭურჭლის სარეცხი მანქანა	MIDEA	installment	1250.00	700.00	1
+2026-05	ხელის ბლენდერი	BRAUN	installment	890.00	504.00	2
+2026-05	ხელსაწყოები,ბაღის ხელსაწყოები,ბაღის მოტო და ელექტრო ინსტრუმენტები	Raider	installment	460.00	261.30	1
+2026-05	ხელსაწყოები,ბაღის ხელსაწყოები,ბაღის მტვერსასრუტი	none	installment	380.00	200.60	1
+2026-05	ხელსაწყოები,ბეწვა ხერხები	none	installment	240.00	135.24	1
+2026-05	ხელსაწყოები,დაზგები და მანქანები	none	installment	1060.00	601.20	1
+2026-05	ხელსაწყოები,ინსტრუმენტების ნაკრები	none	installment	370.00	210.70	1
+2026-05	ხელსაწყოები,კომპრესორი	none	installment	770.00	449.88	1
+2026-05	ხელსაწყოები,მულტიინსტრუმენტები	none	installment	190.00	103.32	1
+2026-05	ხელსაწყოები,სამშენებლო მტვერსასრუტები	none	installment	2340.00	1183.70	2
+2026-05	ხელსაწყოები,სახეხი მანქანები	none	installment	560.00	324.00	1
+2026-05	ხელსაწყოები,ფრეზერები	none	installment	410.00	235.85	1
+2026-05	ხელსაწყოები,ქანჩსახრახნი	none	installment	910.00	551.80	1
+2026-05	ხელსაწყოები,შალაშინი	none	installment	340.00	192.51	1
+2026-05	ხელსაწყოები,შედუღების მოწყობილობა & აპარატი	none	installment	700.00	401.20	1
+2026-05	ხორცსაკეპი	Adler	installment	320.00	175.00	1
+2026-05	ხორცსაკეპი	ARDESTO	installment	620.00	270.00	2
+2026-05	ხორცსაკეპი	FRANKO	installment	1180.00	618.00	2
+2026-05	ხორცსაკეპი მანქანა	FRANKO	installment	480.00	248.00	1
+2026-06		none	installment	12590.00	7131.78	8
+2026-06	none	N/A	installment	510.00	290.00	1
+2026-06	none	none	installment	1190.00	616.00	1
+2026-06	აბაზანის ავეჯის კომპლექტი Layla	Arteco	installment	550.00	315.21	1
+2026-06	აეროგრილი	Hisense	installment	270.00	150.00	1
+2026-06	აეროგრილი	MIDEA	installment	1680.00	942.00	4
+2026-06	აეროგრილი	N/A	installment	270.00	151.00	1
+2026-06	აეროგრილი	Ninja	installment	560.00	320.00	1
+2026-06	ავეჯი	N/A	installment	9810.00	5664.99	28
+2026-06	ავეჯი	SAGA	installment	2480.00	1439.00	2
+2026-06	ავეჯი	ბრენდის გარეშე	installment	9430.00	5374.81	15
+2026-06	ავეჯი,გარე ავეჯი,ბაღის საქანელები	Comfort Room	installment	1260.00	670.00	1
+2026-06	ავეჯი,გარე ავეჯი,ბაღის საქანელები	none	installment	4230.00	1825.00	10
+2026-06	ავეჯი,გარე ავეჯი,გარე ავეჯის კომპლექტი	Comfort Room	installment	1340.00	705.00	4
+2026-06	ავეჯი,გარე ავეჯი,გარე ავეჯის კომპლექტი	none	installment	9828.00	5584.86	13
+2026-06	ავეჯი,გარე ავეჯი,გარე სკამი	N/A	installment	200.00	104.00	2
+2026-06	ავეჯი,გარე ავეჯი,პავილიონი & ტენტი	Comfort Room	installment	2660.00	1300.00	2
+2026-06	ავეჯი,გარე ავეჯი,საყვავილე	ბრენდის გარეშე	single	680.00	323.40	1
+2026-06	ავეჯი,გარე ავეჯი,შეზლონგი	none	installment	340.00	178.00	2
+2026-06	ავეჯი,დივანი	N/A	installment	2110.00	1230.00	1
+2026-06	ავეჯი,დივანი	none	installment	1280.00	750.00	1
+2026-06	ავეჯი,დივანი,რბილი ავეჯი	N/A	installment	510.00	365.00	1
+2026-06	ავეჯი,დივანი,რბილი ავეჯი	none	installment	8290.00	4875.00	4
+2026-06	ავეჯი,მატრასი,საძინებელი	none	installment	1120.00	650.00	2
+2026-06	ავეჯი,მისაღები,თარო	Comfort Room	installment	380.00	208.00	1
+2026-06	ავეჯი,პუფი,რბილი ავეჯი	none	installment	240.00	113.40	3
+2026-06	ავეჯი,სავარძელი,რბილი ავეჯი	none	installment	1920.00	1145.00	1
+2026-06	ავეჯი,საძინებელი,საძინებლის კარადა	SAGA	installment	1380.00	800.00	1
+2026-06	ავეჯი,საწოლი,საძინებელი	none	installment	1150.00	680.00	1
+2026-06	ავეჯი,სკამი	none	installment	1960.00	1058.02	14
+2026-06	ავეჯი,ყავის მაგიდა,რბილი ავეჯი,მისაღები,მაგიდა პუფებით	none	installment	560.00	300.00	1
+2026-06	ავტო აქსესუარები,აკუმულატორი	MUTLU	installment	1900.00	1040.00	2
+2026-06	ავტო აქსესუარები,საბურავი	NANKANG	installment	1660.00	910.00	2
+2026-06	ავტო აქსესუარები,საცხებ-საპოხი მასალები,ძრავის ზეთი	N/A	installment	440.00	242.80	2
+2026-06	აუზი	Bestway	installment	3610.00	1780.00	4
+2026-06	აუზი	INTEX	installment	870.00	420.00	1
+2026-06	აქსესუარები,საათები,მამაკაცის საათები	CLAUDE BERNARD	installment	870.00	509.00	1
+2026-06	აქსესუარები,საათები,უნისექსი	Casio	installment	650.00	364.00	2
+2026-06	აქსესუარები,საათები,ქალის საათები	Casio	installment	230.00	127.00	1
+2026-06	აქსესუარები,ყელსაბამი	PDPAOLA	installment	370.00	212.00	1
+2026-06	ბარის მაცივარი	FRANKO	installment	460.00	264.00	1
+2026-06	ბატუტი	N/A	installment	480.00	279.00	1
+2026-06	ბატუტი	ბრენდის გარეშე	installment	1150.00	519.00	1
+2026-06	ბაღის ავეჯის კომპლექტი	N/A	installment	3350.00	1979.72	7
+2026-06	ბაღის ავეჯის კომპლექტი	ბრენდის გარეშე	installment	1470.00	809.05	2
+2026-06	ბლენდერი	Adler	installment	120.00	60.00	1
+2026-06	ბლენდერი	BRAUN	installment	240.00	138.00	1
+2026-06	ბლენდერი	MESKO	installment	185.00	90.00	1
+2026-06	ბლენდერი	MIDEA	installment	130.00	70.00	1
+2026-06	ბლენდერი	Ninja	installment	480.00	280.00	1
+2026-06	ბლინის ტაფა	N/A	installment	40.00	19.75	1
+2026-06	ბუდე საქანელა	N/A	installment	840.00	400.00	2
+2026-06	გაზის წყლის გამაცხელებელი	MARAZZI	installment	5460.00	3160.00	8
+2026-06	გაზის წყლის გამაცხელებელი	MIDEA	installment	2060.00	1200.00	2
+2026-06	გაზქურა	BEKO	installment	5010.00	2930.00	3
+2026-06	გაზქურა	DIXI	installment	1460.00	1010.00	2
+2026-06	გაზქურა	Simfer	installment	3360.00	1745.00	3
+2026-06	გამწოვი	Millen	installment	260.00	149.00	1
+2026-06	გამწოვი	SAMSUNG	installment	540.00	300.00	1
+2026-06	გამწოვი	Simfer	installment	320.00	180.00	1
+2026-06	გარე ავეჯი,ბაღის საქანელები	BRAUN	installment	770.00	450.00	1
+2026-06	გარე ავეჯი,ბაღის საქანელები	none	installment	2630.00	1290.00	4
+2026-06	გარე ავეჯი,გარე ავეჯის კომპლექტი	none	installment	420.00	238.95	1
+2026-06	გეიმინგი,სათამაშო კონსოლი	PlayStation	installment	3260.00	1881.00	3
+2026-06	გეიმინგი,ფლეისთეიშენი	SONY	installment	33820.00	17483.00	10
+2026-06	გრილ ტოსტერი	FRANKO	single	985.00	2.00	2
+2026-06	დამტენი	N/A	installment	330.00	189.00	1
+2026-06	დენის წყლის გამაცხელებელი	MIDEA	installment	1290.00	745.00	2
+2026-06	დენის წყლის გამაცხელებელი	VOX	installment	770.00	449.00	1
+2026-06	დივანი	ბრენდის გარეშე	installment	2350.00	1380.00	1
+2026-06	დინამიკი	2E	installment	150.00	84.05	1
+2026-06	დინამიკი	FRANKO	installment	840.00	466.00	1
+2026-06	ელექტრო სავარცხელი	PHILIPS	installment	370.00	210.00	1
+2026-06	ელექტრო სავარცხელი	REMINGTON	installment	460.00	177.00	1
+2026-06	ელექტრო სკუტერი	FRANKO	installment	3150.00	1673.00	2
+2026-06	ელექტრო სკუტერი	SENCOR	installment	8100.00	5013.00	3
+2026-06	ელექტრო ღუმელი	SCHAUB	installment	220.00	119.00	1
+2026-06	ეპილატორი	FRANKO	installment	180.00	93.00	1
+2026-06	ველოსიპედი	TRINX	installment	8860.00	5165.00	7
+2026-06	ვენტილატორი	N/A	installment	120.00	61.41	1
+2026-06	ვიდეო დომოფონი	ORNO	installment	1250.00	681.72	1
+2026-06	თმის და წვერის საჭრელი	PHILIPS	installment	240.00	127.00	1
+2026-06	თმის საკრეჭი	PHILIPS	installment	320.00	158.00	1
+2026-06	თმის საშრობი	PHILIPS	installment	460.00	262.00	1
+2026-06	თმის სტაილერი	DREAME	installment	3780.00	2028.31	3
+2026-06	თმის სტაილერი	REMINGTON	installment	280.00	157.00	1
+2026-06	თმის უთო	DREAME	installment	1390.00	701.50	1
+2026-06	იატაკი & საფარები,ლამინირებული იატაკი	N/A	installment	1800.00	850.50	45
+2026-06	კამერა	N/A	installment	1600.00	981.90	6
+2026-06	კარ-ფანჯარა & ფურნიტურა,შიდა კარები	none	installment	2200.00	1402.67	9
+2026-06	კარკასული აუზი	Bestway	installment	1710.00	920.00	2
+2026-06	კომპიუტერები & აქსესუარები,მონიტორები	SAMSUNG	installment	870.00	499.00	1
+2026-06	კომპიუტერები & აქსესუარები,პლანშეტი	Blackview	installment	1290.00	717.00	3
+2026-06	კომპიუტერები & აქსესუარები,პრინტერები	Canon	installment	910.00	524.00	1
+2026-06	კომპიუტერები & აქსესუარები,პრინტერები	N/A	installment	290.00	167.00	1
+2026-06	კონდენციონერი	MIDEA	installment	4010.00	2310.00	2
+2026-06	კონდენციონერი	MIDEA	single	4950.00	4455.00	2
+2026-06	კონდენციონერი	Millen	installment	1980.00	1169.00	2
+2026-06	კონდენციონერი	N/A	installment	1430.00	779.00	1
+2026-06	კონდიციონერი	ARDESTO	installment	9410.00	5449.87	6
+2026-06	კონდიციონერი	BEKO	installment	3960.00	2317.00	3
+2026-06	კონდიციონერი	Hisense	installment	22290.00	13010.00	17
+2026-06	კონდიციონერი	HYUNDAI	installment	2030.00	926.00	1
+2026-06	კონდიციონერი	MIDEA	installment	36255.00	22412.00	19
+2026-06	კონდიციონერი	Millen	installment	870.00	509.00	1
+2026-06	კონდიციონერი	SAMSUNG	installment	2130.00	1084.66	1
+2026-06	კონდიციონერი	TCL	installment	4510.00	2448.00	3
+2026-06	მატრასები	N/A	installment	1150.00	671.00	1
+2026-06	მაღალი წნევით რეცხვის აპარატი 	KARCHER	installment	2030.00	1116.00	1
+2026-06	მაღალი წნევით რეცხვის აპარატი 	KARCHER	single	1400.00	1.00	1
+2026-06	მაცივარი	FRANKO	installment	3860.00	2264.00	2
+2026-06	მაცივარი	Hisense	installment	13750.00	8004.00	10
+2026-06	მაცივარი	MARAZZI	installment	1280.00	765.00	2
+2026-06	მაცივარი	MIDEA	installment	18600.00	10860.00	10
+2026-06	მაცივარი	MIDEA	single	500.00	1.00	1
+2026-06	მაცივარი	SAMSUNG	installment	5790.00	3395.00	1
+2026-06	მაცივარი	VOX	installment	9460.00	5546.00	6
+2026-06	მიკროტალღური ღუმელი	Hisense	installment	480.00	255.00	1
+2026-06	მიკროტალღური ღუმელი	MIDEA	installment	160.00	125.00	1
+2026-06	მიკროტალღური ღუმელი	MIDEA	single	160.00	1.00	1
+2026-06	მიკროტალღური ღუმელი	SAMSUNG	installment	1060.00	608.00	1
+2026-06	მობილურები & აქსესუარები,სმარტფონები	Apple	installment	7240.00	4176.00	5
+2026-06	მობილურები & აქსესუარები,სმარტფონები	HONOR	installment	136420.00	77356.00	113
+2026-06	მობილურები & აქსესუარები,სმარტფონები	none	installment	6200.00	3080.00	5
+2026-06	მობილურები & აქსესუარები,სმარტფონები	OPPO	installment	17010.00	9876.00	9
+2026-06	მობილურები & აქსესუარები,სმარტფონები	Oukitel	installment	2920.00	1696.00	4
+2026-06	მობილურები & აქსესუარები,სმარტფონები	SAMSUNG	installment	72620.00	41862.00	73
+2026-06	მობილურები & აქსესუარები,სმარტფონები,ავეჯი,გარე ავეჯი,გარე ავეჯის კომპლექტი	HONOR	installment	1300.00	746.00	2
+2026-06	მობილურები & აქსესუარები,ყურსასმენები,Buds	none	installment	2390.00	1067.00	4
+2026-06	მონიტორი	SAMSUNG	installment	870.00	499.00	1
+2026-06	მსხვილი ტექნიკა,გაზქურა	BEKO	installment	4990.00	2917.00	3
+2026-06	მსხვილი ტექნიკა,გაზქურა	Millen	installment	1740.00	1019.00	1
+2026-06	მსხვილი ტექნიკა,გაზქურა	Simfer	installment	1040.00	690.00	1
+2026-06	მსხვილი ტექნიკა,გამწოვი	MIDEA	installment	600.00	345.00	1
+2026-06	მსხვილი ტექნიკა,კლიმატური ტექნიკა,დენის წყლის გამაცხელებელი	MIDEA	installment	490.00	285.00	1
+2026-06	მსხვილი ტექნიკა,კლიმატური ტექნიკა,ვენტილატორი	MIDEA	installment	750.00	510.00	3
+2026-06	მსხვილი ტექნიკა,კლიმატური ტექნიკა,კონდიციონერი	ARDESTO	installment	7140.00	4411.31	8
+2026-06	მსხვილი ტექნიკა,კლიმატური ტექნიკა,კონდიციონერი	BEKO	installment	1300.00	759.00	1
+2026-06	მსხვილი ტექნიკა,კლიმატური ტექნიკა,კონდიციონერი	GORENJE	installment	1400.00	580.00	1
+2026-06	მსხვილი ტექნიკა,კლიმატური ტექნიკა,კონდიციონერი	Hisense	installment	15065.00	8885.00	10
+2026-06	მსხვილი ტექნიკა,კლიმატური ტექნიკა,კონდიციონერი	MARAZZI	installment	2900.00	1550.00	2
+2026-06	მსხვილი ტექნიკა,კლიმატური ტექნიკა,კონდიციონერი	MIDEA	installment	24900.00	14480.00	12
+2026-06	მსხვილი ტექნიკა,კლიმატური ტექნიკა,კონდიციონერი	Millen	installment	870.00	509.00	1
+2026-06	მსხვილი ტექნიკა,კლიმატური ტექნიკა,კონდიციონერი	TCL	installment	10640.00	5904.00	7
+2026-06	მსხვილი ტექნიკა,კლიმატური ტექნიკა,კონდიციონერი	ბრენდის გარეშე	installment	1160.00	680.00	1
+2026-06	მსხვილი ტექნიკა,კლიმატური ტექნიკა,ცენტრალური გათბობის ქვაბი	MIDEA	installment	6090.00	3570.00	3
+2026-06	მსხვილი ტექნიკა,კლიმატური ტექნიკა,წყლის გამაცხელებელი	MARAZZI	installment	4790.00	2769.00	7
+2026-06	მსხვილი ტექნიკა,მაცივარი	ARDESTO	installment	1660.00	954.56	2
+2026-06	მსხვილი ტექნიკა,მაცივარი	FRANKO	installment	1220.00	715.00	1
+2026-06	მსხვილი ტექნიკა,მაცივარი	Hisense	installment	5780.00	3350.00	5
+2026-06	მსხვილი ტექნიკა,მაცივარი	MIDEA	installment	2950.00	1730.00	2
+2026-06	მსხვილი ტექნიკა,მაცივარი	TCL	installment	2640.00	1531.00	1
+2026-06	მსხვილი ტექნიკა,მაცივარი	VOX	installment	750.00	435.00	1
+2026-06	მსხვილი ტექნიკა,სარეცხი მანქანა	ARDESTO	installment	3112.00	1652.33	3
+2026-06	მსხვილი ტექნიკა,სარეცხი მანქანა	Hisense	installment	5580.00	3185.00	4
+2026-06	მსხვილი ტექნიკა,სარეცხი მანქანა	LG	installment	2020.00	1095.00	1
+2026-06	მსხვილი ტექნიკა,სარეცხი მანქანა	MARAZZI	installment	4230.00	2455.00	3
+2026-06	მსხვილი ტექნიკა,სარეცხი მანქანა	MIDEA	installment	7160.00	4175.00	7
+2026-06	მსხვილი ტექნიკა,სარეცხი მანქანა	none	installment	890.00	505.00	1
+2026-06	მსხვილი ტექნიკა,სარეცხი მანქანა	TCL	installment	2220.00	1299.00	2
+2026-06	მსხვილი ტექნიკა,სარეცხი მანქანა საშრობით	MARAZZI	installment	1830.00	1050.00	1
+2026-06	მსხვილი ტექნიკა,სარეცხი მანქანა საშრობით,სარეცხი მანქანა	MIDEA	installment	3760.00	2200.00	2
+2026-06	მსხვილი ტექნიკა,სარეცხი მანქანა საშრობით,სარეცხი მანქანა	SAMSUNG	installment	5300.00	2800.00	2
+2026-06	მსხვილი ტექნიკა,საყინულე	ARDESTO	installment	1780.00	1028.62	2
+2026-06	მსხვილი ტექნიკა,საყინულე	Hisense	installment	850.00	495.00	1
+2026-06	მსხვილი ტექნიკა,საყინულე	MIDEA	installment	2280.00	1320.00	2
+2026-06	მსხვილი ტექნიკა,ჩასაშენებელი ტექნიკა,ჩასაშენებელი გამწოვი	MIDEA	installment	460.00	260.00	1
+2026-06	მსხვილი ტექნიკა,ჩასაშენებელი ტექნიკა,ჩასაშენებელი ელექტრო ღუმელი	MIDEA	installment	1160.00	680.00	1
+2026-06	მსხვილი ტექნიკა,ჩასაშენებელი ტექნიკა,ჩასაშენებელი ზედაპირი	MIDEA	installment	860.00	550.00	1
+2026-06	მსხვილი ტექნიკა,წყლის დისპენსერი	BEKO	installment	650.00	374.00	1
+2026-06	მსხვილი ტექნიკა,ჭურჭლის სარეცხი მანქანა	BEKO	installment	1510.00	799.00	1
+2026-06	მსხვილი ტექნიკა,ჭურჭლის სარეცხი მანქანა	MARAZZI	installment	2280.00	1300.00	2
+2026-06	მსხვილი ტექნიკა,ჭურჭლის სარეცხი მანქანა	MIDEA	installment	2580.00	1585.00	2
+2026-06	მტვერსასრუტი	ARSHIA	installment	290.00	128.00	1
+2026-06	მტვერსასრუტი	BEKO	installment	940.00	525.00	2
+2026-06	მტვერსასრუტი	DREAME	installment	3040.00	1817.59	3
+2026-06	მტვერსასრუტი	Hisense	installment	500.00	278.00	2
+2026-06	მტვერსასრუტი	KARCHER	installment	3690.00	2145.70	5
+2026-06	მტვერსასრუტი	KARCHER GEORGIA	installment	730.00	424.15	1
+2026-06	მტვერსასრუტი	MIDEA	installment	3580.00	2080.00	4
+2026-06	მტვერსასრუტი	MIDEA	single	759.00	1.00	1
+2026-06	მტვერსასრუტი	SAMSUNG	installment	1850.00	1025.00	4
+2026-06	მტვერსასრუტი	SENCOR	installment	1260.00	490.00	1
+2026-06	ორთქლის უთო	FRANKO	installment	370.00	189.00	1
+2026-06	პლანშეტი	Blackview	installment	430.00	240.00	1
+2026-06	პლასმასის სავარძელი	N/A	installment	190.00	80.00	1
+2026-06	რობოტი მტვერსასრუტი	BEKO	installment	760.00	480.00	1
+2026-06	რობოტი მტვერსასრუტი	MAMIBOT	installment	1200.00	690.00	1
+2026-06	რობოტი მტვერსასრუტი	MIDEA	installment	1640.00	960.00	1
+2026-06	საათი	Casio	installment	320.00	183.00	1
+2026-06	საბურავი	NEXEN	installment	520.00	304.00	2
+2026-06	სათამაშოები,ელექტრო მანქანები	N/A	installment	2210.00	1240.00	2
+2026-06	სათამაშოები,ელექტრო მანქანები	none	installment	2730.00	1575.00	5
+2026-06	საკერავი მანქანა	Janome	installment	1290.00	750.00	1
+2026-06	სამზარეულო კომბაინი	SENCOR	installment	720.00	310.00	1
+2026-06	სარეცხი მანქანა	ARDESTO	installment	2160.00	1189.28	2
+2026-06	სარეცხი მანქანა	BEKO	installment	1360.00	799.00	1
+2026-06	სარეცხი მანქანა	GORENJE	installment	2960.00	1552.00	2
+2026-06	სარეცხი მანქანა	Hisense	installment	9570.00	5560.00	10
+2026-06	სარეცხი მანქანა	Hisense	single	530.00	495.00	1
+2026-06	სარეცხი მანქანა	MARAZZI	installment	2140.00	1240.00	2
+2026-06	სარეცხი მანქანა	MIDEA	installment	11696.00	6880.00	10
+2026-06	სარეცხი მანქანა	SAMSUNG	installment	5760.00	3137.00	3
+2026-06	სარეცხი მანქანა	Toshiba	installment	1840.00	844.00	1
+2026-06	სარეცხი მანქანა საშრობით	LG	installment	4540.00	2650.00	1
+2026-06	სარეცხი მანქანა საშრობით	SAMSUNG	installment	5400.00	2795.00	2
+2026-06	სარეცხი მანქანა+შრობა	MARAZZI	installment	1890.00	1100.00	1
+2026-06	საქანელა	N/A	installment	4080.00	2250.00	5
+2026-06	საქანელა	ბრენდის გარეშე	installment	770.00	450.00	1
+2026-06	საღებავსაფრქვეველი	Wagner	single	538.00	199.00	1
+2026-06	საყინულე	ARDESTO	installment	2000.00	1160.68	2
+2026-06	საყინულე	FRANKO	installment	2190.00	1257.00	3
+2026-06	საყინულე	MIDEA	installment	4160.00	2420.00	3
+2026-06	საყოფაცხოვრებო ტექნიკა,გაზქურა	BEKO	installment	1490.00	972.00	1
+2026-06	საყოფაცხოვრებო ტექნიკა,გაზქურა	Millen	installment	1110.00	484.00	1
+2026-06	საყოფაცხოვრებო ტექნიკა,გაზქურა	Simfer	installment	2110.00	1301.00	2
+2026-06	საყოფაცხოვრებო ტექნიკა,გათბობა & გაგრილება,გაზის გამათბობელი	AKOG	installment	1330.00	740.00	1
+2026-06	საყოფაცხოვრებო ტექნიკა,გათბობა & გაგრილება,დენის წყლის გამაცხელებელი	MIDEA	installment	800.00	460.00	1
+2026-06	საყოფაცხოვრებო ტექნიკა,გათბობა & გაგრილება,ვენტილატორი	SENCOR	installment	700.00	399.00	1
+2026-06	საყოფაცხოვრებო ტექნიკა,გათბობა & გაგრილება,კონდიციონერი	BEKO	installment	1100.00	719.00	1
+2026-06	საყოფაცხოვრებო ტექნიკა,გათბობა & გაგრილება,კონდიციონერი	CHIGO	installment	1440.00	840.00	1
+2026-06	საყოფაცხოვრებო ტექნიკა,გათბობა & გაგრილება,კონდიციონერი	DIXI	installment	1260.00	685.00	1
+2026-06	საყოფაცხოვრებო ტექნიკა,გათბობა & გაგრილება,კონდიციონერი	Hisense	installment	8280.00	4834.00	6
+2026-06	საყოფაცხოვრებო ტექნიკა,გათბობა & გაგრილება,კონდიციონერი	MIDEA	installment	30885.00	18412.00	14
+2026-06	საყოფაცხოვრებო ტექნიკა,გათბობა & გაგრილება,კონდიციონერი	TCL	installment	6820.00	4018.00	5
+2026-06	საყოფაცხოვრებო ტექნიკა,გათბობა & გაგრილება,წყლის გამაცხელებელი	MARAZZI	installment	2680.00	1540.00	4
+2026-06	საყოფაცხოვრებო ტექნიკა,გათბობა & გაგრილება,წყლის გამაცხელებელი	MIDEA	installment	1100.00	640.00	1
+2026-06	საყოფაცხოვრებო ტექნიკა,მაცივარი	SAMSUNG	installment	2450.00	1428.00	1
+2026-06	საყოფაცხოვრებო ტექნიკა,მაცივარი,მაცივრები	ARDESTO	installment	1820.00	1059.27	1
+2026-06	საყოფაცხოვრებო ტექნიკა,მაცივარი,მაცივრები	MARAZZI	installment	5380.00	3024.00	4
+2026-06	საყოფაცხოვრებო ტექნიკა,მაცივარი,მაცივრები	MIDEA	installment	8830.00	5170.00	4
+2026-06	საყოფაცხოვრებო ტექნიკა,მაცივარი,მაცივრები	SAMSUNG	installment	2450.00	1435.00	1
+2026-06	საყოფაცხოვრებო ტექნიკა,მაცივარი,მაცივრები	VOX	installment	1500.00	870.00	2
+2026-06	საყოფაცხოვრებო ტექნიკა,მაცივარი,საყინულე,მაცივრები	ARDESTO	installment	880.00	494.53	1
+2026-06	საყოფაცხოვრებო ტექნიკა,მაცივარი,საყინულე,მაცივრები	CHIGO	installment	580.00	340.00	1
+2026-06	საყოფაცხოვრებო ტექნიკა,სარეცხი მანქანა	Hisense	installment	1390.00	800.00	1
+2026-06	საყოფაცხოვრებო ტექნიკა,სარეცხი მანქანა საშრობით,სარეცხი მანქანა	SAMSUNG	installment	2650.00	1400.00	1
+2026-06	საყოფაცხოვრებო ტექნიკა,სარეცხი მანქანა საშრობით,სარეცხი მანქანები	MARAZZI	installment	1890.00	1100.00	1
+2026-06	საყოფაცხოვრებო ტექნიკა,სარეცხი მანქანები,სარეცხი მანქანა	ARDESTO	installment	3710.00	2120.24	4
+2026-06	საყოფაცხოვრებო ტექნიკა,სარეცხი მანქანები,სარეცხი მანქანა	Hisense	installment	3580.00	2095.00	3
+2026-06	საყოფაცხოვრებო ტექნიკა,სარეცხი მანქანები,სარეცხი მანქანა	MARAZZI	installment	2460.00	1430.00	2
+2026-06	საყოფაცხოვრებო ტექნიკა,სარეცხი მანქანები,სარეცხი მანქანა	MIDEA	installment	13190.00	7610.00	13
+2026-06	საყოფაცხოვრებო ტექნიკა,ჩასაშენებელი ტექნიკა,გაზქურის ზედაპირი	FRANKO	installment	460.00	264.00	1
+2026-06	საყოფაცხოვრებო ტექნიკა,ჩასაშენებელი ტექნიკა,გაზქურის ზედაპირი,ჩასაშენებელი ზედაპირი	BEKO	installment	710.00	444.00	1
+2026-06	საყოფაცხოვრებო ტექნიკა,ჩასაშენებელი ტექნიკა,ჩასაშენებელი ელექტრო ღუმელი	MIDEA	installment	1160.00	680.00	1
+2026-06	საყოფაცხოვრებო ტექნიკა,ჩასაშენებელი ტექნიკა,ჩასაშენებელი მიკროტალღური	BEKO	installment	1150.00	645.00	1
+2026-06	საყოფაცხოვრებო ტექნიკა,ჩასაშენებელი ტექნიკა,ჩასაშენებელი ჭურჭლის სარეცხი მანქანა	MIDEA	installment	1490.00	870.00	1
+2026-06	საყოფაცხოვრებო ტექნიკა,წვრილი ტექნიკა,აეროგრილი	DREAME	installment	890.00	471.20	1
+2026-06	საყოფაცხოვრებო ტექნიკა,წყლის დისპენსერი	BEKO	installment	650.00	374.00	1
+2026-06	საყოფაცხოვრებო ტექნიკა,წყლის დისპენსერი	CHIGO	installment	510.00	290.00	1
+2026-06	საყოფაცხოვრებო ტექნიკა,წყლის დისპენსერი	DIXI	installment	1020.00	500.00	2
+2026-06	საყოფაცხოვრებო ტექნიკა,წყლის დისპენსერი	Millen	installment	620.00	359.00	1
+2026-06	საყოფაცხოვრებო ტექნიკა,ჭურჭლის სარეცხი მანქანა	BEKO	installment	1430.00	751.00	1
+2026-06	საყოფაცხოვრებო ტექნიკა,ჭურჭლის სარეცხი მანქანა	MARAZZI	installment	2910.00	1650.00	2
+2026-06	საყოფაცხოვრებო ტექნიკა,ჭურჭლის სარეცხი მანქანა	MIDEA	installment	3490.00	2030.00	3
+2026-06	საყოფაცხოვრებო ტექნიკა,ჭურჭლის სარეცხი მანქანა	SHARP	installment	1380.00	800.00	1
+2026-06	საყურე	N/A	installment	360.00	203.00	1
+2026-06	სახლი & ეზო,აბაზანა,აბაზანის ავეჯი,აბაზანის კარადები	none	installment	430.00	244.11	1
+2026-06	სახლი & ეზო,აბაზანა,უნიტაზი & ბიდეები	none	installment	610.00	322.95	2
+2026-06	სახლი & ეზო,აბაზანა,ხელსაბანები & ნიჟარები	none	installment	100.00	45.08	1
+2026-06	სახლი & ეზო,აუზი,აუზი & აქსესუარები	Bestway	installment	27787.00	14540.00	29
+2026-06	სახლი & ეზო,აუზი,აუზი & აქსესუარები	INTEX	installment	1750.00	930.00	3
+2026-06	სახლი & ეზო,აუზი,აუზი & აქსესუარები	none	installment	1020.00	490.00	4
+2026-06	სახლი & ეზო,აუზი,აუზის მოვლა,აუზი & აქსესუარები	Bestway	installment	180.00	100.00	1
+2026-06	სახლი & ეზო,აუზის ტენტი,აუზი & აქსესუარები	Bestway	installment	150.00	40.00	1
+2026-06	სახლი & ეზო,აუზის ტენტი,აუზის მოვლა,აუზი & აქსესუარები	Bestway	installment	190.00	105.00	2
+2026-06	სახლი & ეზო,ბატუტი	Bestway	installment	870.00	520.00	1
+2026-06	სახლი & ეზო,ბატუტი	none	installment	7570.00	4525.00	11
+2026-06	სახლი & ეზო,განათება,ტორშერი	none	installment	260.00	143.28	1
+2026-06	სახლი & ეზო,მაღალი წნევით რეცხვის აპარატი,სახლის მოვლა	KARCHER GEORGIA	installment	3330.00	1828.00	3
+2026-06	სახლი & ეზო,მაღალი წნევით რეცხვის აპარატი,სახლის მოვლა,აქსესუარები	KARCHER GEORGIA	installment	210.00	116.00	1
+2026-06	სახლი & ეზო,ორთქლით საწმენდი აპარატი,სახლის მოვლა	FRANKO	installment	1130.00	634.00	2
+2026-06	სახლი & ეზო,ორთქლით საწმენდი აპარატი,სახლის მოვლა	KARCHER GEORGIA	installment	580.00	316.00	1
+2026-06	სახლი & ეზო,საკერავი მანქანა	Janome	installment	2210.00	1290.00	2
+2026-06	სახლი & ეზო,სამზარეულოს აქსესუარების ნაკრები,დანა-ჩანგლის ნაკრები,სამზარეულო & სერვირება	none	installment	540.00	276.00	2
+2026-06	სახლი & ეზო,სამზარეულოს აქსესუარების ნაკრები,სამზარეულო & სერვირება	ARSHIA	installment	140.00	101.00	1
+2026-06	სახლი & ეზო,უთო	PHILIPS	installment	360.00	195.00	1
+2026-06	სახლი & ეზო,უთო,ორთქლის უთო	BRAUN	installment	360.00	168.00	1
+2026-06	სახლი & ეზო,ქიმწმენდის აპარატი,სახლის მოვლა	KARCHER GEORGIA	installment	660.00	360.00	1
+2026-06	სილამაზე,თავის მოვლა,ელექტრო სავარცხელი	BABYLISS	installment	510.00	240.00	1
+2026-06	სილამაზე,თავის მოვლა,ელექტრო სავარცხელი	FRANKO	installment	140.00	66.00	1
+2026-06	სილამაზე,თავის მოვლა,თმის და წვერის საჭრელი	PHILIPS	installment	320.00	159.00	1
+2026-06	სილამაზე,თავის მოვლა,თმის საშრობი	FRANKO	installment	340.00	186.00	2
+2026-06	სილამაზე,თავის მოვლა,თმის საშრობი	REMINGTON	installment	230.00	101.00	1
+2026-06	სილამაზე,თავის მოვლა,თმის სტაილერი	DREAME	installment	13860.00	7442.16	11
+2026-06	სილამაზე,თავის მოვლა,თმის სტაილერი	SHARK	installment	4320.00	2520.00	5
+2026-06	სილამაზე,თავის მოვლა,თმის უთო	DREAME	installment	1390.00	705.50	1
+2026-06	სილამაზე,თავის მოვლა,თმის უთო	PHILIPS	installment	470.00	270.00	1
+2026-06	სილამაზე,თავის მოვლა,თმის უთო	REMINGTON	installment	1300.00	735.00	4
+2026-06	სილამაზე,თავის მოვლა,ტრიმერი	FRANKO	installment	340.00	164.00	2
+2026-06	სილამაზე,თავის მოვლა,ტრიმერი	SENCOR	installment	170.00	94.00	1
+2026-06	სილამაზე,თმის მოვლა,ელექტრო სავარცხელი	BABYLISS	installment	510.00	240.00	1
+2026-06	სილამაზე,თმის მოვლა,თმის და წვერის საჭრელი	Panasonic	installment	250.00	154.00	1
+2026-06	სილამაზე,თმის მოვლა,თმის საშრობი	Camry	installment	100.00	37.00	1
+2026-06	სილამაზე,თმის მოვლა,თმის საშრობი	DREAME	installment	570.00	303.59	1
+2026-06	სილამაზე,თმის მოვლა,თმის საშრობი	FRANKO	installment	270.00	149.00	1
+2026-06	სილამაზე,თმის მოვლა,თმის საშრობი	none	installment	170.00	90.13	1
+2026-06	სილამაზე,თმის მოვლა,თმის სტაილერი	DREAME	installment	25200.00	13469.29	20
+2026-06	სილამაზე,თმის მოვლა,თმის სტაილერი	SHARK	installment	1640.00	960.00	2
+2026-06	სილამაზე,თმის მოვლა,სასწორი	ARSHIA	installment	190.00	108.00	1
+2026-06	სილამაზე,თმის მოვლა,ტრიმერი	Panasonic	installment	240.00	131.00	1
+2026-06	სკუტერი	FRANKO	installment	3410.00	1802.00	2
+2026-06	სმარტ გაჯეტები,დრონი	DJI	installment	3060.00	1349.00	1
+2026-06	სმარტ გაჯეტები,ვიდეოკამერა	none	installment	2900.00	1699.15	1
+2026-06	სპორტი & ფიტნესი,ლაშქრობა,კარვები & ტენტები	none	installment	320.00	150.00	2
+2026-06	სპორტი & ფიტნესი,სპორტი,ველოსპორტი,ველოსიპედი	TRINX	installment	3570.00	2085.00	4
+2026-06	სპორტი & ფიტნესი,სპორტი,ველოსპორტი,სკუტერი	FRANKO	installment	11730.00	5896.00	5
+2026-06	სპორტი & ფიტნესი,სპორტი,ველოსპორტი,სკუტერი	MIQILONG	installment	220.00	80.63	1
+2026-06	სპორტი & ფიტნესი,სპორტი,როლიკები	NEON	installment	430.00	165.41	1
+2026-06	სპორტი & ფიტნესი,სპორტი,სკუტერი	FRANKO	installment	2520.00	1372.00	2
+2026-06	სპორტი & ფიტნესი,სპორტი,ჰოვერბორდი	GOLDEN CHILD	installment	510.00	290.00	1
+2026-06	ტაფა	BERLLONG	installment	120.00	64.50	1
+2026-06	ტაფა,სახლი & ეზო,ტაფა-ქვაბი,სამზარეულო & სერვირება	none	installment	640.00	324.00	2
+2026-06	ტელევიზორები & აუდიო,აუდიო სისტემები	Eden	installment	420.00	237.00	1
+2026-06	ტელევიზორები & აუდიო,აუდიო სისტემები	TCL	installment	1630.00	949.00	1
+2026-06	ტელევიზორები & აუდიო,დინამიკი	FRANKO	installment	1450.00	763.00	2
+2026-06	ტელევიზორები & აუდიო,ტელევიზორები	FRANKO	installment	510.00	294.00	1
+2026-06	ტელევიზორები & აუდიო,ტელევიზორები	Hisense	installment	580.00	335.00	1
+2026-06	ტელევიზორები & აუდიო,ტელევიზორები	iFFALCON	installment	1310.00	818.00	2
+2026-06	ტელევიზორები & აუდიო,ტელევიზორები	MARAZZI	installment	960.00	560.00	1
+2026-06	ტელევიზორები & აუდიო,ტელევიზორები	TCL	installment	4280.00	2498.00	3
+2026-06	ტელევიზორები & აუდიო,ტელევიზორები,ტელევიზორი	2E	installment	480.00	271.99	1
+2026-06	ტელევიზორები & აუდიო,ტელევიზორები,ტელევიზორი	BEKO	installment	3290.00	1838.00	2
+2026-06	ტელევიზორები & აუდიო,ტელევიზორები,ტელევიზორი	FRANKO	installment	9600.00	5611.00	8
+2026-06	ტელევიზორები & აუდიო,ტელევიზორები,ტელევიზორი	Hisense	installment	17010.00	9830.00	14
+2026-06	ტელევიზორები & აუდიო,ტელევიზორები,ტელევიზორი	MARAZZI	installment	1500.00	880.00	1
+2026-06	ტელევიზორები & აუდიო,ტელევიზორები,ტელევიზორი	SAMSUNG	installment	11690.00	6774.00	5
+2026-06	ტელევიზორები & აუდიო,ტელევიზორები,ტელევიზორი	SKYWORTH	installment	750.00	435.00	1
+2026-06	ტელევიზორები & აუდიო,ტელევიზორები,ტელევიზორი	Sunny	installment	1900.00	1038.00	2
+2026-06	ტელევიზორები & აუდიო,ტელევიზორები,ტელევიზორის აქსესუარები	N/A	installment	100.00	57.00	1
+2026-06	ტელევიზორი 	2E	installment	2030.00	1184.64	3
+2026-06	ტელევიზორი 	BEKO	installment	660.00	383.00	1
+2026-06	ტელევიზორი 	FRANKO	installment	1720.00	1000.00	2
+2026-06	ტელევიზორი 	Hisense	installment	11410.00	7295.00	4
+2026-06	ტელევიზორი 	iFFALCON	installment	1340.00	799.00	1
+2026-06	ტელევიზორი 	N/A	installment	1500.00	880.00	1
+2026-06	ტელევიზორი 	SAMSUNG	installment	4690.00	2745.00	2
+2026-06	ტელევიზორი 	SHARP	installment	2030.00	1190.00	1
+2026-06	ტელევიზორი 	SKYWORTH	installment	2250.00	1305.00	3
+2026-06	ტელევიზორი 	Sunny	installment	570.00	319.00	1
+2026-06	ტელევიზორი 	TCL	installment	2490.00	1498.00	2
+2026-06	ტელეფონი	Apple	installment	13080.00	8921.00	4
+2026-06	ტელეფონი	HONOR	installment	52980.00	30102.00	45
+2026-06	ტელეფონი	iPhone	installment	2700.00	1580.00	2
+2026-06	ტელეფონი	OPPO	installment	15120.00	8790.00	8
+2026-06	ტელეფონი	Oukitel	installment	670.00	424.00	1
+2026-06	ტელეფონი	SAMSUNG	installment	52820.00	30609.00	43
+2026-06	ტოსტერი	FRANKO	installment	270.00	149.00	1
+2026-06	უთო	ARSHIA	single	130.00	118.00	1
+2026-06	უთო	FRANKO	installment	170.00	83.00	1
+2026-06	უთო	Panasonic	installment	140.00	53.00	1
+2026-06	უთო	PHILIPS	installment	330.00	190.00	1
+2026-06	ფლეისთეიშენი	SONY	installment	6620.00	3302.00	2
+2026-06	ფოტო & ვიდეო,დრონი	DJI	installment	4850.00	2382.20	3
+2026-06	ქვაბების ნაკრები	Ambition Noble	installment	200.00	107.07	1
+2026-06	ქვაბების ნაკრები,სახლი & ეზო,სამზარეულო & სერვირება	ARDESTO	installment	930.00	497.58	3
+2026-06	ქვაბი	N/A	installment	290.00	140.98	4
+2026-06	ქვაბი,სახლი & ეზო,სამზარეულო & სერვირება	none	installment	590.00	320.00	1
+2026-06	ქიმწმენდის აპარატი	KARCHER	installment	1210.00	664.00	1
+2026-06	ქიმწმენდის აპარატი	SHARK	installment	720.00	480.00	1
+2026-06	ყავის საფქვავი	DELONGHI	installment	140.00	76.00	1
+2026-06	ჩასაშენებელი ზედაპირი	BEKO	installment	390.00	254.00	1
+2026-06	ჩასაშენებელი ზედაპირი	Simfer	installment	580.00	335.00	1
+2026-06	ჩასაშენებელი ღუმელი	Millen	installment	760.00	449.00	1
+2026-06	ჩასაშენებელი ჭურჭლის სარეცხი მანქანა	BEKO	installment	1490.00	868.00	1
+2026-06	ჩირის აპარატი	FRANKO	installment	280.00	139.00	1
+2026-06	ჩოფერი	MIDEA	installment	90.00	53.00	1
+2026-06	ცენტრალური გათბობის ქვაბი	MIDEA	installment	1550.00	1190.00	1
+2026-06	ცენტრალური გათბობის ქვაბი	MIDEA	single	1800.00	1680.00	1
+2026-06	წვრილი ტექნიკა,ბლენდერი	Ninja	installment	480.00	280.00	1
+2026-06	წვრილი ტექნიკა,დანების კომპლექტი,სამზარეულო & სერვირება	ARDESTO	installment	240.00	130.72	1
+2026-06	წვრილი ტექნიკა,კაპუჩინატორი	FRANKO	installment	200.00	83.00	1
+2026-06	წვრილი ტექნიკა,მტვერსასრუტი	ARSHIA	installment	290.00	128.00	1
+2026-06	წვრილი ტექნიკა,მტვერსასრუტი	BEKO	installment	1260.00	772.00	4
+2026-06	წვრილი ტექნიკა,მტვერსასრუტი	Bosch	installment	5580.00	3207.00	2
+2026-06	წვრილი ტექნიკა,მტვერსასრუტი	DREAME	installment	8200.00	4517.15	5
+2026-06	წვრილი ტექნიკა,მტვერსასრუტი	Electrolux	installment	1360.00	792.00	1
+2026-06	წვრილი ტექნიკა,მტვერსასრუტი	FRANKO	installment	3500.00	1872.00	10
+2026-06	წვრილი ტექნიკა,მტვერსასრუტი	GORENJE	installment	580.00	339.00	1
+2026-06	წვრილი ტექნიკა,მტვერსასრუტი	Hisense	installment	1740.00	925.00	6
+2026-06	წვრილი ტექნიკა,მტვერსასრუტი	KARCHER GEORGIA	installment	10050.00	5614.33	13
+2026-06	წვრილი ტექნიკა,მტვერსასრუტი	MIDEA	installment	1930.00	1105.00	4
+2026-06	წვრილი ტექნიკა,მტვერსასრუტი	SAMSUNG	installment	1460.00	765.00	3
+2026-06	წვრილი ტექნიკა,მტვერსასრუტი	SENCOR	installment	1630.00	933.00	2
+2026-06	წვრილი ტექნიკა,მტვერსასრუტი	Zilan	installment	140.00	95.00	1
+2026-06	წვრილი ტექნიკა,რობოტი მტვერსასრუტი	DREAME	installment	7380.00	4044.71	4
+2026-06	წვრილი ტექნიკა,რობოტი მტვერსასრუტი	KARCHER GEORGIA	installment	870.00	716.00	1
+2026-06	წვრილი ტექნიკა,რობოტი მტვერსასრუტი	MIDEA	installment	5190.00	3030.00	3
+2026-06	წვრილი ტექნიკა,სამზარეულოს აქსესუარების ნაკრები,სამზარეულო & სერვირება	BERLLONG	installment	140.00	65.00	1
+2026-06	წვრილი ტექნიკა,სამზარეულოს წვრილი ტექნიკა,აეროგრილი	ARSHIA	installment	610.00	541.00	2
+2026-06	წვრილი ტექნიკა,სამზარეულოს წვრილი ტექნიკა,აეროგრილი	FRANKO	installment	520.00	251.00	1
+2026-06	წვრილი ტექნიკა,სამზარეულოს წვრილი ტექნიკა,აეროგრილი	GORENJE	installment	240.00	136.00	1
+2026-06	წვრილი ტექნიკა,სამზარეულოს წვრილი ტექნიკა,აეროგრილი	Hisense	installment	1630.00	910.00	6
+2026-06	წვრილი ტექნიკა,სამზარეულოს წვრილი ტექნიკა,აეროგრილი	MIDEA	installment	4860.00	2771.00	11
+2026-06	წვრილი ტექნიკა,სამზარეულოს წვრილი ტექნიკა,აეროგრილი	Ninja	installment	8380.00	4880.00	8
+2026-06	წვრილი ტექნიკა,სამზარეულოს წვრილი ტექნიკა,აეროგრილი	none	installment	920.00	490.71	2
+2026-06	წვრილი ტექნიკა,სამზარეულოს წვრილი ტექნიკა,აეროგრილი	NUTRIBULLET	installment	580.00	293.00	1
+2026-06	წვრილი ტექნიკა,სამზარეულოს წვრილი ტექნიკა,ბლენდერი	ARSHIA	installment	410.00	278.00	1
+2026-06	წვრილი ტექნიკა,სამზარეულოს წვრილი ტექნიკა,ბლენდერი	Bosch	installment	710.00	288.00	1
+2026-06	წვრილი ტექნიკა,სამზარეულოს წვრილი ტექნიკა,ბლენდერი	FRANKO	installment	220.00	119.00	1
+2026-06	წვრილი ტექნიკა,სამზარეულოს წვრილი ტექნიკა,ბლენდერი	MIDEA	installment	1380.00	744.00	9
+2026-06	წვრილი ტექნიკა,სამზარეულოს წვრილი ტექნიკა,ბლენდერი	Ninja	installment	620.00	360.00	1
+2026-06	წვრილი ტექნიკა,სამზარეულოს წვრილი ტექნიკა,ბლენდერი,ხელის ბლენდერი	ARZUM	installment	150.00	87.00	1
+2026-06	წვრილი ტექნიკა,სამზარეულოს წვრილი ტექნიკა,ბლენდერი,ხელის ბლენდერი	BRAUN	installment	390.00	232.00	1
+2026-06	წვრილი ტექნიკა,სამზარეულოს წვრილი ტექნიკა,ბლენდერი,ხელის ბლენდერი	FRANKO	installment	370.00	208.00	1
+2026-06	წვრილი ტექნიკა,სამზარეულოს წვრილი ტექნიკა,ბლენდერი,ხელის ბლენდერი	MIDEA	installment	810.00	460.00	4
+2026-06	წვრილი ტექნიკა,სამზარეულოს წვრილი ტექნიკა,დანების კომპლექტი,სახლი & ეზო,სამზარეულო & სერვირება	ARDESTO	installment	70.00	30.71	1
+2026-06	წვრილი ტექნიკა,სამზარეულოს წვრილი ტექნიკა,ელექტრო ღუმელი	FRANKO	installment	1030.00	555.00	3
+2026-06	წვრილი ტექნიკა,სამზარეულოს წვრილი ტექნიკა,ელექტრო ღუმელი	Hisense	installment	820.00	460.00	2
+2026-06	წვრილი ტექნიკა,სამზარეულოს წვრილი ტექნიკა,ელექტრო ღუმელი	Millen	installment	180.00	119.00	1
+2026-06	წვრილი ტექნიკა,სამზარეულოს წვრილი ტექნიკა,ელექტრო ჩაიდანი	ARSHIA	installment	190.00	108.00	1
+2026-06	წვრილი ტექნიკა,სამზარეულოს წვრილი ტექნიკა,მიკროტალღური ღუმელი	ARSHIA	installment	1860.00	1000.00	5
+2026-06	წვრილი ტექნიკა,სამზარეულოს წვრილი ტექნიკა,მიკროტალღური ღუმელი	Hisense	installment	1320.00	730.00	3
+2026-06	წვრილი ტექნიკა,სამზარეულოს წვრილი ტექნიკა,მიკროტალღური ღუმელი	MIDEA	installment	1350.00	765.00	4
+2026-06	წვრილი ტექნიკა,სამზარეულოს წვრილი ტექნიკა,მიქსერი	ARDESTO	installment	980.00	458.22	2
+2026-06	წვრილი ტექნიკა,სამზარეულოს წვრილი ტექნიკა,მიქსერი	ARSHIA	installment	180.00	100.00	1
+2026-06	წვრილი ტექნიკა,სამზარეულოს წვრილი ტექნიკა,მიქსერი	BEKO	installment	130.00	68.00	1
+2026-06	წვრილი ტექნიკა,სამზარეულოს წვრილი ტექნიკა,მიქსერი	FRANKO	installment	1250.00	667.00	3
+2026-06	წვრილი ტექნიკა,სამზარეულოს წვრილი ტექნიკა,პურის საცხობი	FRANKO	installment	630.00	334.00	1
+2026-06	წვრილი ტექნიკა,სამზარეულოს წვრილი ტექნიკა,სამზარეულოს კომბაინი	SENCOR	installment	720.00	311.00	1
+2026-06	წვრილი ტექნიკა,სამზარეულოს წვრილი ტექნიკა,სლაშის აპარატი	Ninja	installment	1250.00	879.00	1
+2026-06	წვრილი ტექნიკა,სამზარეულოს წვრილი ტექნიკა,ტოსტერი	FRANKO	installment	380.00	191.00	2
+2026-06	წვრილი ტექნიკა,სამზარეულოს წვრილი ტექნიკა,ტოსტერი	SENCOR	installment	180.00	95.60	1
+2026-06	წვრილი ტექნიკა,სამზარეულოს წვრილი ტექნიკა,ტოსტერი,გრილ ტოსტერი	BRAUN	installment	1600.00	900.00	2
+2026-06	წვრილი ტექნიკა,სამზარეულოს წვრილი ტექნიკა,ტოსტერი,გრილ ტოსტერი	FRANKO	installment	310.00	149.00	1
+2026-06	წვრილი ტექნიკა,სამზარეულოს წვრილი ტექნიკა,უთო,ორთქლის უთო	FRANKO	installment	760.00	386.00	1
+2026-06	წვრილი ტექნიკა,სამზარეულოს წვრილი ტექნიკა,უთო,ორთქლის უთო	FRANKO	single	250.00	231.00	1
+2026-06	წვრილი ტექნიკა,სამზარეულოს წვრილი ტექნიკა,უთო,ორთქლის უთო	none	installment	240.00	125.00	1
+2026-06	წვრილი ტექნიკა,სამზარეულოს წვრილი ტექნიკა,ყავის აპარატი	BEKO	installment	1770.00	1035.00	1
+2026-06	წვრილი ტექნიკა,სამზარეულოს წვრილი ტექნიკა,ყავის აპარატი	DELONGHI	installment	1420.00	740.00	2
+2026-06	წვრილი ტექნიკა,სამზარეულოს წვრილი ტექნიკა,ყავის აპარატი	Ninja	installment	9260.00	5437.00	3
+2026-06	წვრილი ტექნიკა,სამზარეულოს წვრილი ტექნიკა,ყინულის აპარატი	Camry	installment	610.00	295.00	1
+2026-06	წვრილი ტექნიკა,სამზარეულოს წვრილი ტექნიკა,ჩაის დასაყენებელი	ARSHIA	installment	330.00	249.00	1
+2026-06	წვრილი ტექნიკა,სამზარეულოს წვრილი ტექნიკა,ჩოფერი	MIDEA	installment	90.00	53.00	1
+2026-06	წვრილი ტექნიკა,სამზარეულოს წვრილი ტექნიკა,წვენსაწური	FRANKO	installment	200.00	113.00	1
+2026-06	წვრილი ტექნიკა,სამზარეულოს წვრილი ტექნიკა,ხორცსაკეპი	ARSHIA	installment	640.00	360.00	2
+2026-06	წვრილი ტექნიკა,სამზარეულოს წვრილი ტექნიკა,ხორცსაკეპი	FRANKO	installment	280.00	159.00	1
+2026-06	წვრილი ტექნიკა,ტაფა,სამზარეულო & სერვირება	TEFAL	installment	320.00	173.00	1
+2026-06	წვრილი ტექნიკა,ტაფა,სახლი & ეზო,ბლინის ტაფა,სამზარეულო & სერვირება	FRANKO	installment	80.00	37.00	1
+2026-06	წვრილი ტექნიკა,უთო	PHILIPS	installment	330.00	190.00	1
+2026-06	წვრილი ტექნიკა,უთო,ორთქლის გენერატორი	FRANKO	installment	660.00	361.00	3
+2026-06	წვრილი ტექნიკა,უთო,ორთქლის უთო	ARZUM	installment	300.00	174.00	2
+2026-06	წვრილი ტექნიკა,უთო,ორთქლის უთო	FRANKO	installment	760.00	386.00	1
+2026-06	წვრილი ტექნიკა,ყავის აპარატი	BEKO	installment	590.00	343.00	1
+2026-06	წვრილი ტექნიკა,ყავის აპარატი	DELONGHI	installment	4550.00	2827.00	2
+2026-06	წვრილი ტექნიკა,ყავის აპარატი	Grundig	installment	710.00	391.00	1
+2026-06	წყლის დისპენსერი	BEKO	installment	530.00	303.00	1
+2026-06	წყლის დისპენსერი	FRANKO	installment	740.00	420.00	2
+2026-06	წყლის დისპენსერი	Millen	installment	620.00	359.00	1
+2026-06	ჭაღი	N/A	installment	80.00	41.25	1
+2026-06	ჭურჭლის სარეცხი მანქანა	BEKO	installment	3280.00	1919.00	2
+2026-06	ჭურჭლის სარეცხი მანქანა	MIDEA	installment	4140.00	2570.00	3
+2026-06	ხელის ბლენდერი	ARZUM	installment	120.00	63.00	1
+2026-06	ხელის ბლენდერი	MIDEA	installment	200.00	115.00	1
+2026-06	ხელსაწყოები,ბაღის ხელსაწყოები,ბაღის მოტო & ელექტრო ინსტრუმენტები	INGCO	installment	1370.00	763.50	2
+2026-06	ხელსაწყოები,ბაღის ხელსაწყოები,ბაღის მოტო და ელექტრო ინსტრუმენტები	INGCO	installment	630.00	363.00	1
+2026-06	ხელსაწყოები,ბაღის ხელსაწყოები,ბაღის მოტო და ელექტრო ინსტრუმენტები	N/A	installment	390.00	227.05	1
+2026-06	ხელსაწყოები,ბაღის ხელსაწყოები,ბაღის მოტო და ელექტრო ინსტრუმენტები	none	installment	1540.00	877.05	3
+2026-06	ხელსაწყოები,ბაღის ხელსაწყოები,ბაღის მტვერსასრუტი	none	installment	380.00	200.60	1
+2026-06	ხელსაწყოები,ბაღის ხელსაწყოები,ხელის მოტობლოკი	ROYAL TURBO	installment	3830.00	2100.00	1
+2026-06	ხელსაწყოები,შედუღების მოწყობილობა & აპარატი	INGCO	installment	550.00	293.00	1
+2026-06	ხელსაწყოები,ხერხები,ტორსული ხერხი	none	installment	1020.00	615.00	1
+2026-06	ხორცის მანქანა	ARSHIA	installment	320.00	180.00	1
+2026-06	ხორცის მანქანა	N/A	installment	490.00	435.00	1
+2026-06	ჰოვერბორდი	GOLDEN CHILD	installment	510.00	1.00	1
+2026-07		none	installment	4550.00	2615.00	3
+2026-07		SAMSUNG	installment	540.00	304.00	1
+2026-07	N/A	N/A	installment	6240.00	4800.00	1
+2026-07	აეროგრილი	BEKO	installment	560.00	319.00	1
+2026-07	აეროგრილი	Hisense	installment	270.00	150.00	1
+2026-07	აეროგრილი	MIDEA	installment	695.00	540.00	2
+2026-07	აეროგრილი	Ninja	installment	560.00	320.00	1
+2026-07	აეროგრილი,აეროგრილი & გრილი	BRAUN	installment	510.00	304.00	1
+2026-07	ავეჯი	N/A	installment	8090.00	4589.78	12
+2026-07	ავეჯი	none	installment	3000.00	1851.62	4
+2026-07	ავეჯი	ბრენდის გარეშე	installment	5580.00	3347.58	4
+2026-07	ავეჯი,გარე ავეჯი,ბაღის საქანელები	Comfort Room	installment	1260.00	670.00	1
+2026-07	ავეჯი,გარე ავეჯი,გარე ავეჯის კომპლექტი	none	installment	10240.00	5940.49	10
+2026-07	ავეჯი,გარე ავეჯი,გარე მაგიდა	none	installment	90.00	47.00	1
+2026-07	ავეჯი,გარე ავეჯი,შეზლონგი	Comfort Room	installment	520.00	210.00	2
+2026-07	ავეჯი,დივანი	none	installment	9540.00	5575.00	5
+2026-07	ავეჯი,დივანი,რბილი ავეჯი	none	installment	13150.00	7695.00	6
+2026-07	ავეჯი,მატრასი	none	installment	2680.00	1566.00	2
+2026-07	ავეჯი,მატრასი,საძინებელი	none	installment	1135.00	660.00	2
+2026-07	ავეჯი,მისაღები	none	installment	580.00	340.00	1
+2026-07	ავეჯი,რბილი ავეჯი,სამეული	none	installment	1960.00	1145.00	1
+2026-07	ავეჯი,საძინებელი,საძინებელის კომპლექტი	SAGA	installment	3820.00	2240.00	1
+2026-07	ავეჯი,საწოლი,საძინებელი	none	installment	1150.00	680.00	1
+2026-07	ავეჯი,სკამი	none	installment	780.00	401.76	6
+2026-07	ავეჯი,ყავის მაგიდა,რბილი ავეჯი,მისაღები	none	installment	460.00	220.00	1
+2026-07	ავეჯი,ხალიჩა	none	installment	80.00	41.60	1
+2026-07	აივნის მაგიდა + 2 სკამი	N/A	installment	220.00	120.00	1
+2026-07	აკუმულატორი	MUTLU	installment	630.00	345.00	1
+2026-07	აუზი	Bestway	installment	9160.00	4900.00	9
+2026-07	აუზი	INTEX	installment	3020.00	1595.00	5
+2026-07	აუზი,აუზი & აქსესუარები	none	installment	850.00	445.00	5
+2026-07	აუზი,აუზი & აქსესუარები,ეზო & გარე სივრცე	Bestway	installment	4260.00	2300.00	1
+2026-07	აქსესუარები,ბეჭედი	ZAG BIJOUX	installment	190.00	110.00	1
+2026-07	აქსესუარები,საათები,მამაკაცის საათები	CLAUDE BERNARD	installment	1740.00	1018.00	2
+2026-07	აქსესუარები,საათები,ქალის საათები	Casio	installment	190.00	106.00	1
+2026-07	აქსესუარები,სამაჯური,ქალის სამაჯური	ZAG BIJOUX	installment	250.00	140.00	1
+2026-07	აქსესუარები,საფულე	N/A	installment	220.00	123.00	1
+2026-07	აქსესუარები,ქალის საათები	CITIZEN	installment	1340.00	781.00	1
+2026-07	ბავშვთა სამყარო,სასადილო სკამი	none	installment	610.00	350.00	1
+2026-07	ბავშვთა სამყარო,საწოლ-მანეჟები	none	installment	1200.00	700.00	3
+2026-07	ბავშვთა სამყარო,ჭოჭინები	none	installment	480.00	285.00	2
+2026-07	ბალახის სათიბი	INGCO	installment	630.00	363.00	1
+2026-07	ბალიში	N/A	installment	200.00	100.76	4
+2026-07	ბატუტი	Bestway	installment	910.00	750.00	1
+2026-07	ბატუტი	N/A	installment	1570.00	909.00	3
+2026-07	ბატუტი	N/A	single	380.00	359.00	1
+2026-07	ბატუტი	ბრენდის გარეშე	installment	2060.00	1038.00	2
+2026-07	ბაღის ავეჯის კომპლექტი	N/A	installment	440.00	256.62	1
+2026-07	ბაღის საქანელა	N/A	installment	2540.00	1498.00	4
+2026-07	ბაღის ხელსაწყოები,ბაღის მოტო და ელექტრო ინსტრუმენტები,ეზო & გარე სივრცე	none	installment	580.00	339.70	1
+2026-07	ბაღის ხელსაწყოები,ბაღის მოტო და ელექტრო ინსტრუმენტები,ეზო & გარე სივრცე	WADFOW	installment	480.00	279.40	1
+2026-07	ბაღის ხელსაწყოები,ხელის მოტობლოკი,ეზო & გარე სივრცე	none	installment	1880.00	1100.00	1
+2026-07	ბენზოხერხი	N/A	installment	530.00	309.66	1
+2026-07	ბლენდერი	MIDEA	installment	121.00	115.00	1
+2026-07	ბლენდერი	Ninja	installment	1620.00	944.00	2
+2026-07	ბუდე საქანელა	N/A	installment	970.00	615.56	2
+2026-07	ბუდე საქანელა	ბრენდის გარეშე	installment	580.00	338.00	2
+2026-07	ბუდე საქანელა ყავისფერი	N/A	installment	760.00	435.12	2
+2026-07	გაზის გამათბობელი	AKOG	installment	1280.00	730.00	1
+2026-07	გაზის წყლის გამაცხელებელი	MARAZZI	installment	4090.00	2354.00	6
+2026-07	გაზის წყლის გამაცხელებელი	MIDEA	installment	2060.00	1200.00	2
+2026-07	გაზქურა	DIXI	installment	4350.00	2675.00	5
+2026-07	გაზქურა	Millen	installment	2220.00	1182.00	2
+2026-07	გაზქურა	Oz	installment	477.00	428.00	1
+2026-07	გაზქურა	Simfer	installment	1020.00	595.00	1
+2026-07	გათბობა & გაგრილება,ვენტილატორი	none	installment	690.00	443.73	2
+2026-07	გამწოვი	MIDEA	installment	1040.00	585.00	2
+2026-07	გამწოვი	Simfer	installment	320.00	165.00	1
+2026-07	გარე ავეჯი,ბაღის საქანელები	BRAUN	installment	1540.00	900.00	2
+2026-07	გარე ავეჯი,ბაღის საქანელები	none	installment	4470.00	2617.30	9
+2026-07	გარე ავეჯი,გარე ავეჯის კომპლექტი	N/A	installment	810.00	470.05	1
+2026-07	გარე ავეჯი,გარე ავეჯის კომპლექტი	none	installment	2460.00	1472.24	7
+2026-07	გარე ავეჯი,პავილიონი & ტენტი,ქოლგები და სადგამები	გარე ავეჯი	installment	140.00	68.00	2
+2026-07	გრილი	BRAUN	installment	880.00	450.00	1
+2026-07	დენის წყლის გამაცხელებელი	Millen	single	219.00	159.00	1
+2026-07	დისკური ხერხი	Bosch	installment	780.00	455.40	1
+2026-07	დრელი	INGCO	installment	120.00	62.00	1
+2026-07	ელექტრო სკუტერი	Segway	installment	3330.00	1951.20	2
+2026-07	ელექტრო სკუტერი	Xiaomi	installment	2760.00	1619.10	1
+2026-07	ელექტრო ღუმელი	FRANKO	installment	410.00	231.00	1
+2026-07	ესპრესოს აპარატი	DELONGHI	installment	820.00	370.00	1
+2026-07	ველოსიპედი	MIQILONG	installment	170.00	95.32	1
+2026-07	ველოსიპედი	N/A	installment	280.00	150.00	2
+2026-07	ველოსიპედი	TRINX	installment	5140.00	3000.00	5
+2026-07	ვენტილატორი	MIDEA	installment	760.00	420.00	3
+2026-07	ვენტილატორი	N/A	installment	120.00	61.41	1
+2026-07	ვენტილატორი	N/A	single	239.00	188.37	1
+2026-07	ვენტილატორი	none	installment	1130.00	627.77	2
+2026-07	ვენტილატორი,კონდიციონერი & გაგრილების სისტემები	none	installment	1590.00	829.76	5
+2026-07	თმის გამასწორებელი	REMINGTON	installment	240.00	110.00	1
+2026-07	თმის და წვერის საჭრელი	PHILIPS	installment	550.00	289.00	2
+2026-07	თმის დასახვევი	BABYLISS	installment	130.00	60.00	1
+2026-07	თმის მოვლა,თმის საშრობი & სავარცხელი,სილამაზე &თავის მოვლა	BABYLISS	installment	1020.00	480.00	2
+2026-07	თმის მოვლა,თმის საშრობი & სავარცხელი,სილამაზე &თავის მოვლა	PHILIPS	installment	370.00	210.00	1
+2026-07	თმის მოვლა,თმის საჭრელი & ტრიმერი,სილამაზე &თავის მოვლა	SENCOR	installment	170.00	90.90	1
+2026-07	თმის მოვლა,თმის სტაილერი	DREAME	installment	2520.00	1337.12	2
+2026-07	თმის მოვლა,თმის სტაილერი	DREAME	single	710.00	650.00	1
+2026-07	თმის მოვლა,თმის სტაილერი,სილამაზე &თავის მოვლა	DREAME	installment	16410.00	8744.09	13
+2026-07	თმის მოვლა,თმის სტაილერი,სილამაზე &თავის მოვლა	REMINGTON	installment	280.00	157.00	1
+2026-07	თმის მოვლა,თმის სტაილერი,სილამაზე &თავის მოვლა	SHARK	installment	1640.00	960.00	2
+2026-07	თმის მოვლა,თმის უთო	PHILIPS	installment	470.00	270.00	1
+2026-07	თმის მოვლა,თმის უთო,სილამაზე &თავის მოვლა	PHILIPS	installment	940.00	540.00	2
+2026-07	თმის მოვლა,თმის უთო,სილამაზე &თავის მოვლა	REMINGTON	installment	370.00	200.00	2
+2026-07	თმის საკრეჭი	FRANKO	installment	150.00	85.00	1
+2026-07	თმის საშრობი	FRANKO	installment	100.00	55.00	1
+2026-07	თმის საშრობი	REMINGTON	installment	310.00	129.00	1
+2026-07	თმის უთო	REMINGTON	installment	240.00	129.00	1
+2026-07	იატაკი & საფარები,ხელოვნური ბალახი	none	installment	900.00	493.80	10
+2026-07	ინდუქციური ქურა 	MIDEA	installment	1520.00	880.00	2
+2026-07	კარკასული აუზი	Bestway	installment	5940.00	3025.00	6
+2026-07	კომპიუტერები & აქსესუარები,პლანშეტი	Blackview	installment	430.00	237.00	1
+2026-07	კომპიუტერები & აქსესუარები,პრინტერები	Canon	installment	610.00	344.00	1
+2026-07	კომპიუტერული აქსესუარები,პლანშეტი	Blackview	installment	430.00	237.00	1
+2026-07	კონდენციონერი	DIXI	installment	1260.00	685.00	1
+2026-07	კონდენციონერი	GORENJE	installment	1760.00	1750.00	1
+2026-07	კონდიციონერი	BEKO	installment	6760.00	3955.00	5
+2026-07	კონდიციონერი	CHIGO	installment	5130.00	2990.00	3
+2026-07	კონდიციონერი	CHiQ	installment	23360.00	13356.00	15
+2026-07	კონდიციონერი	Hisense	installment	5550.00	3369.00	4
+2026-07	კონდიციონერი	MIDEA	installment	34770.00	20655.00	16
+2026-07	კონდიციონერი	Millen	installment	1100.00	637.00	1
+2026-07	კონდიციონერი	TCL	installment	8560.00	4273.42	5
+2026-07	კონდიციონერი,კონდიციონერი & გაგრილების სისტემები	AIMON	installment	510.00	311.69	1
+2026-07	კონდიციონერი,კონდიციონერი & გაგრილების სისტემები	BEKO	installment	11880.00	6954.00	6
+2026-07	კონდიციონერი,კონდიციონერი & გაგრილების სისტემები	CHiQ	installment	15220.00	8874.00	11
+2026-07	კონდიციონერი,კონდიციონერი & გაგრილების სისტემები	MIDEA	installment	16110.00	9265.00	7
+2026-07	კონდიციონერი,კონდიციონერი & გაგრილების სისტემები	TCL	installment	2000.00	1118.00	2
+2026-07	კუთხსახეხი მანქანა	INGCO	installment	460.00	257.00	2
+2026-07	მატრასები	N/A	installment	990.00	570.00	2
+2026-07	მატრასები	ბრენდის გარეშე	installment	560.00	325.00	1
+2026-07	მაღალი წნევით რეცხვის აპარატი 	KARCHER	installment	1450.00	796.00	1
+2026-07	მაცივარი	ARDESTO	installment	770.00	230.00	1
+2026-07	მაცივარი	BEKO	installment	1890.00	1104.00	1
+2026-07	მაცივარი	Hisense	installment	19780.00	11640.00	14
+2026-07	მაცივარი	MARAZZI	installment	8470.00	5070.00	5
+2026-07	მაცივარი	MIDEA	installment	5800.00	3400.00	3
+2026-07	მაცივარი	SAMSUNG	installment	2140.00	1112.00	1
+2026-07	მაცივარი	VOX	installment	1227.00	1169.00	1
+2026-07	მაცივარი,მაცივრები	Hisense	installment	2330.00	1355.00	2
+2026-07	მაცივარი,მაცივრები	MARAZZI	installment	6830.00	3984.00	4
+2026-07	მაცივარი,მაცივრები	SHARP	installment	3520.00	2065.00	1
+2026-07	მიკროტალღური ღუმელი	ARDESTO	installment	320.00	165.10	1
+2026-07	მიკროტალღური ღუმელი	DIXI	installment	240.00	140.00	1
+2026-07	მიკროტალღური ღუმელი	Hisense	installment	777.00	740.00	3
+2026-07	მიკროტალღური ღუმელი	MIDEA	installment	830.00	357.00	2
+2026-07	მიქსერი	MIDEA	installment	140.00	76.00	1
+2026-07	მობილურები & აქსესუარები,სმარტფონები	HONOR	installment	98545.00	54744.00	98
+2026-07	მობილურები & აქსესუარები,სმარტფონები	none	installment	2129.00	1282.00	2
+2026-07	მობილურები & აქსესუარები,სმარტფონები	Oukitel	installment	1460.00	848.00	2
+2026-07	მობილურები & აქსესუარები,სმარტფონები	SAMSUNG	installment	6180.00	3656.00	9
+2026-07	მობილურები & აქსესუარები,ყურსასმენები	none	installment	1300.00	588.00	2
+2026-07	მობილურები & აქსესუარები,ყურსასმენები,Buds	none	installment	540.00	238.00	1
+2026-07	მოტობლოკი	ROYAL ECO	installment	1910.00	850.00	1
+2026-07	მოტოცელი	Raider	installment	510.00	292.00	1
+2026-07	მსხვილი ტექნიკა,კლიმატური ტექნიკა,გაზის გამათბობელი	AKOG	installment	870.00	502.00	1
+2026-07	მსხვილი ტექნიკა,სარეცხი მანქანა	BEKO	installment	1490.00	873.00	1
+2026-07	მსხვილი ტექნიკა,სარეცხი მანქანა	MIDEA	installment	1150.00	670.00	1
+2026-07	მტვერსასრუტი	BEKO	installment	2320.00	1343.00	7
+2026-07	მტვერსასრუტი	Bosch	installment	4440.00	2000.00	2
+2026-07	მტვერსასრუტი	DREAME	installment	13160.00	7297.85	9
+2026-07	მტვერსასრუტი	FRANKO	installment	480.00	280.00	1
+2026-07	მტვერსასრუტი	FRANKO	single	358.00	126.00	1
+2026-07	მტვერსასრუტი	GORENJE	installment	2030.00	1075.00	3
+2026-07	მტვერსასრუტი	Hisense	installment	1960.00	1129.00	4
+2026-07	მტვერსასრუტი	KARCHER	installment	4780.00	2624.00	4
+2026-07	მტვერსასრუტი	KARCHER GEORGIA	installment	6760.00	3900.00	6
+2026-07	მტვერსასრუტი	MIDEA	installment	2040.00	1180.00	3
+2026-07	მტვერსასრუტი	MIDEA	single	325.00	239.00	1
+2026-07	მტვერსასრუტი	SAMSUNG	installment	2194.00	1288.00	7
+2026-07	ნაყინის აპარატი	Ninja	installment	1010.00	960.00	1
+2026-07	ორთქლის აპარატი	KARCHER	installment	900.00	496.00	1
+2026-07	ორთქლის უთო	ARZUM	installment	150.00	87.00	1
+2026-07	პერფორატორები	INGCO	installment	390.00	206.80	1
+2026-07	პლანშეტი	Blackview	installment	1290.00	713.00	3
+2026-07	პორტატული კონდიციონერი	ARDESTO	installment	1280.00	741.79	1
+2026-07	რობოტი მტვერსასრუტი	DREAME	installment	7300.00	4086.33	4
+2026-07	საათი	Casio	installment	248.00	223.00	1
+2026-07	საბავშვო ეტლი	ბრენდის გარეშე	installment	270.00	150.00	1
+2026-07	საბურავები	NANKANG	installment	830.00	458.00	2
+2026-07	საბურავები	TOYO	installment	2720.00	1140.00	4
+2026-07	სათამაშოები	none	installment	1005.00	530.00	1
+2026-07	სათამაშოები,ელექტრო მანქანები	none	installment	1315.00	760.00	2
+2026-07	სათამაშოები,ელექტრო მანქანები	ბრენდის გარეშე	installment	680.00	380.00	1
+2026-07	სათამაშოები,ჰოვერბორდი	GOLDEN CHILD	installment	1600.00	960.00	3
+2026-07	საკერავი მანქანა	Janome	installment	1290.00	750.00	1
+2026-07	სამზარეულო და ჭურჭელი	BERLLONG	installment	840.00	472.42	4
+2026-07	სამზარეულოს კომბაინი	SENCOR	installment	720.00	375.00	1
+2026-07	სამზარეულოს ტექნიკა,აეროგრილი	BEKO	installment	560.00	319.00	1
+2026-07	სამზარეულოს ტექნიკა,აეროგრილი	GORENJE	installment	270.00	146.00	1
+2026-07	სამზარეულოს ტექნიკა,აეროგრილი	Hisense	installment	540.00	300.00	2
+2026-07	სამზარეულოს ტექნიკა,აეროგრილი	MIDEA	installment	1790.00	1027.00	4
+2026-07	სამზარეულოს ტექნიკა,აეროგრილი	Ninja	installment	2640.00	1520.00	3
+2026-07	სამზარეულოს ტექნიკა,ბლენდერი	ARZUM	installment	120.00	63.00	1
+2026-07	სამზარეულოს ტექნიკა,ბლენდერი	Bosch	installment	560.00	250.00	1
+2026-07	სამზარეულოს ტექნიკა,ბლენდერი	MIDEA	installment	140.00	74.00	1
+2026-07	სამზარეულოს ტექნიკა,ბლენდერი	Ninja	installment	1910.00	1112.00	3
+2026-07	სამზარეულოს ტექნიკა,ბლენდერი,ხელის ბლენდერი	ARZUM	installment	150.00	87.00	1
+2026-07	სამზარეულოს ტექნიკა,ბლენდერი,ხელის ბლენდერი	Grundig	installment	340.00	199.00	1
+2026-07	სამზარეულოს ტექნიკა,ელექტრო ღუმელი	FRANKO	installment	410.00	231.00	1
+2026-07	სამზარეულოს ტექნიკა,ელექტრო ღუმელი	Hisense	installment	420.00	240.00	1
+2026-07	სამზარეულოს ტექნიკა,ელექტრო ჩაიდანი	FRANKO	installment	120.00	60.00	1
+2026-07	სამზარეულოს ტექნიკა,ელექტრო ჩაიდანი	Ninja	installment	420.00	240.00	1
+2026-07	სამზარეულოს ტექნიკა,კაპუჩინატორი	FRANKO	installment	150.00	83.00	1
+2026-07	სამზარეულოს ტექნიკა,მიკროტალღური ღუმელი	BEKO	installment	330.00	151.00	1
+2026-07	სამზარეულოს ტექნიკა,მიკროტალღური ღუმელი	Hisense	installment	780.00	453.00	2
+2026-07	სამზარეულოს ტექნიკა,პოპკორნის აპარატი	FRANKO	installment	100.00	52.00	1
+2026-07	სამზარეულოს ტექნიკა,ტოსტერი,გრილ ტოსტერი	FRANKO	installment	570.00	330.00	1
+2026-07	სამზარეულოს ტექნიკა,ტოსტერი,გრილ ტოსტერი	TEFAL	installment	380.00	215.00	1
+2026-07	სამზარეულოს ტექნიკა,ყავის აპარატი	BEKO	installment	3540.00	1848.00	2
+2026-07	სამზარეულოს ტექნიკა,ყავის აპარატი	Ninja	installment	3400.00	1999.00	1
+2026-07	სამზარეულოს ტექნიკა,ყავის აპარატი	SENCOR	installment	700.00	293.00	1
+2026-07	სამზარეულოს ტექნიკა,წვენსაწური	ARSHIA	installment	510.00	283.00	1
+2026-07	სამზარეულოს ტექნიკა,ხელის ბლენდერი	Adler	installment	90.00	30.00	1
+2026-07	სამზარეულოს ტექნიკა,ხორცსაკეპი	FRANKO	installment	480.00	278.00	1
+2026-07	სამზარეულოს ტექნიკა,ხორცსაკეპი	Zilan	installment	470.00	258.00	1
+2026-07	სარეცხი მანქანა	ARDESTO	installment	1720.00	974.82	2
+2026-07	სარეცხი მანქანა	BEKO	installment	4040.00	2362.00	2
+2026-07	სარეცხი მანქანა	Bosch	installment	2790.00	1232.00	1
+2026-07	სარეცხი მანქანა	CHIGO	installment	3460.00	2010.00	3
+2026-07	სარეცხი მანქანა	Hisense	installment	4840.00	3124.00	4
+2026-07	სარეცხი მანქანა	MARAZZI	installment	3430.00	2000.00	2
+2026-07	სარეცხი მანქანა	MIDEA	installment	29786.00	17205.00	26
+2026-07	სარეცხი მანქანა	SHARP	installment	1470.00	855.00	1
+2026-07	სარეცხი მანქანა	Toshiba	installment	1200.00	710.00	1
+2026-07	სარეცხი მანქანა საშრობით	SAMSUNG	installment	2590.00	1400.00	1
+2026-07	სარეცხი მანქანა+შრობა	MARAZZI	installment	1830.00	1050.00	1
+2026-07	სარეცხი მანქანები,სარეცხი მანქანა	LG	installment	4980.00	2919.00	3
+2026-07	სარეცხი მანქანები,სარეცხი მანქანა	MIDEA	installment	7380.00	4320.00	9
+2026-07	სარეცხი მანქანები,სარეცხი მანქანა	none	installment	870.00	505.00	1
+2026-07	საქანელა	N/A	installment	1540.00	900.00	2
+2026-07	საქანელა	ბრენდის გარეშე	installment	770.00	450.00	1
+2026-07	საყინულე	ARDESTO	installment	620.00	347.53	1
+2026-07	საყინულე	FRANKO	installment	770.00	446.00	1
+2026-07	საყინულე	MARAZZI	installment	1580.00	899.00	1
+2026-07	საყინულე	MIDEA	installment	1140.00	660.00	1
+2026-07	საყოფაცხოვრებო ტექნიკა,გაზის გამათბობელი,გათბობა	AKOG	installment	1280.00	730.00	1
+2026-07	საყოფაცხოვრებო ტექნიკა,გაზქურა	BEKO	installment	2940.00	1921.00	2
+2026-07	საყოფაცხოვრებო ტექნიკა,გაზქურა	DIXI	installment	800.00	505.00	1
+2026-07	საყოფაცხოვრებო ტექნიკა,გაზქურა	Simfer	installment	2580.00	1490.00	2
+2026-07	საყოფაცხოვრებო ტექნიკა,გაზქურა	Simfer	single	949.00	690.00	1
+2026-07	საყოფაცხოვრებო ტექნიკა,გათბობა & გაგრილება,ვენტილატორი	none	installment	290.00	169.47	1
+2026-07	საყოფაცხოვრებო ტექნიკა,გათბობა & გაგრილება,კონდიციონერი	BEKO	installment	3500.00	2117.00	3
+2026-07	საყოფაცხოვრებო ტექნიკა,გათბობა & გაგრილება,კონდიციონერი	Hisense	installment	3280.00	1890.00	2
+2026-07	საყოფაცხოვრებო ტექნიკა,გათბობა & გაგრილება,კონდიციონერი	MIDEA	installment	26240.00	15369.00	10
+2026-07	საყოფაცხოვრებო ტექნიკა,გათბობა & გაგრილება,კონდიციონერი	Millen	installment	1920.00	1120.00	2
+2026-07	საყოფაცხოვრებო ტექნიკა,გათბობა & გაგრილება,კონდიციონერი	SAMSUNG	installment	4940.00	2495.11	1
+2026-07	საყოფაცხოვრებო ტექნიკა,გათბობა & გაგრილება,პორტატული კონდიციონერი	ARDESTO	installment	1190.00	672.55	1
+2026-07	საყოფაცხოვრებო ტექნიკა,გათბობა & გაგრილება,ცენტრალური გათბობის ქვაბი	ARISTON	installment	3290.00	1850.00	1
+2026-07	საყოფაცხოვრებო ტექნიკა,გათბობა & გაგრილება,ცენტრალური გათბობის ქვაბი	MIDEA	installment	2030.00	1190.00	1
+2026-07	საყოფაცხოვრებო ტექნიკა,გათბობა & გაგრილება,წყლის გამაცხელებელი	MARAZZI	installment	1330.00	764.00	2
+2026-07	საყოფაცხოვრებო ტექნიკა,გათბობა & გაგრილება,წყლის გამაცხელებელი	MIDEA	installment	2060.00	1200.00	2
+2026-07	საყოფაცხოვრებო ტექნიკა,გამწოვი	BEKO	installment	770.00	449.00	1
+2026-07	საყოფაცხოვრებო ტექნიკა,გამწოვი,ჩასაშენებელი ტექნიკა,ჩასაშენებელი გამწოვი	BEKO	installment	970.00	514.00	2
+2026-07	საყოფაცხოვრებო ტექნიკა,ვენტილატორი	SENCOR	installment	1400.00	797.00	2
+2026-07	საყოფაცხოვრებო ტექნიკა,ვენტილატორი,კონდიციონერი & გაგრილების სისტემები	SENCOR	installment	700.00	399.00	1
+2026-07	საყოფაცხოვრებო ტექნიკა,კონდიციონერი	MIDEA	installment	1670.00	970.00	1
+2026-07	საყოფაცხოვრებო ტექნიკა,კონდიციონერი,კონდიციონერი & გაგრილების სისტემები	BEKO	installment	1100.00	719.00	1
+2026-07	საყოფაცხოვრებო ტექნიკა,კონდიციონერი,კონდიციონერი & გაგრილების სისტემები	CHIGO	installment	4440.00	2595.00	3
+2026-07	საყოფაცხოვრებო ტექნიკა,კონდიციონერი,კონდიციონერი & გაგრილების სისტემები	MIDEA	installment	20410.00	12245.00	9
+2026-07	საყოფაცხოვრებო ტექნიკა,კონდიციონერი,კონდიციონერი & გაგრილების სისტემები	none	installment	2030.00	926.00	1
+2026-07	საყოფაცხოვრებო ტექნიკა,კონდიციონერი,კონდიციონერი & გაგრილების სისტემები	TCL	installment	1010.00	548.46	1
+2026-07	საყოფაცხოვრებო ტექნიკა,მაცივარი	TCL	installment	1110.00	637.00	1
+2026-07	საყოფაცხოვრებო ტექნიკა,მაცივარი,მაცივრები	BEKO	installment	1940.00	1138.00	1
+2026-07	საყოფაცხოვრებო ტექნიკა,მაცივარი,მაცივრები	FRANKO	installment	1930.00	1132.00	1
+2026-07	საყოფაცხოვრებო ტექნიკა,მაცივარი,მაცივრები	Hisense	installment	16475.00	9805.00	10
+2026-07	საყოფაცხოვრებო ტექნიკა,მაცივარი,მაცივრები	MARAZZI	installment	9350.00	5430.00	7
+2026-07	საყოფაცხოვრებო ტექნიკა,მაცივარი,მაცივრები	MIDEA	installment	2030.00	1190.00	1
+2026-07	საყოფაცხოვრებო ტექნიკა,მაცივარი,მაცივრები	SAMSUNG	installment	6580.00	4221.00	3
+2026-07	საყოფაცხოვრებო ტექნიკა,სარეცხი მანქანა საშრობით,სარეცხი მანქანები	LG	installment	4540.00	2650.00	1
+2026-07	საყოფაცხოვრებო ტექნიკა,სარეცხი მანქანა საშრობით,სარეცხი მანქანები	SAMSUNG	installment	8060.00	4715.00	3
+2026-07	საყოფაცხოვრებო ტექნიკა,სარეცხი მანქანა საშრობით,სარეცხი მანქანები	SHARP	installment	3390.00	1990.00	1
+2026-07	საყოფაცხოვრებო ტექნიკა,სარეცხი მანქანა საშრობით,სარეცხი მანქანები,სარეცხი მანქანა	MARAZZI	installment	1830.00	1050.00	1
+2026-07	საყოფაცხოვრებო ტექნიკა,სარეცხი მანქანები	TCL	installment	1020.00	622.00	1
+2026-07	საყოფაცხოვრებო ტექნიკა,სარეცხი მანქანები,სარეცხი მანქანა	ARDESTO	installment	4930.00	2716.11	5
+2026-07	საყოფაცხოვრებო ტექნიკა,სარეცხი მანქანები,სარეცხი მანქანა	BEKO	installment	8800.00	5104.00	6
+2026-07	საყოფაცხოვრებო ტექნიკა,სარეცხი მანქანები,სარეცხი მანქანა	CHIGO	installment	1040.00	600.00	1
+2026-07	საყოფაცხოვრებო ტექნიკა,სარეცხი მანქანები,სარეცხი მანქანა	Hisense	installment	8540.00	4765.00	6
+2026-07	საყოფაცხოვრებო ტექნიკა,სარეცხი მანქანები,სარეცხი მანქანა	LG	installment	1870.00	1095.00	1
+2026-07	საყოფაცხოვრებო ტექნიკა,სარეცხი მანქანები,სარეცხი მანქანა	MARAZZI	installment	1140.00	650.00	1
+2026-07	საყოფაცხოვრებო ტექნიკა,სარეცხი მანქანები,სარეცხი მანქანა	MIDEA	installment	17490.00	10110.00	14
+2026-07	საყოფაცხოვრებო ტექნიკა,სარეცხი მანქანები,სარეცხი მანქანა	SAMSUNG	installment	7070.00	3972.00	4
+2026-07	საყოფაცხოვრებო ტექნიკა,სარეცხის საშრობი,სარეცხი მანქანები,სარეცხი მანქანა	MIDEA	installment	1640.00	960.00	1
+2026-07	საყოფაცხოვრებო ტექნიკა,საყინულე	FRANKO	installment	4590.00	2664.00	6
+2026-07	საყოფაცხოვრებო ტექნიკა,საყინულე	MARAZZI	installment	1450.00	899.00	1
+2026-07	საყოფაცხოვრებო ტექნიკა,საყინულე	SHARP	installment	1500.00	875.00	1
+2026-07	საყოფაცხოვრებო ტექნიკა,ჩასაშენებელი ზედაპირი	SAMSUNG	installment	1070.00	595.00	1
+2026-07	საყოფაცხოვრებო ტექნიკა,ჩასაშენებელი ტექნიკა,გაზქურის ზედაპირი,ჩასაშენებელი ზედაპირი	FRANKO	installment	820.00	476.00	1
+2026-07	საყოფაცხოვრებო ტექნიკა,ჩასაშენებელი ტექნიკა,ჩასაშენებელი ელექტრო ღუმელი	MIDEA	installment	880.00	500.00	1
+2026-07	საყოფაცხოვრებო ტექნიკა,ჩასაშენებელი ტექნიკა,ჩასაშენებელი ელექტრო ღუმელი	Simfer	installment	870.00	510.00	1
+2026-07	საყოფაცხოვრებო ტექნიკა,წყლის გამაცხელებელი	INNOVITA	installment	1240.00	725.00	1
+2026-07	საყოფაცხოვრებო ტექნიკა,წყლის გამაცხელებელი	KARIZZMA	installment	1220.00	808.17	1
+2026-07	საყოფაცხოვრებო ტექნიკა,წყლის გამაცხელებელი	MARAZZI	installment	4060.00	2334.00	6
+2026-07	საყოფაცხოვრებო ტექნიკა,წყლის გამაცხელებელი	MIDEA	installment	6040.00	3520.00	6
+2026-07	საყოფაცხოვრებო ტექნიკა,წყლის გამაცხელებელი,გათბობა	MIDEA	installment	1970.00	1140.00	4
+2026-07	საყოფაცხოვრებო ტექნიკა,ჭურჭლის სარეცხი მანქანა	BEKO	installment	1160.00	679.00	1
+2026-07	საყოფაცხოვრებო ტექნიკა,ჭურჭლის სარეცხი მანქანა	Bosch	installment	3290.00	1577.00	1
+2026-07	საყოფაცხოვრებო ტექნიკა,ჭურჭლის სარეცხი მანქანა	MARAZZI	installment	3810.00	2192.00	3
+2026-07	საყოფაცხოვრებო ტექნიკა,ჭურჭლის სარეცხი მანქანა	MIDEA	installment	7920.00	4600.00	6
+2026-07	საწოლი	N/A	installment	2300.00	1360.00	2
+2026-07	სახლი & დეკორი,აბაზანა,აბაზანები	none	installment	770.00	450.18	1
+2026-07	სახლი & დეკორი,აბაზანა,აბაზანის ავეჯი,საშხაპე კაბინები & მოწყობილობები	ბრენდის გარეშე	installment	410.00	229.95	1
+2026-07	სახლი & დეკორი,აუზი,აუზი & აქსესუარები	Bestway	installment	1260.00	630.00	2
+2026-07	სახლი & დეკორი,აუზი,აუზი & აქსესუარები,ეზო & გარე სივრცე	Bestway	installment	21398.00	10915.00	28
+2026-07	სახლი & დეკორი,აუზი,აუზი & აქსესუარები,ეზო & გარე სივრცე	INTEX	installment	3140.00	1750.00	6
+2026-07	სახლი & დეკორი,აუზის მოვლა,აუზი & აქსესუარები,ეზო & გარე სივრცე	Bestway	installment	190.00	100.00	1
+2026-07	სახლი & დეკორი,აუზის ტენტი,აუზის მოვლა,აუზი & აქსესუარები	Bestway	installment	170.00	90.00	1
+2026-07	სახლი & დეკორი,აუზის ტენტი,აუზის მოვლა,აუზი & აქსესუარები,ეზო & გარე სივრცე	none	installment	80.00	35.00	1
+2026-07	სახლი & დეკორი,ბატუტი	none	installment	960.00	558.00	2
+2026-07	სახლი & დეკორი,ბატუტი,ეზო & გარე სივრცე	Bestway	installment	1390.00	750.00	1
+2026-07	სახლი & დეკორი,ბატუტი,ეზო & გარე სივრცე	none	installment	3240.00	1875.00	5
+2026-07	სახლი & დეკორი,განათება,ჭაღები	none	installment	170.00	90.28	1
+2026-07	სახლი & დეკორი,კარნიზი	none	installment	520.00	308.75	3
+2026-07	სახლი & დეკორი,ორთქლით საწმენდი აპარატი,სახლის მოვლა	KARCHER GEORGIA	installment	1100.00	608.00	2
+2026-07	სახლი & დეკორი,უთო	BRAUN	installment	380.00	195.00	1
+2026-07	სახლი & დეკორი,ქიმწმენდის აპარატი,სახლის მოვლა	KARCHER GEORGIA	installment	1210.00	664.00	1
+2026-07	სახლი & ეზო,აუზი,აუზი & აქსესუარები	Bestway	installment	19580.00	10970.00	17
+2026-07	სახლი & ეზო,აუზი,აუზი & აქსესუარები	INTEX	installment	4330.00	2265.00	5
+2026-07	სახლი & ეზო,აუზი,აუზი & აქსესუარები	ბრენდის გარეშე	installment	90.00	75.00	1
+2026-07	სახლი & ეზო,აუზის მოვლა,აუზი & აქსესუარები	Bestway	installment	170.00	75.00	1
+2026-07	სახლი & ეზო,ბატუტი	none	installment	2080.00	1197.00	3
+2026-07	სახლი & ეზო,ორთქლით საწმენდი აპარატი,სახლის მოვლა	FRANKO	installment	550.00	301.00	1
+2026-07	სახლი & ეზო,ორთქლით საწმენდი აპარატი,სახლის მოვლა	KARCHER GEORGIA	installment	580.00	304.00	1
+2026-07	სახლი & ეზო,საკერავი მანქანა	Janome	installment	860.00	500.00	1
+2026-07	სახლი & ეზო,ქოთანი	none	installment	960.00	550.50	2
+2026-07	სენდვიჩის აპარატი	TEFAL	installment	380.00	215.00	1
+2026-07	სილამაზე,თავის მოვლა,თმის სტაილერი	DREAME	installment	2520.00	1342.16	2
+2026-07	სილამაზე,თმის მოვლა,ელექტრო სავარცხელი	BABYLISS	installment	410.00	195.00	1
+2026-07	სილამაზე,თმის მოვლა,ეპილატორი	FRANKO	installment	170.00	93.00	1
+2026-07	სილამაზე,თმის მოვლა,თმის და წვერის საჭრელი	PHILIPS	installment	530.00	304.00	1
+2026-07	სილამაზე,თმის მოვლა,თმის საშრობი	REMINGTON	installment	320.00	113.00	1
+2026-07	სილამაზე,თმის მოვლა,თმის საშრობი & სავარცხელი	DREAME	installment	965.00	604.92	2
+2026-07	სილამაზე,თმის მოვლა,თმის სტაილერი	DREAME	installment	8820.00	4700.06	7
+2026-07	სილამაზე,თმის მოვლა,თმის სტაილერი	SHARK	installment	3280.00	1920.00	4
+2026-07	სილამაზე,თმის მოვლა,თმის უთო	PHILIPS	installment	470.00	270.00	1
+2026-07	სილამაზე,თმის მოვლა,თმის უთო	REMINGTON	installment	490.00	270.00	2
+2026-07	სილამაზე,თმის მოვლა,წვერსაპარსი	Panasonic	installment	370.00	210.00	1
+2026-07	სკუტერი	MIQILONG	installment	220.00	63.35	1
+2026-07	სმარტ გაჯეტები,დრონი	DJI	installment	3530.00	1709.10	1
+2026-07	სმარტ გაჯეტები,ვიდეოკამერა	Canon	installment	2910.00	1680.00	1
+2026-07	სმარტ გაჯეტები,ვიდეოკამერა	none	installment	580.00	339.15	1
+2026-07	სმარტ გაჯეტები,მიკროფონები	none	installment	390.00	224.10	1
+2026-07	სპორტი & გართობა,ველოსპორტი,ველოსიპედი	MIQILONG	installment	170.00	95.32	1
+2026-07	სპორტი & გართობა,ველოსპორტი,ველოსიპედი	none	installment	270.00	155.00	2
+2026-07	სპორტი & გართობა,ველოსპორტი,ველოსიპედი	TRINX	installment	4190.00	2425.00	5
+2026-07	სპორტი & გართობა,ველოსპორტი,სკუტერი	MIQILONG	installment	880.00	251.26	4
+2026-07	სპორტი & გართობა,ლაშქრობა,კარვები & ტენტები	none	installment	190.00	80.00	1
+2026-07	სპორტი & გართობა,სათამაშოები,ელექტრო მანქანები	none	installment	9460.00	5160.00	11
+2026-07	სპორტი & გართობა,სკუტერი	none	installment	10820.00	6339.60	6
+2026-07	სპორტი & გართობა,სკუტერი	ბრენდის გარეშე	installment	220.00	120.00	1
+2026-07	სპორტი & ფიტნესი,სპორტი,ველოსპორტი,სკუტერი	N/A	installment	660.00	380.00	1
+2026-07	სპორტი,ველოსპორტი,ველოსიპედი,ბავშვთა სამყარო,ველოეტლები	none	installment	540.00	300.00	2
+2026-07	სპორტი,ლაშქრობა,კარვები & ტენტები	Bestway	installment	250.00	120.00	1
+2026-07	სპორტი,სკუტერი	none	installment	21490.00	12590.10	11
+2026-07	სჭვალსახრახნები	ბრენდის გარეშე	installment	130.00	67.00	1
+2026-07	ტაფა	BERLLONG	installment	150.00	87.00	1
+2026-07	ტაფა	TEFAL	installment	320.00	173.00	1
+2026-07	ტაფა,სახლი & დეკორი,გრილის ტაფა,სამზარეულო & ჭურჭელი	none	installment	130.00	69.60	1
+2026-07	ტაფა,სახლი & დეკორი,სამზარეულო & ჭურჭელი	none	installment	1520.00	919.28	8
+2026-07	ტელევიზორები & აუდიო,დინამიკი	FRANKO	installment	1790.00	1028.00	3
+2026-07	ტელევიზორები & აუდიო,ტელევიზორები	Sunny	installment	1140.00	663.00	1
+2026-07	ტელევიზორები & აუდიო,ტელევიზორები,ტელევიზორი	BEKO	installment	2320.00	1332.00	1
+2026-07	ტელევიზორები & აუდიო,ტელევიზორები,ტელევიზორი	FRANKO	installment	510.00	294.00	1
+2026-07	ტელევიზორები & აუდიო,ტელევიზორები,ტელევიზორი	Hisense	installment	5770.00	3180.00	4
+2026-07	ტელევიზორები & აუდიო,ტელევიზორები,ტელევიზორი	MARAZZI	installment	1380.00	800.00	1
+2026-07	ტელევიზორები & აუდიო,ტელევიზორები,ტელევიზორი	SAMSUNG	installment	1140.00	596.00	1
+2026-07	ტელევიზორები & აქსესუარები,დინამიკი	FRANKO	installment	810.00	466.00	1
+2026-07	ტელევიზორები & აქსესუარები,პროექტორი	ViewSonic	installment	1290.00	749.00	1
+2026-07	ტელევიზორები & აქსესუარები,ტელევიზორი	FRANKO	installment	510.00	294.00	1
+2026-07	ტელევიზორები & აქსესუარები,ტელევიზორი	Hisense	installment	9710.00	5853.00	8
+2026-07	ტელევიზორები & აქსესუარები,ტელევიზორი	SAMSUNG	installment	12390.00	7218.00	6
+2026-07	ტელევიზორები & აქსესუარები,ტელევიზორი	Sunny	installment	440.00	290.00	1
+2026-07	ტელევიზორები & აქსესუარები,ტელევიზორი	TCL	installment	11240.00	6798.00	2
+2026-07	ტელევიზორები & აქსესუარები,ტელევიზორი	Xiaomi	installment	4320.00	2517.00	3
+2026-07	ტელევიზორი 	BEKO	installment	1360.00	799.00	1
+2026-07	ტელევიზორი 	FRANKO	installment	5850.00	3381.00	10
+2026-07	ტელევიზორი 	Hisense	installment	8319.00	5191.00	8
+2026-07	ტელევიზორი 	LG	installment	2310.00	1299.00	1
+2026-07	ტელევიზორი 	MARAZZI	installment	1500.00	880.00	1
+2026-07	ტელევიზორი 	SAMSUNG	installment	4350.00	2470.00	3
+2026-07	ტელევიზორი 	SKYWORTH	installment	473.00	435.00	1
+2026-07	ტელევიზორი 	Sunny	installment	1140.00	663.00	1
+2026-07	ტელევიზორი 	TCL	installment	2997.00	2548.00	2
+2026-07	ტელევიზორი 	TCL	single	2100.00	1999.00	1
+2026-07	ტელევიზორი 	UDTV	installment	460.00	329.00	1
+2026-07	ტელევიზორი 	Xiaomi	installment	5200.00	3028.00	4
+2026-07	ტელეფონი	HONOR	installment	63040.00	35656.00	53
+2026-07	ტელეფონი	SAMSUNG	installment	19226.00	12314.00	17
+2026-07	ტენის ამომშრობი	MIDEA	installment	660.00	380.00	1
+2026-07	ტენტი	Bestway	installment	70.00	35.00	1
+2026-07	ტენტი	N/A	installment	60.00	24.00	1
+2026-07	ტოსტერი	BRAUN	installment	170.00	95.00	1
+2026-07	ტოსტერი	FRANKO	installment	120.00	59.00	1
+2026-07	უთო	BRAUN	installment	180.00	100.00	1
+2026-07	უთო,ორთქლის გენერატორი	FRANKO	installment	150.00	86.00	1
+2026-07	ფილტრი	Bestway	installment	380.00	200.00	2
+2026-07	ფლეისთეიშენი	PlayStation	installment	3430.00	1996.00	2
+2026-07	ფოტო & ვიდეო,ვიდეოკამერა	Canon	installment	5200.00	3004.00	1
+2026-07	ქანჩსახრახნი	none	installment	800.00	406.00	1
+2026-07	ქვაბების ნაკრები	ARDESTO	installment	310.00	174.59	1
+2026-07	ქვაბი,სახლი & დეკორი,სამზარეულო & ჭურჭელი	none	installment	630.00	354.74	3
+2026-07	ყავის აპარატი	BEKO	installment	590.00	343.00	1
+2026-07	ყავის აპარატი	Grundig	installment	2437.00	1372.00	4
+2026-07	ყავის აპარატი	MIDEA	installment	966.00	920.00	1
+2026-07	ყელსაბამი	N/A	installment	340.00	173.00	1
+2026-07	შედუღების აპარატი	INGCO	installment	1200.00	654.00	1
+2026-07	ჩასამონტაჟებელი ჭურჭლის სარეცხი მანქანა	MIDEA	installment	1280.00	745.00	1
+2026-07	ჩასაშენებელი გაზის ზედა პანელი	BEKO	installment	880.00	436.00	1
+2026-07	ჩასაშენებელი გამწოვი	MIDEA	installment	460.00	260.00	1
+2026-07	ჩასაშენებელი ზედაპირი	BEKO	installment	440.00	254.00	1
+2026-07	ჩასაშენებელი ზედაპირი	MIDEA	installment	860.00	500.00	1
+2026-07	ჩასაშენებელი მიკროტალღური ღუმელი	FRANKO	installment	670.00	391.00	1
+2026-07	ჩასაშენებელი ღუმელი	MIDEA	installment	1600.00	940.00	1
+2026-07	ჩასაშენებელი ჭურჭლის სარეცხი მანქანა	MARAZZI	installment	1460.00	845.00	1
+2026-07	ცენტრალური გათბობის ქვაბი	ARISTON	installment	5080.00	2620.00	1
+2026-07	წვრილი ტექნიკა,მიქსერი	MIDEA	installment	280.00	155.00	1
+2026-07	წვრილი ტექნიკა,მტვერსასრუტი	BEKO	installment	900.00	519.00	1
+2026-07	წვრილი ტექნიკა,მტვერსასრუტი	DREAME	installment	1890.00	1039.70	2
+2026-07	წვრილი ტექნიკა,მტვერსასრუტი	Hisense	installment	250.00	139.00	1
+2026-07	წვრილი ტექნიკა,მტვერსასრუტი	KARCHER GEORGIA	installment	370.00	200.00	1
+2026-07	წვრილი ტექნიკა,მტვერსასრუტი	MIDEA	installment	3420.00	1990.00	4
+2026-07	წვრილი ტექნიკა,მტვერსასრუტი	SAMSUNG	installment	780.00	429.00	2
+2026-07	წვრილი ტექნიკა,მტვერსასრუტი	SHARK	installment	1240.00	720.00	1
+2026-07	წვრილი ტექნიკა,პურის შესანახი	BERLLONG	installment	180.00	102.35	1
+2026-07	წვრილი ტექნიკა,სამზარეულოს წვრილი ტექნიკა,აეროგრილი	Hisense	installment	850.00	470.00	3
+2026-07	წვრილი ტექნიკა,სამზარეულოს წვრილი ტექნიკა,აეროგრილი	MIDEA	installment	1030.00	589.00	3
+2026-07	წვრილი ტექნიკა,სამზარეულოს წვრილი ტექნიკა,აეროგრილი	Ninja	installment	2200.00	1280.00	2
+2026-07	წვრილი ტექნიკა,სამზარეულოს წვრილი ტექნიკა,ელექტრო ჩაიდანი	Adler	installment	100.00	35.00	1
+2026-07	წვრილი ტექნიკა,სამზარეულოს წვრილი ტექნიკა,მიკროტალღური ღუმელი	ARSHIA	installment	320.00	181.00	1
+2026-07	წვრილი ტექნიკა,სამზარეულოს წვრილი ტექნიკა,მიკროტალღური ღუმელი	BEKO	installment	480.00	231.00	1
+2026-07	წვრილი ტექნიკა,სამზარეულოს წვრილი ტექნიკა,მიქსერი	ARSHIA	installment	460.00	260.00	2
+2026-07	წვრილი ტექნიკა,სამზარეულოს წვრილი ტექნიკა,მიქსერი	FRANKO	installment	470.00	268.00	1
+2026-07	წვრილი ტექნიკა,სამზარეულოს წვრილი ტექნიკა,ტოსტერი	SENCOR	installment	180.00	99.00	1
+2026-07	წვრილი ტექნიკა,სამზარეულოს წვრილი ტექნიკა,ტოსტერი,გრილ ტოსტერი	ARSHIA	installment	220.00	121.00	1
+2026-07	წვრილი ტექნიკა,სამზარეულოს წვრილი ტექნიკა,ტოსტერი,გრილ ტოსტერი	FRANKO	installment	660.00	380.00	2
+2026-07	წვრილი ტექნიკა,სამზარეულოს წვრილი ტექნიკა,უთო	Camry	installment	110.00	55.00	1
+2026-07	წვრილი ტექნიკა,სამზარეულოს წვრილი ტექნიკა,ჩოფერი	SENCOR	installment	130.00	73.00	1
+2026-07	წვრილი ტექნიკა,სამზარეულოს წვრილი ტექნიკა,ხელის ბლენდერი	BRAUN	installment	500.00	232.00	1
+2026-07	წვრილი ტექნიკა,ტაფა,სახლი & ეზო,ბლინის ტაფა,სამზარეულო & სერვირება	FRANKO	installment	80.00	37.00	1
+2026-07	წვრილი ტექნიკა,უთო,ორთქლის გენერატორი	FRANKO	installment	150.00	86.00	1
+2026-07	წვრილი ტექნიკა,ყავის აპარატი	BEKO	installment	320.00	184.00	1
+2026-07	წვრილი ტექნიკა,ყავის აპარატი	Grundig	installment	2310.00	1350.00	2
+2026-07	წვრილი ტექნიკა,ყავის აპარატი	MIDEA	installment	1580.00	920.00	1
+2026-07	ჭურჭლის სარეცხი მანქანა	BEKO	installment	2558.00	1215.00	1
+2026-07	ჭურჭლის სარეცხი მანქანა	MARAZZI	installment	1530.00	892.00	1
+2026-07	ჭურჭლის სარეცხი მანქანა	MIDEA	installment	2760.00	1600.00	2
+2026-07	ხელის ბლენდერი	BRAUN	installment	510.00	250.00	1
+2026-07	ხელსაწყოები,ბაღის ხელსაწყოები,ბაღის მოტო და ელექტრო ინსტრუმენტები	WADFOW	installment	420.00	239.00	1
+2026-07	ხელსაწყოები,ქანჩსახრახნი	none	installment	1260.00	652.00	1
+2026-07	ხელსაწყოები,ხელის ინსტრუმენტების ნაკრები	none	installment	560.00	324.00	1
+2026-07	ხელსაწყოები,ხერხები,დისკური ხერხი	none	installment	770.00	445.00	1
+2026-07	ხელსაწყოები,ხერხები,ტორსული ხერხი	Bosch	installment	3910.00	2605.50	1
+2026-07	ხერხები,ცირკულარული ხერხი	none	installment	330.00	188.60	1
+2026-07	ხორცსაკეპი მანქანა	KENWOOD	installment	470.00	245.00	1
+2026-07	ჰოვერბორდი	GOLDEN CHILD	installment	560.00	320.00	1
+2026-08	N/A	N/A	installment	90.00	44.25	1
+2026-08	აეროგრილები და ღუმელები,მიკროტალღური ღუმელები	MIDEA	installment	360.00	200.00	1
+2026-08	აეროგრილი	BEKO	installment	560.00	369.00	1
+2026-08	აეროგრილი	Hisense	installment	180.00	170.00	1
+2026-08	აეროგრილი	MIDEA	installment	290.02	417.00	3
+2026-08	აეროგრილი	MIDEA	single	315.00	300.00	1
+2026-08	აეროგრილი	Ninja	installment	3460.00	2000.00	4
+2026-08	აეროგრილი,აეროგრილი & გრილი	BRAUN	installment	1020.00	594.00	2
+2026-08	ავეჯი	N/A	installment	1280.00	745.00	1
+2026-08	ავეჯი	none	single	289.00	1.00	1
+2026-08	ავეჯი	ბრენდის გარეშე	installment	480.00	279.00	1
+2026-08	ავეჯი,ბალიში,საძინებელი	none	installment	150.00	65.85	5
+2026-08	ავეჯი,გარე ავეჯი	N/A	single	58.00	1.00	1
+2026-08	ავეჯი,გარე ავეჯი,ბაღის საქანელები	none	installment	1510.00	848.00	5
+2026-08	ავეჯი,გარე ავეჯი,გარე ავეჯის კომპლექტი	none	installment	3240.00	1935.00	5
+2026-08	ავეჯი,გარე ავეჯი,გარე მაგიდა	none	installment	90.00	47.00	1
+2026-08	ავეჯი,დივანი	none	installment	2260.00	1325.00	1
+2026-08	ავეჯი,დივანი,რბილი ავეჯი	none	installment	2560.00	1490.00	2
+2026-08	ავეჯი,მაგიდა,გარე ავეჯი,გარე ავეჯის კომპლექტი	Comfort Room	installment	810.00	470.00	1
+2026-08	ავეჯი,მატრასი	none	installment	1000.00	585.00	1
+2026-08	ავეჯი,მატრასი,საძინებელი	none	installment	1120.00	650.00	2
+2026-08	ავეჯი,მისაღები	ბრენდის გარეშე	installment	560.00	1.00	1
+2026-08	ავეჯი,მისაღები,თარო	none	installment	230.00	125.58	1
+2026-08	ავეჯი,მისაღები,კარადა	ბრენდის გარეშე	installment	720.00	420.00	1
+2026-08	ავეჯი,მისაღები,მისაღების კომპლექტი	SAGA	installment	2720.00	1856.00	1
+2026-08	ავეჯი,პუფი,რბილი ავეჯი	none	installment	80.00	37.80	1
+2026-08	ავეჯი,სავარძელი,რბილი ავეჯი	N/A	single	709.00	1.00	1
+2026-08	ავეჯი,საოფისე ავეჯი	none	installment	1090.00	649.20	2
+2026-08	ავეჯი,საწოლი,საძინებელი	none	installment	2300.00	1360.00	2
+2026-08	ავეჯი,სკამი	none	installment	480.00	250.80	6
+2026-08	ავეჯი,სკამი,გარე ავეჯი,გარე ავეჯის კომპლექტი	Comfort Room	installment	880.00	500.00	4
+2026-08	ავეჯი,სკამი,გარე ავეჯი,გარე ავეჯის კომპლექტი	none	installment	380.00	178.00	2
+2026-08	ავეჯი,ყავის მაგიდა,რბილი ავეჯი,მისაღები	none	installment	1020.00	221.00	2
+2026-08	ავეჯი,ხალიჩა	none	installment	130.00	69.30	1
+2026-08	ავტო აქსესუარები,საბურავი	LANVIGATOR	installment	1040.00	540.00	4
+2026-08	ავტო აქსესუარები,საბურავი	TOURADOR	installment	580.00	290.00	2
+2026-08	ავტო აქსესუარები,საცხებ-საპოხი მასალები,ტრანსმისიის ზეთი	OE LUBRICANTS	installment	320.00	188.00	1
+2026-08	აუზი	Bestway	installment	1660.00	760.00	4
+2026-08	აუზი	INTEX	installment	441.00	420.00	1
+2026-08	აქსესუარები,საათები,მამაკაცის საათები	Casio	installment	860.00	479.00	3
+2026-08	აქსესუარები,საყურე	OLIVER WEBER	installment	130.00	72.00	1
+2026-08	აქსესუარები,ყელსაბამი	OLIVER WEBER	installment	190.00	106.00	1
+2026-08	აქსესუარები,ყელსაბამი	PDPAOLA	installment	370.00	212.00	1
+2026-08	აქსესუარები,ყელსაბამი	ZAG BIJOUX	installment	270.00	152.00	1
+2026-08	ბავშვთა სამყარო,ველოეტლები	none	installment	620.00	290.00	1
+2026-08	ბავშვთა სამყარო,საწოლ-მანეჟები	N/A	installment	480.00	175.00	1
+2026-08	ბავშვთა სამყარო,საწოლ-მანეჟები	none	installment	310.00	175.00	1
+2026-08	ბაღის ავეჯის კომპლექტი	N/A	installment	1250.00	706.05	3
+2026-08	ბაღის საქანელა	N/A	installment	500.00	296.00	2
+2026-08	ბაღის ხელსაწყოები,ბაღის მოტო და ელექტრო ინსტრუმენტები,ეზო & გარე სივრცე	INGCO	installment	1050.00	614.00	1
+2026-08	ბაღის ხელსაწყოები,ბაღის მოტო და ელექტრო ინსტრუმენტები,ეზო & გარე სივრცე	none	installment	510.00	292.00	1
+2026-08	ბლენდერი	ARSHIA	installment	50.00	278.00	1
+2026-08	ბლენდერი	MIDEA	installment	0.01	115.00	1
+2026-08	ბუდე საქანელა	N/A	installment	320.00	175.00	1
+2026-08	ბუდე საქანელა	ბრენდის გარეშე	installment	290.00	180.91	1
+2026-08	გაზის წყლის გამაცხელებელი	MIDEA	installment	960.00	560.00	1
+2026-08	გაზქურა	DIXI	installment	940.00	545.00	1
+2026-08	გაზქურა	Simfer	installment	1815.00	1285.00	2
+2026-08	გათბობის სისტემა	MIDEA	installment	2030.00	1190.00	1
+2026-08	გამწოვი	ELECTOLUX	single	429.00	1.00	1
+2026-08	გამწოვი	ELIKOR	single	225.00	1.00	1
+2026-08	გამწოვი	FRANKO	installment	720.00	395.00	1
+2026-08	გამწოვი	MIDEA	installment	970.00	605.00	2
+2026-08	გამწოვი	MIDEA	single	741.00	2.00	2
+2026-08	გამწოვი	SAMSUNG	single	355.00	275.00	1
+2026-08	გამწოვი	Simfer	installment	420.00	240.00	1
+2026-08	გარე ავეჯი,ბაღის საქანელები	none	installment	4660.00	3009.85	8
+2026-08	გარე ავეჯი,ბაღის საქანელები	ბრენდის გარეშე	installment	1790.00	1020.00	3
+2026-08	გარე ავეჯი,გარე ავეჯის კომპლექტი	N/A	installment	370.00	210.00	1
+2026-08	გარე ავეჯი,გარე ავეჯის კომპლექტი	none	installment	3150.00	902.00	5
+2026-08	გარე ავეჯი,გარე ავეჯის კომპლექტი	ბრენდის გარეშე	installment	140.00	68.00	2
+2026-08	გარე ავეჯი,გარე მაგიდა	none	installment	90.00	47.00	1
+2026-08	გასაბერი აუზი	Bestway	installment	330.00	138.00	2
+2026-08	გეიმინგი,გეიმინგ სავარძელი,სმარტ გაჯეტები	none	installment	670.00	390.10	1
+2026-08	დენის წყლის გამაცხელებელი	MIDEA	installment	990.00	570.00	2
+2026-08	ელექტრო სავარცხელი	PHILIPS	installment	370.00	210.00	1
+2026-08	ელექტრო სკუტერი	Segway	installment	3200.00	1870.70	2
+2026-08	ელექტრო სკუტერი	Xiaomi	installment	10140.00	6176.41	5
+2026-08	ელექტრო ღუმელი	FRANKO	installment	950.00	546.00	3
+2026-08	ელექტრო ჩაიდანი	FRANKO	single	105.00	99.00	1
+2026-08	ვენტილატორი,კონდიციონერი & გაგრილება	none	installment	260.00	110.94	1
+2026-08	თმის ელექტრო სავარცხელი	DREAME	installment	570.00	300.00	1
+2026-08	თმის ელექტრო სავარცხელი	FRANKO	installment	130.00	73.00	1
+2026-08	თმის მოვლა,ეპილატორი,სილამაზე &თავის მოვლა	FRANKO	installment	170.00	93.00	1
+2026-08	თმის მოვლა,თმის საშრობი & სავარცხელი,სილამაზე &თავის მოვლა	BABYLISS	installment	780.00	404.00	2
+2026-08	თმის მოვლა,თმის საშრობი & სავარცხელი,სილამაზე &თავის მოვლა	DREAME	installment	560.00	299.06	1
+2026-08	თმის მოვლა,თმის საშრობი & სავარცხელი,სილამაზე &თავის მოვლა	REMINGTON	installment	320.00	112.00	1
+2026-08	თმის მოვლა,თმის საჭრელი & ტრიმერი,სილამაზე &თავის მოვლა	PHILIPS	installment	530.00	302.00	1
+2026-08	თმის მოვლა,თმის სტაილერი	DREAME	installment	1260.00	666.05	1
+2026-08	თმის მოვლა,თმის სტაილერი	SHARK	installment	820.00	480.00	1
+2026-08	თმის მოვლა,თმის სტაილერი,სილამაზე &თავის მოვლა	DREAME	installment	13860.00	7315.70	11
+2026-08	თმის მოვლა,თმის სტაილერი,სილამაზე &თავის მოვლა	REMINGTON	installment	560.00	312.00	2
+2026-08	თმის მოვლა,თმის სტაილერი,სილამაზე &თავის მოვლა	SHARK	installment	2880.00	1680.00	3
+2026-08	თმის მოვლა,თმის უთო,სილამაზე &თავის მოვლა	PHILIPS	installment	470.00	264.00	1
+2026-08	თმის მოვლა,თმის უთო,სილამაზე &თავის მოვლა	REMINGTON	installment	250.00	134.00	1
+2026-08	თმის მოვლა,წვერსაპარსი,სილამაზე &თავის მოვლა	Panasonic	installment	170.00	93.00	1
+2026-08	თმის მოვლა,წვერსაპარსი,სილამაზე &თავის მოვლა	PHILIPS	installment	960.00	560.00	2
+2026-08	თმის საშრობი	REMINGTON	installment	480.00	227.00	2
+2026-08	თმის სტაილერი	DREAME	installment	1260.00	663.54	1
+2026-08	თმის სტაილერი	SHARK	installment	1860.00	1080.00	2
+2026-08	ინგრედიენტების დამუშავება,სტაციონალური ბლენდერები	Ninja	installment	280.00	144.00	1
+2026-08	ინგრედიენტების დამუშავება,სტაციონალური მიქსერები	ARSHIA	installment	510.00	284.00	1
+2026-08	ინგრედიენტების დამუშავება,ხელის ბლენდერები	SENCOR	installment	380.00	215.00	1
+2026-08	ინგრედიენტების დამუშავება,ხორცსაკეპები	FRANKO	installment	650.00	370.00	1
+2026-08	კარ-ფანჯარა & ფურნიტურა,შიდა კარები	none	installment	240.00	157.21	1
+2026-08	კარკასული აუზი	Bestway	installment	510.00	290.00	1
+2026-08	კომპიუტერული აქსესუარები,პლანშეტი	Blackview	installment	680.00	392.00	2
+2026-08	კონდენციონერი	CHiQ	installment	770.00	399.00	1
+2026-08	კონდენციონერი	MIDEA	installment	1670.00	970.00	1
+2026-08	კონდენციონერი	MIDEA	single	2638.00	2.00	1
+2026-08	კონდიციონერი	ARDESTO	installment	6980.00	4070.00	5
+2026-08	კონდიციონერი	BEKO	installment	1260.00	799.00	1
+2026-08	კონდიციონერი	CHiQ	installment	3580.00	2098.00	2
+2026-08	კონდიციონერი	MIDEA	installment	15420.00	9264.00	9
+2026-08	კონდიციონერი	MIDEA	single	2597.00	2.00	2
+2026-08	კონდიციონერი,კონდიციონერი & გაგრილება	ARDESTO	installment	4680.00	2730.00	3
+2026-08	კონდიციონერი,კონდიციონერი & გაგრილება	CHIGO	installment	1020.00	595.00	1
+2026-08	კონდიციონერი,კონდიციონერი & გაგრილება	CHiQ	installment	2980.00	1618.00	2
+2026-08	კონდიციონერი,კონდიციონერი & გაგრილება	MIDEA	installment	4230.00	2470.00	2
+2026-08	კონდიციონერი,კონდიციონერი & გაგრილება	none	installment	3940.00	1731.00	2
+2026-08	კონდიციონერი,კონდიციონერი & გაგრილების სისტემები	AIMON	installment	290.00	118.15	1
+2026-08	კონდიციონერი,კონდიციონერი & გაგრილების სისტემები	CHiQ	installment	1920.00	1118.00	2
+2026-08	კონდიციონერი,კონდიციონერი & გაგრილების სისტემები	MIDEA	installment	1670.00	970.00	1
+2026-08	კუთხსახეხი მანქანა	none	installment	730.00	453.90	1
+2026-08	მატრასები	N/A	installment	750.00	245.00	1
+2026-08	მაღალი წნევით რეცხვის აპარატი,სახლის მოვლა,ღრმა წმენდის აპარატები	KARCHER GEORGIA	installment	1450.00	796.00	1
+2026-08	მაცივარი	ARDESTO	installment	3530.00	1947.94	3
+2026-08	მაცივარი	FRANKO	installment	1930.00	1132.00	1
+2026-08	მაცივარი	Hisense	installment	20480.00	11960.00	16
+2026-08	მაცივარი	LG	installment	2520.00	1480.00	1
+2026-08	მაცივარი	MARAZZI	installment	6346.00	3970.00	5
+2026-08	მაცივარი	SAMSUNG	installment	3390.00	1984.00	1
+2026-08	მაცივარი,მაცივრები	ARDESTO	installment	390.00	217.64	1
+2026-08	მაცივარი,მაცივრები	BEKO	installment	5370.00	3143.00	2
+2026-08	მაცივარი,მაცივრები	GORENJE	installment	4860.00	2288.00	3
+2026-08	მაცივარი,მაცივრები	Hisense	installment	23660.00	13800.00	21
+2026-08	მაცივარი,მაცივრები	MARAZZI	installment	7320.00	4297.00	4
+2026-08	მაცივარი,მაცივრები	MIDEA	installment	4350.00	2550.00	2
+2026-08	მაცივარი,მაცივრები	VESTEL	installment	2350.00	1.00	1
+2026-08	მაცივარი,საყინულე,მაცივრები	GORENJE	installment	1470.00	799.00	1
+2026-08	მიკროტალღური ღუმელი	Hisense	installment	660.00	378.00	2
+2026-08	მიკროტალღური ღუმელი	MIDEA	installment	0.04	675.00	5
+2026-08	მიკროტალღური ღუმელი	MIDEA	single	158.00	1.00	1
+2026-08	მიკროტალღური ღუმელი	SAMSUNG	installment	580.00	330.00	1
+2026-08	მიკროფონები	DJI	single	250.00	235.00	1
+2026-08	მიქსერი	FRANKO	installment	470.00	268.00	1
+2026-08	მიქსერი	KENWOOD	installment	280.00	136.00	1
+2026-08	მიქსერი	MIDEA	installment	1.04	380.00	5
+2026-08	მიქსერი ჯამით	FRANKO	installment	290.00	164.00	1
+2026-08	მობილურები & აქსესუარები,სმარტფონები	HONOR	installment	89570.00	52408.00	81
+2026-08	მობილურები & აქსესუარები,სმარტფონები	OPPO	installment	1550.00	910.00	1
+2026-08	მობილურები & აქსესუარები,სმარტფონები	SAMSUNG	installment	12350.00	7194.23	12
+2026-08	მობილურები & აქსესუარები,სმარტფონები	Xiaomi	installment	1980.00	1159.00	1
+2026-08	მოტოცელი	Raider	installment	490.00	292.00	1
+2026-08	მტვერსასრუტები,რობოტი მტვერსასრუტები	DREAME	installment	4360.00	2332.74	2
+2026-08	მტვერსასრუტები,ხელის მტვერსასრუტები	KARCHER GEORGIA	installment	280.00	153.90	1
+2026-08	მტვერსასრუტი	BEKO	installment	2210.00	1218.00	6
+2026-08	მტვერსასრუტი	DREAME	installment	2140.00	1170.94	3
+2026-08	მტვერსასრუტი	FRANKO	installment	690.00	383.00	3
+2026-08	მტვერსასრუტი	GORENJE	installment	900.00	540.00	1
+2026-08	მტვერსასრუტი	Hisense	installment	570.00	330.00	1
+2026-08	მტვერსასრუტი	KARCHER GEORGIA	installment	1270.00	692.00	4
+2026-08	მტვერსასრუტი	MIDEA	installment	5110.00	2980.00	5
+2026-08	მტვერსასრუტი	SAMSUNG	installment	4970.00	2724.00	13
+2026-08	მტვერსასრუტი	SAMSUNG	single	279.00	1.00	1
+2026-08	ორთქლის აპარატი	KARCHER	installment	900.00	496.00	1
+2026-08	ორთქლის გენერატორი	FRANKO	single	250.00	219.00	1
+2026-08	პურის საცხობი	FRANKO	installment	1160.00	634.00	2
+2026-08	რადიატორი	ბრენდის გარეშე	installment	440.00	142.60	1
+2026-08	რემონტი,იატაკი & საფარები,ფილა,კერამოგრანიტი	none	installment	2190.00	1222.47	41
+2026-08	რემონტი,კარ-ფანჯარა & ფურნიტურა,შიდა კარები	none	installment	240.00	132.61	1
+2026-08	რობოტი მტვერსასრუტი	DREAME	installment	16650.00	8781.35	6
+2026-08	რობოტი მტვერსასრუტი	KARCHER GEORGIA	installment	3180.00	2011.00	2
+2026-08	რობოტი მტვერსასრუტი	MIDEA	installment	1640.00	960.00	1
+2026-08	საბავშვო ეტლი	ბრენდის გარეშე	installment	270.00	150.00	1
+2026-08	სათამაშო კონსოლი	Nintendo	installment	1850.00	988.66	1
+2026-08	სათამაშო კონსოლი	PlayStation	installment	290.00	171.66	1
+2026-08	საკერავი მანქანა	Janome	installment	820.00	480.00	1
+2026-08	სამზარეულოს ტექნიკა,აეროგრილი	MIDEA	installment	1120.00	645.00	3
+2026-08	სამზარეულოს ტექნიკა,აეროგრილი	Ninja	installment	6220.00	3600.00	7
+2026-08	სამზარეულოს ტექნიკა,აეროგრილი,აეროგრილები და ღუმელები	Ninja	installment	560.00	320.00	1
+2026-08	სამზარეულოს ტექნიკა,ბლენდერი	BRAUN	installment	580.00	389.00	2
+2026-08	სამზარეულოს ტექნიკა,ბლენდერი	MIDEA	installment	140.00	74.00	1
+2026-08	სამზარეულოს ტექნიკა,ბლენდერი	Ninja	installment	3850.00	2232.00	5
+2026-08	სამზარეულოს ტექნიკა,ბლენდერი,ხელის ბლენდერი	Bosch	installment	1310.00	472.00	3
+2026-08	სამზარეულოს ტექნიკა,დანების კომპლექტი,სახლი & დეკორი,სამზარეულო & ჭურჭელი	ARDESTO	installment	140.00	67.38	1
+2026-08	სამზარეულოს ტექნიკა,ელექტრო ღუმელი	FRANKO	installment	490.00	287.00	1
+2026-08	სამზარეულოს ტექნიკა,ელექტრო ჩაიდანი,ელექტრო ჩაიდნები	BRAUN	installment	130.00	70.00	1
+2026-08	სამზარეულოს ტექნიკა,მიკროტალღური ღუმელი	SAMSUNG	installment	460.00	258.00	1
+2026-08	სამზარეულოს ტექნიკა,მიქსერი	ARSHIA	installment	1530.00	852.00	3
+2026-08	სამზარეულოს ტექნიკა,პურის საცხობი	FRANKO	installment	410.00	235.00	1
+2026-08	სამზარეულოს ტექნიკა,სამზარეულოს კომბაინი	ARDESTO	installment	1040.00	605.80	1
+2026-08	სამზარეულოს ტექნიკა,სამზარეულოს კომბაინი	SENCOR	installment	720.00	390.00	1
+2026-08	სამზარეულოს ტექნიკა,ტოსტერი	BRAUN	installment	170.00	133.00	1
+2026-08	სამზარეულოს ტექნიკა,ტოსტერი	Camry	installment	80.00	40.00	1
+2026-08	სამზარეულოს ტექნიკა,ტოსტერი	FRANKO	installment	270.00	141.00	2
+2026-08	სამზარეულოს ტექნიკა,ტოსტერი,გრილ ტოსტერი	FRANKO	installment	130.00	73.00	1
+2026-08	სამზარეულოს ტექნიკა,ქვაბების ნაკრები,სამზარეულო & ჭურჭელი	ARDESTO	installment	450.00	246.00	3
+2026-08	სამზარეულოს ტექნიკა,ყავის აპარატი	ARDESTO	installment	330.00	131.73	1
+2026-08	სამზარეულოს ტექნიკა,ჩოფერი	KENWOOD	installment	130.00	71.00	1
+2026-08	სამზარეულოს ტექნიკა,ხელის ბლენდერი	Panasonic	installment	190.00	116.00	1
+2026-08	სარეცხი მანქანა	ARDESTO	installment	2100.00	1133.30	2
+2026-08	სარეცხი მანქანა	BEKO	installment	3150.00	1726.00	2
+2026-08	სარეცხი მანქანა	CHIGO	installment	1360.00	675.00	1
+2026-08	სარეცხი მანქანა	Hisense	installment	2700.00	1570.00	2
+2026-08	სარეცხი მანქანა	LG	installment	1700.00	1059.00	1
+2026-08	სარეცხი მანქანა	LG	single	1050.00	1.00	1
+2026-08	სარეცხი მანქანა	MARAZZI	installment	4470.00	2605.00	3
+2026-08	სარეცხი მანქანა	MIDEA	installment	15640.00	9055.00	15
+2026-08	სარეცხი მანქანა	SAMSUNG	installment	6940.00	4289.00	4
+2026-08	სარეცხი მანქანა	TCL	installment	1020.00	597.00	1
+2026-08	სარეცხი მანქანა საშრობით	MIDEA	installment	4140.00	2300.00	2
+2026-08	სარეცხი მანქანა საშრობით	SAMSUNG	installment	2580.00	1400.00	1
+2026-08	სარეცხი მანქანა საშრობით,სარეცხი მანქანები	MARAZZI	installment	3660.00	2100.00	2
+2026-08	სარეცხი მანქანა საშრობით,სარეცხი მანქანები	MIDEA	installment	3940.00	2300.00	2
+2026-08	სარეცხი მანქანები,სარეცხი მანქანა	ARDESTO	installment	1050.00	557.05	1
+2026-08	სარეცხი მანქანები,სარეცხი მანქანა	LG	installment	8200.00	4787.00	5
+2026-08	სარეცხი მანქანები,სარეცხი მანქანა	MARAZZI	installment	1140.00	650.00	1
+2026-08	სარეცხი მანქანები,სარეცხი მანქანა	MIDEA	installment	11378.00	6530.00	10
+2026-08	სარეცხი მანქანები,სარეცხი მანქანა	SHARP	installment	2030.00	1185.00	1
+2026-08	სარეცხის საშრობი	SAMSUNG	installment	2550.00	1490.00	1
+2026-08	სასწორი	FRANKO	installment	90.00	51.00	1
+2026-08	საქანელა	N/A	installment	1290.00	625.00	2
+2026-08	საქანელა	ბრენდის გარეშე	installment	1960.00	1216.39	2
+2026-08	საყინულე	FRANKO	installment	630.00	365.00	1
+2026-08	საყინულე	MARAZZI	installment	2170.00	1249.00	2
+2026-08	საყინულე მაცივარი	FRANKO	installment	1300.00	758.00	1
+2026-08	საყინულე მაცივარი	TCL	installment	670.00	424.00	1
+2026-08	საყინულე,მაცივრები	CHIGO	installment	860.00	420.00	1
+2026-08	საყინულე,მაცივრები	FRANKO	installment	1300.00	758.00	1
+2026-08	საყოფაცხოვრებო ტექნიკა,აეროგრილი,კულინარიული ტექნიკა,აეროგრილი & გრილი	BRAUN	installment	510.00	304.00	1
+2026-08	საყოფაცხოვრებო ტექნიკა,გაზის გამათბობელი,გათბობა	AKOG	installment	870.00	499.00	1
+2026-08	საყოფაცხოვრებო ტექნიკა,გაზქურა	DIXI	installment	1810.00	1055.00	2
+2026-08	საყოფაცხოვრებო ტექნიკა,გაზქურა	Simfer	installment	1400.00	820.00	1
+2026-08	საყოფაცხოვრებო ტექნიკა,გამწოვი	BEKO	installment	1840.00	1070.00	2
+2026-08	საყოფაცხოვრებო ტექნიკა,გამწოვი	MIDEA	installment	590.00	345.00	1
+2026-08	საყოფაცხოვრებო ტექნიკა,გამწოვი,ჩასაშენებელი ტექნიკა,ჩასაშენებელი გამწოვი	HANSA	installment	1460.00	764.04	1
+2026-08	საყოფაცხოვრებო ტექნიკა,სარეცხი მანქანა საშრობით,სარეცხი მანქანები,სარეცხი მანქანა	MARAZZI	installment	1830.00	1050.00	1
+2026-08	საყოფაცხოვრებო ტექნიკა,სარეცხი მანქანა საშრობით,სარეცხი მანქანები,სარეცხი მანქანა	MIDEA	installment	2130.00	1150.00	1
+2026-08	საყოფაცხოვრებო ტექნიკა,სარეცხი მანქანები,სარეცხი მანქანა	ARDESTO	installment	830.00	470.00	1
+2026-08	საყოფაცხოვრებო ტექნიკა,სარეცხი მანქანები,სარეცხი მანქანა	BEKO	installment	5160.00	3016.00	4
+2026-08	საყოფაცხოვრებო ტექნიკა,სარეცხი მანქანები,სარეცხი მანქანა	Hisense	installment	3900.00	2285.00	3
+2026-08	საყოფაცხოვრებო ტექნიკა,სარეცხი მანქანები,სარეცხი მანქანა	MARAZZI	installment	2800.00	1630.00	2
+2026-08	საყოფაცხოვრებო ტექნიკა,სარეცხი მანქანები,სარეცხი მანქანა	MIDEA	installment	28060.00	16270.00	24
+2026-08	საყოფაცხოვრებო ტექნიკა,სარეცხი მანქანები,სარეცხი მანქანა	SHARP	installment	1420.00	745.00	1
+2026-08	საყოფაცხოვრებო ტექნიკა,საყინულე	FRANKO	installment	630.00	365.00	1
+2026-08	საყოფაცხოვრებო ტექნიკა,საყინულე	Hisense	installment	900.00	525.00	1
+2026-08	საყოფაცხოვრებო ტექნიკა,საყინულე	MARAZZI	installment	1540.00	900.00	1
+2026-08	საყოფაცხოვრებო ტექნიკა,ჩასაშენებელი ტექნიკა,გაზქურის ზედაპირი,ჩასაშენებელი ზედაპირი	BEKO	installment	1010.00	491.00	1
+2026-08	საყოფაცხოვრებო ტექნიკა,ჩასაშენებელი ტექნიკა,ჩასაშენებელი გამწოვი	Simfer	installment	290.00	165.00	1
+2026-08	საყოფაცხოვრებო ტექნიკა,ჩასაშენებელი ტექნიკა,ჩასაშენებელი ელექტრო ღუმელი	MIDEA	installment	1200.00	700.00	1
+2026-08	საყოფაცხოვრებო ტექნიკა,ჩასაშენებელი ტექნიკა,ჩასაშენებელი ზედაპირი	MIDEA	installment	1720.00	885.00	2
+2026-08	საყოფაცხოვრებო ტექნიკა,ჩასაშენებელი ტექნიკა,ჩასაშენებელი ჭურჭლის სარეცხი მანქანა	MIDEA	installment	1060.00	620.00	1
+2026-08	საყოფაცხოვრებო ტექნიკა,წყლის გამაცხელებელი	MARAZZI	installment	3460.00	1993.00	5
+2026-08	საყოფაცხოვრებო ტექნიკა,წყლის გამაცხელებელი	MIDEA	installment	3020.00	1760.00	3
+2026-08	საყოფაცხოვრებო ტექნიკა,წყლის გამაცხელებელი,გათბობა	MIDEA	installment	490.00	285.00	1
+2026-08	საყოფაცხოვრებო ტექნიკა,ჭურჭლის სარეცხი მანქანა	BEKO	installment	1160.00	679.00	1
+2026-08	საყოფაცხოვრებო ტექნიკა,ჭურჭლის სარეცხი მანქანა	MIDEA	installment	2320.00	1355.00	2
+2026-08	საყოფაცხოვრებო ტექნიკა,ჭურჭლის სარეცხი მანქანა	SAMSUNG	installment	3680.00	2150.00	2
+2026-08	საწოლი	N/A	installment	1150.00	680.00	1
+2026-08	საწოლი,საძინებელი	none	installment	580.00	310.00	1
+2026-08	სახეხი მანქანები	none	installment	1050.00	611.10	1
+2026-08	სახლი & დეკორი,აბაზანა,უნიტაზი & ბიდეები	none	installment	570.00	315.58	2
+2026-08	სახლი & დეკორი,აუზი,აუზი & აქსესუარები,ეზო & გარე სივრცე	Bestway	installment	4810.00	2450.00	2
+2026-08	სახლი & დეკორი,აუზი,აუზი & აქსესუარები,ეზო & გარე სივრცე	INTEX	installment	1970.00	1099.00	2
+2026-08	სახლი & დეკორი,აუზის ტენტი,აუზის მოვლა,აუზი & აქსესუარები,ეზო & გარე სივრცე	none	single	40.00	1.00	1
+2026-08	სახლი & დეკორი,განათება,ჭაღები	none	installment	260.00	129.34	3
+2026-08	სახლი & დეკორი,კარნიზი	none	installment	440.00	226.20	2
+2026-08	სახლი & დეკორი,კარნიზი	ბრენდის გარეშე	installment	570.00	324.57	3
+2026-08	სახლი & დეკორი,მაღალი წნევით რეცხვის აპარატი,სახლის მოვლა	KARCHER GEORGIA	installment	1450.00	796.00	1
+2026-08	სახლი & დეკორი,ორთქლით საწმენდი აპარატი,სახლის მოვლა	KARCHER GEORGIA	installment	1680.00	904.25	3
+2026-08	სახლი & დეკორი,საკერავი მანქანა	Janome	installment	860.00	500.00	1
+2026-08	სახლი & დეკორი,სამზარეულოს აქსესუარების ნაკრები,დანა-ჩანგლის ნაკრები,სამზარეულო & ჭურჭელი	none	installment	100.00	56.94	1
+2026-08	სახლი & დეკორი,უთო	BRAUN	installment	340.00	195.00	1
+2026-08	სახლი & დეკორი,ქიმწმენდის აპარატი,სახლის მოვლა	KARCHER GEORGIA	installment	660.00	360.00	1
+2026-08	სახლი & დეკორი,ქიმწმენდის აპარატი,სახლის მოვლა,ღრმა წმენდის აპარატები	SHARK	installment	820.00	432.00	1
+2026-08	სახლი & დეკორი,შპალერი	none	installment	1200.00	684.48	8
+2026-08	სენდვიჩის აპარატი	TEFAL	installment	380.00	215.00	1
+2026-08	სილამაზე,თავის მოვლა,თმის სტაილერი	DREAME	installment	1260.00	663.54	1
+2026-08	სკამი	none	installment	400.00	209.45	5
+2026-08	სპორტი & გართობა,ველოსპორტი,ველოსიპედი	MIQILONG	installment	170.00	95.32	1
+2026-08	სპორტი & გართობა,ველოსპორტი,ველოსიპედი	TRINX	installment	3020.00	1765.00	3
+2026-08	სპორტი & გართობა,ველოსპორტი,ველოსიპედი,ბავშვთა სამყარო,ველოეტლები	ბრენდის გარეშე	installment	140.00	75.00	1
+2026-08	სპორტი & გართობა,ველოსპორტი,სკუტერი	MIQILONG	installment	140.00	79.80	1
+2026-08	სპორტი & გართობა,სათამაშოები,ელექტრო მანქანები	none	installment	7680.00	3113.00	9
+2026-08	სპორტი & გართობა,სკუტერი	none	installment	8180.00	4809.25	4
+2026-08	ტაფა	BERLLONG	installment	480.00	237.00	2
+2026-08	ტაფა	BERLLONG	single	75.00	1.00	1
+2026-08	ტაფა,სამზარეულო & ჭურჭელი	BERLLONG	installment	230.00	106.00	1
+2026-08	ტაფა,სახლი & დეკორი,ბლინის ტაფა,სამზარეულო & ჭურჭელი	none	installment	40.00	19.75	1
+2026-08	ტაფა,სახლი & დეკორი,გრილის ტაფა,სამზარეულო & ჭურჭელი	BERLLONG	installment	140.00	64.00	1
+2026-08	ტაფა,სახლი & დეკორი,სამზარეულო & ჭურჭელი	none	installment	50.00	31.67	1
+2026-08	ტაფა,სახლი & დეკორი,ტაფა-ქვაბი,სამზარეულო & ჭურჭელი	BERLLONG	installment	150.00	72.00	1
+2026-08	ტელევიზორები & აუდიო,ტელევიზორები	Hisense	installment	560.00	325.00	1
+2026-08	ტელევიზორები & აუდიო,ტელევიზორები,ტელევიზორი	Hisense	installment	580.00	325.00	1
+2026-08	ტელევიზორები & აქსესუარები,დინამიკი	FRANKO	installment	360.00	202.00	1
+2026-08	ტელევიზორები & აქსესუარები,ტელევიზორი	BEKO	installment	3840.00	2225.00	2
+2026-08	ტელევიზორები & აქსესუარები,ტელევიზორი	FRANKO	installment	2780.00	1607.00	5
+2026-08	ტელევიზორები & აქსესუარები,ტელევიზორი	Hisense	installment	10310.00	6035.00	9
+2026-08	ტელევიზორები & აქსესუარები,ტელევიზორი	iFFALCON	installment	570.00	319.00	1
+2026-08	ტელევიზორები & აქსესუარები,ტელევიზორი	MARAZZI	installment	1150.00	880.00	1
+2026-08	ტელევიზორები & აქსესუარები,ტელევიზორი	TCL	installment	1200.00	629.00	1
+2026-08	ტელევიზორი 	BEKO	installment	1620.00	1069.00	2
+2026-08	ტელევიზორი 	FRANKO	installment	1250.00	725.00	2
+2026-08	ტელევიზორი 	Hisense	installment	5320.00	3065.00	6
+2026-08	ტელევიზორი 	iFFALCON	installment	950.00	519.00	1
+2026-08	ტელევიზორი 	SAMSUNG	installment	4960.00	2889.00	2
+2026-08	ტელევიზორი 	Sunny	installment	1330.00	719.00	1
+2026-08	ტელევიზორი 	TCL	installment	4620.00	2697.00	3
+2026-08	ტელევიზორის საკიდი	ბრენდის გარეშე	installment	60.00	22.96	2
+2026-08	ტელეფონი	HONOR	installment	42285.00	24493.00	39
+2026-08	ტელეფონი	SAMSUNG	installment	9050.00	5627.95	9
+2026-08	ტელეფონი	Xiaomi	installment	710.00	425.00	1
+2026-08	ტოსტერი	FRANKO	installment	120.00	59.00	1
+2026-08	ტოსტერი	FRANKO	single	157.00	1.00	1
+2026-08	უთო	FRANKO	installment	320.00	182.00	1
+2026-08	უთო,ორთქლის უთო	Camry	installment	120.00	65.00	1
+2026-08	ქვაბების ნაკრები,სახლი & დეკორი,სამზარეულო & ჭურჭელი	ARDESTO	installment	310.00	172.01	1
+2026-08	ქვაბების ნაკრები,სახლი & დეკორი,სამზარეულო & ჭურჭელი	Ninja	installment	1100.00	640.00	1
+2026-08	ქვაბი	AIMON	installment	80.00	48.98	1
+2026-08	ქვაბი	ARDESTO	installment	80.00	33.06	1
+2026-08	ქვაბი,სამზარეულო & ჭურჭელი	BERLLONG	installment	230.00	106.00	1
+2026-08	ქვაბი,სახლი & დეკორი,სამზარეულო & ჭურჭელი	none	installment	140.00	70.00	1
+2026-08	ყავის აპარატი	BEKO	installment	2390.00	1396.00	3
+2026-08	ყავის აპარატი	DELONGHI	installment	4320.00	2441.00	3
+2026-08	ყავის აპარატი	MIDEA	installment	1580.00	920.00	1
+2026-08	ყავის აპარატი	Ninja	installment	4920.00	2878.00	2
+2026-08	ყავის საფქვავი	DELONGHI	installment	230.00	128.00	1
+2026-08	ყურსასმენი	N/A	single	124.00	1.00	1
+2026-08	ჩასაშენებელი ზედაპირი	SAMSUNG	installment	1020.00	595.00	1
+2026-08	ჩასაშენებელი ზედაპირი	Simfer	single	370.00	1.00	1
+2026-08	ჩასაშენებელი მიკროტალღური ღუმელი	MIDEA	installment	1040.00	600.00	1
+2026-08	ჩასაშენებელი ღუმელი	MIDEA	installment	1500.00	880.00	1
+2026-08	ჩასაშენებელი ღუმელი	SAMSUNG	installment	1680.00	980.00	1
+2026-08	ჩოფერი	ARSHIA	installment	320.00	177.00	1
+2026-08	ცენტრალური გათბობის ქვაბი	MIDEA	installment	1890.00	1110.00	1
+2026-08	ცენტრალური გათბობის ქვაბი,გათბობა	MIDEA	installment	6550.00	3830.00	3
+2026-08	წვრილი ტექნიკა,სამზარეულოს წვრილი ტექნიკა,ტოსტერი,გრილ ტოსტერი	ARSHIA	installment	90.00	49.00	1
+2026-08	წყლის გამაცხელებელი	MARAZZI	installment	660.00	379.00	1
+2026-08	ჭურჭლის სარეცხი	N/A	single	760.00	1.00	1
+2026-08	ჭურჭლის სარეცხი მანქანა	BEKO	installment	1160.00	679.00	1
+2026-08	ჭურჭლის სარეცხი მანქანა	MARAZZI	installment	1140.00	650.00	1
+2026-08	ჭურჭლის სარეცხი მანქანა	MIDEA	installment	910.00	530.00	1
+2026-08	ჭურჭლის სარეცხი მანქანა	SAMSUNG	installment	1510.00	885.00	1
+2026-08	ჭურჭლის სარეცხი მანქანა	SHARP	installment	1390.00	810.00	1
+2026-08	ხელის ბლენდერი	BRAUN	installment	290.00	165.00	1
+2026-08	ხელის ბლენდერი	MIDEA	installment	1.02	345.00	3
+2026-08	ხორცსაკეპი	Panasonic	installment	1020.00	590.00	2
