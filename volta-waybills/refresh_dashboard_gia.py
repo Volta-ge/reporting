@@ -66,7 +66,7 @@ from refresh_dashboard import (
     START, fetch_waybills, build_waybill_rows, fetch_invoices, build_invoice_rows,
     build_reconciliation, build_geo_summary, load_logistics_status,
     fetch_purchase_waybills, build_purchase_rows,
-    fetch_purchase_goods, build_purchase_items,
+    fetch_purchase_goods, build_purchase_items, fetch_buyer_invoices,
 )
 import json
 from datetime import datetime
@@ -176,6 +176,11 @@ def main():
     print(f"purchase goods lines: fetched {len(raw_goods)}, kept {len(vend_items)}, "
           f"{len({it[1] for it in vend_items})} distinct products", file=sys.stderr)
 
+    print(f"[{datetime.now()}] fetching received (buyer-side) invoices from RS.ge...", file=sys.stderr)
+    binv_rows = build_invoice_rows(fetch_buyer_invoices())
+    print(f"received invoices: {len(binv_rows)}, {len({r['t'] for r in binv_rows})} sellers, "
+          f"{sum(r['a'] for r in binv_rows):,.0f} GEL incl. VAT", file=sys.stderr)
+
     print(f"[{datetime.now()}] fetching CRM sales from VoltaStoreDB (Gia's)...", file=sys.stderr)
     crm_rows = fetch_crm_sales_gia()
     print(f"CRM sales (crm_order_status=5, PID resolvable): {len(crm_rows)}", file=sys.stderr)
@@ -199,6 +204,7 @@ def main():
     geo_json = json.dumps(geo, ensure_ascii=False, separators=(",", ":"))
     vend_json = json.dumps(vend_rows, ensure_ascii=False, separators=(",", ":"))
     vend_items_json = json.dumps(vend_items, ensure_ascii=False, separators=(",", ":"))
+    binv_json = json.dumps(binv_rows, ensure_ascii=False, separators=(",", ":"))
 
     template = (HERE / "template.html").read_text(encoding="utf-8")
     out_html = (template
@@ -208,6 +214,7 @@ def main():
                 .replace("__DATA_GEO__", geo_json)
                 .replace("__DATA_VEND__", vend_json)
                 .replace("__DATA_VEND_ITEMS__", vend_items_json)
+                .replace("__DATA_BINV__", binv_json)
                 # The <title> tag is what names the Artifact in the gallery —
                 # every republish overwrote the user's manual rename until the
                 # tag itself was set (2026-09-04). Keep in sync with the name

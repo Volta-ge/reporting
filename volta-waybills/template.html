@@ -408,6 +408,9 @@
     padding-top:8px; border-top:1px solid var(--line);
   }
 
+  .topbar-right{ display:flex; flex-direction:column; align-items:flex-end; gap:6px; }
+  .gen-stamp{ font-family:"IBM Plex Mono",monospace; font-size:11px; color:var(--faint); }
+
   @media (max-width:640px){
     .kpis, .kpis-5{ grid-template-columns:1fr 1fr; }
     .barlist-row{ grid-template-columns:90px 1fr 50px; }
@@ -423,14 +426,18 @@
       <span class="eyebrow">RS.GE &middot; ELECTRONIC RECORDS</span>
       <h1 data-i18n="title">ვოლტას სავაჭრო რეესტრები</h1>
     </div>
-    <div class="tabbar">
-      <button class="tabbtn active" data-tab="recon" data-i18n="tabRecon">გაყიდვა ↔ ზედნადები</button>
-      <button class="tabbtn" data-tab="wb" data-i18n="tabWb">ზედნადებები</button>
-      <button class="tabbtn" data-tab="inv" data-i18n="tabInv">ანგარიშ-ფაქტურები</button>
-      <button class="tabbtn" data-tab="geo" data-i18n="tabGeo">გეოგრაფია</button>
-      <button class="tabbtn" data-tab="vend" id="tabBtnVend" data-i18n="tabVend">მომწოდებლები</button>
-      <button class="tabbtn" data-tab="prod" id="tabBtnProd" data-i18n="tabProd">პროდუქტები</button>
-      <button class="tabbtn" id="langToggle" style="margin-left:6px;">EN</button>
+    <div class="topbar-right">
+      <div class="gen-stamp" id="globalGenStamp">—</div>
+      <div class="tabbar">
+        <button class="tabbtn active" data-tab="recon" data-i18n="tabRecon">გაყიდვა ↔ ზედნადები</button>
+        <button class="tabbtn" data-tab="wb" data-i18n="tabWb">ზედნადებები</button>
+        <button class="tabbtn" data-tab="inv" data-i18n="tabInv">ანგარიშ-ფაქტურები</button>
+        <button class="tabbtn" data-tab="geo" data-i18n="tabGeo">გეოგრაფია</button>
+        <button class="tabbtn" data-tab="vend" id="tabBtnVend" data-i18n="tabVend">მომწოდებლები</button>
+        <button class="tabbtn" data-tab="prod" id="tabBtnProd" data-i18n="tabProd">პროდუქტები</button>
+      <button class="tabbtn" data-tab="binv" id="tabBtnBinv" data-i18n="tabBinv">მიღებული ფაქტურები</button>
+        <button class="tabbtn" id="langToggle" style="margin-left:6px;">EN</button>
+      </div>
     </div>
   </div>
 
@@ -502,7 +509,7 @@
       </div>
     </div>
 
-    <footer><span data-i18n="wbFooterSource">წყარო: შემოსავლების სამსახური &middot; ელექტრონული ზედნადებების სერვისი (RS.ge WayBillService)</span><span id="wbGenStamp">—</span></footer>
+    <footer><span data-i18n="wbFooterSource">წყარო: შემოსავლების სამსახური &middot; ელექტრონული ზედნადებების სერვისი (RS.ge WayBillService)</span></footer>
   </div>
 
   <!-- ======================= INVOICES TAB ======================= -->
@@ -570,7 +577,7 @@
       </div>
     </div>
 
-    <footer><span data-i18n="invFooterSource">წყარო: შემოსავლების სამსახური &middot; ელექტრონული ანგარიშ-ფაქტურის სერვისი (RS.ge NtosService)</span><span id="invGenStamp">—</span></footer>
+    <footer><span data-i18n="invFooterSource">წყარო: შემოსავლების სამსახური &middot; ელექტრონული ანგარიშ-ფაქტურის სერვისი (RS.ge NtosService)</span></footer>
   </div>
 
   <!-- ======================= RECONCILIATION TAB ======================= -->
@@ -587,9 +594,9 @@
         <div class="field">
           <label for="reconStatus" data-i18n="statusLabel">სტატუსი</label>
           <select id="reconStatus">
-            <option value="all" data-i18n="reconStatusAll">ყველა</option>
+            <option value="all" selected data-i18n="reconStatusAll">ყველა</option>
             <option value="matched" data-i18n="reconStatusMatched">დაწყვილებული</option>
-            <option value="missing_wb" selected data-i18n="reconStatusMissingWb">აკლია ზედნადები</option>
+            <option value="missing_wb" data-i18n="reconStatusMissingWb">აკლია ზედნადები</option>
             <option value="missing_sale" data-i18n="reconStatusMissingSale">აკლია გაყიდვა</option>
           </select>
         </div>
@@ -623,7 +630,7 @@
       </div>
     </div>
 
-    <footer><span data-i18n="reconFooterSource">წყარო: myvolta.info CRM (instalments, Order_Status=5) &middot; RS.ge WayBillService</span><span id="reconGenStamp">—</span></footer>
+    <footer><span data-i18n="reconFooterSource">წყარო: myvolta.info CRM (instalments, Order_Status=5) &middot; RS.ge WayBillService</span></footer>
   </div>
 
   <!-- ======================= GEOGRAPHY TAB ======================= -->
@@ -655,7 +662,7 @@
       </div>
     </div>
 
-    <footer><span data-i18n="geoFooterSource">წყარო: შემოსავლების სამსახური &middot; ელექტრონული ზედნადებების სერვისი (RS.ge WayBillService, END_ADDRESS)</span><span id="geoGenStamp">—</span></footer>
+    <footer><span data-i18n="geoFooterSource">წყარო: შემოსავლების სამსახური &middot; ელექტრონული ზედნადებების სერვისი (RS.ge WayBillService, END_ADDRESS)</span></footer>
   </div>
 
   <!-- ======================= VENDORS (PURCHASES) TAB ======================= -->
@@ -747,7 +754,7 @@
       </div>
     </div>
 
-    <footer><span data-i18n="vendFooterSource">წყარო: შემოსავლების სამსახური &middot; ელექტრონული ზედნადებების სერვისი (RS.ge WayBillService, get_buyer_waybills)</span><span id="vendGenStamp">—</span></footer>
+    <footer><span data-i18n="vendFooterSource">წყარო: შემოსავლების სამსახური &middot; ელექტრონული ზედნადებების სერვისი (RS.ge WayBillService, get_buyer_waybills)</span></footer>
   </div>
 
   <!-- ======================= PRODUCTS (PURCHASES BY PRODUCT) TAB ======================= -->
@@ -840,7 +847,91 @@
       </div>
     </div>
 
-    <footer><span data-i18n="prodFooterSource">წყარო: შემოსავლების სამსახური &middot; ელექტრონული ზედნადებების სერვისი (RS.ge WayBillService, get_buyer_waybilll_goods_list)</span><span id="prodGenStamp">—</span></footer>
+    <footer><span data-i18n="prodFooterSource">წყარო: შემოსავლების სამსახური &middot; ელექტრონული ზედნადებების სერვისი (RS.ge WayBillService, get_buyer_waybilll_goods_list)</span></footer>
+  </div>
+
+  <!-- ======================= RECEIVED INVOICES TAB ======================= -->
+  <div class="tabpanel" id="tab-binv">
+
+    <div class="subhead">
+      <div class="brand-block">
+        <div class="subline" id="binvRangeSubline">—</div>
+        <div class="subline" style="font-size:11.5px;opacity:0.75;" data-i18n="binvNote">ანგარიშ-ფაქტურები, სადაც ვოლტა მყიდველია (RS.ge get_buyer_invoices). თარიღი აღნიშნავს ოპერაციის პერიოდს (თვის დასაწყისი), არა რეგისტრაციის დღეს; თანხა დღგ-ს შეიცავს</div>
+      </div>
+      <div class="filters">
+        <div class="field"><label for="binvStart" data-i18n="dateFrom">დან</label><input type="date" id="binvStart"></div>
+        <div class="field"><label for="binvEnd" data-i18n="dateTo">მდე</label><input type="date" id="binvEnd"></div>
+        <div class="field"><label for="binvSeller" data-i18n="sellerLabel">გამყიდველი</label><select id="binvSeller" style="max-width:260px;"><option value="">ყველა</option></select></div>
+        <div class="field"><label for="binvStatus" data-i18n="statusLabel">სტატუსი</label><select id="binvStatus"><option value="">ყველა</option></select></div>
+        <div class="field"><label for="binvMetric" data-i18n="metricLabel">მაჩვენებელი</label><select id="binvMetric"><option value="amount" data-i18n="metricAmount">თანხა (₾)</option><option value="vat" data-i18n="metricVat">დღგ (₾)</option><option value="count" data-i18n="metricCount">რაოდენობა</option></select></div>
+        <button class="btn-reset" id="binvReset" data-i18n="resetFilters">ფილტრის გასუფთავება</button>
+      </div>
+    </div>
+
+    <div class="kpis">
+      <div class="kpi"><span class="kpi-label" data-i18n="binvKpiCount">მიღებული ფაქტურები</span><span class="kpi-value num" id="binvKpiCount">—</span><span class="kpi-sub" id="binvKpiCountSub">&nbsp;</span></div>
+      <div class="kpi"><span class="kpi-label" data-i18n="wbKpiAmount">ჯამური თანხა</span><span class="kpi-value num" id="binvKpiAmount">—</span><span class="kpi-sub" id="binvKpiAmountSub">&nbsp;</span></div>
+      <div class="kpi"><span class="kpi-label" data-i18n="invKpiVat">ჯამური დღგ</span><span class="kpi-value num" id="binvKpiVat">—</span><span class="kpi-sub" id="binvKpiVatSub">&nbsp;</span></div>
+      <div class="kpi"><span class="kpi-label" data-i18n="binvKpiSellers">უნიკალური გამყიდველი</span><span class="kpi-value num" id="binvKpiSellers">—</span><span class="kpi-sub" id="binvKpiSellersSub">&nbsp;</span></div>
+    </div>
+
+    <div class="grid-main">
+      <div class="panel">
+        <div class="panel-head"><span class="panel-title" data-i18n="invMonthlyVolume">თვიური მოცულობა</span><span class="panel-note" data-i18n="invCountAmountNote">ფაქტურების რაოდენობა &amp; თანხა</span></div>
+        <div class="trend-legend"><span><span class="legend-dot" style="background:var(--accent)"></span><span data-i18n="quantity">რაოდენობა</span></span><span><span class="legend-dot" style="background:var(--warm)"></span><span data-i18n="amountGel">თანხა (₾)</span></span></div>
+        <svg class="trend-svg" id="binvTrendChart" viewBox="0 0 960 230" preserveAspectRatio="none"></svg>
+      </div>
+      <div class="side-stack">
+        <div class="panel"><div class="panel-head"><span class="panel-title" data-i18n="byStatus">სტატუსების მიხედვით</span></div><div class="barlist" id="binvStatusBars"></div></div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head"><span class="panel-title" data-i18n="topSellers">მსხვილი გამყიდველები</span><span class="panel-note" data-i18n="top12ByAmount">ტოპ 12, ჯამური თანხით</span></div>
+      <div class="rank-list" id="binvRankList"></div>
+    </div>
+
+    <div class="panel">
+      <div class="table-toolbar">
+        <span><span class="panel-title" data-i18n="binvPivotTitle">გამყიდველები თვეების ჭრილში</span><br><span class="panel-note" id="binvPivotNote"></span></span>
+        <input class="search-input" id="binvPivotSearchBox" placeholder="ძებნა: გამყიდველი, ს/კ…" data-i18n-ph="binvPivotSearchPh">
+      </div>
+      <div class="pivot-scroll">
+        <table>
+          <thead id="binvPivotHead"></thead>
+          <tbody id="binvPivotBody"></tbody>
+          <tfoot id="binvPivotFoot"></tfoot>
+        </table>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="table-toolbar">
+        <span class="panel-title" data-i18n="binvRegistry">მიღებული ფაქტურების რეესტრი</span>
+        <input class="search-input" id="binvSearchBox" placeholder="ძებნა: გამყიდველი, ს/კ, სერია/№…" data-i18n-ph="binvSearchPh">
+      </div>
+      <div class="table-scroll">
+        <table>
+          <thead><tr>
+            <th><button data-k="d" data-i18n="colOperation">ოპერაცია</button></th>
+            <th><button data-k="reg" data-i18n="colRegistration">რეგისტრაცია</button></th>
+            <th><button data-k="f" data-i18n="colSeriesNo">სერია / №</button></th>
+            <th><button data-k="b" data-i18n="colSeller">გამყიდველი</button></th>
+            <th><button data-k="t" data-i18n="colTinCompany">ს/კ</button></th>
+            <th><button data-k="s" data-i18n="colStatus">სტატუსი</button></th>
+            <th><button data-k="v" data-i18n="colVat">დღგ (₾)</button></th>
+            <th><button data-k="a" data-i18n="colAmount">თანხა (₾)</button></th>
+          </tr></thead>
+          <tbody id="binvTbody"></tbody>
+        </table>
+      </div>
+      <div class="pager">
+        <span id="binvPagerInfo">—</span>
+        <div class="pager-btns"><button id="binvPFirst">&laquo;</button><button id="binvPPrev">&lsaquo;</button><button id="binvPNext">&rsaquo;</button><button id="binvPLast">&raquo;</button></div>
+      </div>
+    </div>
+
+    <footer><span data-i18n="binvFooterSource">წყარო: შემოსავლების სამსახური &middot; ელექტრონული ანგარიშ-ფაქტურის სერვისი (RS.ge NtosService, get_buyer_invoices)</span></footer>
   </div>
 
 </div>
@@ -854,6 +945,8 @@ const RAW_GEO = __DATA_GEO__;
 const RAW_VEND = __DATA_VEND__;
 // [waybill_number, product_name, qty, amount] goods lines for RAW_VEND (null when RAW_VEND is null).
 const RAW_VEND_ITEMS = __DATA_VEND_ITEMS__;
+// Received (buyer-side) invoices, same row shape as RAW_INV; null on the myvolta.info build.
+const RAW_BINV = __DATA_BINV__;
 
 /* ---------- i18n ---------- */
 let LANG = localStorage.getItem("voltaLang") || "ka";
@@ -1075,6 +1168,27 @@ const T = {
   colUnitPrice: {ka:"ფასი (₾)", en:"Unit price (₾)"},
   prodRecordsNote: {ka:" პოზიცია · ", en:" line items · "},
   prodFooterSource: {ka:"წყარო: შემოსავლების სამსახური · ელექტრონული ზედნადებების სერვისი (RS.ge WayBillService, get_buyer_waybilll_goods_list)", en:"Source: Revenue Service · Electronic Waybill Service (RS.ge WayBillService, get_buyer_waybilll_goods_list)"},
+
+  // received invoices tab
+  tabBinv: {ka:"მიღებული ფაქტურები", en:"Received invoices"},
+  binvNote: {ka:"ანგარიშ-ფაქტურები, სადაც ვოლტა მყიდველია (RS.ge get_buyer_invoices). თარიღი აღნიშნავს ოპერაციის პერიოდს (თვის დასაწყისი), არა რეგისტრაციის დღეს; თანხა დღგ-ს შეიცავს", en:"Invoices where Volta is the buyer (RS.ge get_buyer_invoices). Date is the operation period (start of month), not the filing day; amounts include VAT"},
+  sellerLabel: {ka:"გამყიდველი", en:"Seller"},
+  metricVat: {ka:"დღგ (₾)", en:"VAT (₾)"},
+  binvKpiCount: {ka:"მიღებული ფაქტურები", en:"Received invoices"},
+  binvKpiSellers: {ka:"უნიკალური გამყიდველი", en:"Unique sellers"},
+  exVat: {ka:" · დღგ-ს გარეშე ", en:" · ex VAT "},
+  invoicesPerSeller: {ka:" ფაქტურა / გამყიდველი", en:" invoices / seller"},
+  topSellers: {ka:"მსხვილი გამყიდველები", en:"Top sellers"},
+  sellersWord: {ka:" გამყიდველი", en:" sellers"},
+  binvPivotTitle: {ka:"გამყიდველები თვეების ჭრილში", en:"Sellers by month"},
+  binvPivotNoteAmount: {ka:"₾, დღგ-ს ჩათვლით · წლის ბოლო სვეტი = იმ წლის ჯამი · გამყიდველზე დაჭერა ფილტრავს", en:"₾ incl. VAT · column after each year = that year's total · click a seller to filter"},
+  binvPivotNoteVat: {ka:"დღგ, ₾ · წლის ბოლო სვეტი = იმ წლის ჯამი · გამყიდველზე დაჭერა ფილტრავს", en:"VAT, ₾ · column after each year = that year's total · click a seller to filter"},
+  binvPivotNoteCount: {ka:"ფაქტურების რაოდენობა · წლის ბოლო სვეტი = იმ წლის ჯამი · გამყიდველზე დაჭერა ფილტრავს", en:"Invoice count · column after each year = that year's total · click a seller to filter"},
+  binvPivotSearchPh: {ka:"ძებნა: გამყიდველი, ს/კ…", en:"Search: seller, TIN…"},
+  colSeller: {ka:"გამყიდველი", en:"Seller"},
+  binvRegistry: {ka:"მიღებული ფაქტურების რეესტრი", en:"Received invoice register"},
+  binvSearchPh: {ka:"ძებნა: გამყიდველი, ს/კ, სერია/№…", en:"Search: seller, TIN, series/№…"},
+  binvFooterSource: {ka:"წყარო: შემოსავლების სამსახური · ელექტრონული ანგარიშ-ფაქტურის სერვისი (RS.ge NtosService, get_buyer_invoices)", en:"Source: Revenue Service · Electronic Invoice Service (RS.ge NtosService, get_buyer_invoices)"},
 };
 
 /* ---------- shared helpers ---------- */
@@ -1097,6 +1211,20 @@ function fmtDateLong(dstr){
 function fmtMonthLong(dstr){
   const d = new Date(dstr);
   return MONTHS()[d.getMonth()]+", "+d.getFullYear();
+}
+// Default "to" date for a filter: the later of the data's own max date and
+// today (the day the dashboard was generated) — so the filter always covers
+// up through today even on a day the source has no rows yet (e.g. RS.ge
+// reporting lag), instead of silently lagging a few days behind each refresh.
+function defaultEndDate(maxDateIso){
+  const todayStr = new Date().toISOString().slice(0,10);
+  const maxStr = (maxDateIso || "").slice(0,10);
+  return maxStr > todayStr ? maxStr : todayStr;
+}
+// Same idea as defaultEndDate, for the month-granularity filters (Vendors, Products).
+function defaultEndMonth(maxMonthStr){
+  const thisMonth = new Date().toISOString().slice(0,7);
+  return (maxMonthStr || "") > thisMonth ? maxMonthStr : thisMonth;
 }
 function fmtInt(n){ return Math.round(n).toLocaleString(LANG === "en" ? "en-US" : "ka-GE"); }
 function fmtGel(n){ return Math.round(n).toLocaleString(LANG === "en" ? "en-US" : "ka-GE") + " ₾"; }
@@ -1225,12 +1353,11 @@ function drawTrend(svg, buckets, keys){
   const minDate = allDates[0] || new Date().toISOString();
   const maxDate = allDates[allDates.length-1] || new Date().toISOString();
   document.getElementById("wbStart").value = minDate.slice(0,10);
-  document.getElementById("wbEnd").value = maxDate.slice(0,10);
+  document.getElementById("wbEnd").value = defaultEndDate(maxDate);
 
   function renderHeader(){
     document.getElementById("wbRangeSubline").textContent =
       fmtDateLong(minDate) + " — " + fmtDateLong(maxDate) + " · " + fmtInt(RAW_WB.length) + t("wbRecordsNote");
-    document.getElementById("wbGenStamp").textContent = t("generatedAt") + fmtDateTime(new Date().toISOString());
   }
 
   function populateSelect(id, mapFn, extra){
@@ -1392,7 +1519,7 @@ function drawTrend(svg, buckets, keys){
   document.getElementById("wbSearchBox").addEventListener("input", applyFilters);
   document.getElementById("wbReset").addEventListener("click", ()=>{
     document.getElementById("wbStart").value = minDate.slice(0,10);
-    document.getElementById("wbEnd").value = maxDate.slice(0,10);
+    document.getElementById("wbEnd").value = defaultEndDate(maxDate);
     document.getElementById("wbStatus").value = "";
     document.getElementById("wbType").value = "";
     document.getElementById("wbSearchBox").value = "";
@@ -1424,12 +1551,11 @@ function drawTrend(svg, buckets, keys){
   const minDate = allDates[0] || new Date().toISOString();
   const maxDate = allDates[allDates.length-1] || new Date().toISOString();
   document.getElementById("invStart").value = minDate.slice(0,10);
-  document.getElementById("invEnd").value = maxDate.slice(0,10);
+  document.getElementById("invEnd").value = defaultEndDate(maxDate);
 
   function renderHeader(){
     document.getElementById("invRangeSubline").textContent =
       fmtMonthLong(minDate) + " — " + fmtMonthLong(maxDate) + " · " + fmtInt(RAW_INV.length) + t("recordsSuffix");
-    document.getElementById("invGenStamp").textContent = t("generatedAt") + fmtDateTime(new Date().toISOString());
   }
 
   function populateSelect(id, mapFn, extra){
@@ -1579,7 +1705,7 @@ function drawTrend(svg, buckets, keys){
   document.getElementById("invSearchBox").addEventListener("input", applyFilters);
   document.getElementById("invReset").addEventListener("click", ()=>{
     document.getElementById("invStart").value = minDate.slice(0,10);
-    document.getElementById("invEnd").value = maxDate.slice(0,10);
+    document.getElementById("invEnd").value = defaultEndDate(maxDate);
     document.getElementById("invStatus").value = "";
     document.getElementById("invSearchBox").value = "";
     applyFilters();
@@ -1612,12 +1738,11 @@ function drawTrend(svg, buckets, keys){
   const maxDate = [saleDates[saleDates.length-1], wbDates[wbDates.length-1]]
     .filter(Boolean).sort().pop() || new Date().toISOString();
   document.getElementById("reconStart").value = minDate.slice(0,10);
-  document.getElementById("reconEnd").value = maxDate.slice(0,10);
+  document.getElementById("reconEnd").value = defaultEndDate(maxDate);
 
   function renderHeader(){
     document.getElementById("reconRangeSubline").textContent =
       fmtDateLong(minDate) + " — " + fmtDateLong(maxDate) + " · " + fmtInt(summary.total) + t("salesChecked");
-    document.getElementById("reconGenStamp").textContent = t("generatedAt") + fmtDateTime(new Date().toISOString());
   }
 
   function statusLabel(){ return {all:t("reconStatusAll"), matched:t("reconStatusMatched"), missing_wb:t("reconStatusMissingWb"), missing_sale:t("reconStatusMissingSale")}; }
@@ -1683,7 +1808,8 @@ function drawTrend(svg, buckets, keys){
   function renderKPIs(){
     const start = document.getElementById("reconStart").value;
     const end = document.getElementById("reconEnd").value;
-    const people = computePeopleForRange(start, end);
+    const status = document.getElementById("reconStatus").value;
+    const people = peopleForStatus(start, end, status);
     const missingWb = people.filter(p => p.status === "missing_wb");
     const missingSale = people.filter(p => p.status === "missing_sale");
     const matchedPeople = people.length - missingWb.length - missingSale.length;
@@ -1807,8 +1933,8 @@ function drawTrend(svg, buckets, keys){
   document.getElementById("reconGroupSearchBox").addEventListener("input", ()=>{ groupPage=0; renderGroupList(); });
   document.getElementById("reconReset").addEventListener("click", ()=>{
     document.getElementById("reconStart").value = minDate.slice(0,10);
-    document.getElementById("reconEnd").value = maxDate.slice(0,10);
-    document.getElementById("reconStatus").value = "missing_wb";
+    document.getElementById("reconEnd").value = defaultEndDate(maxDate);
+    document.getElementById("reconStatus").value = "all";
     document.getElementById("reconGroupSearchBox").value = "";
     applyFilters();
   });
@@ -1857,7 +1983,6 @@ function drawTrend(svg, buckets, keys){
 
     document.getElementById("geoRangeSubline").textContent =
       fmtInt(geo.total) + t("waybillsChecked") + fmtInt(classified) + t("classifiedN") + fmtInt(unclassified) + t("unclassifiedN");
-    document.getElementById("geoGenStamp").textContent = t("generatedAt") + fmtDateTime(new Date().toISOString());
   }
 
   onRerender(render);
@@ -1890,7 +2015,7 @@ function drawTrend(svg, buckets, keys){
   const maxDate = allDates[allDates.length-1] || new Date().toISOString();
   const minMonth = minDate.slice(0,7), maxMonth = maxDate.slice(0,7);
   document.getElementById("vendStart").value = minMonth;
-  document.getElementById("vendEnd").value = maxMonth;
+  document.getElementById("vendEnd").value = defaultEndMonth(maxMonth);
 
   // Goods lines per waybill number (for the per-product breakdown); the
   // amount sign already follows the waybill's (returns negative).
@@ -1912,7 +2037,6 @@ function drawTrend(svg, buckets, keys){
   function renderHeader(){
     document.getElementById("vendRangeSubline").textContent =
       fmtDateLong(minDate) + " — " + fmtDateLong(maxDate) + " · " + fmtInt(RAW_VEND.length) + t("vendRecordsNote");
-    document.getElementById("vendGenStamp").textContent = t("generatedAt") + fmtDateTime(new Date().toISOString());
   }
 
   function populateSelect(id, mapFn, extra){
@@ -2239,7 +2363,7 @@ function drawTrend(svg, buckets, keys){
   document.getElementById("vendSearchBox").addEventListener("input", ()=>{ page=0; renderTable(); });
   document.getElementById("vendReset").addEventListener("click", ()=>{
     document.getElementById("vendStart").value = minMonth;
-    document.getElementById("vendEnd").value = maxMonth;
+    document.getElementById("vendEnd").value = defaultEndMonth(maxMonth);
     document.getElementById("vendVendor").value = "";
     document.getElementById("vendStatus").value = "";
     document.getElementById("vendType").value = "";
@@ -2293,7 +2417,7 @@ function drawTrend(svg, buckets, keys){
   const maxDate = allDates[allDates.length-1] || new Date().toISOString();
   const minMonth = minDate.slice(0,7), maxMonth = maxDate.slice(0,7);
   document.getElementById("prodStart").value = minMonth;
-  document.getElementById("prodEnd").value = maxMonth;
+  document.getElementById("prodEnd").value = defaultEndMonth(maxMonth);
   const expanded = new Set();  // product names currently broken down by vendor
 
   const vendorTotals = {};
@@ -2306,7 +2430,6 @@ function drawTrend(svg, buckets, keys){
     document.getElementById("prodRangeSubline").textContent =
       fmtDateLong(minDate) + " — " + fmtDateLong(maxDate) + " · " + fmtInt(LINES.length) + t("prodRecordsNote") +
       fmtInt(new Set(LINES.map(l=>l.p)).size) + t("productsWord");
-    document.getElementById("prodGenStamp").textContent = t("generatedAt") + fmtDateTime(new Date().toISOString());
   }
 
   function populateSelect(id, mapFn, extra){
@@ -2623,7 +2746,7 @@ function drawTrend(svg, buckets, keys){
   document.getElementById("prodSearchBox").addEventListener("input", ()=>{ page=0; renderTable(); });
   document.getElementById("prodReset").addEventListener("click", ()=>{
     document.getElementById("prodStart").value = minMonth;
-    document.getElementById("prodEnd").value = maxMonth;
+    document.getElementById("prodEnd").value = defaultEndMonth(maxMonth);
     document.getElementById("prodFilter").value = "";
     document.getElementById("prodVendor").value = "";
     document.getElementById("prodStatus").value = "";
@@ -2632,6 +2755,298 @@ function drawTrend(svg, buckets, keys){
     document.getElementById("prodPivotSearchBox").value = "";
     document.getElementById("prodSearchBox").value = "";
     expanded.clear();
+    applyFilters();
+  });
+
+  onRerender(()=>{ populateSelects(); applyFilters(); });
+  applyFilters();
+})();
+
+/* =========================================================
+   RECEIVED INVOICES TAB (buyer side — Volta is the buyer)
+   ========================================================= */
+(function(){
+  if (!RAW_BINV){
+    document.getElementById("tabBtnBinv").hidden = true;
+    return;
+  }
+  function STATUS_MAP(){ return {
+    "0": {label:t("invStatus0"), cls:"tag-other", color:"var(--muted)"},
+    "1": {label:t("invStatus1"), cls:"tag-active", color:"var(--accent)"},
+    "2": {label:t("invStatus2"), cls:"tag-completed", color:"var(--success)"},
+    "3": {label:t("invStatus3"), cls:"tag-carrier", color:"var(--warning)"},
+    "4": {label:t("invStatus4"), cls:"tag-other", color:"var(--muted)"},
+    "5": {label:t("invStatus5"), cls:"tag-active", color:"var(--accent)"},
+    "8": {label:t("invStatus8"), cls:"tag-completed", color:"var(--success)"},
+    "6": {label:t("invStatus6"), cls:"tag-cancelled", color:"var(--danger)"},
+    "7": {label:t("invStatus7"), cls:"tag-cancelled", color:"var(--danger)"}
+  }; }
+  function statusInfo(s){ return STATUS_MAP()[s] || {label:(LANG==="en"?"Other (":"სხვა (")+s+")", cls:"tag-other", color:"var(--muted)"}; }
+
+  const allDates = RAW_BINV.map(r => r.d).sort();
+  const minDate = allDates[0] || new Date().toISOString();
+  const maxDate = allDates[allDates.length-1] || new Date().toISOString();
+  document.getElementById("binvStart").value = minDate.slice(0,10);
+  document.getElementById("binvEnd").value = maxDate.slice(0,10);
+
+  const sellerTotals = {};
+  RAW_BINV.forEach(r=>{
+    if (!sellerTotals[r.t]) sellerTotals[r.t] = {name:r.b, amount:0};
+    sellerTotals[r.t].amount += r.a;
+  });
+
+  function renderHeader(){
+    document.getElementById("binvRangeSubline").textContent =
+      fmtMonthLong(minDate) + " — " + fmtMonthLong(maxDate) + " · " + fmtInt(RAW_BINV.length) + t("recordsSuffix");
+  }
+
+  function populateStatusSelect(){
+    const sel = document.getElementById("binvStatus");
+    const prevVal = sel.value;
+    sel.innerHTML = "";
+    const allOpt = document.createElement("option");
+    allOpt.value = ""; allOpt.textContent = t("all");
+    sel.appendChild(allOpt);
+    const map = STATUS_MAP();
+    const counts = {}; RAW_BINV.forEach(r => counts[r.s] = (counts[r.s]||0)+1);
+    Object.keys(counts).sort((a,b)=> counts[b]-counts[a]).forEach(k=>{
+      const opt = document.createElement("option");
+      opt.value = k;
+      opt.textContent = map[k] ? map[k].label : k;
+      sel.appendChild(opt);
+    });
+    sel.value = prevVal;
+  }
+  function populateSellerSelect(){
+    const sel = document.getElementById("binvSeller");
+    const prevVal = sel.value;
+    sel.innerHTML = "";
+    const allOpt = document.createElement("option");
+    allOpt.value = ""; allOpt.textContent = t("all");
+    sel.appendChild(allOpt);
+    Object.entries(sellerTotals).sort((a,b)=>b[1].amount-a[1].amount).forEach(([tin,v])=>{
+      const opt = document.createElement("option");
+      opt.value = tin;
+      opt.textContent = v.name + " · " + fmtGelShort(v.amount);
+      sel.appendChild(opt);
+    });
+    sel.value = prevVal;
+  }
+  function populateSelects(){ populateSellerSelect(); populateStatusSelect(); }
+  populateSelects();
+
+  let sortKey = "d", sortDir = "desc", page = 0;
+  const PAGE_SIZE = 50;
+  let filtered = RAW_BINV;
+
+  function applyFilters(){
+    const start = document.getElementById("binvStart").value;
+    const end = document.getElementById("binvEnd").value;
+    const seller = document.getElementById("binvSeller").value;
+    const st = document.getElementById("binvStatus").value;
+    filtered = RAW_BINV.filter(r=>{
+      const day = r.d.slice(0,10);
+      if (start && day < start) return false;
+      if (end && day > end) return false;
+      if (seller && r.t !== seller) return false;
+      if (st && r.s !== st) return false;
+      return true;
+    });
+    page = 0;
+    renderAll();
+  }
+
+  function renderKPIs(){
+    const count = filtered.length;
+    const amount = filtered.reduce((s,r)=>s+r.a,0);
+    const vat = filtered.reduce((s,r)=>s+r.v,0);
+    const sellers = new Set(filtered.map(r=>r.t)).size;
+    document.getElementById("binvKpiCount").textContent = fmtInt(count);
+    document.getElementById("binvKpiCountSub").textContent = count ? t("avgPrefix") + fmtGel(amount/count) + t("perInvoice") : " ";
+    document.getElementById("binvKpiAmount").textContent = fmtGelShort(amount);
+    document.getElementById("binvKpiAmountSub").innerHTML = fmtGel(amount) + t("exVat") + fmtGel(amount - vat);
+    document.getElementById("binvKpiVat").textContent = fmtGelShort(vat);
+    document.getElementById("binvKpiVatSub").innerHTML = fmtGel(vat);
+    document.getElementById("binvKpiSellers").textContent = fmtInt(sellers);
+    document.getElementById("binvKpiSellersSub").textContent = count ? (count/sellers).toFixed(1) + t("invoicesPerSeller") : " ";
+  }
+
+  function renderBreakdowns(){
+    const statusCounts = {}; filtered.forEach(r => statusCounts[r.s] = (statusCounts[r.s]||0)+1);
+    renderBarList("binvStatusBars", statusCounts, k=>statusInfo(k).label, k=>statusInfo(k).color);
+  }
+
+  function renderRankList(){
+    const bySeller = {};
+    filtered.forEach(r=>{
+      if (!bySeller[r.t]) bySeller[r.t] = {name:r.b, tin:r.t, amount:0, count:0};
+      bySeller[r.t].amount += r.a;
+      bySeller[r.t].count += 1;
+    });
+    const top = Object.values(bySeller).sort((a,b)=>b.amount-a.amount).slice(0,12);
+    const el = document.getElementById("binvRankList");
+    el.innerHTML = "";
+    top.forEach((b,idx)=>{
+      const row = document.createElement("div");
+      row.className = "rank-row";
+      row.innerHTML =
+        '<span class="rank-num num">'+(idx+1)+'</span>'+
+        '<span><span class="rank-name">'+escapeHtml(b.name)+'</span><br><span class="rank-meta num">'+t("colTinCompany")+' '+b.tin+' &middot; '+b.count+t("invoicesWord")+'</span></span>'+
+        '<span class="rank-amt num">'+fmtGel(b.amount)+'</span>';
+      el.appendChild(row);
+    });
+  }
+
+  function renderTrend(){
+    const byMonth = {};
+    filtered.forEach(r=>{
+      const mk = monthKey(r.d);
+      if (!byMonth[mk]) byMonth[mk] = {count:0, amount:0};
+      byMonth[mk].count += 1;
+      byMonth[mk].amount += r.a;
+    });
+    const months = Object.keys(byMonth).sort();
+    drawTrend(document.getElementById("binvTrendChart"), byMonth, months);
+  }
+
+  /* ---- seller × month pivot (operation period), year-total column after each year ---- */
+  function monthsBetween(ms, me){
+    if (!ms || !me || ms > me) return [];
+    const out = [];
+    let [y, m] = ms.split("-").map(Number);
+    const [ey, em] = me.split("-").map(Number);
+    while (y < ey || (y === ey && m <= em)){
+      out.push(y + "-" + pad2(m));
+      m++; if (m > 12){ m = 1; y++; }
+    }
+    return out;
+  }
+  function renderPivot(){
+    const ms = document.getElementById("binvStart").value.slice(0,7);
+    const me = document.getElementById("binvEnd").value.slice(0,7);
+    const metric = document.getElementById("binvMetric").value;
+    const q = document.getElementById("binvPivotSearchBox").value.trim().toLowerCase();
+    const head = document.getElementById("binvPivotHead");
+    const body = document.getElementById("binvPivotBody");
+    const foot = document.getElementById("binvPivotFoot");
+    document.getElementById("binvPivotNote").textContent =
+      metric === "count" ? t("binvPivotNoteCount") : metric === "vat" ? t("binvPivotNoteVat") : t("binvPivotNoteAmount");
+
+    const months = monthsBetween(ms, me);
+    if (!months.length){
+      head.innerHTML = ""; foot.innerHTML = "";
+      body.innerHTML = "<tr><td class='pivot-empty'>"+t("invalidRange")+"</td></tr>";
+      return;
+    }
+    const cols = [];
+    months.forEach((mk,i)=>{
+      cols.push({kind:"m", key:mk});
+      const y = mk.slice(0,4);
+      const next = months[i+1];
+      if (!next || next.slice(0,4) !== y) cols.push({kind:"y", key:y});
+    });
+    const years = [...new Set(months.map(m=>m.slice(0,4)))];
+    if (years.length > 1) cols.push({kind:"g", key:"total"});
+
+    const sellers = {};
+    filtered.forEach(r=>{
+      const mk = r.d.slice(0,7);
+      const yk = mk.slice(0,4);
+      const val = metric === "count" ? 1 : metric === "vat" ? r.v : r.a;
+      let s = sellers[r.t];
+      if (!s) s = sellers[r.t] = {name:r.b, tin:r.t, m:{}, y:{}, total:0};
+      s.m[mk] = (s.m[mk]||0) + val;
+      s.y[yk] = (s.y[yk]||0) + val;
+      s.total += val;
+    });
+    let rows = Object.values(sellers);
+    if (q) rows = rows.filter(s => s.name.toLowerCase().includes(q) || s.tin.includes(q));
+    rows.sort((a,b)=> b.total - a.total || a.name.localeCompare(b.name));
+
+    const colLabel = c => c.kind === "m"
+      ? MONTHS()[+c.key.slice(5,7)-1].slice(0,3) + " " + c.key.slice(0,4)
+      : c.kind === "y" ? c.key + t("yearTotalSuffix") : t("grandTotal");
+    const colCls = c => c.kind === "m" ? "" : " pivot-total";
+    const cellVal = (o,c) => c.kind === "m" ? o.m[c.key] : c.kind === "y" ? o.y[c.key] : o.total;
+    const fmtCell = x => x ? fmtInt(x) : "—";
+    const cellsFor = o => cols.map(c=>{ const x = cellVal(o,c); return "<td class='num"+colCls(c)+(x ? "" : " pivot-zero")+"'>"+fmtCell(x)+"</td>"; }).join("");
+
+    head.innerHTML = "<tr><th class='pivot-sticky'>"+t("colSeller")+"</th>"+
+      cols.map(c=>"<th class='num"+colCls(c)+"'>"+colLabel(c)+"</th>").join("")+"</tr>";
+    body.innerHTML = rows.length ? rows.map(s=>
+      "<tr><td class='pivot-sticky'><button class='pivot-vendor' data-tin='"+escapeHtml(s.tin)+"' title='"+escapeHtml(s.name)+"'>"+escapeHtml(s.name)+"</button><span class='pivot-tin num'>"+escapeHtml(s.tin)+"</span></td>"+cellsFor(s)+"</tr>"
+    ).join("") : "<tr><td class='pivot-empty' colspan='"+(cols.length+1)+"'>"+t("noData")+"</td></tr>";
+    const tot = {};
+    rows.forEach(s=> cols.forEach(c=>{ const k = c.kind + c.key; tot[k] = (tot[k]||0) + (cellVal(s,c)||0); }));
+    foot.innerHTML = "<tr><td class='pivot-sticky'>"+t("grandTotal")+" · "+fmtInt(rows.length)+t("sellersWord")+"</td>"+
+      cols.map(c=>"<td class='num"+colCls(c)+"'>"+fmtCell(tot[c.kind + c.key])+"</td>").join("")+"</tr>";
+    body.querySelectorAll(".pivot-vendor").forEach(b=> b.addEventListener("click", ()=>{
+      document.getElementById("binvSeller").value = b.dataset.tin;
+      applyFilters();
+    }));
+  }
+
+  function renderTable(){
+    const q = document.getElementById("binvSearchBox").value.trim().toLowerCase();
+    const rows = q ? filtered.filter(r => r.b.toLowerCase().includes(q) || r.t.includes(q) || r.f.toLowerCase().includes(q)) : filtered;
+    const sorted = [...rows].sort((a,b)=>{
+      let av = a[sortKey], bv = b[sortKey];
+      if (sortKey === "a" || sortKey === "v"){ av = +av; bv = +bv; }
+      const cmp = av < bv ? -1 : av > bv ? 1 : 0;
+      return sortDir === "asc" ? cmp : -cmp;
+    });
+    const totalPages = Math.max(1, Math.ceil(sorted.length / PAGE_SIZE));
+    page = Math.min(page, totalPages-1);
+    const start = page*PAGE_SIZE;
+    const pageRows = sorted.slice(start, start+PAGE_SIZE);
+    document.getElementById("binvTbody").innerHTML = pageRows.map(r=>{
+      const si = statusInfo(r.s);
+      return "<tr>"+
+        "<td class='num'>"+fmtMonthLong(r.d)+"</td>"+
+        "<td class='num'>"+(r.reg ? fmtDateTime(r.reg) : "—")+"</td>"+
+        "<td class='num'>"+escapeHtml(r.f)+"</td>"+
+        "<td>"+escapeHtml(r.b)+"</td>"+
+        "<td class='num'>"+r.t+"</td>"+
+        "<td><span class='tag "+si.cls+"'>"+si.label+"</span></td>"+
+        "<td class='amt num'>"+fmtGel(r.v)+"</td>"+
+        "<td class='amt num'>"+fmtGel(r.a)+"</td>"+
+      "</tr>";
+    }).join("");
+    document.getElementById("binvPagerInfo").textContent =
+      sorted.length === 0 ? t("noRecords") :
+      t("showing") + (start+1) + "–" + Math.min(start+PAGE_SIZE, sorted.length) + " / " + fmtInt(sorted.length);
+    document.getElementById("binvPFirst").disabled = page===0;
+    document.getElementById("binvPPrev").disabled = page===0;
+    document.getElementById("binvPNext").disabled = page>=totalPages-1;
+    document.getElementById("binvPLast").disabled = page>=totalPages-1;
+  }
+
+  function renderAll(){ renderHeader(); renderKPIs(); renderBreakdowns(); renderRankList(); renderTrend(); renderPivot(); renderTable(); }
+
+  document.querySelectorAll("#tab-binv thead button").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      const k = btn.dataset.k;
+      if (sortKey === k){ sortDir = sortDir === "asc" ? "desc" : "asc"; }
+      else { sortKey = k; sortDir = (k==="a"||k==="v"||k==="d"||k==="reg") ? "desc" : "asc"; }
+      renderTable();
+    });
+  });
+  document.getElementById("binvPFirst").addEventListener("click", ()=>{ page=0; renderTable(); });
+  document.getElementById("binvPPrev").addEventListener("click", ()=>{ page=Math.max(0,page-1); renderTable(); });
+  document.getElementById("binvPNext").addEventListener("click", ()=>{ page=page+1; renderTable(); });
+  document.getElementById("binvPLast").addEventListener("click", ()=>{ page=1e9; renderTable(); });
+  ["binvStart","binvEnd","binvSeller","binvStatus"].forEach(id=>{ document.getElementById(id).addEventListener("change", applyFilters); });
+  document.getElementById("binvMetric").addEventListener("change", renderPivot);
+  document.getElementById("binvPivotSearchBox").addEventListener("input", renderPivot);
+  document.getElementById("binvSearchBox").addEventListener("input", ()=>{ page=0; renderTable(); });
+  document.getElementById("binvReset").addEventListener("click", ()=>{
+    document.getElementById("binvStart").value = minDate.slice(0,10);
+    document.getElementById("binvEnd").value = maxDate.slice(0,10);
+    document.getElementById("binvSeller").value = "";
+    document.getElementById("binvStatus").value = "";
+    document.getElementById("binvMetric").value = "amount";
+    document.getElementById("binvPivotSearchBox").value = "";
+    document.getElementById("binvSearchBox").value = "";
     applyFilters();
   });
 
@@ -2650,12 +3065,14 @@ document.querySelectorAll(".tabbtn[data-tab]").forEach(btn=>{
 });
 
 /* ---------- language toggle ---------- */
+const GEN_STAMP = new Date().toISOString();
 function applyStaticI18n(){
   document.title = t("title");
   document.querySelectorAll("[data-i18n]").forEach(el=>{ el.textContent = t(el.dataset.i18n); });
   document.querySelectorAll("[data-i18n-ph]").forEach(el=>{ el.placeholder = t(el.dataset.i18nPh); });
   document.getElementById("langToggle").textContent = LANG === "ka" ? "EN" : "ქარ";
   document.documentElement.lang = LANG;
+  document.getElementById("globalGenStamp").textContent = t("generatedAt") + fmtDateTime(GEN_STAMP);
 }
 function setLang(lang){
   LANG = lang;

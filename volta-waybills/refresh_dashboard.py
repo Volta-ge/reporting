@@ -575,6 +575,36 @@ def fetch_invoices():
     return rows
 
 
+def fetch_buyer_invoices():
+    """
+    Received (buyer-side) invoices — get_buyer_invoices on the same
+    ntosservice, identical parameter list and identical diffgram row shape
+    as get_seller_invoices (ORG_NAME/SA_IDENT_NO are the SELLER here), so
+    build_invoice_rows() is reused as-is. Same zeep-can't-bind quirk, same
+    raw-POST workaround as fetch_invoices(). Probed 2026-09-04: 2,758 rows /
+    126 sellers since 2025-09-01; TANXA is VAT-inclusive (VAT == TANXA*18/118).
+    """
+    client = Client(INVOICE_WSDL)
+    end = datetime.now()
+    node = client.create_message(
+        client.service, "get_buyer_invoices",
+        user_id=INVOICE_USER_ID, un_id=INVOICE_UN_ID,
+        s_dt=START, e_dt=end,
+        op_s_dt=START, op_e_dt=end,
+        invoice_no="", sa_ident_no="", desc="", doc_mos_nom="",
+        su=SU, sp=SP,
+    )
+    envelope = etree.tostring(node)
+    headers = {"Content-Type": "text/xml; charset=utf-8", "SOAPAction": "http://tempuri.org/get_buyer_invoices"}
+    response = client.transport.post(INVOICE_ENDPOINT, envelope, headers)
+    root = etree.fromstring(response.content)
+    rows = []
+    for el in root.iter():
+        if etree.QName(el).localname == "invoices":
+            rows.append({etree.QName(child).localname: child.text for child in el})
+    return rows
+
+
 def build_invoice_rows(raw):
     rows = []
     for r in raw:
@@ -1281,6 +1311,7 @@ def main():
                 # here makes template.html hide that tab entirely.
                 .replace("__DATA_VEND__", "null")
                 .replace("__DATA_VEND_ITEMS__", "null")
+                .replace("__DATA_BINV__", "null")
                 # <title> names the Artifact in the gallery; the user renamed
                 # this one "RS_Old DB" (2026-09-04) — keep the tag in sync so a
                 # daily republish doesn't revert the name.
