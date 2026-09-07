@@ -2786,8 +2786,13 @@ function drawTrend(svg, buckets, keys){
   const allDates = RAW_BINV.map(r => r.d).sort();
   const minDate = allDates[0] || new Date().toISOString();
   const maxDate = allDates[allDates.length-1] || new Date().toISOString();
+  // "მდე" defaults to the refresh day, like the waybill tabs — invoices are
+  // dated by operation PERIOD (usually the 1st of the month), so the data's
+  // own max date would sit weeks behind the actual refresh.
+  const todayIso = new Date().toISOString().slice(0,10);
+  const endDefault = maxDate.slice(0,10) > todayIso ? maxDate.slice(0,10) : todayIso;
   document.getElementById("binvStart").value = minDate.slice(0,10);
-  document.getElementById("binvEnd").value = maxDate.slice(0,10);
+  document.getElementById("binvEnd").value = endDefault;
 
   const sellerTotals = {};
   RAW_BINV.forEach(r=>{
@@ -3041,7 +3046,7 @@ function drawTrend(svg, buckets, keys){
   document.getElementById("binvSearchBox").addEventListener("input", ()=>{ page=0; renderTable(); });
   document.getElementById("binvReset").addEventListener("click", ()=>{
     document.getElementById("binvStart").value = minDate.slice(0,10);
-    document.getElementById("binvEnd").value = maxDate.slice(0,10);
+    document.getElementById("binvEnd").value = endDefault;
     document.getElementById("binvSeller").value = "";
     document.getElementById("binvStatus").value = "";
     document.getElementById("binvMetric").value = "amount";
