@@ -24,4 +24,5 @@ $built = (new NewDbReport($pdo, $dir, __DIR__ . '/../src/product_mapping.json'))
 $flags = JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES;
 file_put_contents($out . '/php_report_data.json', json_encode($built['report'], $flags));
 file_put_contents($out . '/php_sales_data.json', json_encode($built['sales'], $flags));
-fwrite(STDERR, sprintf("end=%s  built in %.1fs  -> %s/php_report_data.json, php_sales_data.json\n", $end, microtime(true) - $t, $out));
+file_put_contents($out . '/php_logistics_data.json', json_encode($built['logistics'], $flags));
+fwrite(STDERR, sprintf("end=%s  built in %.1fs  -> %s/php_report_data.json, php_sales_data.json, php_logistics_data.json\n", $end, microtime(true) - $t, $out));

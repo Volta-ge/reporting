@@ -96,6 +96,7 @@ period	d	order_id	product_id	qty	sales	deal_type	brand	sku	product_name
 2026-09	2026-09-04	55730	2127	1	529.0000	installment	HONOR	167871	ტელეფონი HONOR X6c 6GB/128GB Ocean Cyan
 2026-09	2026-09-04	55732	142298	1	779.0000	installment	SAMSUNG	169673	Mobile and Smartphones/ Samsung/ Samsung A175F Galaxy A17 8GB/256GB LTE Duos Black
 2026-09	2026-09-04	55748	500	1	569.0000	installment	HISENSE	HISENSE-DT27DR4-White	მაცივარი HISENSE DT27DR4-White
+2026-09	2026-09-04	55750	1994	1	1209.0000	installment	HISENSE	HISENSE-RD39WCWD-BI	მაცივარი HISENSE RD39WCWD-BI
 2026-09	2026-09-04	55754	2543	1	699.0000	installment	DREAME	DZ30	აეროგრილი DREAME DZ30 - Black
 2026-09	2026-09-04	55763	2434	1	1699.0000	installment	DREAME	Dream-013	რობოტი მტვერსასრუტი Dreame Robot Vacuum D20 Pro Plus White (RLD43SD)
 2026-09	2026-09-04	55774	888	1	849.0000	installment	MARAZZI	MARAZZI-WM701FL66-S-W	სარეცხი მანქანა MARAZZI WM701FL66(S/W)
@@ -137,10 +138,14 @@ period	d	order_id	product_id	qty	sales	deal_type	brand	sku	product_name
 2026-09	2026-09-05	55991	1086	1	709.0000	installment	MIDEA	MIDEA-MF01610US40-W	სარეცხი მანქანა MIDEA MF01610US40/W
 2026-09	2026-09-05	56004	932	1	389.0000	installment	FRANKO	FRANKO-FCO-9037	ელექტრო ღუმელი FRANKO FCO-9037
 2026-09	2026-09-07	55376	876	1	649.0000	installment	SHARK	SHARK-HD424SLEU	თმის სტაილერი SHARK HD424SLEU
+2026-09	2026-09-07	55430	72870	1	479.0000	installment		B2-BLACK	ბავშვის სასადილო სკამი B2-BLACK
+2026-09	2026-09-07	55430	72389	1	419.0000	installment		6189V-BLACK	საბავშვო სამთვალა სასეირნო ველო-ეტლი 6189V-BLACK
+2026-09	2026-09-07	55430	73079	1	189.0000	installment		105CER	ჭოჭინა 360 გრადუსიანი მბრუნავი სავარძლით 105CER
 2026-09	2026-09-07	55467	2514	1	1369.0000	installment		T10FT	ლურჯი ბატუტი კიბით AJ-T10FT 10FT (306სმ;250კგ)
 2026-09	2026-09-07	55669	249	1	749.0000	installment	MIDEA	MIDEA-MF100W70	სარეცხის მანქანა MIDEA MF100W70
 2026-09	2026-09-07	55678	70301	1	649.0000	installment		FT-7188-B	 საბავშვო ელექტრო მანქანა G-Class FT-7188-B
 2026-09	2026-09-07	55775	900	1	759.0000	installment	MARAZZI	MARAZZI-ML43UG74C	ტელევიზორი MARAZZI ML43UG74C
+2026-09	2026-09-07	55830	142265	1	709.0000	installment	HONOR	177280	Mobile and Smartphones/ Honor/ Honor X7e 6GB/256GB Light Blue
 2026-09	2026-09-07	55844	1472	1	439.0000	installment	HISENSE	HISENSE-32A4Q	ტელევიზორი HISENSE 32A4Q
 2026-09	2026-09-07	55897	747	1	799.0000	installment	HISENSE	HISENSE-RD-23DC-SILVER	მაცივარი HISENSE RD-23DC SILVER
 2026-09	2026-09-07	55906	849	1	999.0000	installment	CHIGO	CHIGO-CWF904	სარეცხი მანქანა CHIGO CWF904
@@ -158,6 +163,8 @@ period	d	order_id	product_id	qty	sales	deal_type	brand	sku	product_name
 2026-09	2026-09-07	56074	684	1	859.0000	installment		polo	დივანი "პოლო"
 2026-09	2026-09-07	56114	71613	1	169.0000	installment		006SKU-BLU	საბავშვო სკუტერი dumitu plus 006SKU-BLU
 2026-09	2026-09-07	56114	2547	1	179.0000	installment	CASIO	7ARDF	საათი Casio Quartz Wristwatch / LTP-1094Q-7ARDF
+2026-09	2026-09-07	56123	1472	1	439.0000	installment	HISENSE	HISENSE-32A4Q	ტელევიზორი HISENSE 32A4Q
+2026-09	2026-09-07	56123	40211	1	69.0000	installment	ULTIMATE	52992	TV Accessories/ Wall Brakets/ Ultimate  SL-400  26"-40"/66-102cm  Fixed Lockable TV Bracket  35kg 3.5mm(wall distance) VESA 200/400
 2026-09	2026-09-07	56133	921	1	869.0000	installment	NINJA	NINJA-SL400EU	აეროგრილი NINJA SL400EU
 2026-09	2026-09-07	56141	3745	1	999.0000	installment	DREAME	AMF18A	თმის სტაილერი Styler Dreame AirStyle Pro Gold Titanium (AMF18A)
 2026-09	2026-09-07	56159	862	1	409.0000	installment	MIDEA	MIDEA-MF-CY110-A	აეროგრილი MIDEA MF-CY110A

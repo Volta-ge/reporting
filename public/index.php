@@ -76,6 +76,9 @@ if (!isset($config['voltastoredb'])) {
         $flags = JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES;
         $html = preg_replace('/^const REPORT_JSON = .*;$/m', 'const REPORT_JSON = ' . json_encode($cached['report'], $flags) . ';', $html, 1, $c1);
         $html = preg_replace('/^const SALES_JSON = .*;$/m', 'const SALES_JSON = ' . json_encode($cached['sales'], $flags) . ';', $html, 1, $c2);
+        if (isset($cached['logistics'])) {
+            $html = preg_replace('/^const LOGI_JSON = .*;$/m', 'const LOGI_JSON = ' . json_encode($cached['logistics'], $flags) . ';', $html, 1);
+        }
         if ($c1 !== 1 || $c2 !== 1) {
             $html = (string) file_get_contents($page);
             $fallbackNote = 'template anchors not found — showing the last committed build';
