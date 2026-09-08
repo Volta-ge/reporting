@@ -1,6 +1,7 @@
 # Volta_Finance — ფინანსური ანგარიშგება ორისის ბაზიდან
 
-Artifact (ბრაუზერში სანახავად): https://claude.ai/code/artifact/d96a30f0-dfbf-45d9-9c8e-9c0c8477d56a
+**საჯარო ბმული (GitHub Pages):** https://volta-ge.github.io/reporting/finance.html
+Artifact (იგივე გვერდი claude.ai-ზე): https://claude.ai/code/artifact/d96a30f0-dfbf-45d9-9c8e-9c0c8477d56a
 ამ საქაღალდეში `Volta_Finance.html` იგივე გვერდია (ბრაუზერში პირდაპირ იხსნება, ინტერნეტი მხოლოდ შრიფტებისთვის სჭირდება).
 
 **ჩანართები:** მიმოხილვა · ბალანსი · მოგება-ზარალი · ბრუნვითი უწყისი · ფულადი ნაკადები · დებიტორები/კრედიტორები · ხარჯების ანალიზი.
@@ -17,7 +18,9 @@ Artifact (ბრაუზერში სანახავად): https://clau
    ავტომატურად იღებს ყველაზე ახალ RAR-ს: unrar → `tools/export_sqlite.py` (TPS → SQLite) → `tools/build_data.py`
    (თვიური აგრეგატები, `dash_data.json`) → `tools/build_dashboard.py` (`dashboard_template.html` + JSON → `Volta_Finance.html`).
    წყაროს თარიღი ფაილის სახელიდან იწერება `source.json`-ში.
-3. `git add volta-finance && git commit && git push` და Artifact-ის ხელახლა გამოქვეყნება იმავე ბმულზე (Claude-ს უთხარი „განაახლე“).
+3. `git add volta-finance && git commit && git push` (perf/stream-dashboard) და Artifact-ის ხელახლა გამოქვეყნება იმავე ბმულზე (Claude-ს უთხარი „განაახლე“).
+4. GitHub Pages-ის ასლი (`docs/finance.html` main ბრენჩზე) ყოველ დილით ავტომატურად განახლდება commit-ის შემდეგ
+   (`Desktop\Volta_Waybillsuild_docs_waybills.py`, სქედულერის ტასკი); მაშინვე გინდა — ეს სკრიპტი ხელით გაუშვი.
 
 სხვა მონაცემთა საქაღალდე: `set VOLTA_FIN_DATA=...` გარემოს ცვლადით.
 
