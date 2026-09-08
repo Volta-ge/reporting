@@ -5,6 +5,8 @@ them to `main` of Volta-ge/reporting:
 
   waybill_dashboard.html     -> docs/waybills.html      (RS_Old DB, myvolta.info CRM)
   waybill_dashboard_gia.html -> docs/waybills-new.html  (RS_New DB, VoltaStoreDB CRM)
+  volta-analytics-new-db/deals_amount_migration.html (committed on
+  perf/stream-dashboard)     -> docs/analytics-new.html (Volta_Analytics_New DB)
 
 Each source is an Artifact-style body fragment (no <!DOCTYPE>/<html>/<head>/
 <body>); it is wrapped into a standalone document here. Only pages whose
@@ -34,12 +36,21 @@ PAGES = [
     (LIVE / "waybill_dashboard.html", "docs/waybills.html"),
     (LIVE / "waybill_dashboard_gia.html", "docs/waybills-new.html"),
 ]
+# Volta_Analytics_New DB (Artifact c743a673) is built by another session's
+# project, volta-analytics-new-db/, which lives on the perf/stream-dashboard
+# branch — it is only present in the shared clone's working tree while that
+# branch is checked out, so the page is read from the COMMITTED copy on the
+# remote branch (git show), never from a path. It is a snapshot refreshed on
+# request in that other session; this just republishes whatever was last
+# committed there, at https://volta-ge.github.io/reporting/analytics-new.html.
+GIT_PAGES = [
+    ("perf/stream-dashboard", "volta-analytics-new-db/deals_amount_migration.html", "docs/analytics-new.html"),
+]
 
 MARKER = "</style>\n"
 
 
-def build_wrapped_html(src: Path) -> str:
-    content = src.read_text(encoding="utf-8")
+def build_wrapped_html(content: str) -> str:
     idx = content.index(MARKER) + len(MARKER)
     head_part = content[:idx]
     body_part = content[idx:]
@@ -54,7 +65,9 @@ def build_wrapped_html(src: Path) -> str:
 
 
 def git(args, cwd):
-    return subprocess.run(["git", *args], cwd=cwd, check=True, capture_output=True, text=True)
+    # utf-8 explicitly: `git show` of the Georgian-text HTML would otherwise be
+    # decoded with the Windows locale codepage and silently mangled.
+    return subprocess.run(["git", *args], cwd=cwd, check=True, capture_output=True, text=True, encoding="utf-8")
 
 
 def ensure_worktree():
@@ -72,13 +85,26 @@ def ensure_worktree():
 def main():
     ensure_worktree()
     changed = []
+
+    def emit(rel, content):
+        (PAGES_WORKTREE / rel).write_text(build_wrapped_html(content), encoding="utf-8")
+        if git(["status", "--porcelain", "--", rel], PAGES_WORKTREE).stdout.strip():
+            changed.append(rel)
+
     for src, rel in PAGES:
         if not src.is_file():
             print(f"skipping {rel}: source missing ({src})", file=sys.stderr)
             continue
-        (PAGES_WORKTREE / rel).write_text(build_wrapped_html(src), encoding="utf-8")
-        if git(["status", "--porcelain", "--", rel], PAGES_WORKTREE).stdout.strip():
-            changed.append(rel)
+        emit(rel, src.read_text(encoding="utf-8"))
+
+    for branch, path, rel in GIT_PAGES:
+        try:
+            git(["fetch", "-q", "origin", branch], PAGES_WORKTREE)
+            content = git(["show", f"origin/{branch}:{path}"], PAGES_WORKTREE).stdout
+        except subprocess.CalledProcessError as e:
+            print(f"skipping {rel}: cannot read {path} from origin/{branch} ({e.stderr.strip()})", file=sys.stderr)
+            continue
+        emit(rel, content)
 
     if not changed:
         print("GitHub Pages copies unchanged, nothing to commit.")
