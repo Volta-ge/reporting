@@ -44,6 +44,7 @@ cp config.example.sh config.sh    # once; fill in the passwords
 bash pull_new.sh                  # new-DB extracts through yesterday (or pass YYYY-MM-DD)
 node merge.js && node build_report_data.js        # Daily Mail    -> REPORT_JSON in the HTML
 node build_sales.js && node patch_sales_tabs.js   # Sales Analyze -> SALES_JSON in the HTML
+node build_logistics.js                            # Logistics Daily -> LOGI_JSON in the HTML
 ```
 
 Then open `deals_amount_migration.html` over a local http server (a `file://` load does not run the JS),
@@ -60,6 +61,7 @@ Excel export of the Daily Mail group: `node build_daily_mail_xlsx.js`, then
 | `deals_amount_migration.html` | the dashboard (single file; data embedded as `REPORT_JSON` / `SALES_JSON`) |
 | `pull_new.sh` / `pull_old.sh` | DB extracts (new DB: rolling; old DB: frozen, only if the TSVs are lost) |
 | `merge.js`, `build_report_data.js` | Daily Mail series (daily + monthly) and injection into the HTML |
+| `build_logistics.js` | Logistics Daily (pending-by-age from crm_activity_log, delivery status from crm_shipment_status_history, city/goods/open cases; populations anchored at 2026-09-02, the first day of the CRM logistics module) and injection |
 | `build_sales.js`, `patch_sales_tabs.js` | Sales Analyze reports (JS port of `FunnelRepository`'s bucketed reports + `ProductClassifier`) and injection |
 | `build_daily_mail_xlsx.js`, `write_daily_mail_xlsx.ps1` | Excel export |
 | `old_*.tsv`, `new_*.tsv` | inputs |
