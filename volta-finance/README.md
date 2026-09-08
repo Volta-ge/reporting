@@ -20,7 +20,7 @@ Artifact (იგივე გვერდი claude.ai-ზე): https://claude.a
    წყაროს თარიღი ფაილის სახელიდან იწერება `source.json`-ში.
 3. `git add volta-finance && git commit && git push` (perf/stream-dashboard) და Artifact-ის ხელახლა გამოქვეყნება იმავე ბმულზე (Claude-ს უთხარი „განაახლე“).
 4. GitHub Pages-ის ასლი (`docs/finance.html` main ბრენჩზე) ყოველ დილით ავტომატურად განახლდება commit-ის შემდეგ
-   (`Desktop\Volta_Waybillsuild_docs_waybills.py`, სქედულერის ტასკი); მაშინვე გინდა — ეს სკრიპტი ხელით გაუშვი.
+   (`C:/Users/Lenovo/Desktop/Volta_Waybills/build_docs_waybills.py`, სქედულერის ტასკი); მაშინვე გინდა — ეს სკრიპტი ხელით გაუშვი.
 
 სხვა მონაცემთა საქაღალდე: `set VOLTA_FIN_DATA=...` გარემოს ცვლადით.
 
