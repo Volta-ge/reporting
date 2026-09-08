@@ -15,6 +15,16 @@ return [
         'password' => 'CHANGE_ME',
     ],
 
+    // VoltaStoreDB (the new database, "Volta Database Gia's") — read by public/index.php for the live
+    // Volta_Analytics_New DB dashboard. Without this block the page falls back to the last committed build.
+    'voltastoredb' => [
+        'host' => 'replica.ctywygswaaft.eu-central-1.rds.amazonaws.com',
+        'port' => 3306,
+        'database' => 'VoltaStoreDB',
+        'username' => 'readonly_widgera',
+        'password' => 'CHANGE_ME',
+    ],
+
     // Business-set monthly goals — not derived from the database. Update here when targets change.
     'targets' => [
         'applications' => 2500,

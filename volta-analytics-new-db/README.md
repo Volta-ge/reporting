@@ -25,7 +25,19 @@ remaining balance and shrinks as payments post); Downpayment = `crm_advance_amou
 sheet (`../src/product_mapping.json`) matches only part of the new catalog's category names (the rest lands
 in Uncategorized).
 
-## Refresh
+## Live on reporting.volta.ge
+
+`public/index.php` serves this dashboard **live**: `src/NewDbReport.php` recomputes both data blocks from
+VoltaStoreDB on request (same SQL as `pull_new.sh`, same math as the Node scripts — the two are
+cross-checked to be identical for the same day), swaps them into this folder's `deals_amount_migration.html`,
+and caches the result in `data/newdb_<yesterday>.json` for an hour (`?refresh=1` forces a recompute). The day
+rolls over by itself, so nothing needs to be run daily. The server's `config.php` needs the `voltastoredb`
+block from `config.example.php`; without it, or if the database is unreachable, the page falls back to the
+last committed build and says so in a yellow note. The top-right stamp shows when the numbers were computed
+(Tbilisi time) and the last day they cover. `bin/newdb_dump.php [YYYY-MM-DD]` writes the live JSON to
+`php_*.json` here for cross-checking against the Node pipeline.
+
+## Refresh (static build — the Artifact copy and the fallback page)
 
 ```
 cp config.example.sh config.sh    # once; fill in the passwords
