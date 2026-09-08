@@ -53,13 +53,22 @@ if (!isset($config['voltastoredb'])) {
                 }
             }
         } catch (\Throwable $e) {
+            // Database::connect() wraps the driver error; surface the root cause so the note itself says
+            // whether it is a wrong password ("Access denied for user ...") or a network/firewall problem
+            // ("Connection timed out" / "Connection refused" = this server's IP is not allowed on the RDS
+            // security group, port 3306).
+            $root = $e;
+            while ($root->getPrevious() !== null) {
+                $root = $root->getPrevious();
+            }
+            $why = $root === $e ? $e->getMessage() : ($e->getMessage() . ' Driver said: ' . $root->getMessage());
             $stale = is_file($cacheFile) ? json_decode((string) file_get_contents($cacheFile), true) : null;
             if (is_array($stale) && isset($stale['report'], $stale['sales'])) {
                 $cached = $stale;
-                $fallbackNote = 'live refresh failed (' . $e->getMessage() . ') — showing the last cached numbers from ' . ($stale['report']['generatedAt'] ?? '?');
+                $fallbackNote = 'live refresh failed (' . $why . ') — showing the last cached numbers from ' . ($stale['report']['generatedAt'] ?? '?');
             } else {
                 $cached = null;
-                $fallbackNote = 'live refresh failed (' . $e->getMessage() . ') — showing the last committed build';
+                $fallbackNote = 'live refresh failed (' . $why . ') — showing the last committed build';
             }
         }
     }
