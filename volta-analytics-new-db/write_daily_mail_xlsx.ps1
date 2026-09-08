@@ -1,4 +1,4 @@
-# Writes daily_mail_xlsx.json (from build_daily_mail_xlsx.js) to an .xlsx via Excel COM, applying the
+﻿# Writes daily_mail_xlsx.json (from build_daily_mail_xlsx.js) to an .xlsx via Excel COM, applying the
 # Volta_Analytics spreadsheet palette per row class. Excel evaluates the formulas itself on save.
 param([string]$JsonPath, [string]$OutPath)
 $json = Get-Content -Path $JsonPath -Encoding UTF8 -Raw | ConvertFrom-Json
@@ -14,6 +14,15 @@ $fills = @{
   'green'          = @{ bg = (Bgr '#e2efda'); ink = (Bgr '#111111'); bold = $false }
   'plain'          = @{ bg = (Bgr '#ffffff'); ink = (Bgr '#111111'); bold = $false }
   'footer'         = @{ bg = (Bgr '#ffffff'); ink = (Bgr '#6b6b6b'); bold = $false }
+  # Volta logo palette (Logistics workbook): lime #c2ff00 on navy #1a1a34
+  'logi-group'     = @{ bg = (Bgr '#1a1a34'); ink = (Bgr '#c2ff00'); bold = $true }
+  'logi-title'     = @{ bg = (Bgr '#1a1a34'); ink = (Bgr '#c2ff00'); bold = $true }
+  'logi-head'      = @{ bg = (Bgr '#2b2b4f'); ink = (Bgr '#ffffff'); bold = $true }
+  'logi-total'     = @{ bg = (Bgr '#c2ff00'); ink = (Bgr '#1a1a34'); bold = $true }
+  'logi-light'     = @{ bg = (Bgr '#f5ffd6'); ink = (Bgr '#1a1a34'); bold = $false }
+  'logi-white'     = @{ bg = (Bgr '#ffffff'); ink = (Bgr '#1a1a34'); bold = $false }
+  'logi-plain'     = @{ bg = (Bgr '#ffffff'); ink = (Bgr '#1a1a34'); bold = $false }
+  'blank'          = @{ bg = (Bgr '#ffffff'); ink = (Bgr '#111111'); bold = $false }
 }
 $noteBg = Bgr '#fff2cc'
 $borderColor = Bgr '#c9c9c9'
@@ -40,6 +49,9 @@ foreach ($sheet in $json.sheets) {
     $rowRange.Font.Bold = $style.bold
     $rowRange.Font.Name = 'Arial'
     $rowRange.Font.Size = 9
+    if ($row.cls -eq 'logi-plain') { $rowRange.Font.Italic = $true }
+    if ($row.cls -eq 'logi-group') { $rowRange.Font.Size = 12; $ws.Rows.Item($r).RowHeight = 24 }
+    if ($row.cls -eq 'blank') { $ws.Rows.Item($r).RowHeight = 8 }
     $c = 0
     foreach ($cellDef in $row.cells) {
       $c++
@@ -53,6 +65,7 @@ foreach ($sheet in $json.sheets) {
       }
       if ($cellDef.t -eq 'p') { $cell.NumberFormat = '0.0%' }
       elseif ($cellDef.t -eq 'n') { $cell.NumberFormat = '#,##0' }
+      elseif ($cellDef.t -eq 'd') { $cell.NumberFormat = '0.0' }
       if ($cellDef.PSObject.Properties.Name -contains 'note' -and $cellDef.note) { $cell.Interior.Color = $noteBg; $cell.WrapText = $true; $cell.HorizontalAlignment = -4131 }
       if ($cellDef.PSObject.Properties.Name -contains 'dash' -and $cellDef.dash) { $cell.HorizontalAlignment = -4152; $cell.Font.Color = (Bgr '#6b6b6b') }
       if ($cellDef.t -ne 's') { $cell.HorizontalAlignment = -4152 }
@@ -65,12 +78,23 @@ foreach ($sheet in $json.sheets) {
       for ($k = 2; $k -le $maxCols; $k += 2) { $m = $ws.Range($ws.Cells.Item($r, $k), $ws.Cells.Item($r, $k + 1)); $m.Merge() | Out-Null; $m.HorizontalAlignment = -4108 }
     }
   }
-  $used = $ws.Range($ws.Cells.Item(1, 1), $ws.Cells.Item($r, $maxCols))
-  $used.Borders.LineStyle = 1; $used.Borders.Weight = 2; $used.Borders.Color = $borderColor
+  $rr = 0
+  foreach ($row in $sheet.rows) {
+    $rr++
+    if ($row.cls -eq 'blank') { continue }
+    $w = $row.cells.Count; if ($row.PSObject.Properties.Name -contains 'span' -and $row.span -gt $w) { $w = $row.span }
+    $rng = $ws.Range($ws.Cells.Item($rr, 1), $ws.Cells.Item($rr, $w))
+    $rng.Borders.LineStyle = 1; $rng.Borders.Weight = 2; $rng.Borders.Color = $borderColor
+  }
   $i = 0
   foreach ($w in $sheet.widths) { $i++; $ws.Columns.Item($i).ColumnWidth = $w }
   $ws.Activate() | Out-Null
-  if ($sheet.PSObject.Properties.Name -contains 'freezeCol') {
+  if ($sheet.PSObject.Properties.Name -contains 'freezeRow') {
+    $excel.ActiveWindow.FreezePanes = $false
+    $fc = 0; if ($sheet.PSObject.Properties.Name -contains 'freezeCol') { $fc = [int]$sheet.freezeCol }
+    $excel.ActiveWindow.SplitColumn = $fc; $excel.ActiveWindow.SplitRow = [int]$sheet.freezeRow
+    if ($fc -gt 0 -or [int]$sheet.freezeRow -gt 0) { $excel.ActiveWindow.FreezePanes = $true }
+  } elseif ($sheet.PSObject.Properties.Name -contains 'freezeCol') {
     $excel.ActiveWindow.FreezePanes = $false
     $excel.ActiveWindow.SplitColumn = 1; $excel.ActiveWindow.SplitRow = 4; $excel.ActiveWindow.FreezePanes = $true
   } else {

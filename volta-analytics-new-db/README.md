@@ -52,6 +52,9 @@ check the three Daily Mail tabs and the four Sales tabs, and republish the Artif
 
 Excel export of the Daily Mail group: `node build_daily_mail_xlsx.js`, then
 `powershell -File write_daily_mail_xlsx.ps1 -JsonPath daily_mail_xlsx.json -OutPath Volta_Daily_Mail_New_DB.xlsx`
+(use Windows-style absolute paths for -JsonPath/-OutPath — Excel's SaveAs rejects forward slashes).
+Excel export of Logistics Daily: `node build_logistics_xlsx.js`, then the same writer with
+`-JsonPath logistics_xlsx.json -OutPath Volta_Logistics_New_DB.xlsx` (6 sheets, Volta logo palette).
 (Excel COM; every % and total is a live formula).
 
 ## Files
@@ -63,5 +66,5 @@ Excel export of the Daily Mail group: `node build_daily_mail_xlsx.js`, then
 | `merge.js`, `build_report_data.js` | Daily Mail series (daily + monthly) and injection into the HTML |
 | `build_logistics.js` | Logistics Daily (pending-by-age from crm_activity_log, delivery status from crm_shipment_status_history, city/goods/open cases; populations anchored at 2026-09-02, the first day of the CRM logistics module) and injection |
 | `build_sales.js`, `patch_sales_tabs.js` | Sales Analyze reports (JS port of `FunnelRepository`'s bucketed reports + `ProductClassifier`) and injection |
-| `build_daily_mail_xlsx.js`, `write_daily_mail_xlsx.ps1` | Excel export |
+| `build_daily_mail_xlsx.js`, `build_logistics_xlsx.js`, `write_daily_mail_xlsx.ps1` | Excel exports (Daily Mail / Logistics Daily); the .ps1 is the shared Excel-COM writer |
 | `old_*.tsv`, `new_*.tsv` | inputs |

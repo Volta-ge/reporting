@@ -153,6 +153,7 @@ period	d	order_id	product_id	qty	sales	deal_type	brand	sku	product_name
 2026-09	2026-09-07	55909	1184	1	89.0000	installment	FRANKO	FRANKO-F-G-T-1207	ტოსტერი FRANKO FGT-1207
 2026-09	2026-09-07	55921	1374	1	449.0000	installment	CHIGO	CHIGO-CRG120	მაცივარი CHIGO CRG120
 2026-09	2026-09-07	55940	1471	1	919.0000	installment	HISENSE	HISENSE-WF3S8043BB3	სარეცხი მანქანა HISENSE WF3S8043BB3
+2026-09	2026-09-07	55984	142276	1	1419.0000	installment	OnePlus	176664	Mobile and Smartphones/ OnePlus/ OnePlus Nord CE 6 8GB/256GB Pitch Black
 2026-09	2026-09-07	55988	71606	1	179.0000	installment		338SKY	საბავშვო სკუტერი ხელის მოსაკიდით 338SKY
 2026-09	2026-09-07	56007	2160	1	429.0000	installment	MIDEA	MIDEA-VSS-P9-LITE	მტვერსასრუტი MIDEA VSS-P9-LITE
 2026-09	2026-09-07	56027	64146	1	689.0000	installment	DJI	DJI-1	DJI Neo ( No RC)
@@ -179,3 +180,4 @@ period	d	order_id	product_id	qty	sales	deal_type	brand	sku	product_name
 2026-09	2026-09-07	56223	2128	1	629.0000	installment		Mattress-open-spring	მატრასი ღია ზამბარა 160/200
 2026-09	2026-09-07	56241	932	1	389.0000	installment	FRANKO	FRANKO-FCO-9037	ელექტრო ღუმელი FRANKO FCO-9037
 2026-09	2026-09-07	56254	40245	1	759.0000	installment	AKOG	102115	Heater/ Akog/ AKOG-4-SP (SIT) BLACK (40-50 კვ2)
+2026-09	2026-09-07	56261	117	1	169.0000	installment	FRANKO	FRANKO-FDH-1066	ჩირის აპარატი FRANKO FDH-1066

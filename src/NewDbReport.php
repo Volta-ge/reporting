@@ -18,8 +18,10 @@ use PDO;
 final class NewDbReport
 {
     public const CUTOVER = '2026-08-31';
-    /** first day of the CRM logistics module; the delivery tables start here (earlier orders were fulfilled outside it) */
+    /** first day of the CRM logistics module; the delivery series starts here. Population = orders with a crm_order_logistics row that are active or in status 11 = CRM "Signed" (contract signed, becomes Active a few hours later — the CRM counts them too) */
     private const LOGI_START = '2026-09-02';
+    /** Sales – Pending Status counts applications submitted from this date on (pre-cutover migrated 'pending' applications are stale; the CRM's Pending figure includes them, this table does not — user's choice 2026-09-08) */
+    private const PENDING_START = '2026-09-01';
     private const SERIES_START = '2026-01-01';
     private const DAILY_STATS_FROM = '2026-06-01';
     private const OLD_BUCKET_END = '2026-08-30';
@@ -58,7 +60,7 @@ final class NewDbReport
     private const LOGI_STATUS_LABEL = [
         20 => 'დაწყებული / Started', 25 => 'მოძიება / Procuring', 30 => 'მზადაა მომწოდებელთან / Ready at vendor',
         35 => 'აღებულია მომწოდებლისგან / Collected', 40 => 'საწყობისკენ / To warehouse', 45 => 'საწყობშია / Warehouse',
-        48 => 'სტატუსი 48', 50 => 'გასაგზავნად მზადაა / Ready to ship', 60 => 'გზაშია / Out for delivery',
+        48 => 'ნაწილობრივ მზადაა / Partially ready', 50 => 'გასაგზავნად მზადაა / Ready to ship', 60 => 'გზაშია / Out for delivery',
         80 => 'მიტანილი / Delivered', 81 => 'გატანილი / Picked up',
     ];
 
@@ -76,7 +78,7 @@ final class NewDbReport
             LEFT JOIN (SELECT entity_id, MIN(created_at) left_at FROM crm_activity_log WHERE action='installment.status_change' AND JSON_EXTRACT(metadata,'$.from')=4 GROUP BY entity_id) x ON x.entity_id=o.id
             WHERE (x.entity_id IS NOT NULL OR o.crm_order_status=4) AND (x.left_at IS NULL OR x.left_at >= cal.d + INTERVAL 1 DAY)
             GROUP BY cal.d ORDER BY cal.d");
-        $stmt->execute(['cutover' => $cutover, 'today' => $today, 'cutover2' => $cutover]);
+        $stmt->execute(['cutover' => self::PENDING_START, 'today' => $today, 'cutover2' => self::PENDING_START]);
         $pending = ['dates' => [], 'upTo1' => [], 'oneTo5' => [], 'over5' => []];
         foreach ($stmt->fetchAll() as $r) {
             $pending['dates'][] = $r['d'];
@@ -86,15 +88,15 @@ final class NewDbReport
         }
 
         $stmt = $this->pdo->prepare("WITH RECURSIVE cal AS (SELECT DATE(:cutover) d UNION ALL SELECT d + INTERVAL 1 DAY FROM cal WHERE d < DATE(:today)),
-            pop AS (SELECT o.id, COALESCE(o.crm_creator_date, o.created_at) sale, dl.delivered_at FROM orders o LEFT JOIN (SELECT order_id, MIN(created_at) delivered_at FROM crm_shipment_status_history WHERE entity_type=4 AND to_status IN (80,81) GROUP BY order_id) dl ON dl.order_id=o.id WHERE o.crm_active=1 AND o.crm_creator_date >= :start2)
+            pop AS (SELECT o.id, COALESCE(o.crm_creator_date, o.created_at) sale, GREATEST(COALESCE(o.crm_creator_date, o.created_at), l.created_at) entered, dl.delivered_at FROM orders o JOIN crm_order_logistics l ON l.order_id=o.id LEFT JOIN (SELECT order_id, MIN(created_at) delivered_at FROM crm_shipment_status_history WHERE entity_type=4 AND to_status IN (80,81) GROUP BY order_id) dl ON dl.order_id=o.id WHERE (o.crm_active=1 OR o.crm_order_status=11))
             SELECT cal.d,
-              SUM(pop.sale < cal.d + INTERVAL 1 DAY AND (pop.delivered_at IS NULL OR pop.delivered_at >= cal.d + INTERVAL 1 DAY) AND DATEDIFF(cal.d, DATE(pop.sale)) <= 1) upTo1,
-              SUM(pop.sale < cal.d + INTERVAL 1 DAY AND (pop.delivered_at IS NULL OR pop.delivered_at >= cal.d + INTERVAL 1 DAY) AND DATEDIFF(cal.d, DATE(pop.sale)) BETWEEN 2 AND 5) oneTo5,
-              SUM(pop.sale < cal.d + INTERVAL 1 DAY AND (pop.delivered_at IS NULL OR pop.delivered_at >= cal.d + INTERVAL 1 DAY) AND DATEDIFF(cal.d, DATE(pop.sale)) > 5) over5,
+              SUM(pop.entered < cal.d + INTERVAL 1 DAY AND (pop.delivered_at IS NULL OR pop.delivered_at >= cal.d + INTERVAL 1 DAY) AND DATEDIFF(cal.d, DATE(pop.sale)) <= 1) upTo1,
+              SUM(pop.entered < cal.d + INTERVAL 1 DAY AND (pop.delivered_at IS NULL OR pop.delivered_at >= cal.d + INTERVAL 1 DAY) AND DATEDIFF(cal.d, DATE(pop.sale)) BETWEEN 2 AND 5) oneTo5,
+              SUM(pop.entered < cal.d + INTERVAL 1 DAY AND (pop.delivered_at IS NULL OR pop.delivered_at >= cal.d + INTERVAL 1 DAY) AND DATEDIFF(cal.d, DATE(pop.sale)) > 5) over5,
               SUM(DATE(pop.delivered_at) = cal.d) delivered,
               ROUND(AVG(CASE WHEN DATE(pop.delivered_at) = cal.d THEN TIMESTAMPDIFF(HOUR, pop.sale, pop.delivered_at)/24 END),1) avgDays
-            FROM cal LEFT JOIN pop ON pop.sale < cal.d + INTERVAL 1 DAY GROUP BY cal.d ORDER BY cal.d");
-        $stmt->execute(['cutover' => $logiStart, 'today' => $today, 'start2' => $logiStart]);
+            FROM cal LEFT JOIN pop ON pop.entered < cal.d + INTERVAL 1 DAY GROUP BY cal.d ORDER BY cal.d");
+        $stmt->execute(['cutover' => $logiStart, 'today' => $today]);
         $delivery = ['dates' => [], 'upTo1' => [], 'oneTo5' => [], 'over5' => [], 'onHold' => [], 'delivered' => [], 'avgDeliveryTime' => []];
         foreach ($stmt->fetchAll() as $r) {
             $delivery['dates'][] = $r['d'];
@@ -106,31 +108,8 @@ final class NewDbReport
             $delivery['avgDeliveryTime'][] = $numOrNull($r['avgDays']);
         }
 
-        $stmt = $this->pdo->prepare("SELECT CASE WHEN a.city IS NULL OR a.city='' THEN 'Without City' WHEN a.city='თბილისი' THEN 'Tbilisi' ELSE 'Other Cities' END grp, SUM(dl.order_id IS NULL) notDelivered, COUNT(*) allOrders
-            FROM orders o LEFT JOIN (SELECT order_id, MIN(city) city FROM addresses WHERE address_type='order_shipping' GROUP BY order_id) a ON a.order_id=o.id
-            LEFT JOIN (SELECT order_id FROM crm_shipment_status_history WHERE entity_type=4 AND to_status IN (80,81) GROUP BY order_id) dl ON dl.order_id=o.id
-            WHERE o.crm_active=1 AND o.crm_creator_date >= :start GROUP BY grp");
-        $stmt->execute(['start' => $logiStart]);
-        $cityMap = [];
-        foreach ($stmt->fetchAll() as $r) {
-            $cityMap[$r['grp']] = ['notDelivered' => (int) $r['notDelivered'], 'all' => (int) $r['allOrders']];
-        }
-        $cityRows = [];
-        $totND = 0;
-        $totAll = 0;
-        foreach (['Tbilisi', 'Other Cities', 'Without City'] as $label) {
-            $c = $cityMap[$label] ?? ['notDelivered' => 0, 'all' => 0];
-            $cityRows[] = ['label' => $label, 'notDelivered' => $c['notDelivered'], 'all' => $c['all']];
-            $totND += $c['notDelivered'];
-            $totAll += $c['all'];
-        }
-        foreach ($cityRows as &$cr) {
-            $cr['share'] = $totND ? self::num($cr['notDelivered'] / $totND) : 0;
-        }
-        unset($cr);
-        $byCity = ['title' => 'Orders by City', 'headLabel' => 'City', 'rows' => $cityRows, 'total' => ['label' => 'Total', 'notDelivered' => $totND, 'all' => $totAll, 'share' => $totND ? 1 : 0]];
 
-        // goods type = mapping-sheet categoryEn of each line's product
+        // goods type = mapping-sheet categoryEn of the product
         $this->loadMapping();
         $cats = [];
         foreach ($this->pdo->query("SELECT c.id, c.parent_id, ct.name FROM categories c LEFT JOIN category_translations ct ON ct.category_id=c.id AND ct.locale='ka_GE'")->fetchAll() as $r) {
@@ -154,39 +133,79 @@ final class NewDbReport
             $s = self::label(($this->lookup(implode(',', $names)) ?? [])['categoryEn'] ?? null);
             return $s ?? 'Uncategorized';
         };
-        $stmt = $this->pdo->prepare("SELECT o.id order_id, oi.product_id, (dl.order_id IS NULL) not_delivered FROM orders o JOIN order_items oi ON oi.order_id=o.id
-            LEFT JOIN (SELECT order_id FROM crm_shipment_status_history WHERE entity_type=4 AND to_status IN (80,81) GROUP BY order_id) dl ON dl.order_id=o.id
-            WHERE o.crm_active=1 AND o.crm_creator_date >= :start ORDER BY o.id, oi.id");
-        $stmt->execute(['start' => $logiStart]);
-        $goods = [];
-        foreach ($stmt->fetchAll() as $l) {
-            $g = $goodsType((string) $l['product_id']);
-            $goods[$g] ??= ['notDelivered' => 0, 'all' => 0];
-            $goods[$g]['all']++;
-            if ((int) $l['not_delivered'] === 1) { $goods[$g]['notDelivered']++; }
+        // Orders by City / Goods Type, by day — same population + entered/delivered rules as the Delivery Status table
+        $stmt = $this->pdo->prepare("SELECT o.id order_id, GREATEST(COALESCE(o.crm_creator_date, o.created_at), l.created_at) entered, dl.delivered_at,
+              CASE WHEN a.city IS NULL OR a.city='' THEN 'Without City' WHEN a.city='თბილისი' THEN 'Tbilisi' ELSE 'Other Cities' END city_grp,
+              (SELECT oi.product_id FROM order_items oi WHERE oi.order_id=o.id ORDER BY oi.base_total DESC, oi.id LIMIT 1) top_product_id
+            FROM orders o JOIN crm_order_logistics l ON l.order_id=o.id
+            LEFT JOIN (SELECT order_id, MIN(city) city FROM addresses WHERE address_type='order_shipping' GROUP BY order_id) a ON a.order_id=o.id
+            LEFT JOIN (SELECT order_id, MIN(created_at) delivered_at FROM crm_shipment_status_history WHERE entity_type=4 AND to_status IN (80,81) GROUP BY order_id) dl ON dl.order_id=o.id
+            WHERE (o.crm_active=1 OR o.crm_order_status=11) ORDER BY o.id");
+        $stmt->execute();
+        $orders = [];
+        foreach ($stmt->fetchAll() as $r) {
+            $orders[] = ['entered' => (string) $r['entered'], 'delivered' => $r['delivered_at'] === null ? null : (string) $r['delivered_at'], 'city' => (string) $r['city_grp'], 'goods' => $goodsType((string) $r['top_product_id'])];
         }
-        $goodsRows = [];
-        foreach (self::jsKeyOrder($goods) as $label) {
-            $goodsRows[] = ['label' => (string) $label, 'notDelivered' => $goods[$label]['notDelivered'], 'all' => $goods[$label]['all']];
-        }
-        usort($goodsRows, static function ($a, $b) {
-            $ua = $a['label'] === 'Uncategorized' ? 1 : 0;
-            $ub = $b['label'] === 'Uncategorized' ? 1 : 0;
-            return $ua <=> $ub ?: $b['all'] <=> $a['all'];
-        });
-        $gND = array_sum(array_column($goodsRows, 'notDelivered'));
-        $gAll = array_sum(array_column($goodsRows, 'all'));
-        foreach ($goodsRows as &$gr) {
-            $gr['share'] = $gND ? self::num($gr['notDelivered'] / $gND) : 0;
-        }
-        unset($gr);
-        $byGoods = ['title' => 'Orders by Goods Type', 'headLabel' => 'Goods Type', 'rows' => $goodsRows, 'total' => ['label' => 'Total', 'notDelivered' => $gND, 'all' => $gAll, 'share' => $gND ? 1 : 0]];
+        $seriesDates = $delivery['dates'];
+        $seriesFor = static function (string $key, ?array $labels, string $title, string $headLabel, bool $sortByToday) use ($orders, $seriesDates): array {
+            $zero = array_fill(0, count($seriesDates), 0);
+            $groups = [];
+            foreach ($labels ?? [] as $l) { $groups[$l] = ['nd' => $zero, 'all' => $zero]; }
+            foreach ($orders as $o) {
+                $k = $o[$key];
+                $groups[$k] ??= ['nd' => $zero, 'all' => $zero];
+                foreach ($seriesDates as $i => $d) {
+                    $end = $d . ' 23:59:59.999';
+                    if ($o['entered'] > $end) { continue; }
+                    $groups[$k]['all'][$i]++;
+                    if ($o['delivered'] === null || $o['delivered'] > $end) { $groups[$k]['nd'][$i]++; }
+                }
+            }
+            $lastDay = end($seriesDates) ?: '';
+            $month = substr((string) $lastDay, 0, 7);
+            foreach ($orders as $o) {
+                if (substr($o['entered'], 0, 7) === $month) { $groups[$o[$key]]['month'] = ($groups[$o[$key]]['month'] ?? 0) + 1; }
+            }
+            $rows = [];
+            foreach ($groups as $label => $g) { $rows[] = ['label' => (string) $label, 'nd' => $g['nd'], 'all' => $g['all'], 'month' => $g['month'] ?? 0]; }
+            if ($sortByToday) {
+                usort($rows, static function ($a, $b) {
+                    $ua = $a['label'] === 'Uncategorized' ? 1 : 0;
+                    $ub = $b['label'] === 'Uncategorized' ? 1 : 0;
+                    return $ua <=> $ub ?: end($b['all']) <=> end($a['all']);
+                });
+            }
+            $sum = static function (string $k) use ($rows, $seriesDates): array {
+                $out = [];
+                foreach ($seriesDates as $i => $d) { $t = 0; foreach ($rows as $r) { $t += $r[$k][$i]; } $out[] = $t; }
+                return $out;
+            };
+            $mk = static fn (string $k) => array_map(static fn ($r) => ['label' => $r['label'], 'vals' => $r[$k]], $rows);
+            $ndTot = 0;
+            $monthTot = 0;
+            foreach ($rows as $r) { $ndTot += end($r['nd']); $monthTot += $r['month']; }
+            $summaryRows = [];
+            foreach ($rows as $r) {
+                $ndLast = end($r['nd']);
+                $summaryRows[] = ['label' => $r['label'], 'nd' => $ndLast, 'ndShare' => $ndTot ? self::num($ndLast / $ndTot) : 0, 'month' => $r['month'], 'monthShare' => $monthTot ? self::num($r['month'] / $monthTot) : 0];
+            }
+            $dash = "\u{2014}";
+            return ['title' => $title, 'headLabel' => $headLabel, 'dates' => $seriesDates,
+                'daily' => [
+                    ['label' => 'Not Delivered Orders ' . $dash . ' by day', 'rows' => $mk('nd'), 'total' => $sum('nd')],
+                    ['label' => 'ALL Orders in the logistics module ' . $dash . ' by day', 'rows' => $mk('all'), 'total' => $sum('all')],
+                ],
+                'summary' => ['lastDay' => $lastDay, 'month' => $month, 'rows' => $summaryRows,
+                    'total' => ['label' => 'Total', 'nd' => $ndTot, 'ndShare' => $ndTot ? 1 : 0, 'month' => $monthTot, 'monthShare' => $monthTot ? 1 : 0]]];
+        };
+        $byCity = $seriesFor('city', ['Tbilisi', 'Other Cities', 'Without City'], 'Orders by City', 'City', false);
+        $byGoods = $seriesFor('goods', null, 'Orders by Goods Type', 'Goods Type', true);
 
         $stmt = $this->pdo->prepare("SELECT o.id order_id, TRIM(CONCAT(COALESCE(o.customer_first_name,''),' ',COALESCE(o.customer_last_name,''))) customer, DATE(COALESCE(o.crm_creator_date,o.created_at)) waiting_from, l.logistics_status, COALESCE(a.city,'') city
             FROM orders o LEFT JOIN crm_order_logistics l ON l.order_id=o.id LEFT JOIN (SELECT order_id, MIN(city) city FROM addresses WHERE address_type='order_shipping' GROUP BY order_id) a ON a.order_id=o.id
             LEFT JOIN (SELECT order_id FROM crm_shipment_status_history WHERE entity_type=4 AND to_status IN (80,81) GROUP BY order_id) dl ON dl.order_id=o.id
-            WHERE o.crm_active=1 AND o.crm_creator_date >= :start AND dl.order_id IS NULL ORDER BY COALESCE(o.crm_creator_date,o.created_at), o.id LIMIT 10");
-        $stmt->execute(['start' => $logiStart]);
+            WHERE (o.crm_active=1 OR o.crm_order_status=11) AND l.id IS NOT NULL AND dl.order_id IS NULL ORDER BY COALESCE(o.crm_creator_date,o.created_at), o.id LIMIT 10");
+        $stmt->execute();
         $openCases = [];
         foreach ($stmt->fetchAll() as $r) {
             $code = $r['logistics_status'];
@@ -197,7 +216,54 @@ final class NewDbReport
             ];
         }
 
-        return ['pending' => $pending, 'delivery' => $delivery, 'byCity' => $byCity, 'byGoods' => $byGoods, 'openCases' => $openCases];
+        // CRM status by day (orders / order lines / vendor collections) — same SQL as pull_new.sh logi_status.tsv
+        $sections = [
+            'orders' => ['entity' => 4, 'title' => 'Orders by logistics status', 'codes' => [20 => 'Started', 25 => 'Procuring', 30 => 'Ready at vendor', 35 => 'Collecting', 40 => 'Collected', 45 => 'At warehouse', 48 => 'Partially ready (mixed lines)', 50 => 'Ready to ship', 60 => 'Out for delivery', 80 => 'Delivered', 81 => 'Picked up']],
+            'lines' => ['entity' => 1, 'title' => 'Order lines by fulfillment status', 'codes' => [20 => 'Awaiting procurement', 25 => 'Ordered from vendor', 30 => 'Ready at vendor', 35 => 'Collection scheduled', 40 => 'Collected', 45 => 'At warehouse', 50 => 'Ready for dispatch', 60 => 'Out for delivery', 80 => 'Delivered', 81 => 'Picked up']],
+            'collections' => ['entity' => 2, 'title' => 'Vendor collections by status', 'codes' => [35 => 'Scheduled', 40 => 'Collected (on the way)', 45 => 'Received at warehouse']],
+        ];
+        $stmt = $this->pdo->prepare("WITH RECURSIVE cal AS (SELECT DATE(:start) d UNION ALL SELECT d + INTERVAL 1 DAY FROM cal WHERE d < DATE(:today)),
+            ev AS (SELECT h.id, h.entity_type, h.entity_id, h.to_status, h.created_at FROM crm_shipment_status_history h JOIN orders o ON o.id=h.order_id AND (o.crm_active=1 OR o.crm_order_status=11) WHERE h.entity_type IN (1,2,4))
+            SELECT e.entity_type, cal.d, e.to_status status, COUNT(*) n FROM cal JOIN ev e ON e.created_at < cal.d + INTERVAL 1 DAY
+            LEFT JOIN ev e2 ON e2.entity_type=e.entity_type AND e2.entity_id=e.entity_id AND e2.created_at < cal.d + INTERVAL 1 DAY AND (e2.created_at > e.created_at OR (e2.created_at=e.created_at AND e2.id>e.id))
+            WHERE e2.id IS NULL GROUP BY e.entity_type, cal.d, e.to_status ORDER BY e.entity_type, cal.d, e.to_status");
+        $stmt->execute(['start' => $logiStart, 'today' => $today]);
+        $raw = $stmt->fetchAll();
+        $dates = [];
+        foreach ($raw as $r) { $dates[$r['d']] = true; }
+        $dates = array_keys($dates);
+        sort($dates);
+        $statusByDay = ['dates' => $dates];
+        // memo row: module orders not yet activated (status 11, no 11->1 activation event by the end of day D)
+        $stmt = $this->pdo->prepare("WITH RECURSIVE cal AS (SELECT DATE(:start) d UNION ALL SELECT d + INTERVAL 1 DAY FROM cal WHERE d < DATE(:today))
+            SELECT cal.d, COUNT(*) n FROM cal JOIN crm_order_logistics l ON l.created_at < cal.d + INTERVAL 1 DAY JOIN orders o ON o.id=l.order_id AND (o.crm_active=1 OR o.crm_order_status=11)
+            LEFT JOIN (SELECT entity_id, MIN(created_at) activated_at FROM crm_activity_log WHERE action='installment.status_change' AND JSON_EXTRACT(metadata,'$.to')=1 GROUP BY entity_id) act ON act.entity_id=o.id
+            WHERE act.activated_at IS NULL OR act.activated_at >= cal.d + INTERVAL 1 DAY GROUP BY cal.d ORDER BY cal.d");
+        $stmt->execute(['start' => $logiStart, 'today' => $today]);
+        $notAct = [];
+        foreach ($stmt->fetchAll() as $r) { $notAct[$r['d']] = (int) $r['n']; }
+        $statusByDay['notActivated'] = array_map(static fn ($d) => $notAct[$d] ?? 0, $dates);
+        foreach ($sections as $key => $sec) {
+            $cell = [];
+            $extra = [];
+            foreach ($raw as $r) {
+                if ((int) $r['entity_type'] !== $sec['entity']) { continue; }
+                $cell[$r['d']][(int) $r['status']] = (int) $r['n'];
+                if (!isset($sec['codes'][(int) $r['status']])) { $extra[(int) $r['status']] = 'Status ' . $r['status']; }
+            }
+            ksort($extra);
+            $rows = [];
+            foreach ($sec['codes'] + $extra as $code => $label) {
+                $vals = [];
+                foreach ($dates as $d) { $vals[] = $cell[$d][$code] ?? 0; }
+                if (array_sum($vals) > 0) { $rows[] = ['code' => $code, 'label' => $label, 'vals' => $vals]; }
+            }
+            $total = [];
+            foreach ($dates as $i => $d) { $t = 0; foreach ($rows as $row) { $t += $row['vals'][$i]; } $total[] = $t; }
+            $statusByDay[$key] = ['title' => $sec['title'], 'rows' => $rows, 'total' => $total];
+        }
+
+        return ['pending' => $pending, 'delivery' => $delivery, 'byCity' => $byCity, 'byGoods' => $byGoods, 'openCases' => $openCases, 'statusByDay' => $statusByDay];
     }
 
     // ------------------------------------------------------------------ helpers

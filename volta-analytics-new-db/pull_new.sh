@@ -45,40 +45,61 @@ Q "SELECT product_id, category_id FROM product_categories ORDER BY product_id, c
 
 # ---------------- Logistics Daily (all reconstructed from the CRM logs, so history is exact from the cutover) ----------------
 TODAY="$(date +%F)"
-LOGI_START='2026-09-02'   # first day of the CRM logistics module; earlier orders were fulfilled outside it
+LOGI_START='2026-09-02'   # first day of the CRM logistics module — the delivery series starts here
+# population = orders that HAVE a crm_order_logistics row and are either active (crm_active=1) or in status 11 = CRM "Signed"
+# (contract signed, logistics started, becomes Active = status 1 in the log / 5 in orders a few hours later; the CRM counts these too). Orders never entered into the module were fulfilled outside it and are not counted.
 # pending loan applications (crm_order_status 4) at the end of each day, by age since the application — an order counts as
 # pending on day D if it was ever pending (has a from=4 status change, or is pending now) and had not left status 4 by the end of D
-Q "WITH RECURSIVE cal AS (SELECT DATE('$CUTOVER') d UNION ALL SELECT d + INTERVAL 1 DAY FROM cal WHERE d < DATE('$TODAY'))
+# only applications submitted from PENDING_START on (user's choice, 2026-09-08): the ~358 pre-cutover applications migrated from the
+# old CRM that are still 'pending' are stale and would swamp the table — the CRM's own Pending figure (~490) includes them
+PENDING_START='2026-09-01'
+Q "WITH RECURSIVE cal AS (SELECT DATE('$PENDING_START') d UNION ALL SELECT d + INTERVAL 1 DAY FROM cal WHERE d < DATE('$TODAY'))
    SELECT cal.d, SUM(DATEDIFF(cal.d, DATE(o.created_at)) <= 1) upTo1, SUM(DATEDIFF(cal.d, DATE(o.created_at)) BETWEEN 2 AND 5) oneTo5, SUM(DATEDIFF(cal.d, DATE(o.created_at)) > 5) over5
-   FROM cal JOIN orders o ON o.created_at >= '$CUTOVER' AND o.created_at < cal.d + INTERVAL 1 DAY
+   FROM cal JOIN orders o ON o.created_at >= '$PENDING_START' AND o.created_at < cal.d + INTERVAL 1 DAY
    LEFT JOIN (SELECT entity_id, MIN(created_at) left_at FROM crm_activity_log WHERE action='installment.status_change' AND JSON_EXTRACT(metadata,'\$.from')=4 GROUP BY entity_id) x ON x.entity_id=o.id
    WHERE (x.entity_id IS NOT NULL OR o.crm_order_status=4) AND (x.left_at IS NULL OR x.left_at >= cal.d + INTERVAL 1 DAY)
    GROUP BY cal.d ORDER BY cal.d;" > "$S/logi_pending.tsv"
-# delivery status per day: active orders (sale date from the cutover) not yet delivered/picked up at the end of D, by age since the sale;
+# delivery status per day: active orders in the module (entered = sale date or the day the module picked them up, whichever is later) not yet delivered/picked up at the end of D, by age since the sale;
 # delivered = orders whose first delivered/picked-up event (crm_shipment_status_history, order level, status 80/81) fell on D
 Q "WITH RECURSIVE cal AS (SELECT DATE('$LOGI_START') d UNION ALL SELECT d + INTERVAL 1 DAY FROM cal WHERE d < DATE('$TODAY')),
-   pop AS (SELECT o.id, COALESCE(o.crm_creator_date, o.created_at) sale, dl.delivered_at FROM orders o LEFT JOIN (SELECT order_id, MIN(created_at) delivered_at FROM crm_shipment_status_history WHERE entity_type=4 AND to_status IN (80,81) GROUP BY order_id) dl ON dl.order_id=o.id WHERE o.crm_active=1 AND o.crm_creator_date >= '$LOGI_START')
+   pop AS (SELECT o.id, COALESCE(o.crm_creator_date, o.created_at) sale, GREATEST(COALESCE(o.crm_creator_date, o.created_at), l.created_at) entered, dl.delivered_at FROM orders o JOIN crm_order_logistics l ON l.order_id=o.id LEFT JOIN (SELECT order_id, MIN(created_at) delivered_at FROM crm_shipment_status_history WHERE entity_type=4 AND to_status IN (80,81) GROUP BY order_id) dl ON dl.order_id=o.id WHERE (o.crm_active=1 OR o.crm_order_status=11))
    SELECT cal.d,
-     SUM(pop.sale < cal.d + INTERVAL 1 DAY AND (pop.delivered_at IS NULL OR pop.delivered_at >= cal.d + INTERVAL 1 DAY) AND DATEDIFF(cal.d, DATE(pop.sale)) <= 1) upTo1,
-     SUM(pop.sale < cal.d + INTERVAL 1 DAY AND (pop.delivered_at IS NULL OR pop.delivered_at >= cal.d + INTERVAL 1 DAY) AND DATEDIFF(cal.d, DATE(pop.sale)) BETWEEN 2 AND 5) oneTo5,
-     SUM(pop.sale < cal.d + INTERVAL 1 DAY AND (pop.delivered_at IS NULL OR pop.delivered_at >= cal.d + INTERVAL 1 DAY) AND DATEDIFF(cal.d, DATE(pop.sale)) > 5) over5,
+     SUM(pop.entered < cal.d + INTERVAL 1 DAY AND (pop.delivered_at IS NULL OR pop.delivered_at >= cal.d + INTERVAL 1 DAY) AND DATEDIFF(cal.d, DATE(pop.sale)) <= 1) upTo1,
+     SUM(pop.entered < cal.d + INTERVAL 1 DAY AND (pop.delivered_at IS NULL OR pop.delivered_at >= cal.d + INTERVAL 1 DAY) AND DATEDIFF(cal.d, DATE(pop.sale)) BETWEEN 2 AND 5) oneTo5,
+     SUM(pop.entered < cal.d + INTERVAL 1 DAY AND (pop.delivered_at IS NULL OR pop.delivered_at >= cal.d + INTERVAL 1 DAY) AND DATEDIFF(cal.d, DATE(pop.sale)) > 5) over5,
      SUM(DATE(pop.delivered_at) = cal.d) delivered,
      ROUND(AVG(CASE WHEN DATE(pop.delivered_at) = cal.d THEN TIMESTAMPDIFF(HOUR, pop.sale, pop.delivered_at)/24 END),1) avgDays
-   FROM cal LEFT JOIN pop ON pop.sale < cal.d + INTERVAL 1 DAY GROUP BY cal.d ORDER BY cal.d;" > "$S/logi_delivery.tsv"
-# current snapshot by city (shipping address) — not-delivered vs all active orders since the cutover
-Q "SELECT CASE WHEN a.city IS NULL OR a.city='' THEN 'Without City' WHEN a.city='თბილისი' THEN 'Tbilisi' ELSE 'Other Cities' END grp, SUM(dl.order_id IS NULL) notDelivered, COUNT(*) allOrders
-   FROM orders o LEFT JOIN (SELECT order_id, MIN(city) city FROM addresses WHERE address_type='order_shipping' GROUP BY order_id) a ON a.order_id=o.id
-   LEFT JOIN (SELECT order_id FROM crm_shipment_status_history WHERE entity_type=4 AND to_status IN (80,81) GROUP BY order_id) dl ON dl.order_id=o.id
-   WHERE o.crm_active=1 AND o.crm_creator_date >= '$LOGI_START' GROUP BY grp ORDER BY allOrders DESC;" > "$S/logi_city.tsv"
-# per line item, for the goods-type breakdown (classified with the mapping sheet in the build step)
-Q "SELECT o.id order_id, oi.product_id, (dl.order_id IS NULL) not_delivered FROM orders o JOIN order_items oi ON oi.order_id=o.id
-   LEFT JOIN (SELECT order_id FROM crm_shipment_status_history WHERE entity_type=4 AND to_status IN (80,81) GROUP BY order_id) dl ON dl.order_id=o.id
-   WHERE o.crm_active=1 AND o.crm_creator_date >= '$LOGI_START' ORDER BY o.id, oi.id;" > "$S/logi_lines.tsv"
+   FROM cal LEFT JOIN pop ON pop.entered < cal.d + INTERVAL 1 DAY GROUP BY cal.d ORDER BY cal.d;" > "$S/logi_delivery.tsv"
+# per order in the module (one row each): when it entered the series, when it was delivered, its city group and the product
+# of its highest-value line — the build turns this into the daily "Orders by City" / "Orders by Goods Type" series
+Q "SELECT o.id order_id, GREATEST(COALESCE(o.crm_creator_date, o.created_at), l.created_at) entered, dl.delivered_at,
+     CASE WHEN a.city IS NULL OR a.city='' THEN 'Without City' WHEN a.city='თბილისი' THEN 'Tbilisi' ELSE 'Other Cities' END city_grp,
+     (SELECT oi.product_id FROM order_items oi WHERE oi.order_id=o.id ORDER BY oi.base_total DESC, oi.id LIMIT 1) top_product_id
+   FROM orders o JOIN crm_order_logistics l ON l.order_id=o.id
+   LEFT JOIN (SELECT order_id, MIN(city) city FROM addresses WHERE address_type='order_shipping' GROUP BY order_id) a ON a.order_id=o.id
+   LEFT JOIN (SELECT order_id, MIN(created_at) delivered_at FROM crm_shipment_status_history WHERE entity_type=4 AND to_status IN (80,81) GROUP BY order_id) dl ON dl.order_id=o.id
+   WHERE (o.crm_active=1 OR o.crm_order_status=11) ORDER BY o.id;" > "$S/logi_orders.tsv"
 # the 10 oldest not-yet-delivered active orders
 Q "SELECT o.id order_id, TRIM(CONCAT(COALESCE(o.customer_first_name,''),' ',COALESCE(o.customer_last_name,''))) customer, DATE(COALESCE(o.crm_creator_date,o.created_at)) waiting_from, l.logistics_status, COALESCE(a.city,'') city
    FROM orders o LEFT JOIN crm_order_logistics l ON l.order_id=o.id LEFT JOIN (SELECT order_id, MIN(city) city FROM addresses WHERE address_type='order_shipping' GROUP BY order_id) a ON a.order_id=o.id
    LEFT JOIN (SELECT order_id FROM crm_shipment_status_history WHERE entity_type=4 AND to_status IN (80,81) GROUP BY order_id) dl ON dl.order_id=o.id
-   WHERE o.crm_active=1 AND o.crm_creator_date >= '$LOGI_START' AND dl.order_id IS NULL ORDER BY COALESCE(o.crm_creator_date,o.created_at), o.id LIMIT 10;" > "$S/logi_open.tsv"
+   WHERE (o.crm_active=1 OR o.crm_order_status=11) AND l.id IS NOT NULL AND dl.order_id IS NULL ORDER BY COALESCE(o.crm_creator_date,o.created_at), o.id LIMIT 10;" > "$S/logi_open.tsv"
+
+# CRM status by day — how many orders (entity_type 4), order lines (1) and vendor collections (2) sat in each logistics
+# status at the end of each day; the status of an entity on day D = its last status-history event up to the end of D.
+# Today's column equals the live crm_order_logistics / crm_line_fulfillment / crm_vendor_collections status counts (verified).
+# Same population as the other logistics tables (active or status-11 orders in the module).
+Q "WITH RECURSIVE cal AS (SELECT DATE('$LOGI_START') d UNION ALL SELECT d + INTERVAL 1 DAY FROM cal WHERE d < DATE('$TODAY')),
+   ev AS (SELECT h.id, h.entity_type, h.entity_id, h.to_status, h.created_at FROM crm_shipment_status_history h JOIN orders o ON o.id=h.order_id AND (o.crm_active=1 OR o.crm_order_status=11) WHERE h.entity_type IN (1,2,4))
+   SELECT e.entity_type, cal.d, e.to_status status, COUNT(*) n FROM cal JOIN ev e ON e.created_at < cal.d + INTERVAL 1 DAY
+   LEFT JOIN ev e2 ON e2.entity_type=e.entity_type AND e2.entity_id=e.entity_id AND e2.created_at < cal.d + INTERVAL 1 DAY AND (e2.created_at > e.created_at OR (e2.created_at=e.created_at AND e2.id>e.id))
+   WHERE e2.id IS NULL GROUP BY e.entity_type, cal.d, e.to_status ORDER BY e.entity_type, cal.d, e.to_status;" > "$S/logi_status.tsv"
+
+# memo row: module orders not yet activated (status 11, no 11->1 activation event by the end of day D)
+Q "WITH RECURSIVE cal AS (SELECT DATE('$LOGI_START') d UNION ALL SELECT d + INTERVAL 1 DAY FROM cal WHERE d < DATE('$TODAY'))
+   SELECT cal.d, COUNT(*) n FROM cal JOIN crm_order_logistics l ON l.created_at < cal.d + INTERVAL 1 DAY JOIN orders o ON o.id=l.order_id AND (o.crm_active=1 OR o.crm_order_status=11)
+   LEFT JOIN (SELECT entity_id, MIN(created_at) activated_at FROM crm_activity_log WHERE action='installment.status_change' AND JSON_EXTRACT(metadata,'\$.to')=1 GROUP BY entity_id) act ON act.entity_id=o.id
+   WHERE act.activated_at IS NULL OR act.activated_at >= cal.d + INTERVAL 1 DAY GROUP BY cal.d ORDER BY cal.d;" > "$S/logi_not_activated.tsv"
 
 echo "END=$END"
-wc -l "$S/new_daily_seg.tsv" "$S/new_daily_apps.tsv" "$S/new_sales_lines.tsv" "$S/logi_pending.tsv" "$S/logi_delivery.tsv" "$S/logi_lines.tsv" | sed "s#$S/##"
+wc -l "$S/new_daily_seg.tsv" "$S/new_daily_apps.tsv" "$S/new_sales_lines.tsv" "$S/logi_pending.tsv" "$S/logi_delivery.tsv" "$S/logi_orders.tsv" "$S/logi_status.tsv" | sed "s#$S/##"
