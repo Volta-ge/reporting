@@ -114,6 +114,16 @@ table.ledger{border-collapse:collapse;width:100%;min-width:640px}
 .check .ok{color:var(--pos);font-weight:500}
 .check .bad{color:var(--neg);font-weight:500}
 .mt{margin-top:18px}
+.toolbar input[type=date]{font:inherit;font-size:13px;padding:5px 8px;border:1px solid var(--line);border-radius:6px;background:var(--surface);color:var(--ink)}
+.toolbar .fl{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted)}
+.toolbar button.reset{font-size:12.5px;color:var(--accent);padding:5px 8px}
+.st{display:inline-block;font-size:11.5px;padding:1px 8px;border-radius:999px;font-weight:500;white-space:nowrap}
+.st.ok{background:var(--pos-soft);color:var(--pos)}
+.st.diff{background:var(--amber-soft);color:var(--amber)}
+.st.no_oris{background:var(--neg-soft);color:var(--neg)}
+.st.no_rs{background:var(--accent-soft);color:var(--accent)}
+.st.late{background:var(--surface2);color:var(--muted)}
+.ledger tr.cur td{background:var(--accent-soft)}
 footer{max-width:1380px;margin:0 auto;padding:0 28px 40px;color:var(--faint);font-size:12px}
 @media (prefers-reduced-motion:no-preference){.chart rect,.chart circle{transition:opacity .15s}}
 </style>
@@ -138,6 +148,7 @@ footer{max-width:1380px;margin:0 auto;padding:0 28px 40px;color:var(--faint);fon
     <button role="tab" data-p="cf"></button>
     <button role="tab" data-p="ar"></button>
     <button role="tab" data-p="ex"></button>
+    <button role="tab" data-p="wb"></button>
   </nav>
 </header>
 
@@ -149,12 +160,14 @@ footer{max-width:1380px;margin:0 auto;padding:0 28px 40px;color:var(--faint);fon
   <section class="panel" id="p-cf"></section>
   <section class="panel" id="p-ar"></section>
   <section class="panel" id="p-ex"></section>
+  <section class="panel" id="p-wb"></section>
 </main>
 <footer id="foot"></footer>
 <div class="tip" id="tip"></div>
 
 <script>
 const D = __DATA__;
+const WB = __WBDATA__;   // RS.ge <-> Oris waybill reconciliation data (null if not built)
 const M = D.months, NM = M.length;
 const years = [...new Set(M.map(m=>m.slice(0,4)))];
 const state = { year: years[years.length-1], month: null, tab: 'ov', lang: 'ka', open: new Set(), arLedger: '1 4 10', arQ: '', arN: 100 };
@@ -578,8 +591,79 @@ function renderEX(){
   document.getElementById('p-ex').innerHTML=h;
 }
 
+/* ---------- WAYBILLS: RS.ge <-> Oris ---------- */
+const WBL={
+ka:{tab:'ზედნადებები RS ↔ ორისი', title:'ზედნადებების შედარება: RS.ge ↔ ორისი', rsData:'RS.ge მონაცემები', orisData:'ორისის ასლი', from:'დან', to:'მდე',
+  sides:{sell:'გაყიდვები (ჩვენი ზედნადებები)', buy:'შესყიდვები (მომწოდებლების ზედნადებები)'},
+  status:{all:'ყველა ზედნადები', ok:'დაწყვილებული', no_oris:'აკლია ორისში', no_rs:'აკლია RS-ზე', diff:'თანხა განსხვავდება'},
+  search:'ძებნა: ნომერი, კონტრაგენტი, ს/კ', reset:'ფილტრის გასუფთავება', count:'რაოდენობა', rsAmt:'თანხა RS.ge-ზე', orisAmt:'თანხა ორისში', diffAmt:'სხვაობა (RS − ორისი)',
+  ofFiltered:'არჩეული ფილტრით', byStatus:'ჯამები სტატუსების მიხედვით', byStatusCap:'არჩეული პერიოდი და მიმართულება · სტატუსის ფილტრის მიუხედავად · დააკლიკე სტრიქონს ფილტრისთვის',
+  statusCol:'სტატუსი', cntCol:'რაოდენობა', rsCol:'RS.ge თანხა', orisCol:'ორისის თანხა', diffCol:'სხვაობა', share:'წილი',
+  monthly:'თვეების მიხედვით', monthlyCap:'არჩეული პერიოდი და მიმართულება · რაოდენობა / თანხა', month:'თვე', rsAll:'RS.ge სულ', orisAll:'ორისი სულ',
+  num:'ნომერი', date:'თარიღი', party:'კონტრაგენტი', tin:'ს/კ', type:'RS ტიპი', rows:'ზედნადები', showMore:(n,t)=>`მეტის ჩვენება (კიდევ ${n} · სულ ${t})`,
+  late:'ორისის ასლის შემდეგ', ret:'დაბრუნება', notBuilt:'RS.ge-ს მონაცემები ამ ვერსიაში არ არის ჩატვირთული.',
+  note:'დაწყვილება ზედნადების ნომრით. RS.ge თანხა = FULL_AMOUNT (დაბრუნების ზედნადებები უარყოფითი ნიშნით), ორისის თანხა = ამ ნომრით გატარებული საქონლის ღირებულება დღგ-ს ჩათვლით (მყიდველის/მომწოდებლის ანგარიშის კორესპონდენცია შემოსავალთან, საქონელთან და დღგ-სთან; ბანკის გადახდები არ ითვლება). გაუქმებული (STATUS −2) RS ზედნადებები არ შედის. ორისში ზედნადების ნომრის გარეშე გატარებული დოკუმენტები (ინვოისები და სხვ.) „აკლია RS-ზე" სვეტში ჩანს. ორისის ასლის თარიღის შემდეგ გამოწერილი RS ზედნადებები ცალკე ნიშნულითაა.'},
+en:{tab:'Waybills RS ↔ Oris', title:'Waybill reconciliation: RS.ge ↔ Oris', rsData:'RS.ge data', orisData:'Oris copy', from:'From', to:'To',
+  sides:{sell:'Sales (our waybills)', buy:'Purchases (supplier waybills)'},
+  status:{all:'All waybills', ok:'Matched', no_oris:'Missing in Oris', no_rs:'Missing on RS.ge', diff:'Amount differs'},
+  search:'Search: number, counterparty, TIN', reset:'Reset filters', count:'Count', rsAmt:'Amount on RS.ge', orisAmt:'Amount in Oris', diffAmt:'Difference (RS − Oris)',
+  ofFiltered:'with the selected filter', byStatus:'Totals by status', byStatusCap:'selected period and direction · regardless of the status filter · click a row to filter',
+  statusCol:'Status', cntCol:'Count', rsCol:'RS.ge amount', orisCol:'Oris amount', diffCol:'Difference', share:'Share',
+  monthly:'By month', monthlyCap:'selected period and direction · count / amount', month:'Month', rsAll:'RS.ge total', orisAll:'Oris total',
+  num:'Number', date:'Date', party:'Counterparty', tin:'TIN', type:'RS type', rows:'waybills', showMore:(n,t)=>`Show more (${n} more · ${t} total)`,
+  late:'after the Oris copy', ret:'return', notBuilt:'RS.ge data is not loaded in this build.',
+  note:'Matched by waybill number. RS.ge amount = FULL_AMOUNT (return waybills negative); Oris amount = the goods value incl. VAT booked under that number (customer/supplier account against revenue, goods and VAT; bank payments are ignored). Cancelled RS waybills (STATUS −2) are excluded. Documents booked in Oris without a waybill number (invoices etc.) appear under "Missing on RS.ge". RS waybills issued after the Oris copy date carry a separate marker.'}};
+const WBS = {side:'sell', from:null, to:null, status:'all', q:'', n:200};
+const wbStatus = r => r[4]===null ? 'no_rs' : r[5]===null ? 'no_oris' : Math.abs(r[4]-r[5])>0.05 ? 'diff' : 'ok';
+function renderWB(){
+  const t=WBL[state.lang]; const el=document.getElementById('p-wb');
+  if(!WB){ el.innerHTML=periodHead(t.title,'')+`<p class="note">${t.notBuilt}</p>`; return; }
+  const asof=D.meta.asof; if(!WBS.from){ WBS.from=WB.meta.start; WBS.to=asof; }
+  const all=WB[WBS.side]; const inPeriod=all.filter(r=>r[1]>=WBS.from && r[1]<=WBS.to);
+  const q=WBS.q.trim().toLowerCase();
+  let rows=inPeriod.filter(r=>(WBS.status==='all'||wbStatus(r)===WBS.status) && (!q || r[0].toLowerCase().includes(q) || r[2].toLowerCase().includes(q) || r[3].includes(q)));
+  const sum=(a,f)=>a.reduce((s,r)=>s+(f(r)||0),0);
+  const rsA=sum(rows,r=>r[4]), orA=sum(rows,r=>r[5]);
+  let h=periodHead(t.title, `${t.rsData}: <b>${WB.meta.rs_fetched}</b> · ${t.orisData}: <b>${asof.split('-').reverse().join('.')}</b>`);
+  h+=`<div class="toolbar"><div class="pills">${['sell','buy'].map(s=>`<button data-wbside="${s}" aria-pressed="${s===WBS.side}">${t.sides[s]}</button>`).join('')}</div></div>`;
+  h+=`<div class="toolbar"><span class="fl">${t.from} <input type="date" id="wbFrom" value="${WBS.from}" min="${WB.meta.start}"></span><span class="fl">${t.to} <input type="date" id="wbTo" value="${WBS.to}"></span>
+    <select id="wbStatus">${Object.entries(t.status).map(([k,v])=>`<option value="${k}" ${k===WBS.status?'selected':''}>${v}</option>`).join('')}</select>
+    <input type="search" id="wbQ" placeholder="${t.search}" value="${esc(WBS.q)}"><button class="reset" id="wbReset">${t.reset}</button></div>`;
+  h+=`<div class="kpis">${kpi(t.count+' · '+t.ofFiltered,'<span class="num">'+rows.length+'</span>',`${inPeriod.length} ${t.rows}`)}${kpi(t.rsAmt,rsA)}${kpi(t.orisAmt,orA)}${kpi(t.diffAmt,rsA-orA)}</div>`;
+  // status summary
+  const groups={}; for(const k of ['ok','no_oris','no_rs','diff']) groups[k]={n:0,rs:0,or:0};
+  for(const r of inPeriod){ const g=groups[wbStatus(r)]; g.n++; g.rs+=r[4]||0; g.or+=r[5]||0; }
+  const totN=inPeriod.length||1;
+  h+=`<div class="grid2"><div class="card"><h3>${t.byStatus}</h3><div class="cap">${t.byStatusCap}</div><div class="tablewrap" style="box-shadow:none;border:0"><table class="ledger" style="min-width:0"><thead><tr><th>${t.statusCol}</th><th class="n">${t.cntCol}</th><th class="n">${t.share}</th><th class="n">${t.rsCol}</th><th class="n">${t.orisCol}</th><th class="n">${t.diffCol}</th></tr></thead><tbody>`;
+  for(const k of ['ok','no_oris','no_rs','diff']){ const g=groups[k]; h+=`<tr class="${WBS.status===k?'cur':''}" data-wbst="${k}" style="cursor:pointer"><td><span class="st ${k}">${t.status[k]}</span></td><td class="n">${g.n}</td><td class="n">${(g.n/totN*100).toFixed(1)}%</td>${cell(g.rs)}${cell(g.or)}${cell(g.rs-g.or)}</tr>`; }
+  h+=`<tr class="total ${WBS.status==='all'?'cur':''}" data-wbst="all" style="cursor:pointer"><td>${t.status.all}</td><td class="n">${inPeriod.length}</td><td class="n">100%</td>${cell(sum(inPeriod,r=>r[4]))}${cell(sum(inPeriod,r=>r[5]))}${cell(sum(inPeriod,r=>r[4])-sum(inPeriod,r=>r[5]))}</tr></tbody></table></div></div>`;
+  // monthly
+  const mon=new Map(); for(const r of inPeriod){ const m=r[1].slice(0,7); const g=mon.get(m)||{rsN:0,rs:0,orN:0,or:0,noO:0,noOA:0,noR:0,noRA:0,df:0}; mon.set(m,g);
+    if(r[4]!==null){g.rsN++; g.rs+=r[4];} if(r[5]!==null){g.orN++; g.or+=r[5];} const s=wbStatus(r); if(s==='no_oris'){g.noO++; g.noOA+=r[4];} if(s==='no_rs'){g.noR++; g.noRA+=r[5];} if(s==='diff') g.df++; }
+  h+=`<div class="card"><h3>${t.monthly}</h3><div class="cap">${t.monthlyCap}</div><div class="tablewrap" style="box-shadow:none;border:0"><table class="ledger" style="min-width:0"><thead><tr><th>${t.month}</th><th class="n">${t.rsAll}</th><th class="n">${t.orisAll}</th><th class="n">${t.status.no_oris}</th><th class="n">${t.status.no_rs}</th><th class="n">${t.status.diff}</th></tr></thead><tbody>`;
+  for(const [m,g] of [...mon.entries()].sort((a,b)=>b[0]<a[0]?-1:1)) h+=`<tr><td class="num">${m}</td><td class="n">${g.rsN} · ${fmt(g.rs,0)}</td><td class="n">${g.orN} · ${fmt(g.or,0)}</td><td class="n ${g.noO?'neg':'zero'}">${g.noO} · ${fmt(g.noOA,0)}</td><td class="n ${g.noR?'':'zero'}" ${g.noR?'style="color:var(--accent)"':''}>${g.noR} · ${fmt(g.noRA,0)}</td><td class="n ${g.df?'':'zero'}" ${g.df?'style="color:var(--amber)"':''}>${g.df}</td></tr>`;
+  h+=`</tbody></table></div></div></div>`;
+  // rows table
+  const TYPES=state.lang==='en'?{'1':'internal','2':'with transport','3':'no transport','4':'distribution','5':'return','6':'sub-waybill'}:{'1':'შიდა გადაზიდვა','2':'ტრანსპორტირებით','3':'ტრანსპორტირების გარეშე','4':'დისტრიბუცია','5':'დაბრუნება','6':'ქვე-ზედნადები'};
+  h+=`<div class="tablewrap mt"><table class="ledger"><thead><tr><th>${t.num}</th><th>${t.date}</th><th>${t.party}</th><th>${t.tin}</th><th class="n">${t.rsCol}</th><th class="n">${t.orisCol}</th><th class="n">${t.diffCol}</th><th>${t.statusCol}</th><th>${t.type}</th></tr></thead><tbody>`;
+  for(const r of rows.slice(0,WBS.n)){ const s=wbStatus(r); const late=s==='no_oris'&&r[1]>asof;
+    h+=`<tr><td class="num">${esc(r[0])}</td><td class="num">${r[1]}</td><td class="name" style="min-width:180px">${esc(r[2])}</td><td class="num" style="color:var(--muted)">${esc(r[3])}</td>${r[4]===null?'<td class="n zero">–</td>':cell(r[4])}${r[5]===null?'<td class="n zero">–</td>':cell(r[5])}${(r[4]===null||r[5]===null)?'<td class="n zero">–</td>':cell(r[4]-r[5])}<td><span class="st ${s}">${t.status[s]}</span>${late?` <span class="st late">${t.late}</span>`:''}</td><td style="color:var(--muted);font-size:12px">${r[7]?(TYPES[r[7]]||r[7]):''}</td></tr>`; }
+  h+=`<tr class="total"><td colspan="4">${t.status.all==='All waybills'?'Total':'სულ'} (${rows.length})</td>${cell(rsA)}${cell(orA)}${cell(rsA-orA)}<td></td><td></td></tr></tbody></table>`;
+  if(rows.length>WBS.n) h+=`<div class="more"><button id="wbMore" style="color:var(--accent);font-weight:500">${t.showMore(Math.min(500,rows.length-WBS.n),rows.length)}</button></div>`;
+  h+=`</div><p class="note">${t.note}</p>`;
+  el.innerHTML=h;
+  el.querySelectorAll('[data-wbside]').forEach(b=>b.addEventListener('click',()=>{ WBS.side=b.dataset.wbside; WBS.n=200; renderWB(); }));
+  el.querySelectorAll('[data-wbst]').forEach(r=>r.addEventListener('click',()=>{ WBS.status=r.dataset.wbst; WBS.n=200; renderWB(); }));
+  el.querySelector('#wbFrom').addEventListener('change',e=>{ if(e.target.value){ WBS.from=e.target.value; renderWB(); } });
+  el.querySelector('#wbTo').addEventListener('change',e=>{ if(e.target.value){ WBS.to=e.target.value; renderWB(); } });
+  el.querySelector('#wbStatus').addEventListener('change',e=>{ WBS.status=e.target.value; WBS.n=200; renderWB(); });
+  el.querySelector('#wbReset').addEventListener('click',()=>{ WBS.from=WB.meta.start; WBS.to=asof; WBS.status='all'; WBS.q=''; WBS.n=200; renderWB(); });
+  const inp=el.querySelector('#wbQ'); let tm; inp.addEventListener('input',()=>{ clearTimeout(tm); tm=setTimeout(()=>{ WBS.q=inp.value; WBS.n=200; const pos=inp.selectionStart; renderWB(); const n=document.getElementById('wbQ'); n.focus(); n.setSelectionRange(pos,pos); },250); });
+  const mb=el.querySelector('#wbMore'); if(mb) mb.addEventListener('click',()=>{ WBS.n+=500; renderWB(); });
+}
+
 /* ---------- wiring ---------- */
-const R={ov:renderOV,bs:renderBS,pl:renderPL,tb:renderTB,cf:renderCF,ar:renderAR,ex:renderEX};
+const R={ov:renderOV,bs:renderBS,pl:renderPL,tb:renderTB,cf:renderCF,ar:renderAR,ex:renderEX,wb:renderWB};
 function render(){ document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('on',p.id==='p-'+state.tab)); document.querySelectorAll('#tabs button').forEach(b=>b.setAttribute('aria-selected',b.dataset.p===state.tab)); R[state.tab](); }
 function buildChrome(){
   const t=T(); document.documentElement.lang=state.lang;
@@ -587,7 +671,7 @@ function buildChrome(){
   const dmy=s=>s.split('-').reverse().join('.');
   document.getElementById('h-sub').innerHTML=`${t.src} <b>${dmy(D.meta.asof)}</b> · ${t.journal} <b>${dmy(D.meta.first)} – ${dmy(D.meta.last)}</b> · ${t.allGel}`;
   document.getElementById('l-year').textContent=t.year; document.getElementById('l-month').textContent=t.month;
-  document.querySelectorAll('#tabs button').forEach(b=>b.textContent=t.tabs[b.dataset.p]);
+  document.querySelectorAll('#tabs button').forEach(b=>{ b.textContent=b.dataset.p==='wb'?WBL[state.lang].tab:t.tabs[b.dataset.p]; if(b.dataset.p==='wb') b.hidden=!WB; });
   document.querySelectorAll('#lang button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.l===state.lang));
   const s=D.meta.stats; document.getElementById('foot').textContent=t.foot({total:fmt(s.total,0),kept:fmt(s.kept,0),closing:fmt(s.skip_closing,0),offbal:s.skip_offbal},s.fx_converted);
   const yr=document.getElementById('years'); yr.innerHTML=years.map(y=>`<button aria-pressed="${y===state.year}" data-y="${y}">${y}</button>`).join('');
