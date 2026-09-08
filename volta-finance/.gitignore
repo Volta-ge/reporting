@@ -1,0 +1,6 @@
+extract/
+*.RAR
+*.rar
+*.sqlite
+dash_data.json
+__pycache__/

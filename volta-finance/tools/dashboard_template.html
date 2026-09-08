@@ -1,0 +1,604 @@
+<meta charset="utf-8">
+<title>Volta_Finance</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+Georgian:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+:root{
+  color-scheme:light;
+  --bg:#F3F5F4; --surface:#FFFFFF; --surface2:#EBEFEE; --ink:#16202A; --muted:#5B6B78; --faint:#8A98A3;
+  --line:#D7DDDE; --line2:#E7ECEC; --accent:#1470A6; --accent-ink:#FFFFFF; --accent-soft:#E2EEF6;
+  --amber:#C9722A; --amber-soft:#F7EADF; --pos:#2A7F5A; --neg:#B23F2E; --pos-soft:#E1F1E9; --neg-soft:#F6E3DF;
+  --heat:20,112,166; --shadow:0 1px 2px rgba(22,32,42,.06),0 4px 14px rgba(22,32,42,.05);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --bg:#12171B; --surface:#1A2126; --surface2:#222A30; --ink:#E4E9EC; --muted:#93A1AB; --faint:#6E7C86;
+    --line:#2C363D; --line2:#242D34; --accent:#3A8DBA; --accent-ink:#0E141A; --accent-soft:#1E3241;
+    --amber:#C27F3C; --amber-soft:#3A2B1B; --pos:#4CAF84; --neg:#E06A57; --pos-soft:#1B3328; --neg-soft:#3B221E;
+    --heat:58,141,186; --shadow:0 1px 2px rgba(0,0,0,.4),0 4px 14px rgba(0,0,0,.35);
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#12171B; --surface:#1A2126; --surface2:#222A30; --ink:#E4E9EC; --muted:#93A1AB; --faint:#6E7C86;
+  --line:#2C363D; --line2:#242D34; --accent:#3A8DBA; --accent-ink:#0E141A; --accent-soft:#1E3241;
+  --amber:#C27F3C; --amber-soft:#3A2B1B; --pos:#4CAF84; --neg:#E06A57; --pos-soft:#1B3328; --neg-soft:#3B221E;
+  --heat:58,141,186; --shadow:0 1px 2px rgba(0,0,0,.4),0 4px 14px rgba(0,0,0,.35);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Noto Sans Georgian","Sylfaen","Segoe UI",system-ui,sans-serif;font-size:14px;line-height:1.45}
+.num,.code,td.n,th.n{font-family:"IBM Plex Mono","Consolas",monospace;font-variant-numeric:tabular-nums}
+a{color:var(--accent)}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+.top{background:var(--surface);border-bottom:1px solid var(--line)}
+.top-in{max-width:1380px;margin:0 auto;padding:18px 28px 0;display:flex;flex-wrap:wrap;gap:12px 32px;align-items:flex-end;justify-content:space-between}
+.brand h1{margin:0;font-size:20px;font-weight:700;letter-spacing:-.01em}
+.brand .sub{color:var(--muted);font-size:12.5px;margin-top:2px}
+.brand .sub b{color:var(--ink);font-weight:500}
+.controls{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;padding-bottom:14px}
+.ctl-label{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);margin-right:6px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:6px;overflow:hidden;background:var(--surface2)}
+.seg button{padding:6px 11px;font-size:13px;font-weight:500;color:var(--muted);border-right:1px solid var(--line)}
+.seg button:last-child{border-right:0}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+.seg.lang button{padding:6px 10px;font-size:12px;letter-spacing:.04em}
+select{font:inherit;font-size:13px;padding:6px 28px 6px 10px;border:1px solid var(--line);border-radius:6px;background:var(--surface2);color:var(--ink);appearance:none;
+ background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),linear-gradient(135deg,var(--muted) 50%,transparent 50%);background-position:calc(100% - 15px) 55%,calc(100% - 10px) 55%;background-size:5px 5px;background-repeat:no-repeat}
+.tabs{max-width:1380px;margin:0 auto;padding:0 28px;display:flex;gap:2px;overflow-x:auto}
+.tabs button{padding:10px 14px;font-size:13.5px;font-weight:500;color:var(--muted);border-bottom:2px solid transparent;white-space:nowrap;margin-bottom:-1px}
+.tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent)}
+.tabs button:hover{color:var(--ink)}
+
+main{max-width:1380px;margin:0 auto;padding:22px 28px 60px}
+.panel{display:none}.panel.on{display:block}
+.period{display:flex;flex-wrap:wrap;gap:6px 16px;align-items:baseline;margin:0 0 16px}
+.period h2{margin:0;font-size:17px;font-weight:600}
+.period .win{color:var(--muted);font-size:13px}
+.period .win b{color:var(--ink);font-weight:500}
+.note{color:var(--muted);font-size:12.5px;margin:10px 0 0;max-width:80ch}
+
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;margin-bottom:20px}
+.kpi{background:var(--surface);border:1px solid var(--line2);border-radius:8px;padding:12px 14px 11px}
+.kpi .l{font-size:11.5px;color:var(--muted);letter-spacing:.02em}
+.kpi .v{font-size:21px;font-weight:600;margin-top:4px;letter-spacing:-.01em}
+.kpi .d{font-size:12px;margin-top:3px;color:var(--muted)}
+.kpi .d .up{color:var(--pos)}.kpi .d .dn{color:var(--neg)}
+
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media (max-width:900px){.grid2{grid-template-columns:1fr}}
+.card{background:var(--surface);border:1px solid var(--line2);border-radius:8px;box-shadow:var(--shadow);padding:14px 16px 12px}
+.card h3{margin:0 0 2px;font-size:14px;font-weight:600}
+.card .cap{color:var(--muted);font-size:12px;margin-bottom:8px}
+.legend{display:flex;gap:14px;font-size:12px;color:var(--muted);margin:2px 0 6px}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px}
+.chart{position:relative}
+.chart svg{width:100%;height:auto;display:block;overflow:visible}
+.tip{position:absolute;pointer-events:none;background:var(--ink);color:var(--bg);font-size:12px;padding:6px 9px;border-radius:5px;white-space:nowrap;transform:translate(-50%,-110%);display:none;z-index:5;box-shadow:var(--shadow)}
+.tip b{font-weight:600}
+
+.tablewrap{overflow-x:auto;background:var(--surface);border:1px solid var(--line2);border-radius:8px;box-shadow:var(--shadow)}
+table.ledger{border-collapse:collapse;width:100%;min-width:640px}
+.ledger th{font-size:11.5px;font-weight:500;color:var(--muted);text-align:left;padding:9px 12px;border-bottom:1px solid var(--line);letter-spacing:.02em;white-space:nowrap;background:var(--surface)}
+.ledger th.n,.ledger td.n{text-align:right}
+.ledger td{padding:6px 12px;border-bottom:1px solid var(--line2);vertical-align:middle;white-space:nowrap}
+.ledger td.name{white-space:normal;min-width:260px;max-width:520px}
+#p-ex .ledger td.name{white-space:nowrap;min-width:0;max-width:none}
+.ledger tr:last-child td{border-bottom:0}
+.ledger tr.lvl1 td{font-weight:600;background:var(--surface2)}
+.ledger tr.lvl2 td{font-weight:500}
+.ledger tr.total td{font-weight:600;border-top:2px solid var(--line);background:var(--surface2)}
+.ledger tr.sub td{font-weight:600;border-top:1px solid var(--line)}
+.ledger tr.head td{font-size:11.5px;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;padding-top:14px;font-weight:500}
+.ledger td.n.neg{color:var(--neg)}
+.ledger td.n.zero{color:var(--faint)}
+.ledger td.n.pos{color:var(--pos)}
+.code{color:var(--faint);font-size:11.5px;margin-right:8px}
+.tg{display:inline-block;width:16px;height:16px;line-height:14px;text-align:center;border:1px solid var(--line);border-radius:3px;font-size:11px;color:var(--muted);margin-right:6px;vertical-align:1px;background:var(--surface)}
+.tg.open{background:var(--accent-soft);border-color:transparent;color:var(--accent)}
+.tg.none{visibility:hidden}
+.ind1{padding-left:22px}.ind2{padding-left:44px}.ind3{padding-left:66px}.ind4{padding-left:88px}
+.more{padding:8px 12px;font-size:12.5px;color:var(--accent);font-weight:500}
+.pct{color:var(--muted);font-size:11.5px;margin-left:6px}
+.bar{display:inline-block;height:6px;border-radius:3px;background:var(--accent);vertical-align:middle;margin-right:8px;opacity:.75}
+.toolbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:0 0 12px}
+.toolbar input[type=search]{font:inherit;font-size:13px;padding:6px 10px;border:1px solid var(--line);border-radius:6px;background:var(--surface);color:var(--ink);min-width:260px}
+.pills{display:flex;flex-wrap:wrap;gap:6px}
+.pills button{padding:5px 11px;border:1px solid var(--line);border-radius:999px;font-size:12.5px;color:var(--muted);background:var(--surface)}
+.pills button[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent);color:var(--accent);font-weight:500}
+.heat{background:rgba(var(--heat),calc(var(--h) * .28))}
+.badge{display:inline-block;font-size:11px;padding:1px 7px;border-radius:999px;background:var(--surface2);color:var(--muted);margin-left:6px;vertical-align:1px}
+.check{margin-top:10px;font-size:12.5px;color:var(--muted)}
+.check .ok{color:var(--pos);font-weight:500}
+.check .bad{color:var(--neg);font-weight:500}
+.mt{margin-top:18px}
+footer{max-width:1380px;margin:0 auto;padding:0 28px 40px;color:var(--faint);font-size:12px}
+@media (prefers-reduced-motion:no-preference){.chart rect,.chart circle{transition:opacity .15s}}
+</style>
+
+<header class="top">
+  <div class="top-in">
+    <div class="brand">
+      <h1 id="h-title"></h1>
+      <div class="sub" id="h-sub"></div>
+    </div>
+    <div class="controls">
+      <span class="ctl-label" id="l-year"></span><div class="seg" id="years"></div>
+      <span class="ctl-label" id="l-month"></span><select id="month"></select>
+      <div class="seg lang" id="lang"><button data-l="ka">ქარ</button><button data-l="en">EN</button></div>
+    </div>
+  </div>
+  <nav class="tabs" role="tablist" id="tabs">
+    <button role="tab" data-p="ov"></button>
+    <button role="tab" data-p="bs"></button>
+    <button role="tab" data-p="pl"></button>
+    <button role="tab" data-p="tb"></button>
+    <button role="tab" data-p="cf"></button>
+    <button role="tab" data-p="ar"></button>
+    <button role="tab" data-p="ex"></button>
+  </nav>
+</header>
+
+<main>
+  <section class="panel" id="p-ov"></section>
+  <section class="panel" id="p-bs"></section>
+  <section class="panel" id="p-pl"></section>
+  <section class="panel" id="p-tb"></section>
+  <section class="panel" id="p-cf"></section>
+  <section class="panel" id="p-ar"></section>
+  <section class="panel" id="p-ex"></section>
+</main>
+<footer id="foot"></footer>
+<div class="tip" id="tip"></div>
+
+<script>
+const D = __DATA__;
+const M = D.months, NM = M.length;
+const years = [...new Set(M.map(m=>m.slice(0,4)))];
+const state = { year: years[years.length-1], month: null, tab: 'ov', lang: 'ka', open: new Set(), arLedger: '1 4 10', arQ: '', arN: 100 };
+try{ const l=localStorage.getItem('volta-fin-lang'); if(l==='en'||l==='ka') state.lang=l; }catch(_){}
+
+/* ---------- i18n ---------- */
+const L = {
+ka:{
+  title:'შპს ვოლტა · ფინანსური ანგარიშგება', src:'წყარო: ორისი, ბაზის ასლი', journal:'ჟურნალი', allGel:'ყველა თანხა ლარში (₾)',
+  year:'წელი', month:'თვე', wholeYear:'მთელი წელი',
+  tabs:{ov:'მიმოხილვა',bs:'ბალანსი',pl:'მოგება-ზარალი',tb:'ბრუნვითი უწყისი',cf:'ფულადი ნაკადები',ar:'დებიტორები · კრედიტორები',ex:'ხარჯების ანალიზი'},
+  mS:['იან','თებ','მარ','აპრ','მაი','ივნ','ივლ','აგვ','სექ','ოქტ','ნოე','დეკ'],
+  mL:['იანვარი','თებერვალი','მარტი','აპრილი','მაისი','ივნისი','ივლისი','აგვისტო','სექტემბერი','ოქტომბერი','ნოემბერი','დეკემბერი'],
+  period:'პერიოდი', compare:'შედარება', prev:'წინა', asOf:'მდგომარეობა', start:'დასაწყისი', mln:'მლნ', ths:'ათ.', months:'თვე',
+  expand:'გაშლა', collapse:'ჩაკეცვა', unknownAcc:'(უცნობი ანგარიში)',
+  shownTop:(n,t)=>`ნაჩვენებია ${n} უდიდესი ${t} ქვეანგარიშიდან · სრული სია დებიტორ/კრედიტორთა ჩანართშია`,
+  revenue:'შემოსავალი', gross:'საერთო მოგება', net:'წმინდა მოგება', cash:'ფულადი სახსრები', ar:'მოთხოვნები (დებიტორები)', liab:'ვალდებულებები (სულ)',
+  chRev:'შემოსავალი და წმინდა მოგება თვეების მიხედვით', chCash:'ფულადი სახსრები და მოთხოვნები თვის ბოლოს', cashLeg:'ფული (სალარო + ბანკი)', arLeg:'მოთხოვნები', eomBal:'ნაშთი თვის ბოლოს',
+  yearly:'წლიური შეჯამება', yearlyCap:'ყველა წელი, ₾ · მოგება/ზარალი დახურვის გატარებების გარეშე',
+  margin:'მარჟა', adm:'ადმ. ხარჯები', cashYE:'ფული წლის ბოლოს', arShort:'მოთხოვნები', liabShort:'ვალდებულებები',
+  bs:'ბალანსი', account:'ანგარიში', change:'ცვლილება', assets:'აქტივები', totAssets:'სულ აქტივები', liabilities:'ვალდებულებები', totLiab:'სულ ვალდებულებები', equity:'საკუთარი კაპიტალი', totEq:'სულ კაპიტალი', totLE:'სულ ვალდებულებები და კაპიტალი',
+  bsCheck:'კონტროლი: აქტივები − (ვალდებულებები + კაპიტალი) =', periodStart:'პერიოდის დასაწყისი',
+  bsNote:'„საანგარიშგებო პერიოდის მოგება/ზარალი" (5 3 30) გამოთვლილია შემოსავლებისა და ხარჯების ანგარიშების ნაშთიდან, ორისის თვიური დახურვის გატარებების გარეშე, ამიტომ ნებისმიერი თვის ბოლოს სწორ დაგროვილ შედეგს აჩვენებს. ცვეთის ანგარიშები (2 2, 2 6) აქტივებში უარყოფითი ნიშნით ჩანს. ვალუტის ოპერაციები გადაყვანილია ლარში იმ დღის კურსით.',
+  plTitle:'მოგება-ზარალის ანგარიშგება', item:'მუხლი', chg:'ცვლ.', opRev:'საოპერაციო შემოსავლები', cogs:'რეალიზებული საქონლის/პროდუქციის თვითღირებულება', opEx:'საოპერაციო ხარჯები', nonOp:'არასაოპერაციო და სხვა შემოსავლები/ხარჯები',
+  opProfit:'საოპერაციო მოგება', netPL:'წმინდა მოგება / ზარალი', ofRev:'შემოსავლიდან', byMonth:'თვეების მიხედვით', exPos:'₾ · ხარჯები დადებითი ნიშნით',
+  cogsCol:'თვითღირებულება', distCol:'მიწოდების ხარჯ.', nonOpCol:'არასაოპ. წმინდა', total:'სულ',
+  plNote:'მოგების გადასახადი ორისში კაპიტალის ანგარიშზე (5 3 10 → 3 3 10) ირიცხება და აქ არ არის გამოკლებული. თანხები ორისის თვიური დახურვის გატარებების გარეშეა, ამიტომ ნებისმიერ თვეზე რეალურ შედეგს აჩვენებს.',
+  tbTitle:'ბრუნვითი უწყისი', tbSub:'ნაშთები: დებეტი დადებითი, კრედიტი უარყოფითი', openBal:'ნაშთი დასაწყისში', debit:'დებეტი', credit:'კრედიტი', closeBal:'ნაშთი ბოლოს',
+  tbCheck1:'კონტროლი: დებეტური ბრუნვა − კრედიტული ბრუნვა =', tbCheck2:'ნაშთების ჯამი =',
+  tbNote:'შემოსავლებისა და ხარჯების ანგარიშები (6–9) დახურვის გატარებების გარეშეა, ამიტომ მათი ნაშთი პერიოდის დაგროვილ შედეგს აჩვენებს. 150-ზე მეტი ქვეანგარიშის მქონე კვანძებზე ნაჩვენებია 150 უდიდესი.',
+  cfTitle:'ფულადი ნაკადები', cfSub:'პირდაპირი მეთოდი, კონტრ-ანგარიშების მიხედვით', cashOpen:'ფული პერიოდის დასაწყისში', inflow:'შემოსვლა', outflow:'გასვლა', netFlow:'წმინდა ნაკადი', cashEnd:'ფული პერიოდის ბოლოს',
+  cfChart:'შემოსვლა და გასვლა თვეების მიხედვით', cfChartCap:'₾ · ბანკებს/სალაროს შორის გადარიცხვების გარეშე', flowCtr:'ნაკადი / კონტრ-ანგარიში', netCol:'წმინდა',
+  transfers:'გადარიცხვები სალაროსა და ბანკის ანგარიშებს შორის (ჯამში არ შედის)', atStart:'დასაწყისში', transfersNet:'გადარიცხვები (წმინდა)', atEnd:'ბოლოს', totCash:'სულ ფულადი სახსრები',
+  cfNote:'ნაკადები დაჯგუფებულია იმ ანგარიშის მიხედვით, რომელთანაც ფულის ანგარიში კორესპონდირებს. ორისის ფულადი ნაკადების კატეგორიები (Category) გატარებებზე მინიჭებული არ არის, ამიტომ ეს დაჯგუფება ანგარიშთა გეგმიდან გამომდინარეობს.',
+  cfGroups:['მყიდველებიდან მიღებული თანხები','მომწოდებლებზე გადახდილი','საქონლისა და მასალების შესყიდვა','ხელფასი და პერსონალი','გადასახადები','სესხები და დაფინანსება','პარტნიორები და კაპიტალი','ძირითადი საშუალებები და ინვესტიციები','საოპერაციო ხარჯების პირდაპირი გადახდა','არასაოპერაციო (პროცენტი, კურსთა სხვაობა, სხვა)','სხვა'],
+  arTitle:'დებიტორები და კრედიტორები', turnover:'ბრუნვები', search:'ძებნა: სახელი ან კოდი', contragents:'კონტრაგენტი', filtered:'(ფილტრით)',
+  arLedgers:{'1 4 10':'მოთხოვნები მყიდველების მიმართ','3 1 20':'მიღებული ავანსები','3 1 10':'მომწოდებლები','3 1 31':'მომსახურებაზე გაცემული თანხები','3 1 32':'გადასახდელი ხელფასი','4 1 90':'გრძელვადიანი სესხები','3 2 10':'მოკლევადიანი სესხები','1 4 30':'მოთხოვნები პერსონალის მიმართ','1 4 50':'სესხები პარტნიორებზე'},
+  balEnd:'ნაშთი პერიოდის ბოლოს', atStartLbl:'დასაწყისში', toDr:'ბრუნვა · დებეტი', toCr:'ბრუნვა · კრედიტი', nonZero:'არანულოვანი ნაშთი', top10:'10 უდიდესი', ofBal:'ნაშთისა',
+  oppA:'კრედიტული ნაშთით (ავანსი/ზედმეტობა)', oppL:'დებეტური ნაშთით (ავანსი/ზედმეტობა)', code:'კოდი', contragent:'კონტრაგენტი',
+  showMore:(n,t)=>`მეტის ჩვენება (კიდევ ${n} · სულ ${t})`,
+  arNoteA:'დებეტური ნაშთი = მოთხოვნა კონტრაგენტის მიმართ, კრედიტული = ავანსი ან ზედმეტად გადახდილი.', arNoteL:'კრედიტული ნაშთი = ჩვენი დავალიანება, დებეტური = ჩვენს მიერ გადახდილი ავანსი.', negRed:'ნაშთი უარყოფითი ნიშნით წითლადაა.',
+  exTitle:'ხარჯების ანალიზი', exSub:'ხარჯები თვეების მიხედვით, ₾', selMonth:'არჩეული თვე', ga:'საერთო და ადმინისტრაციული (7 4)', dist:'მიწოდების ხარჯები (7 3)', nonOpEx:'არასაოპერაციო ხარჯები (8 2)', totEx:'სულ საოპერაციო + სხვა ხარჯები', avgMonth:'თვეში საშუალოდ', exItem:'ხარჯის მუხლი', avgCol:'საშ. თვე',
+  exNote:'თვითღირებულება (7 2) აქ არ შედის, ის მოგება-ზარალის ჩანართშია. ფონის ინტენსივობა თითოეული სტრიქონის საკუთარ მაქსიმუმთანაა შედარებული.',
+  foot:(s,fx)=>`ჟურნალის ${s.total} გატარებიდან გამოყენებულია ${s.kept}: გამორიცხულია ${s.closing} თვიური დახურვის გატარება (5 3 30 ↔ 6–9) და ${s.offbal} ბალანსგარეშე (B); ${fx} სავალუტო ოპერაცია გადაყვანილია ლარში ორისის კურსების ცხრილით. ბალანსები შემოწმებულია ორისის წლის საწყის ნაშთებთან (2020–2025): განსხვავება მხოლოდ 1,155 ₾ ერთ სავალუტო ოპერაციაზე (1 2 ↔ 1 6).`
+},
+en:{
+  title:'Volta LLC · Financial Statements', src:'Source: Oris accounting, database copy of', journal:'journal', allGel:'all amounts in Georgian lari (₾)',
+  year:'Year', month:'Month', wholeYear:'Whole year',
+  tabs:{ov:'Overview',bs:'Balance Sheet',pl:'Profit & Loss',tb:'Trial Balance',cf:'Cash Flow',ar:'Receivables · Payables',ex:'Expense Analysis'},
+  mS:['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],
+  mL:['January','February','March','April','May','June','July','August','September','October','November','December'],
+  period:'Period', compare:'compared with', prev:'prior', asOf:'As of', start:'Start', mln:'M', ths:'K', months:'months',
+  expand:'Expand', collapse:'Collapse', unknownAcc:'(unknown account)',
+  shownTop:(n,t)=>`Showing the ${n} largest of ${t} sub-accounts · the full list is in the Receivables · Payables tab`,
+  revenue:'Revenue', gross:'Gross profit', net:'Net profit', cash:'Cash', ar:'Receivables', liab:'Liabilities (total)',
+  chRev:'Revenue and net profit by month', chCash:'Cash and receivables at month end', cashLeg:'Cash (till + bank)', arLeg:'Receivables', eomBal:'balance at month end',
+  yearly:'Yearly summary', yearlyCap:'All years, ₾ · profit/loss without closing entries',
+  margin:'Margin', adm:'G&A expenses', cashYE:'Cash at year end', arShort:'Receivables', liabShort:'Liabilities',
+  bs:'Balance Sheet', account:'Account', change:'Change', assets:'Assets', totAssets:'Total assets', liabilities:'Liabilities', totLiab:'Total liabilities', equity:'Equity', totEq:'Total equity', totLE:'Total liabilities and equity',
+  bsCheck:'Check: assets − (liabilities + equity) =', periodStart:'start of period',
+  bsNote:'"Profit/loss for the reporting period" (5 3 30) is computed from the balances of the income and expense accounts, without the monthly closing entries Oris posts, so it shows the correct cumulative result at any month end. Depreciation accounts (2 2, 2 6) appear under assets with a negative sign. Foreign-currency transactions are converted to lari at the rate of the transaction date.',
+  plTitle:'Profit and Loss Statement', item:'Line item', chg:'Chg.', opRev:'Operating revenue', cogs:'Cost of goods / products sold', opEx:'Operating expenses', nonOp:'Non-operating and other income / expenses',
+  opProfit:'Operating profit', netPL:'Net profit / loss', ofRev:'of revenue', byMonth:'By month', exPos:'₾ · expenses shown as positive',
+  cogsCol:'Cost of sales', distCol:'Distribution', nonOpCol:'Non-op. net', total:'Total',
+  plNote:'Profit tax is booked in Oris directly to equity (5 3 10 → 3 3 10) and is not deducted here. Amounts exclude the monthly closing entries, so every month shows its real result.',
+  tbTitle:'Trial Balance', tbSub:'balances: debit positive, credit negative', openBal:'Opening balance', debit:'Debit', credit:'Credit', closeBal:'Closing balance',
+  tbCheck1:'Check: debit turnover − credit turnover =', tbCheck2:'sum of balances =',
+  tbNote:'Income and expense accounts (6–9) exclude closing entries, so their balance shows the cumulative result for the period. Nodes with more than 150 sub-accounts show the 150 largest.',
+  cfTitle:'Cash Flow Statement', cfSub:'direct method, by counter-account', cashOpen:'Cash at start of period', inflow:'Inflows', outflow:'Outflows', netFlow:'Net cash flow', cashEnd:'Cash at end of period',
+  cfChart:'Inflows and outflows by month', cfChartCap:'₾ · excluding transfers between bank accounts and till', flowCtr:'Flow / counter-account', netCol:'Net',
+  transfers:'Transfers between till and bank accounts (not included in totals)', atStart:'At start', transfersNet:'Transfers (net)', atEnd:'At end', totCash:'Total cash',
+  cfNote:'Flows are grouped by the account the cash account corresponds with. Oris cash-flow categories are not assigned to journal entries, so this grouping is derived from the chart of accounts.',
+  cfGroups:['Received from customers','Paid to suppliers','Purchase of goods and materials','Salaries and personnel','Taxes','Loans and financing','Partners and equity','Fixed assets and investments','Direct payment of operating expenses','Non-operating (interest, FX differences, other)','Other'],
+  arTitle:'Receivables and Payables', turnover:'turnover', search:'Search: name or code', contragents:'counterparties', filtered:'(filtered)',
+  arLedgers:{'1 4 10':'Trade receivables','3 1 20':'Advances received','3 1 10':'Suppliers','3 1 31':'Amounts paid for services','3 1 32':'Salaries payable','4 1 90':'Long-term loans','3 2 10':'Short-term loans','1 4 30':'Receivables from staff','1 4 50':'Loans to partners'},
+  balEnd:'Balance at end of period', atStartLbl:'at start', toDr:'Turnover · debit', toCr:'Turnover · credit', nonZero:'Non-zero balances', top10:'top 10', ofBal:'of balance',
+  oppA:'With credit balance (advance / overpayment)', oppL:'With debit balance (advance / overpayment)', code:'Code', contragent:'Counterparty',
+  showMore:(n,t)=>`Show more (${n} more · ${t} total)`,
+  arNoteA:'Debit balance = amount owed by the counterparty, credit = advance or overpayment.', arNoteL:'Credit balance = amount we owe, debit = advance we have paid.', negRed:'Negative balances are shown in red.',
+  exTitle:'Expense Analysis', exSub:'expenses by month, ₾', selMonth:'selected month', ga:'General and administrative (7 4)', dist:'Distribution expenses (7 3)', nonOpEx:'Non-operating expenses (8 2)', totEx:'Total operating + other expenses', avgMonth:'monthly average', exItem:'Expense item', avgCol:'Avg / month',
+  exNote:'Cost of sales (7 2) is not included here; see the Profit & Loss tab. Background intensity is relative to each row\'s own maximum.',
+  foot:(s,fx)=>`Of ${s.total} journal entries, ${s.kept} are used: ${s.closing} monthly closing entries (5 3 30 ↔ 6–9) and ${s.offbal} off-balance (B) entries are excluded; ${fx} foreign-currency entries are converted to lari using the Oris exchange-rate table. Balances were verified against Oris year-opening balances (2020–2025): the only difference is 1,155 ₾ on one FX transaction (1 2 ↔ 1 6).`
+}};
+const ACC_EN = {
+'1':'Current assets','1 1':'Cash on hand','1 1 10':'Cash in national currency','1 1 20':'Cash in foreign currency','1 2':'Cash at bank','1 2 10':'National currency, resident banks','1 2 20':'Foreign currency, resident banks','1 2 30':'Foreign currency, non-resident banks','1 2 90':'Cash on other bank accounts',
+'1 3':'Short-term investments','1 4':'Short-term receivables','1 4 10':'Trade receivables','1 4 15':'Allowance for doubtful receivables','1 4 20':'Receivables from related parties','1 4 30':'Receivables from staff','1 4 40':'Receivables from management and board','1 4 50':'Loans to partners','1 4 60':'Current portion of long-term partner receivables','1 4 70':'Current portion of long-term receivables','1 4 80':'Advances paid to suppliers','1 4 85':'Advances paid to customs','1 4 90':'Other short-term receivables',
+'1 5':'Short-term notes receivable','1 6':'Inventories','1 6 10':'Goods','1 6 35':'Interim account','1 7':'Prepaid expenses','1 8':'Accrued receivables','1 9':'Other current assets',
+'2':'Non-current assets','2 1':'Property, plant and equipment','2 1 60':'Office equipment','2 1 80':'Vehicles','2 1 90':'Leasehold improvements','2 2':'Accumulated depreciation','2 2 60':'Depreciation of office equipment','2 2 80':'Depreciation of vehicles','2 2 90':'Depreciation of leasehold improvements',
+'2 3':'Long-term receivables','2 4':'Long-term investments','2 5':'Intangible assets','2 5 90':'Other intangible assets','2 6':'Amortisation of intangible assets','2 6 90':'Amortisation of other intangible assets',
+'3':'Current liabilities','3 1':'Short-term liabilities','3 1 10':'Trade payables','3 1 20':'Advances received','3 1 30':'Wages payable','3 1 31':'Amounts paid for services','3 1 32':'Salaries payable','3 1 40':'Royalties','3 1 50':'Commissions payable','3 1 60':'Liabilities to staff','3 1 70':'Liabilities to related parties','3 1 90':'Other short-term liabilities',
+'3 2':'Short-term loans','3 2 10':'Short-term loans','3 2 20':'Loans from partners','3 2 30':'Current portion of long-term loans',
+'3 3':'Tax liabilities','3 3 10':'Profit tax payable','3 3 20':'Income tax payable','3 3 30':'VAT payable','3 3 40':'VAT paid (input)','3 3 50':'Excise payable','3 3 60':'Excise paid','3 3 70':'Social tax','3 3 80':'Property tax','3 3 85':'Road fund tax','3 3 90':'Other tax liabilities',
+'3 4':'Accrued liabilities','3 4 10':'Interest payable','3 4 20':'Dividends payable',
+'4':'Non-current liabilities','4 1':'Long-term borrowings','4 1 10':'Bonds payable','4 1 20':'Notes payable','4 1 30':'Finance lease liabilities','4 1 40':'Long-term loans','4 1 90':'Other long-term borrowings','4 2':'Deferred tax and other long-term liabilities','4 3':'Provisions','4 4':'Deferred income',
+'5':'Equity','5 1':'Share capital','5 2':'Partners\' capital','5 3':'Profit / loss','5 3 10':'Retained earnings','5 3 20':'Accumulated loss','5 3 30':'Profit / loss for the reporting period','5 4':'Reserves and funding',
+'6':'Operating revenue','6 1':'Operating revenue','6 1 10':'Sales revenue','6 1 20':'Sales returns and discounts','6 1 90':'Other operating revenue','6 1 91':'Marketing service fees',
+'7':'Operating expenses','7 1':'Cost of products sold (production and services)','7 1 10':'Direct materials','7 1 20':'Direct labour','7 1 30':'Social charges on direct labour','7 1 40':'Auxiliary materials','7 1 50':'Indirect labour','7 1 60':'Social charges on indirect labour','7 1 70':'Depreciation and amortisation','7 1 80':'Repair costs','7 1 85':'Inventory adjustment','7 1 90':'Other operating costs',
+'7 2':'Cost of goods sold (trading)','7 2 10':'Goods sold / purchased','7 2 20':'Purchase returns and discounts','7 2 90':'Inventory adjustment',
+'7 3':'Distribution expenses','7 3 10':'Advertising','7 3 20':'Sales salaries and commissions','7 3 30':'Charges on sales salaries','7 3 40':'Transportation and storage','7 3 90':'Other distribution expenses',
+'7 4':'General and administrative expenses','7 4 10':'Salaries','7 4 11':'Independent account','7 4 12':'Public registry','7 4 13':'Life insurance','7 4 14':'Household expenses','7 4 15':'Social charges','7 4 16':'Car rental','7 4 17':'Mobile communication','7 4 18':'Undocumented expenses','7 4 19':'Services by individuals','7 4 20':'Rent','7 4 21':'Advertisement placement','7 4 22':'Website functionality','7 4 23':'Domain costs','7 4 24':'One-off integration fee','7 4 25':'Office supplies','7 4 26':'Car maintenance','7 4 27':'Vehicle expenses','7 4 28':'Instalment-programme integration','7 4 29':'Parking','7 4 30':'Communication','7 4 31':'Cleaning','7 4 35':'Insurance','7 4 40':'Repairs','7 4 45':'Computer expenses','7 4 50':'Consulting','7 4 55':'Depreciation and amortisation','7 4 60':'Bad-debt expenses','7 4 65':'Other tax expenses','7 4 90':'Other general expenses',
+'8':'Non-operating income and expenses','8 1':'Non-operating income','8 1 10':'Interest income','8 1 25':'Penalty income','8 1 50':'FX gains (USD)','8 1 90':'Other non-operating income',
+'8 2':'Non-operating expenses','8 2 10':'Interest expense','8 2 11':'Loan origination fees','8 2 15':'Write-off of impaired portfolio','8 2 50':'FX losses','8 2 90':'Other non-operating expenses',
+'9':'Extraordinary and other income and expenses','9 1':'Extraordinary income and expenses','9 1 10':'Extraordinary income','9 1 20':'Extraordinary expenses','9 2':'Other expenses'
+};
+const T = () => L[state.lang];
+const GM = () => T().mS, GMF = () => T().mL;
+
+/* ---------- account tree ---------- */
+const ACC = D.acc;
+const children = {};
+for (const c of Object.keys(ACC)) { const p = parentOf(c); if (p!==null) (children[p] ||= []).push(c); }
+for (const p in children) children[p].sort(cmpCode);
+function parentOf(c){ const i=c.lastIndexOf(' '); return i<0?null:c.slice(0,i); }
+function cmpCode(a,b){ const x=a.split(' '),y=b.split(' '); for(let i=0;i<Math.max(x.length,y.length);i++){ if(x[i]===undefined)return -1; if(y[i]===undefined)return 1; const nx=+x[i],ny=+y[i]; if(!isNaN(nx)&&!isNaN(ny)){ if(nx!==ny)return nx-ny; } else if(x[i]!==y[i]) return x[i]<y[i]?-1:1; } return 0; }
+const name = c => (state.lang==='en' && ACC_EN[c]) ? ACC_EN[c] : (ACC[c]||[T().unknownAcc])[0];
+const level = c => c.split(' ').length;
+
+/* ---------- period ---------- */
+function monthsOf(y){ const a=[]; M.forEach((m,i)=>{ if(m.slice(0,4)===y) a.push(i); }); return a; }
+const mName = i => GMF()[+M[i].slice(5)-1];
+const yLbl = y => state.lang==='en' ? y : `${y} წელი`;
+function period(){
+  const ys = monthsOf(state.year);
+  if (state.month===null){
+    const s=ys[0], e=ys[ys.length-1];
+    const py = String(+state.year-1); const lastMon=M[e].slice(5); const pys = monthsOf(py).filter(i=>M[i].slice(5)<=lastMon);
+    const partial = pys.length && (ys.length<12 || pys.length<12);
+    return { s, e, label: `${yLbl(state.year)} (${mName(s)} – ${mName(e)})`, kind:'year',
+      cmp: pys.length? {s:pys[0], e:pys[pys.length-1], label: partial? `${py} (${mName(pys[0])} – ${mName(pys[pys.length-1])})` : yLbl(py)}:null,
+      cmpBS: s>0? {e:s-1, label: state.lang==='en' ? `end of ${M[s-1].slice(0,4)} (${mName(s-1)})` : `${M[s-1].slice(0,4)} წლის ბოლო (${mName(s-1)})`}:null };
+  }
+  const idx = M.indexOf(`${state.year}-${state.month}`);
+  const s=idx,e=idx; const mn=+state.month-1;
+  const pyi = M.indexOf(`${+state.year-1}-${state.month}`);
+  return { s,e,label:`${GMF()[mn]} ${state.year}`, kind:'month',
+    cmp: pyi>=0? {s:pyi,e:pyi,label:`${GMF()[mn]} ${+state.year-1}`}:null,
+    cmpBS: s>0? {e:s-1,label:`${mName(s-1)} ${M[s-1].slice(0,4)}`}:null };
+}
+function endLabel(e){ return `${mName(e)} ${M[e].slice(0,4)}`; }
+const endOfLbl = e => state.lang==='en' ? `end of ${endLabel(e)}` : `${endLabel(e)} ბოლოს`;
+
+/* ---------- stats ---------- */
+const cache = new Map();
+function stats(s,e){
+  const key=s+':'+e; if(cache.has(key)) return cache.get(key);
+  const st=new Map(); const get=c=>{ let v=st.get(c); if(!v){v={o:0,d:0,c:0}; st.set(c,v);} return v; };
+  for (const code in D.agg){ const a=D.agg[code]; let o=0,d=0,c=0;
+    for(let i=0;i<a.length;i+=3){ const m=a[i]; if(m<s) o+=a[i+1]-a[i+2]; else if(m<=e){ d+=a[i+1]; c+=a[i+2]; } }
+    if(!o&&!d&&!c) continue;
+    let p=code; while(p!==null){ const v=get(p); v.o+=o; v.d+=d; v.c+=c; p=parentOf(p); }
+  }
+  cache.set(key,st); return st;
+}
+const S = (st,c)=>st.get(c)||{o:0,d:0,c:0};
+const close = v => v.o+v.d-v.c;
+function plNet(st){ let o=0,n=0; for(const c of ['6','7','8','9']){ const v=S(st,c); o+=v.o; n+=v.d-v.c; } return {o,n}; }
+
+/* ---------- formatting ---------- */
+const NBSP=' ';
+function fmt(n,dec=2){ if(n===null||n===undefined||isNaN(n)) return '–'; const neg=n<-0.004; const a=Math.abs(n).toFixed(dec); const [i,f]=a.split('.'); const g=i.replace(/\B(?=(\d{3})+(?!\d))/g,NBSP); return (neg?'−':'')+g+(f?'.'+f:''); }
+function fmtK(n){ const a=Math.abs(n); if(a>=1e6) return (n<0?'−':'')+(a/1e6).toFixed(2)+NBSP+T().mln; if(a>=1e4) return (n<0?'−':'')+(a/1e3).toFixed(1)+NBSP+T().ths; return fmt(n,0); }
+function cell(n,opts={}){ const cls=['n']; if(Math.abs(n)<0.005) cls.push('zero'); else if(n<0) cls.push('neg'); else if(opts.pos) cls.push('pos'); return `<td class="${cls.join(' ')}">${fmt(n)}</td>`; }
+function delta(cur,prev,invert){ if(prev===null||prev===undefined||Math.abs(prev)<0.005) return `<span>${T().prev}: –</span>`; const d=cur-prev; const p=d/Math.abs(prev)*100; const good=invert?d<0:d>0; return `<span class="${Math.abs(p)<0.05?'':(good?'up':'dn')}">${d>=0?'+':'−'}${fmt(Math.abs(d),0)} (${p>=0?'+':'−'}${Math.abs(p).toFixed(1)}%)</span>`; }
+const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+function periodHead(title, sub){ return `<div class="period"><h2>${title}</h2><span class="win">${sub}</span></div>`; }
+const gel = `<span style="font-size:13px;color:var(--muted)"> ₾</span>`;
+
+/* ---------- generic tree table ---------- */
+function treeRows(roots, st, opts){
+  const out=[]; const maxL=opts.maxLevel||5;
+  const walk=(code,lv)=>{
+    const kids=(children[code]||[]).filter(k=>opts.keep? opts.keep(k,st):true);
+    const has=kids.length>0 && lv<maxL;
+    const id=opts.prefix+code;
+    const isOpen = state.open.has(id) || (lv<= (opts.openTo||1));
+    out.push(opts.row(code,lv,has,isOpen,id));
+    if(has && isOpen){
+      let list=kids;
+      if(kids.length>150){ list=kids.slice().sort((a,b)=>Math.abs(opts.sortVal(b,st))-Math.abs(opts.sortVal(a,st))).slice(0,150); }
+      for(const k of list) walk(k,lv+1);
+      if(kids.length>150) out.push(`<tr><td colspan="9" class="more ind${Math.min(lv,4)}">${T().shownTop(150,kids.length)}</td></tr>`);
+    }
+  };
+  for(const r of roots) walk(r,1);
+  return out.join('');
+}
+function tgl(has,open,id){ return has? `<button class="tg ${open?'open':''}" data-tg="${id}" aria-label="${open?T().collapse:T().expand}">${open?'−':'+'}</button>` : `<span class="tg none"></span>`; }
+function nameCell(code,lv,has,open,id,label){ return `<td class="name ind${Math.min(lv-1,4)}">${tgl(has,open,id)}<span class="code">${esc(code)}</span>${esc(label||name(code))}</td>`; }
+
+/* ---------- charts ---------- */
+const tip=document.getElementById('tip');
+function showTip(ev,html){ tip.innerHTML=html; tip.style.display='block'; const r=ev.currentTarget.closest('.chart').getBoundingClientRect(); tip.style.left=(ev.clientX-r.left)+'px'; tip.style.top=(ev.clientY-r.top-8)+'px'; }
+function hideTip(){ tip.style.display='none'; }
+function niceMax(v){ if(v<=0) return 1; const p=Math.pow(10,Math.floor(Math.log10(v))); const f=v/p; const n= f<=1?1: f<=2?2: f<=2.5?2.5: f<=5?5:10; return n*p; }
+function attachTips(el){ el.querySelectorAll('rect[data-tt]').forEach(r=>{ r.addEventListener('mousemove',ev=>showTip(ev,r.dataset.tt)); r.addEventListener('mouseleave',hideTip); }); }
+function barChart(el, labels, series, line){
+  const W=820,H=250,Lm=58,R=12,Tm=14,B=30; const iw=W-Lm-R, ih=H-Tm-B;
+  let mx=0,mn=0; series.forEach(s=>s.vals.forEach(v=>{mx=Math.max(mx,v);mn=Math.min(mn,v);})); if(line) line.vals.forEach(v=>{mx=Math.max(mx,v);mn=Math.min(mn,v);});
+  mx=niceMax(mx); mn= mn<0? -niceMax(-mn):0; const span=mx-mn||1;
+  const y=v=>Tm+ih-(v-mn)/span*ih; const n=labels.length; const gw=iw/n; const bw=Math.max(4,(gw*0.7)/series.length-2);
+  let g=''; for(let i=0;i<=5;i++){ const v=mn+span*i/5; const yy=y(v); g+=`<line x1="${Lm}" x2="${W-R}" y1="${yy}" y2="${yy}" stroke="var(--line2)" stroke-width="1"/><text x="${Lm-8}" y="${yy+4}" text-anchor="end" font-size="11" fill="var(--muted)" font-family="IBM Plex Mono,monospace">${fmtK(v)}</text>`; }
+  if(mn<0) g+=`<line x1="${Lm}" x2="${W-R}" y1="${y(0)}" y2="${y(0)}" stroke="var(--muted)" stroke-width="1"/>`;
+  let bars='',hit='';
+  labels.forEach((lb,i)=>{ const x0=Lm+i*gw+(gw-(bw+2)*series.length)/2;
+    series.forEach((s,j)=>{ const v=s.vals[i]; const x=x0+j*(bw+2); const y0=y(0), y1=y(v); const top=Math.min(y0,y1), h=Math.abs(y0-y1);
+      bars+=`<rect x="${x.toFixed(1)}" y="${top.toFixed(1)}" width="${bw.toFixed(1)}" height="${Math.max(h,0).toFixed(1)}" rx="2" fill="${s.color}" stroke="var(--surface)" stroke-width="1"/>`; });
+    g+=`<text x="${Lm+i*gw+gw/2}" y="${H-10}" text-anchor="middle" font-size="11" fill="var(--muted)">${lb}</text>`;
+    const tt=`<b>${lb}</b>`+series.map(s=>`<br>${s.name}: ${fmt(s.vals[i],0)} ₾`).join('')+(line?`<br>${line.name}: ${fmt(line.vals[i],0)} ₾`:'');
+    hit+=`<rect x="${Lm+i*gw}" y="${Tm}" width="${gw}" height="${ih}" fill="transparent" data-tt="${esc(tt).replace(/"/g,'&quot;')}"/>`; });
+  let ln='';
+  if(line){ const pts=line.vals.map((v,i)=>`${(Lm+i*gw+gw/2).toFixed(1)},${y(v).toFixed(1)}`); ln=`<polyline points="${pts.join(' ')}" fill="none" stroke="${line.color}" stroke-width="2" stroke-linejoin="round"/>`+line.vals.map((v,i)=>`<circle cx="${(Lm+i*gw+gw/2).toFixed(1)}" cy="${y(v).toFixed(1)}" r="3.5" fill="${line.color}" stroke="var(--surface)" stroke-width="2"/>`).join(''); }
+  el.innerHTML=`<svg viewBox="0 0 ${W} ${H}" role="img">${g}${bars}${ln}${hit}</svg>`; attachTips(el);
+}
+function lineChart(el, labels, series){
+  const W=820,H=250,Lm=58,R=12,Tm=14,B=30; const iw=W-Lm-R, ih=H-Tm-B;
+  let mx=0,mn=0; series.forEach(s=>s.vals.forEach(v=>{mx=Math.max(mx,v);mn=Math.min(mn,v);})); mx=niceMax(mx); mn=mn<0?-niceMax(-mn):0; const span=mx-mn||1;
+  const n=labels.length; const x=i=>Lm+(n>1? i*iw/(n-1):iw/2); const y=v=>Tm+ih-(v-mn)/span*ih;
+  let g=''; for(let i=0;i<=5;i++){ const v=mn+span*i/5; g+=`<line x1="${Lm}" x2="${W-R}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line2)"/><text x="${Lm-8}" y="${y(v)+4}" text-anchor="end" font-size="11" fill="var(--muted)" font-family="IBM Plex Mono,monospace">${fmtK(v)}</text>`; }
+  labels.forEach((lb,i)=>{ g+=`<text x="${x(i)}" y="${H-10}" text-anchor="middle" font-size="11" fill="var(--muted)">${lb}</text>`; });
+  let paths='';
+  series.forEach((s,j)=>{ const pts=s.vals.map((v,i)=>`${x(i).toFixed(1)},${y(v).toFixed(1)}`);
+    if(j===0) paths+=`<path d="M${x(0).toFixed(1)},${y(0)} L${pts.join(' L')} L${x(n-1).toFixed(1)},${y(0)} Z" fill="${s.color}" opacity=".12"/>`;
+    paths+=`<polyline points="${pts.join(' ')}" fill="none" stroke="${s.color}" stroke-width="2" stroke-linejoin="round"/>`;
+    paths+=s.vals.map((v,i)=>`<circle cx="${x(i).toFixed(1)}" cy="${y(v).toFixed(1)}" r="${i===n-1?4.5:3}" fill="${s.color}" stroke="var(--surface)" stroke-width="2"/>`).join(''); });
+  let hit=''; labels.forEach((lb,i)=>{ const tt=`<b>${lb}</b>`+series.map(s=>`<br>${s.name}: ${fmt(s.vals[i],0)} ₾`).join(''); const w=n>1?iw/(n-1):iw; hit+=`<rect x="${x(i)-w/2}" y="${Tm}" width="${w}" height="${ih}" fill="transparent" data-tt="${esc(tt).replace(/"/g,'&quot;')}"/>`; });
+  el.innerHTML=`<svg viewBox="0 0 ${W} ${H}" role="img">${g}${paths}${hit}</svg>`; attachTips(el);
+}
+const cssVar=v=>getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+
+/* ---------- P&L model ---------- */
+function plLines(st){
+  const inc=c=>{const v=S(st,c); return v.c-v.d;}, exp=c=>{const v=S(st,c); return v.d-v.c;};
+  const rev=inc('6'), cogs=exp('7 2')+exp('7 1'), gross=rev-cogs, dist=exp('7 3'), adm=exp('7 4'), op=gross-dist-adm;
+  const noi=inc('8 1'), noe=exp('8 2'), ext=inc('9 1'), oth=exp('9 2'); const net=op+noi-noe+ext-oth;
+  return {rev,cogs,gross,dist,adm,op,noi,noe,ext,oth,net};
+}
+function cashClose(st){ return close(S(st,'1 1'))+close(S(st,'1 2')); }
+const kpi=(l,v,d)=>`<div class="kpi"><div class="l">${l}</div><div class="v num">${typeof v==='number'?fmt(v,0)+gel:v}</div><div class="d">${d||''}</div></div>`;
+
+/* ---------- OVERVIEW ---------- */
+function renderOV(){
+  const t=T(); const P=period(); const st=stats(P.s,P.e); const cs=P.cmp?stats(P.cmp.s,P.cmp.e):null;
+  const pl=plLines(st), pp=cs?plLines(cs):null;
+  const ar=close(S(st,'1 4')), liab=-(close(S(st,'3'))+close(S(st,'4'))), cash=cashClose(st);
+  const bsPrev=P.cmpBS?stats(P.cmpBS.e+1,P.cmpBS.e):null;
+  const prevAR=bsPrev?S(bsPrev,'1 4').o:null, prevCash=bsPrev?(S(bsPrev,'1 1').o+S(bsPrev,'1 2').o):null, prevLiab=bsPrev?-(S(bsPrev,'3').o+S(bsPrev,'4').o):null;
+  let h=periodHead(t.tabs.ov, `${t.period}: <b>${P.label}</b>${P.cmp?` · ${t.compare}: ${P.cmp.label}`:''}`);
+  h+=`<div class="kpis">${kpi(t.revenue,pl.rev,pp&&delta(pl.rev,pp.rev))}${kpi(t.gross,pl.gross,pp&&delta(pl.gross,pp.gross))}${kpi(t.net,pl.net,pp&&delta(pl.net,pp.net))}${kpi(t.cash+' · '+endLabel(P.e),cash,prevCash!==null&&delta(cash,prevCash))}${kpi(t.ar,ar,prevAR!==null&&delta(ar,prevAR))}${kpi(t.liab,liab,prevLiab!==null&&delta(liab,prevLiab,true))}</div>`;
+  const ys=monthsOf(state.year); const labels=ys.map(i=>GM()[+M[i].slice(5)-1]);
+  const revV=[],netV=[],cashV=[],arV=[];
+  ys.forEach(i=>{ const s1=stats(i,i); const p1=plLines(s1); revV.push(p1.rev); netV.push(p1.net); cashV.push(cashClose(s1)); arV.push(close(S(s1,'1 4'))); });
+  h+=`<div class="grid2"><div class="card"><h3>${t.chRev}</h3><div class="cap">${yLbl(state.year)}, ₾</div><div class="legend"><span><i style="background:${cssVar('--accent')}"></i>${t.revenue}</span><span><i style="background:${cssVar('--amber')}"></i>${t.net}</span></div><div class="chart" id="c-rev"></div></div>
+  <div class="card"><h3>${t.chCash}</h3><div class="cap">${yLbl(state.year)}, ${t.eomBal}, ₾</div><div class="legend"><span><i style="background:${cssVar('--accent')}"></i>${t.cashLeg}</span><span><i style="background:${cssVar('--amber')}"></i>${t.arLeg}</span></div><div class="chart" id="c-cash"></div></div></div>`;
+  h+=`<div class="card mt"><h3>${t.yearly}</h3><div class="cap">${t.yearlyCap}</div><div class="tablewrap" style="box-shadow:none;border:0"><table class="ledger"><thead><tr><th>${t.year}</th><th class="n">${t.revenue}</th><th class="n">${t.gross}</th><th class="n">${t.margin}</th><th class="n">${t.adm}</th><th class="n">${t.net}</th><th class="n">${t.cashYE}</th><th class="n">${t.arShort}</th><th class="n">${t.liabShort}</th></tr></thead><tbody>`;
+  for(const y of years){ const ym=monthsOf(y); const s1=stats(ym[0],ym[ym.length-1]); const p1=plLines(s1); h+=`<tr><td class="num">${y}${ym.length<12?`<span class="badge">${ym.length} ${t.months}</span>`:''}</td>${cell(p1.rev)}${cell(p1.gross)}<td class="n">${p1.rev?(p1.gross/p1.rev*100).toFixed(1)+'%':'–'}</td>${cell(p1.adm)}${cell(p1.net,{pos:true})}${cell(cashClose(s1))}${cell(close(S(s1,'1 4')))}${cell(-(close(S(s1,'3'))+close(S(s1,'4'))))}</tr>`; }
+  h+=`</tbody></table></div></div>`;
+  const el=document.getElementById('p-ov'); el.innerHTML=h;
+  barChart(el.querySelector('#c-rev'),labels,[{name:t.revenue,color:cssVar('--accent'),vals:revV}],{name:t.net,color:cssVar('--amber'),vals:netV});
+  lineChart(el.querySelector('#c-cash'),labels,[{name:t.cashLeg,color:cssVar('--accent'),vals:cashV},{name:t.arLeg,color:cssVar('--amber'),vals:arV}]);
+}
+
+/* ---------- BALANCE SHEET ---------- */
+function bsVal(st,code){ const v=S(st,code); let x=close(v); if(code==='5'||code==='5 3'||code==='5 3 30'){ const p=plNet(st); x+=p.o+p.n; } const cls=code[0]; return (cls==='1'||cls==='2')? x : -x; }
+function bsOpen(st,code){ const v=S(st,code); let x=v.o; if(code==='5'||code==='5 3'||code==='5 3 30'){ x+=plNet(st).o; } const cls=code[0]; return (cls==='1'||cls==='2')? x : -x; }
+function renderBS(){
+  const t=T(); const P=period(); const st=stats(P.s,P.e);
+  const keep=(k,s)=>{ const v=S(s,k); return Math.abs(v.o)+v.d+v.c>0.004 || k==='5 3 30'; };
+  const row=(code,lv,has,open,id)=>{ const cur=bsVal(st,code), prev=bsOpen(st,code); const l=lv<=2?`lvl${lv}`:''; return `<tr class="${l}">${nameCell(code,lv,has,open,id)}${cell(cur)}${cell(prev)}${cell(cur-prev)}</tr>`; };
+  const opts={prefix:'bs',openTo:2,maxLevel:4,keep,row,sortVal:(k,s)=>close(S(s,k))};
+  const A=bsVal(st,'1')+bsVal(st,'2'), Lb=bsVal(st,'3')+bsVal(st,'4'), E=bsVal(st,'5');
+  const A0=bsOpen(st,'1')+bsOpen(st,'2'), L0=bsOpen(st,'3')+bsOpen(st,'4'), E0=bsOpen(st,'5');
+  let h=periodHead(t.bs, `${t.asOf}: <b>${endOfLbl(P.e)}</b> · ${t.compare}: ${P.cmpBS?P.cmpBS.label:'–'} (${t.periodStart})`);
+  h+=`<div class="tablewrap"><table class="ledger"><thead><tr><th>${t.account}</th><th class="n">${endLabel(P.e)}</th><th class="n">${P.cmpBS?P.cmpBS.label:t.start}</th><th class="n">${t.change}</th></tr></thead><tbody>`;
+  h+=`<tr class="head"><td colspan="4">${t.assets}</td></tr>${treeRows(['1','2'],st,opts)}<tr class="sub"><td>${t.totAssets}</td>${cell(A)}${cell(A0)}${cell(A-A0)}</tr>`;
+  h+=`<tr class="head"><td colspan="4">${t.liabilities}</td></tr>${treeRows(['3','4'],st,opts)}<tr class="sub"><td>${t.totLiab}</td>${cell(Lb)}${cell(L0)}${cell(Lb-L0)}</tr>`;
+  h+=`<tr class="head"><td colspan="4">${t.equity}</td></tr>${treeRows(['5'],st,opts)}<tr class="sub"><td>${t.totEq}</td>${cell(E)}${cell(E0)}${cell(E-E0)}</tr>`;
+  h+=`<tr class="total"><td>${t.totLE}</td>${cell(Lb+E)}${cell(L0+E0)}${cell(Lb+E-L0-E0)}</tr></tbody></table></div>`;
+  const diff=A-(Lb+E);
+  h+=`<div class="check">${t.bsCheck} <span class="${Math.abs(diff)<0.05?'ok':'bad'} num">${fmt(diff)}</span></div>`;
+  h+=`<p class="note">${t.bsNote}</p>`;
+  document.getElementById('p-bs').innerHTML=h;
+}
+
+/* ---------- P&L ---------- */
+function renderPL(){
+  const t=T(); const P=period(); const st=stats(P.s,P.e); const cs=P.cmp?stats(P.cmp.s,P.cmp.e):null;
+  const pl=plLines(st), pp=cs?plLines(cs):null;
+  const incSign=c=>c[0]==='6'||c==='8 1'||c==='9 1'||c.startsWith('8 1 ')||c.startsWith('9 1 ');
+  const val=(s,c)=>{ const v=S(s,c); return incSign(c)? v.c-v.d : v.d-v.c; };
+  const keep=(k,s)=>{ const v=S(s,k); const w=cs?S(cs,k):{o:0,d:0,c:0}; return v.d+v.c+w.d+w.c>0.004; };
+  const pc=(a,b)=>`<td class="n">${b&&Math.abs(b)>0.004?((a-b)/Math.abs(b)*100).toFixed(1)+'%':'–'}</td>`;
+  const row=(code,lv,has,open,id)=>{ const cur=val(st,code), prev=cs?val(cs,code):null; const l=lv<=2?`lvl${lv}`:''; return `<tr class="${l}">${nameCell(code,lv,has,open,id)}${cell(cur)}${cs?cell(prev):''}${cs?pc(cur,prev):''}</tr>`; };
+  const opts={prefix:'pl',openTo:1,maxLevel:4,keep,row,sortVal:(k,s)=>val(s,k)};
+  const sub=(label,a,b)=>`<tr class="sub"><td>${label}</td>${cell(a,{pos:true})}${cs?cell(b,{pos:true}):''}${cs?pc(a,b):''}</tr>`;
+  const pct=(a,b)=>b?` <span class="pct">${(a/b*100).toFixed(1)}% ${t.ofRev}</span>`:'';
+  let h=periodHead(t.plTitle, `${t.period}: <b>${P.label}</b>${P.cmp?` · ${t.compare}: ${P.cmp.label}`:''}`);
+  h+=`<div class="tablewrap"><table class="ledger"><thead><tr><th>${t.item}</th><th class="n">${P.label}</th>${cs?`<th class="n">${P.cmp.label}</th><th class="n">${t.chg}</th>`:''}</tr></thead><tbody>`;
+  h+=`<tr class="head"><td colspan="4">${t.opRev}</td></tr>${treeRows(['6'],st,opts)}`;
+  h+=`<tr class="head"><td colspan="4">${t.cogs}</td></tr>${treeRows(['7 2','7 1'],st,{...opts,openTo:0})}`;
+  h+=sub(`${t.gross}${pct(pl.gross,pl.rev)}`,pl.gross,pp&&pp.gross);
+  h+=`<tr class="head"><td colspan="4">${t.opEx}</td></tr>${treeRows(['7 3','7 4'],st,{...opts,openTo:0})}`;
+  h+=sub(`${t.opProfit}${pct(pl.op,pl.rev)}`,pl.op,pp&&pp.op);
+  h+=`<tr class="head"><td colspan="4">${t.nonOp}</td></tr>${treeRows(['8 1','8 2','9 1','9 2'],st,{...opts,openTo:0})}`;
+  h+=`<tr class="total"><td>${t.netPL}${pct(pl.net,pl.rev)}</td>${cell(pl.net,{pos:true})}${cs?cell(pp.net,{pos:true}):''}${cs?pc(pl.net,pp.net):''}</tr>`;
+  h+=`</tbody></table></div>`;
+  const ys=monthsOf(state.year);
+  h+=`<div class="card mt"><h3>${t.byMonth} · ${state.year}</h3><div class="cap">${t.exPos}</div><div class="tablewrap" style="box-shadow:none;border:0"><table class="ledger"><thead><tr><th>${t.month}</th><th class="n">${t.revenue}</th><th class="n">${t.cogsCol}</th><th class="n">${t.gross}</th><th class="n">${t.distCol}</th><th class="n">${t.adm}</th><th class="n">${t.opProfit}</th><th class="n">${t.nonOpCol}</th><th class="n">${t.net}</th></tr></thead><tbody>`;
+  let tot={rev:0,cogs:0,gross:0,dist:0,adm:0,op:0,no:0,net:0};
+  ys.forEach(i=>{ const p1=plLines(stats(i,i)); const no=p1.noi-p1.noe+p1.ext-p1.oth; tot.rev+=p1.rev;tot.cogs+=p1.cogs;tot.gross+=p1.gross;tot.dist+=p1.dist;tot.adm+=p1.adm;tot.op+=p1.op;tot.no+=no;tot.net+=p1.net;
+    const hl = state.month!==null && M[i].slice(5)===state.month; h+=`<tr${hl?' style="background:var(--accent-soft)"':''}><td>${mName(i)}</td>${cell(p1.rev)}${cell(p1.cogs)}${cell(p1.gross)}${cell(p1.dist)}${cell(p1.adm)}${cell(p1.op,{pos:true})}${cell(no)}${cell(p1.net,{pos:true})}</tr>`; });
+  h+=`<tr class="total"><td>${t.total} ${state.year}</td>${cell(tot.rev)}${cell(tot.cogs)}${cell(tot.gross)}${cell(tot.dist)}${cell(tot.adm)}${cell(tot.op,{pos:true})}${cell(tot.no)}${cell(tot.net,{pos:true})}</tr></tbody></table></div></div>`;
+  h+=`<p class="note">${t.plNote}</p>`;
+  document.getElementById('p-pl').innerHTML=h;
+}
+
+/* ---------- TRIAL BALANCE ---------- */
+function renderTB(){
+  const t=T(); const P=period(); const st=stats(P.s,P.e);
+  const keep=(k,s)=>{ const v=S(s,k); return Math.abs(v.o)+v.d+v.c>0.004; };
+  const row=(code,lv,has,open,id)=>{ const v=S(st,code); const l=lv<=2?`lvl${lv}`:''; return `<tr class="${l}">${nameCell(code,lv,has,open,id)}${cell(v.o)}${cell(v.d)}${cell(v.c)}${cell(close(v))}</tr>`; };
+  const opts={prefix:'tb',openTo:1,maxLevel:4,keep,row,sortVal:(k,s)=>close(S(s,k))};
+  let o=0,d=0,c=0,e=0; for(const r of ['1','2','3','4','5','6','7','8','9']){ const v=S(st,r); o+=v.o; d+=v.d; c+=v.c; e+=close(v); }
+  let h=periodHead(t.tbTitle, `${t.period}: <b>${P.label}</b> · ${t.tbSub}`);
+  h+=`<div class="tablewrap"><table class="ledger"><thead><tr><th>${t.account}</th><th class="n">${t.openBal}</th><th class="n">${t.debit}</th><th class="n">${t.credit}</th><th class="n">${t.closeBal}</th></tr></thead><tbody>`;
+  h+=treeRows(['1','2','3','4','5','6','7','8','9'],st,opts);
+  h+=`<tr class="total"><td>${t.total}</td>${cell(o)}${cell(d)}${cell(c)}${cell(e)}</tr></tbody></table></div>`;
+  h+=`<div class="check">${t.tbCheck1} <span class="${Math.abs(d-c)<0.05?'ok':'bad'} num">${fmt(d-c)}</span> · ${t.tbCheck2} <span class="${Math.abs(e)<0.05?'ok':'bad'} num">${fmt(e)}</span></div>`;
+  h+=`<p class="note">${t.tbNote}</p>`;
+  document.getElementById('p-tb').innerHTML=h;
+}
+
+/* ---------- CASH FLOW ---------- */
+const CF_RULES=[
+  c=>c.startsWith('1 4 10')||c.startsWith('3 1 20'),
+  c=>c.startsWith('3 1 10')||c.startsWith('3 1 31'),
+  c=>c.startsWith('1 6')||c.startsWith('7 2')||c.startsWith('7 1'),
+  c=>c.startsWith('3 1 32')||c.startsWith('3 1 30')||c.startsWith('7 4 10')||c.startsWith('1 4 30')||c.startsWith('3 1 60'),
+  c=>c.startsWith('3 3'),
+  c=>c.startsWith('3 2')||c.startsWith('4 1')||c.startsWith('4 2')||c.startsWith('1 4 50'),
+  c=>c.startsWith('5'),
+  c=>c.startsWith('2')||c.startsWith('1 3'),
+  c=>c.startsWith('7'),
+  c=>c.startsWith('8')||c.startsWith('9'),
+  c=>true];
+function cfGroup(c){ for(let i=0;i<CF_RULES.length;i++) if(CF_RULES[i](c)) return i; return CF_RULES.length-1; }
+const isCash=c=>c.startsWith('1 1')||c.startsWith('1 2');
+function renderCF(){
+  const t=T(); const P=period(); const st=stats(P.s,P.e);
+  const groups=new Map(); const byAcc=new Map(); let tin=0,tout=0,trIn=0,trOut=0;
+  for(const [cash,ctr,m,i,o] of D.cf){ if(m<P.s||m>P.e) continue;
+    const a=byAcc.get(cash)||{i:0,o:0,ti:0,to:0}; byAcc.set(cash,a);
+    if(isCash(ctr)){ a.ti+=i; a.to+=o; trIn+=i; trOut+=o; continue; }
+    a.i+=i; a.o+=o; tin+=i; tout+=o;
+    const g=cfGroup(ctr); const G=groups.get(g)||{i:0,o:0,items:new Map()}; groups.set(g,G); G.i+=i; G.o+=o;
+    const it=G.items.get(ctr)||{i:0,o:0}; it.i+=i; it.o+=o; G.items.set(ctr,it); }
+  const open=S(st,'1 1').o+S(st,'1 2').o, end=cashClose(st);
+  let h=periodHead(t.cfTitle, `${t.period}: <b>${P.label}</b> · ${t.cfSub}`);
+  h+=`<div class="kpis">${kpi(t.cashOpen,open)}${kpi(t.inflow,tin)}${kpi(t.outflow,tout)}${kpi(t.netFlow,tin-tout)}${kpi(t.cashEnd,end)}</div>`;
+  const ys=monthsOf(state.year); const labels=ys.map(i=>GM()[+M[i].slice(5)-1]); const inV=ys.map(()=>0), outV=ys.map(()=>0);
+  for(const [cash,ctr,m,i,o] of D.cf){ const j=ys.indexOf(m); if(j<0||isCash(ctr)) continue; inV[j]+=i; outV[j]+=o; }
+  h+=`<div class="card"><h3>${t.cfChart}</h3><div class="cap">${yLbl(state.year)}, ${t.cfChartCap}</div><div class="legend"><span><i style="background:${cssVar('--accent')}"></i>${t.inflow}</span><span><i style="background:${cssVar('--amber')}"></i>${t.outflow}</span></div><div class="chart" id="c-cf"></div></div>`;
+  h+=`<div class="tablewrap mt"><table class="ledger"><thead><tr><th>${t.flowCtr}</th><th class="n">${t.inflow}</th><th class="n">${t.outflow}</th><th class="n">${t.netCol}</th></tr></thead><tbody>`;
+  for(let gi=0; gi<CF_RULES.length; gi++){ if(!groups.has(gi)) continue; const G=groups.get(gi); const id='cf'+gi; const open_=state.open.has(id);
+    h+=`<tr class="lvl2"><td class="name">${tgl(true,open_,id)}${esc(t.cfGroups[gi])}</td>${cell(G.i)}${cell(G.o)}${cell(G.i-G.o)}</tr>`;
+    if(open_){ const items=[...G.items.entries()].sort((a,b)=>(b[1].i+b[1].o)-(a[1].i+a[1].o)); for(const [c,it] of items) h+=`<tr><td class="name ind1"><span class="code">${esc(c)}</span>${esc(name(c))}</td>${cell(it.i)}${cell(it.o)}${cell(it.i-it.o)}</tr>`; } }
+  h+=`<tr class="total"><td>${t.total}</td>${cell(tin)}${cell(tout)}${cell(tin-tout)}</tr>`;
+  h+=`<tr><td class="name" style="color:var(--muted)">${t.transfers}</td>${cell(trIn)}${cell(trOut)}${cell(trIn-trOut)}</tr></tbody></table></div>`;
+  h+=`<div class="tablewrap mt"><table class="ledger"><thead><tr><th>${t.account}</th><th class="n">${t.atStart}</th><th class="n">${t.inflow}</th><th class="n">${t.outflow}</th><th class="n">${t.transfersNet}</th><th class="n">${t.atEnd}</th></tr></thead><tbody>`;
+  const accs=[...new Set([...byAcc.keys(), ...Object.keys(ACC).filter(c=>isCash(c)&&level(c)>=3&&!children[c]&&Math.abs(close(S(st,c)))>0.004)])].sort(cmpCode);
+  for(const c of accs){ const a=byAcc.get(c)||{i:0,o:0,ti:0,to:0}; const v=S(st,c); if(Math.abs(v.o)+v.d+v.c<0.004) continue; h+=`<tr><td class="name"><span class="code">${esc(c)}</span>${esc(name(c))}</td>${cell(v.o)}${cell(a.i)}${cell(a.o)}${cell(a.ti-a.to)}${cell(close(v))}</tr>`; }
+  h+=`<tr class="total"><td>${t.totCash}</td>${cell(open)}${cell(tin)}${cell(tout)}${cell(trIn-trOut)}${cell(end)}</tr></tbody></table></div>`;
+  h+=`<p class="note">${t.cfNote}</p>`;
+  const el=document.getElementById('p-cf'); el.innerHTML=h;
+  barChart(el.querySelector('#c-cf'),labels,[{name:t.inflow,color:cssVar('--accent'),vals:inV},{name:t.outflow,color:cssVar('--amber'),vals:outV}],null);
+}
+
+/* ---------- AR / AP ---------- */
+const AR_LEDGERS=['1 4 10','3 1 20','3 1 10','3 1 31','3 1 32','4 1 90','3 2 10','1 4 30','1 4 50'];
+function renderAR(){
+  const t=T(); const P=period(); const st=stats(P.s,P.e); const led=state.arLedger; const isA=led[0]==='1'; const sign=isA?1:-1;
+  let rows=(children[led]||[]).map(c=>{ const v=S(st,c); return {c,o:v.o*sign,d:v.d,k:v.c,e:close(v)*sign}; }).filter(r=>Math.abs(r.o)+r.d+r.k>0.004);
+  const q=state.arQ.trim().toLowerCase(); if(q) rows=rows.filter(r=>name(r.c).toLowerCase().includes(q)||r.c.toLowerCase().includes(q));
+  rows.sort((a,b)=>Math.abs(b.e)-Math.abs(a.e));
+  const tot=rows.reduce((x,r)=>{x.o+=r.o;x.d+=r.d;x.k+=r.k;x.e+=r.e;return x;},{o:0,d:0,k:0,e:0});
+  const nz=rows.filter(r=>Math.abs(r.e)>0.004).length; const opp=rows.filter(r=>r.e<-0.004);
+  const top10=rows.slice(0,10).reduce((s,r)=>s+Math.max(r.e,0),0); const posTot=rows.reduce((s,r)=>s+Math.max(r.e,0),0);
+  let h=periodHead(t.arTitle, `${t.asOf}: <b>${endOfLbl(P.e)}</b> · ${t.turnover}: ${P.label}`);
+  h+=`<div class="toolbar"><div class="pills">${AR_LEDGERS.filter(l=>children[l]).map(l=>`<button data-led="${l}" aria-pressed="${l===led}"><span class="code" style="margin-right:5px">${l}</span>${t.arLedgers[l]}</button>`).join('')}</div></div>`;
+  h+=`<div class="toolbar"><input type="search" id="arq" placeholder="${t.search}" value="${esc(state.arQ)}"><span style="color:var(--muted);font-size:12.5px">${rows.length} ${t.contragents}${q?' '+t.filtered:''}</span></div>`;
+  h+=`<div class="kpis">${kpi(t.balEnd,tot.e,`${t.atStartLbl}: ${fmt(tot.o,0)} ₾`)}${kpi(t.toDr,tot.d)}${kpi(t.toCr,tot.k)}${kpi(t.nonZero,'<span class="num">'+nz+'</span>',`${t.top10}: ${posTot?(top10/posTot*100).toFixed(0):0}% ${t.ofBal}`)}${kpi(isA?t.oppA:t.oppL,'<span class="num">'+opp.length+'</span>',`${fmt(opp.reduce((s,r)=>s+r.e,0),0)} ₾`)}</div>`;
+  const mx=Math.max(...rows.map(r=>Math.abs(r.e)),1);
+  h+=`<div class="tablewrap"><table class="ledger"><thead><tr><th>${t.code}</th><th>${t.contragent}</th><th class="n">${t.openBal}</th><th class="n">${t.debit}</th><th class="n">${t.credit}</th><th class="n">${t.closeBal}</th><th></th></tr></thead><tbody>`;
+  const show=rows.slice(0,state.arN);
+  for(const r of show) h+=`<tr><td class="code" style="margin:0">${esc(r.c.slice(led.length+1))}</td><td class="name">${esc(name(r.c))}</td>${cell(r.o)}${cell(r.d)}${cell(r.k)}${cell(r.e)}<td style="width:130px"><span class="bar" style="width:${(Math.abs(r.e)/mx*110).toFixed(0)}px;${r.e<0?'background:var(--neg)':''}"></span></td></tr>`;
+  h+=`<tr class="total"><td colspan="2">${t.total} (${rows.length})</td>${cell(tot.o)}${cell(tot.d)}${cell(tot.k)}${cell(tot.e)}<td></td></tr></tbody></table>`;
+  if(rows.length>state.arN) h+=`<div class="more"><button id="armore" style="color:var(--accent);font-weight:500">${t.showMore(Math.min(300,rows.length-state.arN),rows.length)}</button></div>`;
+  h+=`</div><p class="note">${isA?t.arNoteA:t.arNoteL} ${t.negRed}</p>`;
+  const el=document.getElementById('p-ar'); el.innerHTML=h;
+  el.querySelectorAll('[data-led]').forEach(b=>b.addEventListener('click',()=>{ state.arLedger=b.dataset.led; state.arN=100; renderAR(); }));
+  const inp=el.querySelector('#arq'); let tm; inp.addEventListener('input',()=>{ clearTimeout(tm); tm=setTimeout(()=>{ state.arQ=inp.value; state.arN=100; const pos=inp.selectionStart; renderAR(); const n=document.getElementById('arq'); n.focus(); n.setSelectionRange(pos,pos); },250); });
+  const mb=el.querySelector('#armore'); if(mb) mb.addEventListener('click',()=>{ state.arN+=300; renderAR(); });
+}
+
+/* ---------- EXPENSES ---------- */
+function renderEX(){
+  const t=T(); const ys=monthsOf(state.year);
+  const ms=ys.map(i=>stats(i,i)); const yst=stats(ys[0],ys[ys.length-1]);
+  const val=(s,c)=>{ const v=S(s,c); return v.d-v.c; };
+  const roots=['7 4','7 3','7 1','8 2','9 2'];
+  const keep=(k,s)=>Math.abs(val(yst,k))>0.004 || (S(yst,k).d+S(yst,k).c)>0.004;
+  const row=(code,lv,has,open,id)=>{ const vals=ms.map(s=>val(s,code)); const mx=Math.max(...vals.map(Math.abs),0.01); const tot=val(yst,code); const l=lv<=1?'lvl1':lv===2?'lvl2':'';
+    return `<tr class="${l}">${nameCell(code,lv,has,open,id)}${vals.map(v=>`<td class="n ${lv>=2?'heat':''}" style="--h:${(Math.abs(v)/mx).toFixed(2)}">${Math.abs(v)<0.005?'<span style="color:var(--faint)">·</span>':fmt(v,0)}</td>`).join('')}${cell(tot)}<td class="n">${fmt(tot/ys.length,0)}</td></tr>`; };
+  const opts={prefix:'ex',openTo:1,maxLevel:4,keep,row,sortVal:(k,s)=>val(yst,k)};
+  const total=roots.reduce((s,c)=>s+val(yst,c),0); const rev=plLines(yst).rev;
+  let h=periodHead(t.exTitle, `${t.year}: <b>${state.year}</b> · ${t.exSub}${state.month!==null?` · ${t.selMonth}: ${GMF()[+state.month-1]}`:''}`);
+  h+=`<div class="kpis">${kpi(t.ga,val(yst,'7 4'),rev?`${(val(yst,'7 4')/rev*100).toFixed(1)}% ${t.ofRev}`:'')}${kpi(t.dist,val(yst,'7 3'))}${kpi(t.nonOpEx,val(yst,'8 2'))}${kpi(t.totEx,total,`${t.avgMonth} ${fmt(total/ys.length,0)} ₾`)}</div>`;
+  h+=`<div class="tablewrap"><table class="ledger"><thead><tr><th>${t.exItem}</th>${ys.map(i=>`<th class="n" ${state.month!==null&&M[i].slice(5)===state.month?'style="color:var(--accent)"':''}>${GM()[+M[i].slice(5)-1]}</th>`).join('')}<th class="n">${t.total} ${state.year}</th><th class="n">${t.avgCol}</th></tr></thead><tbody>`;
+  h+=treeRows(roots,yst,opts);
+  h+=`<tr class="total"><td>${t.total}</td>${ys.map((i,j)=>cell(roots.reduce((s,c)=>s+val(ms[j],c),0))).join('')}${cell(total)}<td class="n">${fmt(total/ys.length,0)}</td></tr></tbody></table></div>`;
+  h+=`<p class="note">${t.exNote}</p>`;
+  document.getElementById('p-ex').innerHTML=h;
+}
+
+/* ---------- wiring ---------- */
+const R={ov:renderOV,bs:renderBS,pl:renderPL,tb:renderTB,cf:renderCF,ar:renderAR,ex:renderEX};
+function render(){ document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('on',p.id==='p-'+state.tab)); document.querySelectorAll('#tabs button').forEach(b=>b.setAttribute('aria-selected',b.dataset.p===state.tab)); R[state.tab](); }
+function buildChrome(){
+  const t=T(); document.documentElement.lang=state.lang;
+  document.getElementById('h-title').textContent=t.title;
+  const dmy=s=>s.split('-').reverse().join('.');
+  document.getElementById('h-sub').innerHTML=`${t.src} <b>${dmy(D.meta.asof)}</b> · ${t.journal} <b>${dmy(D.meta.first)} – ${dmy(D.meta.last)}</b> · ${t.allGel}`;
+  document.getElementById('l-year').textContent=t.year; document.getElementById('l-month').textContent=t.month;
+  document.querySelectorAll('#tabs button').forEach(b=>b.textContent=t.tabs[b.dataset.p]);
+  document.querySelectorAll('#lang button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.l===state.lang));
+  const s=D.meta.stats; document.getElementById('foot').textContent=t.foot({total:fmt(s.total,0),kept:fmt(s.kept,0),closing:fmt(s.skip_closing,0),offbal:s.skip_offbal},s.fx_converted);
+  const yr=document.getElementById('years'); yr.innerHTML=years.map(y=>`<button aria-pressed="${y===state.year}" data-y="${y}">${y}</button>`).join('');
+  yr.querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{ state.year=b.dataset.y; if(state.month!==null && M.indexOf(`${state.year}-${state.month}`)<0) state.month=null; buildChrome(); render(); }));
+  const ms=document.getElementById('month'); const avail=monthsOf(state.year).map(i=>M[i].slice(5));
+  ms.innerHTML=`<option value="">${t.wholeYear}</option>`+avail.map(m=>`<option value="${m}" ${state.month===m?'selected':''}>${t.mL[+m-1]}</option>`).join('');
+  ms.onchange=()=>{ state.month=ms.value||null; render(); };
+}
+document.getElementById('lang').addEventListener('click',e=>{ const b=e.target.closest('button[data-l]'); if(!b) return; state.lang=b.dataset.l; try{localStorage.setItem('volta-fin-lang',state.lang);}catch(_){} buildChrome(); render(); });
+document.getElementById('tabs').addEventListener('click',e=>{ const b=e.target.closest('button[data-p]'); if(!b) return; state.tab=b.dataset.p; try{localStorage.setItem('volta-fin-tab',state.tab);}catch(_){} render(); });
+document.querySelector('main').addEventListener('click',e=>{ const t=e.target.closest('[data-tg]'); if(!t) return; const id=t.dataset.tg; if(state.open.has(id)) state.open.delete(id); else state.open.add(id); render(); });
+try{ const t=localStorage.getItem('volta-fin-tab'); if(t&&R[t]) state.tab=t; }catch(_){}
+buildChrome(); render();
+</script>
