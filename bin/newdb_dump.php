@@ -25,4 +25,7 @@ $flags = JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES;
 file_put_contents($out . '/php_report_data.json', json_encode($built['report'], $flags));
 file_put_contents($out . '/php_sales_data.json', json_encode($built['sales'], $flags));
 file_put_contents($out . '/php_logistics_data.json', json_encode($built['logistics'], $flags));
+foreach (NewDbReport::GROUPS as $key => $class) {
+    if (isset($built[$key])) { file_put_contents($out . '/php_' . $key . '_data.json', json_encode($built[$key], $flags)); }
+}
 fwrite(STDERR, sprintf("end=%s  built in %.1fs  -> %s/php_report_data.json, php_sales_data.json, php_logistics_data.json\n", $end, microtime(true) - $t, $out));

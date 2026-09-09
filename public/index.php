@@ -38,7 +38,8 @@ if (!isset($config['voltastoredb'])) {
     $cacheFile = $cacheDir . '/newdb_' . $end . '.json';
     $force = isset($_GET['refresh']);
     $cached = (!$force && is_file($cacheFile) && (time() - filemtime($cacheFile)) < CACHE_TTL) ? json_decode((string) file_get_contents($cacheFile), true) : null;
-    if (!is_array($cached) || !isset($cached['report'], $cached['sales'])) {
+    $complete = static fn ($c) => is_array($c) && isset($c['report'], $c['sales']) && !array_diff_key(array_filter(NewDbReport::GROUPS, static fn ($cls) => is_file(__DIR__ . '/../src/' . $cls . '.php')), $c);
+    if (!$complete($cached)) {
         try {
             set_time_limit(120);
             $pdo = Database::connect($config['voltastoredb']);
@@ -72,12 +73,20 @@ if (!isset($config['voltastoredb'])) {
             }
         }
     }
+    if (is_array($cached) && !empty($cached['errors']) && $fallbackNote === null) {
+        $fallbackNote = 'live numbers for ' . implode(', ', array_keys($cached['errors'])) . ' could not be computed (' . implode(' | ', $cached['errors']) . ') - those tabs show the last committed build';
+    }
     if (is_array($cached)) {
         $flags = JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES;
         $html = preg_replace('/^const REPORT_JSON = .*;$/m', 'const REPORT_JSON = ' . json_encode($cached['report'], $flags) . ';', $html, 1, $c1);
         $html = preg_replace('/^const SALES_JSON = .*;$/m', 'const SALES_JSON = ' . json_encode($cached['sales'], $flags) . ';', $html, 1, $c2);
         if (isset($cached['logistics'])) {
             $html = preg_replace('/^const LOGI_JSON = .*;$/m', 'const LOGI_JSON = ' . json_encode($cached['logistics'], $flags) . ';', $html, 1);
+        }
+        foreach (NewDbReport::GROUPS as $key => $class) {
+            if (!isset($cached[$key])) { continue; }
+            $const = 'const ' . strtoupper($key) . '_JSON = ';
+            $html = preg_replace('/^' . preg_quote($const, '/') . '.*;$/m', $const . json_encode($cached[$key], $flags) . ';', $html, 1);
         }
         if ($c1 !== 1 || $c2 !== 1) {
             $html = (string) file_get_contents($page);

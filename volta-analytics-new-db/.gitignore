@@ -11,3 +11,13 @@ logistics_data.json
 daily_mail_xlsx.json
 *.xlsx
 logistics_xlsx.json
+ops_data.json
+mkt_data.json
+pf_data.json
+cust_data.json
+coll_data.json
+php_mkt_data.json
+php_ops_data.json
+php_coll_data.json
+php_pf_data.json
+php_cust_data.json

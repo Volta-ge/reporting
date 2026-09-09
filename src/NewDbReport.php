@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Volta\Funnel;
 
+use Throwable;
+
 use PDO;
 
 /**
@@ -39,10 +41,11 @@ final class NewDbReport
     {
     }
 
-    /** @return array{report: array, sales: array} */
+    /** @return array{report: array, sales: array, logistics: array, mkt?: array, ops?: array, cust?: array, coll?: array, pf?: array} */
     public function build(string $end): array
     {
         $generatedAt = gmdate('Y-m-d H:i') . ' UTC';
+        $today = (new \DateTimeImmutable('today'))->format('Y-m-d');
         $report = $this->dailyMail($end);
         $report['cutover'] = self::CUTOVER;
         $report['generatedAt'] = $generatedAt;
@@ -52,8 +55,29 @@ final class NewDbReport
         $logistics = $this->logistics();
         $logistics['cutover'] = self::CUTOVER;
         $logistics['generatedAt'] = $generatedAt;
-        return ['report' => $report, 'sales' => $sales, 'logistics' => $logistics];
+        $out = ['report' => $report, 'sales' => $sales, 'logistics' => $logistics];
+        // The five newer groups (Marketing, Operations, Customers, Collections, Portfolio) live in their own classes —
+        // src/NewDbMkt.php … — each the PHP twin of volta-analytics-new-db/build_<prefix>.js and returning exactly the
+        // structure of <prefix>_data.json. A missing class file simply leaves that tab on the committed static numbers.
+        foreach (self::GROUPS as $key => $class) {
+            $file = __DIR__ . '/' . $class . '.php';
+            if (!is_file($file)) { continue; }
+            require_once $file;
+            $fqcn = __NAMESPACE__ . chr(92) . $class;
+            // these groups run through TODAY (their last column is "(today)" / "(MTD)"), unlike Daily Mail's END = yesterday
+            try {
+                $out[$key] = (new $fqcn($this->pdo, $this->dir, $this->mappingPath))->build($today);
+            } catch (Throwable $e) {
+                // one group failing (query timeout, schema change) must not take the whole page down: that tab keeps the
+                // committed static numbers and the yellow note on the page says which group is stale
+                $out['errors'][$key] = $e->getMessage();
+            }
+        }
+        return $out;
     }
+
+    /** JSON key in the build() result => class in src/ (also the `const <KEY>_JSON` line the HTML carries, upper-cased) */
+    public const GROUPS = ['mkt' => 'NewDbMkt', 'ops' => 'NewDbOps', 'cust' => 'NewDbCust', 'coll' => 'NewDbColl', 'pf' => 'NewDbPf'];
 
     // ------------------------------------------------------------------ Logistics Daily
 

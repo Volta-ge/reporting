@@ -1,0 +1,200 @@
+d	metric	n	amt
+2026-08-31	crm_overdue_entered	3	0.00
+2026-09-01	call_loans	9	0.00
+2026-09-01	call_promised	4	0.00
+2026-09-01	call_reached	7	0.00
+2026-09-01	chan_call	9	0.00
+2026-09-01	chan_other	1	0.00
+2026-09-01	chan_sms	1	0.00
+2026-09-01	crm_case_settled	11	0.00
+2026-09-01	crm_overdue_bucket_up	1401	0.00
+2026-09-01	crm_overdue_entered	83	0.00
+2026-09-01	promise_made	1	176.00
+2026-09-01	reminder_created	4	0.00
+2026-09-01	reminder_due	2	0.00
+2026-09-01	restructure_approved	1	0.00
+2026-09-01	restructure_requested	1	3909.00
+2026-09-01	sms_Collections	1	0.00
+2026-09-01	sms_დასაფარია მიმდინარე	1	0.00
+2026-09-01	sms_ვერ ვუკავშირდები	4	0.00
+2026-09-01	sms_მოვალეთა რეესტრი	1	0.00
+2026-09-01	sms_შეუსაბამო მონაცემები	1	0.00
+2026-09-01	status_Negotiating	1	0.00
+2026-09-01	status_New schedule	2	0.00
+2026-09-01	status_No contact	1	0.00
+2026-09-01	status_Promised	1	0.00
+2026-09-02	call_loans	13	0.00
+2026-09-02	call_promised	1	0.00
+2026-09-02	call_reached	13	0.00
+2026-09-02	chan_call	11	0.00
+2026-09-02	chan_none	1	0.00
+2026-09-02	chan_sms	2	0.00
+2026-09-02	crm_case_settled	4	0.00
+2026-09-02	crm_overdue_bucket_up	4	0.00
+2026-09-02	crm_overdue_cured	3	0.00
+2026-09-02	crm_overdue_entered	181	0.00
+2026-09-02	pm_assigned_pm	3	0.00
+2026-09-02	promise_made	1	1750.00
+2026-09-02	reminder_created	9	0.00
+2026-09-02	reminder_due	2	0.00
+2026-09-02	sms_Collections	1	0.00
+2026-09-02	sms_REJECTED	2	0.00
+2026-09-02	sms_დასაფარია მიმდინარე	1	0.00
+2026-09-02	sms_მოვალეთა რეესტრი	6	0.00
+2026-09-02	sms_პროდუქციის არ ქონა	1	0.00
+2026-09-02	sms_შეუსაბამო მონაცემები	5	0.00
+2026-09-02	status_Negotiating	5	0.00
+2026-09-02	status_Promised	1	0.00
+2026-09-03	call_loans	80	0.00
+2026-09-03	call_reached	87	0.00
+2026-09-03	chan_call	84	0.00
+2026-09-03	chan_email	1	0.00
+2026-09-03	chan_sms	2	0.00
+2026-09-03	crm_case_settled	2	0.00
+2026-09-03	crm_overdue_bucket_up	30	0.00
+2026-09-03	crm_overdue_cured	4	0.00
+2026-09-03	crm_overdue_entered	88	0.00
+2026-09-03	pm_assigned_pm	22	0.00
+2026-09-03	reminder_created	74	0.00
+2026-09-03	reminder_due	1	0.00
+2026-09-03	sms_Collections	1	0.00
+2026-09-03	sms_REJECTED	1	0.00
+2026-09-03	sms_გადახდისუუნარო	1	0.00
+2026-09-03	sms_მოვალეთა რეესტრი	2	0.00
+2026-09-03	sms_შეუსაბამო მონაცემები	11	0.00
+2026-09-03	sms_ხიშნიკი	1	0.00
+2026-09-03	status_Active	33	0.00
+2026-09-03	status_Negotiating	24	0.00
+2026-09-03	status_New schedule	1	0.00
+2026-09-03	status_No contact	1	0.00
+2026-09-03	status_Refused to pay	1	0.00
+2026-09-04	call_loans	134	0.00
+2026-09-04	call_reached	138	0.00
+2026-09-04	chan_call	134	0.00
+2026-09-04	chan_sms	4	0.00
+2026-09-04	crm_case_settled	1	0.00
+2026-09-04	crm_overdue_bucket_up	145	0.00
+2026-09-04	crm_overdue_cured	3	0.00
+2026-09-04	crm_overdue_entered	85	0.00
+2026-09-04	pm_assigned_collector	1	0.00
+2026-09-04	pm_assigned_pm	28	0.00
+2026-09-04	reminder_created	102	0.00
+2026-09-04	reminder_due	19	0.00
+2026-09-04	restructure_requested	1	5338.11
+2026-09-04	sms_Collections	4	0.00
+2026-09-04	sms_REJECTED	1	0.00
+2026-09-04	sms_გადახდისუუნარო	2	0.00
+2026-09-04	sms_დასაფარია მიმდინარე	5	0.00
+2026-09-04	sms_მოვალეთა რეესტრი	4	0.00
+2026-09-04	sms_პროდუქციის არ ქონა	2	0.00
+2026-09-04	sms_შეუსაბამო მონაცემები	9	0.00
+2026-09-04	status_Active	5	0.00
+2026-09-04	status_Negotiating	33	0.00
+2026-09-04	status_New schedule	1	0.00
+2026-09-05	call_loans	16	0.00
+2026-09-05	call_reached	17	0.00
+2026-09-05	chan_call	17	0.00
+2026-09-05	crm_case_settled	2	0.00
+2026-09-05	crm_overdue_bucket_up	253	0.00
+2026-09-05	crm_overdue_cured	242	0.00
+2026-09-05	crm_overdue_entered	33	0.00
+2026-09-05	pm_assigned_pm	32	0.00
+2026-09-05	reminder_created	17	0.00
+2026-09-05	reminder_due	11	0.00
+2026-09-05	sms_ვერ ვუკავშირდები	1	0.00
+2026-09-05	sms_მოვალეთა რეესტრი	6	0.00
+2026-09-05	sms_შეუსაბამო მონაცემები	7	0.00
+2026-09-05	sms_ხიშნიკი	1	0.00
+2026-09-05	status_Active	1	0.00
+2026-09-05	status_Negotiating	8	0.00
+2026-09-06	crm_case_settled	3	0.00
+2026-09-06	crm_overdue_bucket_up	76	0.00
+2026-09-06	crm_overdue_cured	1	0.00
+2026-09-06	crm_overdue_entered	170	0.00
+2026-09-06	promise_broken	1	0.00
+2026-09-06	promise_kept	1	0.00
+2026-09-06	reminder_due	1	0.00
+2026-09-06	restructure_approved	1	0.00
+2026-09-07	call_loans	134	0.00
+2026-09-07	call_promised	2	0.00
+2026-09-07	call_reached	153	0.00
+2026-09-07	chan_call	150	0.00
+2026-09-07	chan_sms	5	0.00
+2026-09-07	crm_case_settled	7	0.00
+2026-09-07	crm_overdue_bucket_up	86	0.00
+2026-09-07	crm_overdue_cured	4	0.00
+2026-09-07	crm_overdue_entered	61	0.00
+2026-09-07	pm_assigned_pm	29	0.00
+2026-09-07	promise_made	11	4102.00
+2026-09-07	reminder_created	106	0.00
+2026-09-07	reminder_due	61	0.00
+2026-09-07	restructure_approved	1	0.00
+2026-09-07	restructure_requested	2	4264.00
+2026-09-07	sms_Collections	5	0.00
+2026-09-07	sms_REJECTED	2	0.00
+2026-09-07	sms_გადახდისუუნარო	2	0.00
+2026-09-07	sms_დასაფარია მიმდინარე	3	0.00
+2026-09-07	sms_ვერ ვუკავშირდები	4	0.00
+2026-09-07	sms_მოვალეთა რეესტრი	10	0.00
+2026-09-07	sms_შეუსაბამო მონაცემები	8	0.00
+2026-09-07	sms_ხიშნიკი	3	0.00
+2026-09-07	status_Negotiating	17	0.00
+2026-09-07	status_New schedule	3	0.00
+2026-09-07	status_Promised	11	0.00
+2026-09-08	call_loans	113	0.00
+2026-09-08	call_no_answer	2	0.00
+2026-09-08	call_promised	1	0.00
+2026-09-08	call_reached	120	0.00
+2026-09-08	chan_call	106	0.00
+2026-09-08	chan_other	13	0.00
+2026-09-08	chan_sms	4	0.00
+2026-09-08	crm_case_settled	4	0.00
+2026-09-08	crm_overdue_bucket_up	23	0.00
+2026-09-08	crm_overdue_cured	215	0.00
+2026-09-08	crm_overdue_entered	155	0.00
+2026-09-08	pm_assigned_pm	40	0.00
+2026-09-08	promise_broken	6	0.00
+2026-09-08	promise_kept	6	0.00
+2026-09-08	promise_made	2	535.00
+2026-09-08	reminder_created	95	0.00
+2026-09-08	reminder_due	46	0.00
+2026-09-08	restructure_approved	4	0.00
+2026-09-08	restructure_requested	8	12318.30
+2026-09-08	sms_Collections	2	0.00
+2026-09-08	sms_გადახდისუუნარო	4	0.00
+2026-09-08	sms_დასაფარია მიმდინარე	2	0.00
+2026-09-08	sms_ვერ ვუკავშირდები	5	0.00
+2026-09-08	sms_მოვალეთა რეესტრი	2	0.00
+2026-09-08	sms_პროდუქციის არ ქონა	2	0.00
+2026-09-08	sms_შეუსაბამო მონაცემები	11	0.00
+2026-09-08	sms_ხიშნიკი	3	0.00
+2026-09-08	status_Negotiating	10	0.00
+2026-09-08	status_New schedule	1	0.00
+2026-09-08	status_Promised	2	0.00
+2026-09-08	status_Refused to pay	1	0.00
+2026-09-09	call_loans	91	0.00
+2026-09-09	call_promised	1	0.00
+2026-09-09	call_reached	123	0.00
+2026-09-09	chan_call	74	0.00
+2026-09-09	chan_email	19	0.00
+2026-09-09	chan_sms	31	0.00
+2026-09-09	crm_case_settled	2	0.00
+2026-09-09	crm_overdue_bucket_up	103	0.00
+2026-09-09	crm_overdue_cured	156	0.00
+2026-09-09	crm_overdue_entered	47	0.00
+2026-09-09	pm_assigned_pm	6	0.00
+2026-09-09	promise_broken	1	0.00
+2026-09-09	promise_kept	1	0.00
+2026-09-09	promise_made	4	572.00
+2026-09-09	reminder_created	53	0.00
+2026-09-09	reminder_due	105	0.00
+2026-09-09	restructure_requested	2	1146.00
+2026-09-09	sms_Collections	31	0.00
+2026-09-09	sms_დასაფარია მიმდინარე	6	0.00
+2026-09-09	sms_ვერ ვუკავშირდები	10	0.00
+2026-09-09	sms_მოვალეთა რეესტრი	1	0.00
+2026-09-09	sms_პროდუქციის არ ქონა	2	0.00
+2026-09-09	sms_შეუსაბამო მონაცემები	6	0.00
+2026-09-09	sms_ხიშნიკი	1	0.00
+2026-09-09	status_Negotiating	2	0.00
+2026-09-09	status_Promised	4	0.00

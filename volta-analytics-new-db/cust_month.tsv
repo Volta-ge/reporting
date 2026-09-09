@@ -1,0 +1,1273 @@
+dim	val	m	n
+age	NULL	2024-01	26
+age	NULL	2024-02	9
+age	NULL	2024-03	16
+age	NULL	2024-04	12
+age	NULL	2024-05	8
+age	NULL	2024-06	7
+age	NULL	2024-07	8
+age	NULL	2024-08	2
+age	NULL	2024-09	6
+age	NULL	2024-10	3
+age	NULL	2024-11	11
+age	NULL	2024-12	10
+age	NULL	2025-01	6
+age	NULL	2025-02	5
+age	NULL	2025-03	6
+age	NULL	2025-04	5
+age	NULL	2025-05	3
+age	NULL	2025-06	4
+age	NULL	2025-07	6
+age	NULL	2025-08	7
+age	NULL	2025-09	2
+age	NULL	2025-10	1
+age	NULL	2025-11	5
+age	NULL	2025-12	7
+age	NULL	2026-01	16
+age	NULL	2026-02	23
+age	NULL	2026-03	397
+age	NULL	2026-04	189
+age	NULL	2026-05	219
+age	NULL	2026-06	454
+age	NULL	2026-07	362
+age	NULL	2026-08	269
+age	NULL	2026-09	179
+age	1:< 18	2024-03	1
+age	1:< 18	2024-09	2
+age	1:< 18	2024-10	2
+age	1:< 18	2024-11	1
+age	1:< 18	2024-12	1
+age	1:< 18	2025-01	1
+age	1:< 18	2025-06	1
+age	1:< 18	2025-12	2
+age	1:< 18	2026-02	2
+age	1:< 18	2026-04	6
+age	1:< 18	2026-06	2
+age	2:18 - 24	2024-01	30
+age	2:18 - 24	2024-02	60
+age	2:18 - 24	2024-03	103
+age	2:18 - 24	2024-04	86
+age	2:18 - 24	2024-05	78
+age	2:18 - 24	2024-06	61
+age	2:18 - 24	2024-07	74
+age	2:18 - 24	2024-08	63
+age	2:18 - 24	2024-09	126
+age	2:18 - 24	2024-10	187
+age	2:18 - 24	2024-11	377
+age	2:18 - 24	2024-12	211
+age	2:18 - 24	2025-01	312
+age	2:18 - 24	2025-02	229
+age	2:18 - 24	2025-03	159
+age	2:18 - 24	2025-04	76
+age	2:18 - 24	2025-05	103
+age	2:18 - 24	2025-06	87
+age	2:18 - 24	2025-07	117
+age	2:18 - 24	2025-08	63
+age	2:18 - 24	2025-09	73
+age	2:18 - 24	2025-10	105
+age	2:18 - 24	2025-11	177
+age	2:18 - 24	2025-12	265
+age	2:18 - 24	2026-01	228
+age	2:18 - 24	2026-02	246
+age	2:18 - 24	2026-03	199
+age	2:18 - 24	2026-04	238
+age	2:18 - 24	2026-05	196
+age	2:18 - 24	2026-06	347
+age	2:18 - 24	2026-07	376
+age	2:18 - 24	2026-08	228
+age	2:18 - 24	2026-09	73
+age	3:25 - 34	2024-01	175
+age	3:25 - 34	2024-02	184
+age	3:25 - 34	2024-03	324
+age	3:25 - 34	2024-04	290
+age	3:25 - 34	2024-05	257
+age	3:25 - 34	2024-06	269
+age	3:25 - 34	2024-07	232
+age	3:25 - 34	2024-08	246
+age	3:25 - 34	2024-09	343
+age	3:25 - 34	2024-10	491
+age	3:25 - 34	2024-11	952
+age	3:25 - 34	2024-12	490
+age	3:25 - 34	2025-01	763
+age	3:25 - 34	2025-02	573
+age	3:25 - 34	2025-03	415
+age	3:25 - 34	2025-04	269
+age	3:25 - 34	2025-05	243
+age	3:25 - 34	2025-06	298
+age	3:25 - 34	2025-07	387
+age	3:25 - 34	2025-08	168
+age	3:25 - 34	2025-09	345
+age	3:25 - 34	2025-10	379
+age	3:25 - 34	2025-11	614
+age	3:25 - 34	2025-12	786
+age	3:25 - 34	2026-01	689
+age	3:25 - 34	2026-02	787
+age	3:25 - 34	2026-03	738
+age	3:25 - 34	2026-04	1073
+age	3:25 - 34	2026-05	1330
+age	3:25 - 34	2026-06	2155
+age	3:25 - 34	2026-07	1849
+age	3:25 - 34	2026-08	1390
+age	3:25 - 34	2026-09	470
+age	4:35 - 44	2024-01	165
+age	4:35 - 44	2024-02	192
+age	4:35 - 44	2024-03	255
+age	4:35 - 44	2024-04	264
+age	4:35 - 44	2024-05	209
+age	4:35 - 44	2024-06	288
+age	4:35 - 44	2024-07	245
+age	4:35 - 44	2024-08	240
+age	4:35 - 44	2024-09	227
+age	4:35 - 44	2024-10	315
+age	4:35 - 44	2024-11	511
+age	4:35 - 44	2024-12	328
+age	4:35 - 44	2025-01	492
+age	4:35 - 44	2025-02	417
+age	4:35 - 44	2025-03	319
+age	4:35 - 44	2025-04	180
+age	4:35 - 44	2025-05	232
+age	4:35 - 44	2025-06	286
+age	4:35 - 44	2025-07	392
+age	4:35 - 44	2025-08	146
+age	4:35 - 44	2025-09	328
+age	4:35 - 44	2025-10	335
+age	4:35 - 44	2025-11	493
+age	4:35 - 44	2025-12	820
+age	4:35 - 44	2026-01	549
+age	4:35 - 44	2026-02	675
+age	4:35 - 44	2026-03	659
+age	4:35 - 44	2026-04	805
+age	4:35 - 44	2026-05	924
+age	4:35 - 44	2026-06	1326
+age	4:35 - 44	2026-07	1216
+age	4:35 - 44	2026-08	1007
+age	4:35 - 44	2026-09	332
+age	5:45 - 59	2024-01	103
+age	5:45 - 59	2024-02	103
+age	5:45 - 59	2024-03	182
+age	5:45 - 59	2024-04	192
+age	5:45 - 59	2024-05	158
+age	5:45 - 59	2024-06	210
+age	5:45 - 59	2024-07	173
+age	5:45 - 59	2024-08	167
+age	5:45 - 59	2024-09	129
+age	5:45 - 59	2024-10	220
+age	5:45 - 59	2024-11	267
+age	5:45 - 59	2024-12	181
+age	5:45 - 59	2025-01	227
+age	5:45 - 59	2025-02	200
+age	5:45 - 59	2025-03	202
+age	5:45 - 59	2025-04	120
+age	5:45 - 59	2025-05	160
+age	5:45 - 59	2025-06	176
+age	5:45 - 59	2025-07	247
+age	5:45 - 59	2025-08	100
+age	5:45 - 59	2025-09	214
+age	5:45 - 59	2025-10	187
+age	5:45 - 59	2025-11	288
+age	5:45 - 59	2025-12	510
+age	5:45 - 59	2026-01	309
+age	5:45 - 59	2026-02	397
+age	5:45 - 59	2026-03	453
+age	5:45 - 59	2026-04	414
+age	5:45 - 59	2026-05	396
+age	5:45 - 59	2026-06	508
+age	5:45 - 59	2026-07	487
+age	5:45 - 59	2026-08	485
+age	5:45 - 59	2026-09	166
+age	6:60+	2024-01	23
+age	6:60+	2024-02	36
+age	6:60+	2024-03	53
+age	6:60+	2024-04	64
+age	6:60+	2024-05	46
+age	6:60+	2024-06	69
+age	6:60+	2024-07	59
+age	6:60+	2024-08	45
+age	6:60+	2024-09	48
+age	6:60+	2024-10	45
+age	6:60+	2024-11	81
+age	6:60+	2024-12	62
+age	6:60+	2025-01	72
+age	6:60+	2025-02	71
+age	6:60+	2025-03	67
+age	6:60+	2025-04	42
+age	6:60+	2025-05	46
+age	6:60+	2025-06	63
+age	6:60+	2025-07	71
+age	6:60+	2025-08	24
+age	6:60+	2025-09	51
+age	6:60+	2025-10	38
+age	6:60+	2025-11	73
+age	6:60+	2025-12	141
+age	6:60+	2026-01	67
+age	6:60+	2026-02	101
+age	6:60+	2026-03	129
+age	6:60+	2026-04	116
+age	6:60+	2026-05	88
+age	6:60+	2026-06	99
+age	6:60+	2026-07	95
+age	6:60+	2026-08	76
+age	6:60+	2026-09	16
+city	NULL	2024-01	12
+city	NULL	2024-02	12
+city	NULL	2024-03	11
+city	NULL	2024-04	17
+city	NULL	2024-05	13
+city	NULL	2024-06	7
+city	NULL	2024-07	9
+city	NULL	2024-08	9
+city	NULL	2024-09	7
+city	NULL	2024-10	8
+city	NULL	2024-11	10
+city	NULL	2024-12	9
+city	NULL	2025-01	5
+city	NULL	2025-02	4
+city	NULL	2025-03	9
+city	NULL	2025-04	7
+city	NULL	2025-05	3
+city	NULL	2025-06	4
+city	NULL	2025-07	6
+city	NULL	2025-08	7
+city	NULL	2025-09	2
+city	NULL	2025-11	4
+city	NULL	2025-12	3
+city	NULL	2026-01	22
+city	NULL	2026-02	12
+city	NULL	2026-03	21
+city	NULL	2026-04	7
+city	NULL	2026-05	6
+city	NULL	2026-06	11
+city	NULL	2026-07	6
+city	NULL	2026-08	12
+city	NULL	2026-09	212
+city	Other cities	2024-01	35
+city	Other cities	2024-02	45
+city	Other cities	2024-03	163
+city	Other cities	2024-04	113
+city	Other cities	2024-05	80
+city	Other cities	2024-06	96
+city	Other cities	2024-07	100
+city	Other cities	2024-08	92
+city	Other cities	2024-09	85
+city	Other cities	2024-10	148
+city	Other cities	2024-11	294
+city	Other cities	2024-12	190
+city	Other cities	2025-01	267
+city	Other cities	2025-02	211
+city	Other cities	2025-03	166
+city	Other cities	2025-04	81
+city	Other cities	2025-05	115
+city	Other cities	2025-06	152
+city	Other cities	2025-07	124
+city	Other cities	2025-08	48
+city	Other cities	2025-09	145
+city	Other cities	2025-10	149
+city	Other cities	2025-11	258
+city	Other cities	2025-12	432
+city	Other cities	2026-01	235
+city	Other cities	2026-02	320
+city	Other cities	2026-03	443
+city	Other cities	2026-04	650
+city	Other cities	2026-05	688
+city	Other cities	2026-06	679
+city	Other cities	2026-07	609
+city	Other cities	2026-08	484
+city	Other cities	2026-09	154
+city	ბათუმი	2024-01	1
+city	ბათუმი	2024-02	11
+city	ბათუმი	2024-03	87
+city	ბათუმი	2024-04	38
+city	ბათუმი	2024-05	35
+city	ბათუმი	2024-06	21
+city	ბათუმი	2024-07	30
+city	ბათუმი	2024-08	49
+city	ბათუმი	2024-09	49
+city	ბათუმი	2024-10	54
+city	ბათუმი	2024-11	170
+city	ბათუმი	2024-12	73
+city	ბათუმი	2025-01	142
+city	ბათუმი	2025-02	98
+city	ბათუმი	2025-03	75
+city	ბათუმი	2025-04	45
+city	ბათუმი	2025-05	45
+city	ბათუმი	2025-06	53
+city	ბათუმი	2025-07	68
+city	ბათუმი	2025-08	11
+city	ბათუმი	2025-09	45
+city	ბათუმი	2025-10	63
+city	ბათუმი	2025-11	117
+city	ბათუმი	2025-12	176
+city	ბათუმი	2026-01	121
+city	ბათუმი	2026-02	100
+city	ბათუმი	2026-03	118
+city	ბათუმი	2026-04	157
+city	ბათუმი	2026-05	201
+city	ბათუმი	2026-06	394
+city	ბათუმი	2026-07	383
+city	ბათუმი	2026-08	280
+city	ბათუმი	2026-09	79
+city	გარდაბანი	2024-01	5
+city	გარდაბანი	2024-02	8
+city	გარდაბანი	2024-03	11
+city	გარდაბანი	2024-04	10
+city	გარდაბანი	2024-05	11
+city	გარდაბანი	2024-06	9
+city	გარდაბანი	2024-07	8
+city	გარდაბანი	2024-08	3
+city	გარდაბანი	2024-09	5
+city	გარდაბანი	2024-10	10
+city	გარდაბანი	2024-11	40
+city	გარდაბანი	2024-12	13
+city	გარდაბანი	2025-01	16
+city	გარდაბანი	2025-02	17
+city	გარდაბანი	2025-03	13
+city	გარდაბანი	2025-04	5
+city	გარდაბანი	2025-05	8
+city	გარდაბანი	2025-06	5
+city	გარდაბანი	2025-07	16
+city	გარდაბანი	2025-08	2
+city	გარდაბანი	2025-09	7
+city	გარდაბანი	2025-10	15
+city	გარდაბანი	2025-11	18
+city	გარდაბანი	2025-12	33
+city	გარდაბანი	2026-01	22
+city	გარდაბანი	2026-02	33
+city	გარდაბანი	2026-03	36
+city	გარდაბანი	2026-04	24
+city	გარდაბანი	2026-05	17
+city	გარდაბანი	2026-06	29
+city	გარდაბანი	2026-07	26
+city	გარდაბანი	2026-08	28
+city	გარდაბანი	2026-09	9
+city	გორი	2024-01	3
+city	გორი	2024-02	9
+city	გორი	2024-03	40
+city	გორი	2024-04	31
+city	გორი	2024-05	12
+city	გორი	2024-06	22
+city	გორი	2024-07	22
+city	გორი	2024-08	20
+city	გორი	2024-09	18
+city	გორი	2024-10	29
+city	გორი	2024-11	39
+city	გორი	2024-12	22
+city	გორი	2025-01	53
+city	გორი	2025-02	20
+city	გორი	2025-03	45
+city	გორი	2025-04	12
+city	გორი	2025-05	17
+city	გორი	2025-06	26
+city	გორი	2025-07	31
+city	გორი	2025-08	7
+city	გორი	2025-09	24
+city	გორი	2025-10	24
+city	გორი	2025-11	42
+city	გორი	2025-12	83
+city	გორი	2026-01	47
+city	გორი	2026-02	54
+city	გორი	2026-03	64
+city	გორი	2026-04	51
+city	გორი	2026-05	54
+city	გორი	2026-06	128
+city	გორი	2026-07	92
+city	გორი	2026-08	98
+city	გორი	2026-09	24
+city	გურჯაანი	2024-01	4
+city	გურჯაანი	2024-02	6
+city	გურჯაანი	2024-03	7
+city	გურჯაანი	2024-04	11
+city	გურჯაანი	2024-05	5
+city	გურჯაანი	2024-06	6
+city	გურჯაანი	2024-07	6
+city	გურჯაანი	2024-08	8
+city	გურჯაანი	2024-09	7
+city	გურჯაანი	2024-10	10
+city	გურჯაანი	2024-11	24
+city	გურჯაანი	2024-12	15
+city	გურჯაანი	2025-01	17
+city	გურჯაანი	2025-02	9
+city	გურჯაანი	2025-03	4
+city	გურჯაანი	2025-04	7
+city	გურჯაანი	2025-05	9
+city	გურჯაანი	2025-06	5
+city	გურჯაანი	2025-07	10
+city	გურჯაანი	2025-08	2
+city	გურჯაანი	2025-09	6
+city	გურჯაანი	2025-10	11
+city	გურჯაანი	2025-11	19
+city	გურჯაანი	2025-12	22
+city	გურჯაანი	2026-01	9
+city	გურჯაანი	2026-02	11
+city	გურჯაანი	2026-03	25
+city	გურჯაანი	2026-04	12
+city	გურჯაანი	2026-05	14
+city	გურჯაანი	2026-06	33
+city	გურჯაანი	2026-07	40
+city	გურჯაანი	2026-08	14
+city	გურჯაანი	2026-09	5
+city	ზუგდიდი	2024-01	4
+city	ზუგდიდი	2024-02	5
+city	ზუგდიდი	2024-03	28
+city	ზუგდიდი	2024-04	30
+city	ზუგდიდი	2024-05	8
+city	ზუგდიდი	2024-06	11
+city	ზუგდიდი	2024-07	12
+city	ზუგდიდი	2024-08	13
+city	ზუგდიდი	2024-09	14
+city	ზუგდიდი	2024-10	30
+city	ზუგდიდი	2024-11	78
+city	ზუგდიდი	2024-12	23
+city	ზუგდიდი	2025-01	41
+city	ზუგდიდი	2025-02	40
+city	ზუგდიდი	2025-03	24
+city	ზუგდიდი	2025-04	8
+city	ზუგდიდი	2025-05	12
+city	ზუგდიდი	2025-06	30
+city	ზუგდიდი	2025-07	35
+city	ზუგდიდი	2025-08	12
+city	ზუგდიდი	2025-09	15
+city	ზუგდიდი	2025-10	26
+city	ზუგდიდი	2025-11	66
+city	ზუგდიდი	2025-12	71
+city	ზუგდიდი	2026-01	30
+city	ზუგდიდი	2026-02	58
+city	ზუგდიდი	2026-03	63
+city	ზუგდიდი	2026-04	54
+city	ზუგდიდი	2026-05	65
+city	ზუგდიდი	2026-06	133
+city	ზუგდიდი	2026-07	120
+city	ზუგდიდი	2026-08	99
+city	ზუგდიდი	2026-09	33
+city	თბილისი	2024-01	434
+city	თბილისი	2024-02	435
+city	თბილისი	2024-03	404
+city	თბილისი	2024-04	541
+city	თბილისი	2024-05	495
+city	თბილისი	2024-06	626
+city	თბილისი	2024-07	495
+city	თბილისი	2024-08	483
+city	თბილისი	2024-09	563
+city	თბილისი	2024-10	820
+city	თბილისი	2024-11	1196
+city	თბილისი	2024-12	765
+city	თბილისი	2025-01	973
+city	თბილისი	2025-02	874
+city	თბილისი	2025-03	656
+city	თბილისი	2025-04	438
+city	თბილისი	2025-05	466
+city	თბილისი	2025-06	493
+city	თბილისი	2025-07	765
+city	თბილისი	2025-08	360
+city	თბილისი	2025-09	632
+city	თბილისი	2025-10	585
+city	თბილისი	2025-11	884
+city	თბილისი	2025-12	1284
+city	თბილისი	2026-01	1089
+city	თბილისი	2026-02	1321
+city	თბილისი	2026-03	1489
+city	თბილისი	2026-04	1523
+city	თბილისი	2026-05	1677
+city	თბილისი	2026-06	2705
+city	თბილისი	2026-07	2388
+city	თბილისი	2026-08	1892
+city	თბილისი	2026-09	575
+city	მცხეთა	2024-01	8
+city	მცხეთა	2024-02	13
+city	მცხეთა	2024-03	13
+city	მცხეთა	2024-04	12
+city	მცხეთა	2024-05	15
+city	მცხეთა	2024-06	14
+city	მცხეთა	2024-07	16
+city	მცხეთა	2024-08	26
+city	მცხეთა	2024-09	33
+city	მცხეთა	2024-10	22
+city	მცხეთა	2024-11	35
+city	მცხეთა	2024-12	25
+city	მცხეთა	2025-01	38
+city	მცხეთა	2025-02	20
+city	მცხეთა	2025-03	21
+city	მცხეთა	2025-04	13
+city	მცხეთა	2025-05	21
+city	მცხეთა	2025-06	17
+city	მცხეთა	2025-07	25
+city	მცხეთა	2025-08	10
+city	მცხეთა	2025-09	17
+city	მცხეთა	2025-10	19
+city	მცხეთა	2025-11	26
+city	მცხეთა	2025-12	25
+city	მცხეთა	2026-01	33
+city	მცხეთა	2026-02	35
+city	მცხეთა	2026-03	21
+city	მცხეთა	2026-04	25
+city	მცხეთა	2026-05	27
+city	მცხეთა	2026-06	52
+city	მცხეთა	2026-07	66
+city	მცხეთა	2026-08	49
+city	მცხეთა	2026-09	19
+city	ოზურგეთი	2024-01	1
+city	ოზურგეთი	2024-02	2
+city	ოზურგეთი	2024-03	26
+city	ოზურგეთი	2024-04	7
+city	ოზურგეთი	2024-05	5
+city	ოზურგეთი	2024-06	5
+city	ოზურგეთი	2024-07	7
+city	ოზურგეთი	2024-08	11
+city	ოზურგეთი	2024-09	7
+city	ოზურგეთი	2024-10	5
+city	ოზურგეთი	2024-11	22
+city	ოზურგეთი	2024-12	8
+city	ოზურგეთი	2025-01	29
+city	ოზურგეთი	2025-02	24
+city	ოზურგეთი	2025-03	11
+city	ოზურგეთი	2025-04	13
+city	ოზურგეთი	2025-05	8
+city	ოზურგეთი	2025-06	15
+city	ოზურგეთი	2025-07	14
+city	ოზურგეთი	2025-08	2
+city	ოზურგეთი	2025-09	9
+city	ოზურგეთი	2025-10	10
+city	ოზურგეთი	2025-11	21
+city	ოზურგეთი	2025-12	31
+city	ოზურგეთი	2026-01	11
+city	ოზურგეთი	2026-02	32
+city	ოზურგეთი	2026-03	24
+city	ოზურგეთი	2026-04	19
+city	ოზურგეთი	2026-05	35
+city	ოზურგეთი	2026-06	57
+city	ოზურგეთი	2026-07	40
+city	ოზურგეთი	2026-08	31
+city	ოზურგეთი	2026-09	6
+city	რუსთავი	2024-01	9
+city	რუსთავი	2024-02	32
+city	რუსთავი	2024-03	27
+city	რუსთავი	2024-04	34
+city	რუსთავი	2024-05	27
+city	რუსთავი	2024-06	41
+city	რუსთავი	2024-07	16
+city	რუსთავი	2024-08	13
+city	რუსთავი	2024-09	31
+city	რუსთავი	2024-10	38
+city	რუსთავი	2024-11	81
+city	რუსთავი	2024-12	55
+city	რუსთავი	2025-01	96
+city	რუსთავი	2025-02	56
+city	რუსთავი	2025-03	49
+city	რუსთავი	2025-04	15
+city	რუსთავი	2025-05	34
+city	რუსთავი	2025-06	33
+city	რუსთავი	2025-07	36
+city	რუსთავი	2025-08	17
+city	რუსთავი	2025-09	44
+city	რუსთავი	2025-10	53
+city	რუსთავი	2025-11	65
+city	რუსთავი	2025-12	109
+city	რუსთავი	2026-01	91
+city	რუსთავი	2026-02	107
+city	რუსთავი	2026-03	110
+city	რუსთავი	2026-04	97
+city	რუსთავი	2026-05	135
+city	რუსთავი	2026-06	204
+city	რუსთავი	2026-07	159
+city	რუსთავი	2026-08	156
+city	რუსთავი	2026-09	36
+city	სამტრედია	2024-03	11
+city	სამტრედია	2024-04	8
+city	სამტრედია	2024-05	2
+city	სამტრედია	2024-06	7
+city	სამტრედია	2024-07	4
+city	სამტრედია	2024-08	5
+city	სამტრედია	2024-09	6
+city	სამტრედია	2024-10	7
+city	სამტრედია	2024-11	18
+city	სამტრედია	2024-12	10
+city	სამტრედია	2025-01	15
+city	სამტრედია	2025-02	10
+city	სამტრედია	2025-03	6
+city	სამტრედია	2025-04	3
+city	სამტრედია	2025-05	4
+city	სამტრედია	2025-06	2
+city	სამტრედია	2025-07	14
+city	სამტრედია	2025-08	4
+city	სამტრედია	2025-09	8
+city	სამტრედია	2025-10	3
+city	სამტრედია	2025-11	16
+city	სამტრედია	2025-12	26
+city	სამტრედია	2026-01	23
+city	სამტრედია	2026-02	16
+city	სამტრედია	2026-03	13
+city	სამტრედია	2026-04	27
+city	სამტრედია	2026-05	24
+city	სამტრედია	2026-06	45
+city	სამტრედია	2026-07	31
+city	სამტრედია	2026-08	24
+city	სამტრედია	2026-09	6
+city	სენაკი	2024-03	18
+city	სენაკი	2024-04	5
+city	სენაკი	2024-05	7
+city	სენაკი	2024-06	10
+city	სენაკი	2024-07	10
+city	სენაკი	2024-08	3
+city	სენაკი	2024-09	2
+city	სენაკი	2024-10	8
+city	სენაკი	2024-11	21
+city	სენაკი	2024-12	7
+city	სენაკი	2025-01	20
+city	სენაკი	2025-02	5
+city	სენაკი	2025-03	7
+city	სენაკი	2025-04	5
+city	სენაკი	2025-05	3
+city	სენაკი	2025-06	6
+city	სენაკი	2025-07	4
+city	სენაკი	2025-08	1
+city	სენაკი	2025-09	4
+city	სენაკი	2025-10	13
+city	სენაკი	2025-11	16
+city	სენაკი	2025-12	31
+city	სენაკი	2026-01	18
+city	სენაკი	2026-02	11
+city	სენაკი	2026-03	9
+city	სენაკი	2026-04	21
+city	სენაკი	2026-05	21
+city	სენაკი	2026-06	51
+city	სენაკი	2026-07	36
+city	სენაკი	2026-08	31
+city	სენაკი	2026-09	4
+city	ფოთი	2024-01	1
+city	ფოთი	2024-02	1
+city	ფოთი	2024-03	30
+city	ფოთი	2024-04	14
+city	ფოთი	2024-05	6
+city	ფოთი	2024-06	9
+city	ფოთი	2024-07	14
+city	ფოთი	2024-08	4
+city	ფოთი	2024-09	13
+city	ფოთი	2024-10	22
+city	ფოთი	2024-11	32
+city	ფოთი	2024-12	17
+city	ფოთი	2025-01	38
+city	ფოთი	2025-02	20
+city	ფოთი	2025-03	15
+city	ფოთი	2025-04	7
+city	ფოთი	2025-05	12
+city	ფოთი	2025-06	26
+city	ფოთი	2025-07	19
+city	ფოთი	2025-08	4
+city	ფოთი	2025-09	13
+city	ფოთი	2025-10	15
+city	ფოთი	2025-11	12
+city	ფოთი	2025-12	43
+city	ფოთი	2026-01	17
+city	ფოთი	2026-02	18
+city	ფოთი	2026-03	33
+city	ფოთი	2026-04	28
+city	ფოთი	2026-05	37
+city	ფოთი	2026-06	70
+city	ფოთი	2026-07	70
+city	ფოთი	2026-08	52
+city	ფოთი	2026-09	11
+city	ქობულეთი	2024-02	1
+city	ქობულეთი	2024-03	11
+city	ქობულეთი	2024-04	9
+city	ქობულეთი	2024-05	5
+city	ქობულეთი	2024-06	4
+city	ქობულეთი	2024-07	10
+city	ქობულეთი	2024-08	6
+city	ქობულეთი	2024-09	8
+city	ქობულეთი	2024-10	6
+city	ქობულეთი	2024-11	27
+city	ქობულეთი	2024-12	9
+city	ქობულეთი	2025-01	22
+city	ქობულეთი	2025-02	18
+city	ქობულეთი	2025-03	13
+city	ქობულეთი	2025-04	8
+city	ქობულეთი	2025-05	3
+city	ქობულეთი	2025-06	16
+city	ქობულეთი	2025-07	9
+city	ქობულეთი	2025-08	8
+city	ქობულეთი	2025-09	11
+city	ქობულეთი	2025-10	13
+city	ქობულეთი	2025-11	15
+city	ქობულეთი	2025-12	39
+city	ქობულეთი	2026-01	18
+city	ქობულეთი	2026-02	22
+city	ქობულეთი	2026-03	19
+city	ქობულეთი	2026-04	32
+city	ქობულეთი	2026-05	33
+city	ქობულეთი	2026-06	53
+city	ქობულეთი	2026-07	72
+city	ქობულეთი	2026-08	41
+city	ქობულეთი	2026-09	12
+city	ქუთაისი	2024-01	2
+city	ქუთაისი	2024-02	3
+city	ქუთაისი	2024-03	26
+city	ქუთაისი	2024-04	19
+city	ქუთაისი	2024-05	20
+city	ქუთაისი	2024-06	13
+city	ქუთაისი	2024-07	17
+city	ქუთაისი	2024-08	14
+city	ქუთაისი	2024-09	19
+city	ქუთაისი	2024-10	38
+city	ქუთაისი	2024-11	99
+city	ქუთაისი	2024-12	35
+city	ქუთაისი	2025-01	77
+city	ქუთაისი	2025-02	60
+city	ქუთაისი	2025-03	38
+city	ქუთაისი	2025-04	22
+city	ქუთაისი	2025-05	20
+city	ქუთაისი	2025-06	24
+city	ქუთაისი	2025-07	33
+city	ქუთაისი	2025-08	9
+city	ქუთაისი	2025-09	24
+city	ქუთაისი	2025-10	38
+city	ქუთაისი	2025-11	47
+city	ქუთაისი	2025-12	91
+city	ქუთაისი	2026-01	51
+city	ქუთაისი	2026-02	55
+city	ქუთაისი	2026-03	56
+city	ქუთაისი	2026-04	90
+city	ქუთაისი	2026-05	86
+city	ქუთაისი	2026-06	199
+city	ქუთაისი	2026-07	208
+city	ქუთაისი	2026-08	139
+city	ქუთაისი	2026-09	40
+city	ხაშური	2024-01	3
+city	ხაშური	2024-02	1
+city	ხაშური	2024-03	21
+city	ხაშური	2024-04	9
+city	ხაშური	2024-05	10
+city	ხაშური	2024-06	3
+city	ხაშური	2024-07	15
+city	ხაშური	2024-08	4
+city	ხაშური	2024-09	14
+city	ხაშური	2024-10	8
+city	ხაშური	2024-11	14
+city	ხაშური	2024-12	7
+city	ხაშური	2025-01	24
+city	ხაშური	2025-02	9
+city	ხაშური	2025-03	16
+city	ხაშური	2025-04	3
+city	ხაშური	2025-05	7
+city	ხაშური	2025-06	8
+city	ხაშური	2025-07	11
+city	ხაშური	2025-08	4
+city	ხაშური	2025-09	7
+city	ხაშური	2025-10	8
+city	ხაშური	2025-11	24
+city	ხაშური	2025-12	32
+city	ხაშური	2026-01	21
+city	ხაშური	2026-02	26
+city	ხაშური	2026-03	31
+city	ხაშური	2026-04	24
+city	ხაშური	2026-05	33
+city	ხაშური	2026-06	48
+city	ხაშური	2026-07	39
+city	ხაშური	2026-08	25
+city	ხაშური	2026-09	11
+emp	NULL	2024-01	522
+emp	NULL	2024-02	584
+emp	NULL	2024-03	934
+emp	NULL	2024-04	908
+emp	NULL	2024-05	756
+emp	NULL	2024-06	904
+emp	NULL	2024-07	791
+emp	NULL	2024-08	763
+emp	NULL	2024-09	881
+emp	NULL	2024-10	1263
+emp	NULL	2024-11	2200
+emp	NULL	2024-12	1283
+emp	NULL	2025-01	1873
+emp	NULL	2025-02	1495
+emp	NULL	2025-03	1168
+emp	NULL	2025-04	692
+emp	NULL	2025-05	787
+emp	NULL	2025-06	915
+emp	NULL	2025-07	1220
+emp	NULL	2025-08	508
+emp	NULL	2025-09	1013
+emp	NULL	2025-10	1045
+emp	NULL	2025-11	1650
+emp	NULL	2025-12	2531
+emp	NULL	2026-01	1858
+emp	NULL	2026-02	2231
+emp	NULL	2026-03	1945
+emp	NULL	2026-04	838
+emp	NULL	2026-05	766
+emp	NULL	2026-06	589
+emp	NULL	2026-07	865
+emp	NULL	2026-08	879
+emp	NULL	2026-09	1076
+emp	Not specified	2026-04	4
+emp	Private sector	2026-03	307
+emp	Private sector	2026-04	858
+emp	Private sector	2026-05	1031
+emp	Private sector	2026-06	1832
+emp	Private sector	2026-07	1601
+emp	Private sector	2026-08	1124
+emp	Private sector	2026-09	100
+emp	Public sector	2026-03	105
+emp	Public sector	2026-04	379
+emp	Public sector	2026-05	454
+emp	Public sector	2026-06	823
+emp	Public sector	2026-07	707
+emp	Public sector	2026-08	495
+emp	Public sector	2026-09	26
+emp	Self-employed	2026-03	196
+emp	Self-employed	2026-04	669
+emp	Self-employed	2026-05	815
+emp	Self-employed	2026-06	1400
+emp	Self-employed	2026-07	1065
+emp	Self-employed	2026-08	820
+emp	Self-employed	2026-09	26
+emp	Unemployed	2026-03	22
+emp	Unemployed	2026-04	93
+emp	Unemployed	2026-05	87
+emp	Unemployed	2026-06	247
+emp	Unemployed	2026-07	147
+emp	Unemployed	2026-08	137
+emp	Unemployed	2026-09	8
+gender	NULL	2024-01	3
+gender	NULL	2024-02	5
+gender	NULL	2024-03	6
+gender	NULL	2024-04	5
+gender	NULL	2024-05	6
+gender	NULL	2024-06	7
+gender	NULL	2024-07	5
+gender	NULL	2024-08	2
+gender	NULL	2024-09	6
+gender	NULL	2024-10	1
+gender	NULL	2024-11	8
+gender	NULL	2024-12	8
+gender	NULL	2025-01	4
+gender	NULL	2025-02	3
+gender	NULL	2025-03	6
+gender	NULL	2025-04	6
+gender	NULL	2025-05	3
+gender	NULL	2025-06	3
+gender	NULL	2025-07	5
+gender	NULL	2025-08	6
+gender	NULL	2025-09	2
+gender	NULL	2025-11	4
+gender	NULL	2025-12	6
+gender	NULL	2026-01	17
+gender	NULL	2026-02	20
+gender	NULL	2026-03	371
+gender	NULL	2026-04	51
+gender	NULL	2026-05	73
+gender	NULL	2026-06	75
+gender	NULL	2026-07	77
+gender	NULL	2026-08	66
+gender	NULL	2026-09	90
+gender	Female	2024-01	376
+gender	Female	2024-02	386
+gender	Female	2024-03	669
+gender	Female	2024-04	653
+gender	Female	2024-05	524
+gender	Female	2024-06	683
+gender	Female	2024-07	570
+gender	Female	2024-08	556
+gender	Female	2024-09	640
+gender	Female	2024-10	838
+gender	Female	2024-11	1467
+gender	Female	2024-12	921
+gender	Female	2025-01	1266
+gender	Female	2025-02	908
+gender	Female	2025-03	803
+gender	Female	2025-04	513
+gender	Female	2025-05	564
+gender	Female	2025-06	638
+gender	Female	2025-07	840
+gender	Female	2025-08	361
+gender	Female	2025-09	627
+gender	Female	2025-10	626
+gender	Female	2025-11	944
+gender	Female	2025-12	1531
+gender	Female	2026-01	1123
+gender	Female	2026-02	1209
+gender	Female	2026-03	1246
+gender	Female	2026-04	1514
+gender	Female	2026-05	1567
+gender	Female	2026-06	2428
+gender	Female	2026-07	2416
+gender	Female	2026-08	1782
+gender	Female	2026-09	648
+gender	Male	2024-01	143
+gender	Male	2024-02	193
+gender	Male	2024-03	259
+gender	Male	2024-04	250
+gender	Male	2024-05	226
+gender	Male	2024-06	214
+gender	Male	2024-07	216
+gender	Male	2024-08	205
+gender	Male	2024-09	235
+gender	Male	2024-10	424
+gender	Male	2024-11	725
+gender	Male	2024-12	354
+gender	Male	2025-01	603
+gender	Male	2025-02	584
+gender	Male	2025-03	359
+gender	Male	2025-04	173
+gender	Male	2025-05	220
+gender	Male	2025-06	274
+gender	Male	2025-07	375
+gender	Male	2025-08	141
+gender	Male	2025-09	384
+gender	Male	2025-10	419
+gender	Male	2025-11	702
+gender	Male	2025-12	994
+gender	Male	2026-01	718
+gender	Male	2026-02	1002
+gender	Male	2026-03	958
+gender	Male	2026-04	1276
+gender	Male	2026-05	1513
+gender	Male	2026-06	2388
+gender	Male	2026-07	1892
+gender	Male	2026-08	1607
+gender	Male	2026-09	498
+risk	NULL	2024-01	522
+risk	NULL	2024-02	584
+risk	NULL	2024-03	933
+risk	NULL	2024-04	908
+risk	NULL	2024-05	613
+risk	NULL	2024-06	699
+risk	NULL	2024-07	609
+risk	NULL	2024-08	592
+risk	NULL	2024-09	696
+risk	NULL	2024-10	1018
+risk	NULL	2024-11	1885
+risk	NULL	2024-12	1038
+risk	NULL	2025-01	1651
+risk	NULL	2025-02	1240
+risk	NULL	2025-03	948
+risk	NULL	2025-04	495
+risk	NULL	2025-05	572
+risk	NULL	2025-06	685
+risk	NULL	2025-07	915
+risk	NULL	2025-08	370
+risk	NULL	2025-09	802
+risk	NULL	2025-10	837
+risk	NULL	2025-11	1327
+risk	NULL	2025-12	1992
+risk	NULL	2026-01	1304
+risk	NULL	2026-02	1615
+risk	NULL	2026-03	1801
+risk	NULL	2026-04	2133
+risk	NULL	2026-05	2288
+risk	NULL	2026-06	3685
+risk	NULL	2026-07	3323
+risk	NULL	2026-08	2759
+risk	NULL	2026-09	1089
+risk	High	2024-05	26
+risk	High	2024-06	30
+risk	High	2024-07	49
+risk	High	2024-08	41
+risk	High	2024-09	50
+risk	High	2024-10	50
+risk	High	2024-11	54
+risk	High	2024-12	52
+risk	High	2025-01	71
+risk	High	2025-02	86
+risk	High	2025-03	61
+risk	High	2025-04	43
+risk	High	2025-05	39
+risk	High	2025-06	52
+risk	High	2025-07	71
+risk	High	2025-08	22
+risk	High	2025-09	49
+risk	High	2025-10	53
+risk	High	2025-11	135
+risk	High	2025-12	94
+risk	High	2026-06	2
+risk	High	2026-07	1
+risk	Low	2024-03	1
+risk	Low	2024-05	52
+risk	Low	2024-06	87
+risk	Low	2024-07	54
+risk	Low	2024-08	52
+risk	Low	2024-09	71
+risk	Low	2024-10	82
+risk	Low	2024-11	85
+risk	Low	2024-12	71
+risk	Low	2025-01	52
+risk	Low	2025-02	50
+risk	Low	2025-03	54
+risk	Low	2025-04	43
+risk	Low	2025-05	68
+risk	Low	2025-06	44
+risk	Low	2025-07	77
+risk	Low	2025-08	36
+risk	Low	2025-09	49
+risk	Low	2025-10	48
+risk	Low	2025-11	79
+risk	Low	2025-12	52
+risk	Low	2026-01	5
+risk	Low	2026-03	2
+risk	Low	2026-04	2
+risk	Low	2026-05	2
+risk	Low	2026-06	1
+risk	Low	2026-07	1
+risk	Low	2026-08	8
+risk	Low	2026-09	46
+risk	Medium	2024-05	65
+risk	Medium	2024-06	88
+risk	Medium	2024-07	79
+risk	Medium	2024-08	78
+risk	Medium	2024-09	64
+risk	Medium	2024-10	113
+risk	Medium	2024-11	176
+risk	Medium	2024-12	122
+risk	Medium	2025-01	99
+risk	Medium	2025-02	119
+risk	Medium	2025-03	105
+risk	Medium	2025-04	111
+risk	Medium	2025-05	108
+risk	Medium	2025-06	134
+risk	Medium	2025-07	157
+risk	Medium	2025-08	80
+risk	Medium	2025-09	113
+risk	Medium	2025-10	107
+risk	Medium	2025-11	109
+risk	Medium	2025-12	393
+risk	Medium	2026-01	549
+risk	Medium	2026-02	616
+risk	Medium	2026-03	772
+risk	Medium	2026-04	706
+risk	Medium	2026-05	863
+risk	Medium	2026-06	1203
+risk	Medium	2026-07	1060
+risk	Medium	2026-08	688
+risk	Medium	2026-09	101
+sal	NULL	2024-01	522
+sal	NULL	2024-02	584
+sal	NULL	2024-03	934
+sal	NULL	2024-04	908
+sal	NULL	2024-05	756
+sal	NULL	2024-06	904
+sal	NULL	2024-07	791
+sal	NULL	2024-08	763
+sal	NULL	2024-09	881
+sal	NULL	2024-10	1263
+sal	NULL	2024-11	2200
+sal	NULL	2024-12	1283
+sal	NULL	2025-01	1873
+sal	NULL	2025-02	1495
+sal	NULL	2025-03	1168
+sal	NULL	2025-04	692
+sal	NULL	2025-05	787
+sal	NULL	2025-06	915
+sal	NULL	2025-07	1220
+sal	NULL	2025-08	508
+sal	NULL	2025-09	1013
+sal	NULL	2025-10	1045
+sal	NULL	2025-11	1650
+sal	NULL	2025-12	2531
+sal	NULL	2026-01	1857
+sal	NULL	2026-02	2223
+sal	NULL	2026-03	1934
+sal	NULL	2026-04	838
+sal	NULL	2026-05	766
+sal	NULL	2026-06	589
+sal	NULL	2026-07	865
+sal	NULL	2026-08	879
+sal	NULL	2026-09	1091
+sal	0:0 (no salary)	2026-04	1
+sal	0:0 (no salary)	2026-05	4
+sal	0:0 (no salary)	2026-06	5
+sal	0:0 (no salary)	2026-07	1
+sal	0:0 (no salary)	2026-08	4
+sal	0:0 (no salary)	2026-09	2
+sal	1:< 500	2026-04	19
+sal	1:< 500	2026-05	31
+sal	1:< 500	2026-06	30
+sal	1:< 500	2026-07	25
+sal	1:< 500	2026-08	37
+sal	2:500 - 999	2026-03	110
+sal	2:500 - 999	2026-04	246
+sal	2:500 - 999	2026-05	161
+sal	2:500 - 999	2026-06	299
+sal	2:500 - 999	2026-07	305
+sal	2:500 - 999	2026-08	174
+sal	2:500 - 999	2026-09	11
+sal	3:1,000 - 1,999	2026-02	7
+sal	3:1,000 - 1,999	2026-03	277
+sal	3:1,000 - 1,999	2026-04	811
+sal	3:1,000 - 1,999	2026-05	1025
+sal	3:1,000 - 1,999	2026-06	1704
+sal	3:1,000 - 1,999	2026-07	1376
+sal	3:1,000 - 1,999	2026-08	1014
+sal	3:1,000 - 1,999	2026-09	70
+sal	4:2,000 - 2,999	2026-03	167
+sal	4:2,000 - 2,999	2026-04	546
+sal	4:2,000 - 2,999	2026-05	603
+sal	4:2,000 - 2,999	2026-06	1196
+sal	4:2,000 - 2,999	2026-07	911
+sal	4:2,000 - 2,999	2026-08	688
+sal	4:2,000 - 2,999	2026-09	35
+sal	5:3,000 - 4,999	2026-03	70
+sal	5:3,000 - 4,999	2026-04	282
+sal	5:3,000 - 4,999	2026-05	418
+sal	5:3,000 - 4,999	2026-06	765
+sal	5:3,000 - 4,999	2026-07	664
+sal	5:3,000 - 4,999	2026-08	471
+sal	5:3,000 - 4,999	2026-09	21
+sal	6:5,000+	2026-01	1
+sal	6:5,000+	2026-02	1
+sal	6:5,000+	2026-03	17
+sal	6:5,000+	2026-04	95
+sal	6:5,000+	2026-05	143
+sal	6:5,000+	2026-06	300
+sal	6:5,000+	2026-07	238
+sal	6:5,000+	2026-08	187
+sal	6:5,000+	2026-09	6
+sal	7:Not specified	2026-04	3
+sal	7:Not specified	2026-05	2
+sal	7:Not specified	2026-06	3
+sal	7:Not specified	2026-08	1
+soc	NULL	2024-01	522
+soc	NULL	2024-02	584
+soc	NULL	2024-03	934
+soc	NULL	2024-04	908
+soc	NULL	2024-05	756
+soc	NULL	2024-06	904
+soc	NULL	2024-07	791
+soc	NULL	2024-08	763
+soc	NULL	2024-09	881
+soc	NULL	2024-10	1263
+soc	NULL	2024-11	2200
+soc	NULL	2024-12	1283
+soc	NULL	2025-01	1873
+soc	NULL	2025-02	1495
+soc	NULL	2025-03	1168
+soc	NULL	2025-04	692
+soc	NULL	2025-05	787
+soc	NULL	2025-06	915
+soc	NULL	2025-07	1220
+soc	NULL	2025-08	508
+soc	NULL	2025-09	1013
+soc	NULL	2025-10	1045
+soc	NULL	2025-11	1650
+soc	NULL	2025-12	2531
+soc	NULL	2026-01	1858
+soc	NULL	2026-02	2231
+soc	NULL	2026-03	2006
+soc	NULL	2026-04	1934
+soc	NULL	2026-05	1455
+soc	NULL	2026-06	589
+soc	NULL	2026-07	865
+soc	NULL	2026-08	879
+soc	NULL	2026-09	1202
+soc	Housewife	2026-03	163
+soc	Housewife	2026-04	611
+soc	Housewife	2026-05	718
+soc	Housewife	2026-06	1384
+soc	Housewife	2026-07	1264
+soc	Housewife	2026-08	865
+soc	Housewife	2026-09	9
+soc	None of these	2026-03	190
+soc	None of these	2026-04	4
+soc	None of these	2026-05	649
+soc	None of these	2026-06	2373
+soc	None of these	2026-07	1692
+soc	None of these	2026-08	1338
+soc	None of these	2026-09	22
+soc	Pensioner	2026-03	35
+soc	Pensioner	2026-04	79
+soc	Pensioner	2026-05	100
+soc	Pensioner	2026-06	125
+soc	Pensioner	2026-07	105
+soc	Pensioner	2026-08	91
+soc	Student	2026-03	181
+soc	Student	2026-04	213
+soc	Student	2026-05	231
+soc	Student	2026-06	420
+soc	Student	2026-07	459
+soc	Student	2026-08	282
+soc	Student	2026-09	3
+src	NULL	2024-01	522
+src	NULL	2024-02	584
+src	NULL	2024-03	934
+src	NULL	2024-04	908
+src	NULL	2024-05	756
+src	NULL	2024-06	904
+src	NULL	2024-07	791
+src	NULL	2024-08	763
+src	NULL	2024-09	881
+src	NULL	2024-10	1263
+src	NULL	2024-11	2200
+src	NULL	2024-12	1283
+src	NULL	2025-01	1873
+src	NULL	2025-02	1495
+src	NULL	2025-03	1168
+src	NULL	2025-04	692
+src	NULL	2025-05	787
+src	NULL	2025-06	915
+src	NULL	2025-07	1220
+src	NULL	2025-08	508
+src	NULL	2025-09	1013
+src	NULL	2025-10	1045
+src	NULL	2025-11	1650
+src	NULL	2025-12	2531
+src	NULL	2026-01	1857
+src	NULL	2026-02	2218
+src	NULL	2026-03	1934
+src	NULL	2026-04	838
+src	NULL	2026-05	766
+src	NULL	2026-06	589
+src	NULL	2026-07	865
+src	NULL	2026-08	879
+src	NULL	2026-09	1042
+src	Facebook	2026-02	2
+src	Facebook	2026-03	255
+src	Facebook	2026-04	1051
+src	Facebook	2026-05	1391
+src	Facebook	2026-06	2538
+src	Facebook	2026-07	1945
+src	Facebook	2026-08	1474
+src	Facebook	2026-09	119
+src	Friend / family recommendation	2026-01	1
+src	Friend / family recommendation	2026-03	163
+src	Friend / family recommendation	2026-04	376
+src	Friend / family recommendation	2026-05	434
+src	Friend / family recommendation	2026-06	828
+src	Friend / family recommendation	2026-07	727
+src	Friend / family recommendation	2026-08	499
+src	Friend / family recommendation	2026-09	16
+src	Google	2026-02	1
+src	Google	2026-03	11
+src	Google	2026-04	22
+src	Google	2026-05	28
+src	Google	2026-06	28
+src	Google	2026-07	24
+src	Google	2026-08	28
+src	Instagram	2026-02	7
+src	Instagram	2026-03	32
+src	Instagram	2026-04	82
+src	Instagram	2026-05	171
+src	Instagram	2026-06	386
+src	Instagram	2026-07	271
+src	Instagram	2026-08	208
+src	Instagram	2026-09	6
+src	Other	2026-03	26
+src	Other	2026-04	106
+src	Other	2026-05	96
+src	Other	2026-06	81
+src	Other	2026-07	78
+src	Other	2026-08	69
+src	Outdoor banner	2026-02	1
+src	Outdoor banner	2026-03	18
+src	Outdoor banner	2026-04	6
+src	TikTok	2026-02	1
+src	TikTok	2026-03	24
+src	TikTok	2026-04	189
+src	TikTok	2026-05	59
+src	TikTok	2026-06	135
+src	TikTok	2026-07	184
+src	TikTok	2026-08	59
+src	TikTok	2026-09	4
+src	Used Volta before	2026-02	1
+src	Used Volta before	2026-03	112
+src	Used Volta before	2026-04	171
+src	Used Volta before	2026-05	208
+src	Used Volta before	2026-06	306
+src	Used Volta before	2026-07	291
+src	Used Volta before	2026-08	239
+src	Used Volta before	2026-09	49
