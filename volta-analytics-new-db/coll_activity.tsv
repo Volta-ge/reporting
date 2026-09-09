@@ -172,30 +172,30 @@ d	metric	n	amt
 2026-09-08	status_New schedule	1	0.00
 2026-09-08	status_Promised	2	0.00
 2026-09-08	status_Refused to pay	1	0.00
-2026-09-09	call_loans	108	0.00
+2026-09-09	call_loans	172	0.00
 2026-09-09	call_promised	1	0.00
-2026-09-09	call_reached	141	0.00
-2026-09-09	chan_call	92	0.00
+2026-09-09	call_reached	215	0.00
+2026-09-09	chan_call	158	0.00
 2026-09-09	chan_email	19	0.00
-2026-09-09	chan_sms	31	0.00
-2026-09-09	crm_case_settled	3	0.00
+2026-09-09	chan_sms	39	0.00
+2026-09-09	crm_case_settled	6	0.00
 2026-09-09	crm_overdue_bucket_up	103	0.00
 2026-09-09	crm_overdue_cured	156	0.00
 2026-09-09	crm_overdue_entered	47	0.00
-2026-09-09	pm_assigned_pm	7	0.00
+2026-09-09	pm_assigned_pm	29	0.00
 2026-09-09	promise_broken	1	0.00
 2026-09-09	promise_kept	1	0.00
 2026-09-09	promise_made	4	572.00
-2026-09-09	reminder_created	65	0.00
+2026-09-09	reminder_created	121	0.00
 2026-09-09	reminder_due	105	0.00
-2026-09-09	restructure_requested	2	1146.00
-2026-09-09	sms_Collections	31	0.00
+2026-09-09	restructure_requested	4	3696.65
+2026-09-09	sms_Collections	39	0.00
 2026-09-09	sms_გადახდისუუნარო	1	0.00
-2026-09-09	sms_დასაფარია მიმდინარე	7	0.00
+2026-09-09	sms_დასაფარია მიმდინარე	9	0.00
 2026-09-09	sms_ვერ ვუკავშირდები	10	0.00
-2026-09-09	sms_მოვალეთა რეესტრი	1	0.00
+2026-09-09	sms_მოვალეთა რეესტრი	4	0.00
 2026-09-09	sms_პროდუქციის არ ქონა	2	0.00
-2026-09-09	sms_შეუსაბამო მონაცემები	6	0.00
+2026-09-09	sms_შეუსაბამო მონაცემები	7	0.00
 2026-09-09	sms_ხიშნიკი	1	0.00
 2026-09-09	status_Negotiating	2	0.00
 2026-09-09	status_Promised	4	0.00

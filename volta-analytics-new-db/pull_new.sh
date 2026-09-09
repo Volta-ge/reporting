@@ -15,23 +15,42 @@ Q() { "$MYSQL_BIN" -h "$NEWDB_HOST" -P 3306 -u "$NEWDB_USER" -D "$NEWDB_NAME" --
 # base_grand_total is the fixed sale amount; grand_total is the remaining balance and shrinks as payments post.
 SEG="CASE WHEN EXISTS (SELECT 1 FROM order_items oi JOIN product_flat pf ON pf.product_id=oi.product_id AND pf.locale='ka_GE' WHERE oi.order_id=o.id AND (pf.name LIKE 'ტელეფონი%' OR pf.name LIKE 'ტელევიზორ%')) OR o.base_grand_total>2500 THEN 'A' ELSE 'B' END"
 
-# Deals Closed / Amount Sold — keyed to the order (disbursement) date, active orders only.
+# Deals Closed / Amount Sold — keyed to the day the loan reaches Active status (crm_activity_log,
+# 'installment.status_change', metadata.to=1: the Signed-to-Active transition), active orders only. This is
+# the date key the CRM's own Sales performance page uses (user's decision 2026-09-09, replacing the earlier
+# order/disbursement date crm_creator_date -- only possible from the cutover on, since the activity log has no
+# reliable pre-cutover data; old-DB months keep Order_Date via old_daily_seg.tsv, unaffected by this).
 # amount = the full installment amount the customer pays (product price + financing markup) = the payment
 # schedule total; the advance is added only when the schedule was built net of it (schedule + advance <= price),
 # because in the other convention the advance is already posted against the first schedule row.
 # price = product price (base_grand_total), kept for reference / the Segment A rule.
-Q "SELECT DATE(o.crm_creator_date) d, $SEG seg, COUNT(*) deals,
+Q "WITH act AS (SELECT entity_id, MIN(created_at) t FROM crm_activity_log WHERE action='installment.status_change' AND JSON_EXTRACT(metadata,'\$.to')=1 GROUP BY entity_id)
+   SELECT DATE(act.t) d, $SEG seg, COUNT(*) deals,
    SUM(CASE WHEN s.tot IS NULL THEN o.base_grand_total
             WHEN s.tot + COALESCE(o.crm_advance_amount,0) <= o.base_grand_total + 0.01 THEN s.tot + COALESCE(o.crm_advance_amount,0)
             ELSE s.tot END) amount,
    SUM(o.base_grand_total) price, SUM(s.tot IS NULL) no_schedule
-   FROM orders o LEFT JOIN (SELECT installment_id, SUM(schedule_amount) tot FROM crm_installment_schedules GROUP BY installment_id) s ON s.installment_id=o.id
-   WHERE o.crm_active=1 AND DATE(o.crm_creator_date) BETWEEN '$CUTOVER' AND '$END' GROUP BY d, seg ORDER BY d, seg;" > "$S/new_daily_seg.tsv"
+   FROM act JOIN orders o ON o.id=act.entity_id AND o.crm_active=1
+   LEFT JOIN (SELECT installment_id, SUM(schedule_amount) tot FROM crm_installment_schedules GROUP BY installment_id) s ON s.installment_id=o.id
+   WHERE DATE(act.t) BETWEEN '$CUTOVER' AND '$END' GROUP BY d, seg ORDER BY d, seg;" > "$S/new_daily_seg.tsv"
 
-# Applications / Terms / Underwriting / Downpayment — keyed to the application date (created_at)
+# Applications / Terms / Underwriting — keyed to the application date (created_at). Downpayment moved to its
+# own query below (payment date, actually collected only).
 Q "SELECT DATE(o.created_at) d, $SEG seg, COUNT(*) applications, SUM(o.crm_underwriter_status_id IS NOT NULL) terms,
-   SUM(o.crm_underwriter_status_id=16) uw, ROUND(SUM(COALESCE(o.crm_advance_amount,0)),2) dp
+   SUM(o.crm_underwriter_status_id=16) uw
    FROM orders o WHERE DATE(o.created_at) BETWEEN '$CUTOVER' AND '$END' GROUP BY d, seg ORDER BY d, seg;" > "$S/new_daily_apps.tsv"
+
+# Downpayment Collected — REAL cash collected, keyed to the payment date (not the application date, and not the
+# amount merely recorded on the application). A downpayment payment = a crm_payments row whose amount equals
+# the order's crm_advance_amount (the downpayment is posted as an ordinary payment; crm_payments' own `advance`
+# column is a different, much rarer flag, verified against the CRM's payments export not to be the downpayment).
+# User's decision 2026-09-09, after comparing the old application-date/recorded-amount figure (17,947 GEL,
+# Sep 1-8) against the CRM's payments export: switched to what was actually paid (6,354 GEL for the same days).
+Q "SELECT DATE(p.payment_date) d, $SEG seg, ROUND(SUM(p.amount),2) dp
+   FROM crm_payments p JOIN orders o ON o.id=p.installment_id
+   WHERE p.reversed_at IS NULL AND o.crm_advance_amount > 0 AND p.amount = o.crm_advance_amount
+     AND DATE(p.payment_date) BETWEEN '$CUTOVER' AND '$END'
+   GROUP BY d, seg ORDER BY d, seg;" > "$S/new_daily_dp.tsv"
 
 # Sales Analyze line items — real sales only (crm_order_status 5 = installment, 99 = single payment); the new DB has no cost data
 Q "SELECT DATE_FORMAT(COALESCE(o.crm_creator_date,o.created_at),'%Y-%m') period, DATE(COALESCE(o.crm_creator_date,o.created_at)) d, o.id order_id, oi.product_id, oi.qty_ordered qty, oi.base_total sales,

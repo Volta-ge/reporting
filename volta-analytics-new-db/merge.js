@@ -31,11 +31,13 @@ for (const r of parseTsv('old_daily_seg.tsv')) { const s = day(r.d)[r.seg]; s.cl
 for (const r of parseTsv('new_daily_seg.tsv')) { const s = day(r.d)[r.seg]; s.closed += +r.deals; s.amount += +r.amount; }
 // Aplication_Date-keyed
 for (const r of parseTsv('old_daily_apps.tsv')) { const s = day(r.d)[r.seg]; s.applications += +r.applications; s.terms += +r.terms; s.uw += +r.uw; s.dp += +r.dp; }
-for (const r of parseTsv('new_daily_apps.tsv')) { const s = day(r.d)[r.seg]; s.applications += +r.applications; s.terms += +r.terms; s.uw += +r.uw; s.dp += +r.dp; }
+for (const r of parseTsv('new_daily_apps.tsv')) { const s = day(r.d)[r.seg]; s.applications += +r.applications; s.terms += +r.terms; s.uw += +r.uw; }
+for (const r of parseTsv('new_daily_dp.tsv')) { const s = day(r.d)[r.seg]; s.dp += +r.dp; }
 
 // Guard: a source file must never contribute rows on the wrong side of the cutover
 for (const r of parseTsv('old_daily_seg.tsv').concat(parseTsv('old_daily_apps.tsv'))) if (r.d >= CUTOVER) throw new Error('old-DB row past cutover: ' + r.d);
 for (const r of parseTsv('new_daily_seg.tsv').concat(parseTsv('new_daily_apps.tsv'))) if (r.d < CUTOVER) throw new Error('new-DB row before cutover: ' + r.d);
+for (const r of parseTsv('new_daily_dp.tsv')) if (r.d < CUTOVER) throw new Error('new-DB row (downpayment) before cutover: ' + r.d);
 
 function fmt(dt) { return dt.toISOString().slice(0, 10); }
 const start = new Date('2026-01-01T00:00:00Z');

@@ -71,7 +71,7 @@ m	type	n	active_n	loan_n
 2025-12	1:New	1609	204	237
 2025-12	2:Returning (earlier application only)	555	75	83
 2025-12	3:Returning (previous loan)	367	178	211
-2026-01	1:New	1094	221	266
+2026-01	1:New	1094	220	266
 2026-01	2:Returning (earlier application only)	428	84	92
 2026-01	3:Returning (previous loan)	336	157	190
 2026-02	1:New	1191	200	223
@@ -79,13 +79,13 @@ m	type	n	active_n	loan_n
 2026-02	3:Returning (previous loan)	491	237	278
 2026-03	1:New	1375	289	311
 2026-03	2:Returning (earlier application only)	552	93	100
-2026-03	3:Returning (previous loan)	648	321	354
+2026-03	3:Returning (previous loan)	648	320	354
 2026-04	1:New	1550	291	304
 2026-04	2:Returning (earlier application only)	754	109	111
 2026-04	3:Returning (previous loan)	537	261	276
 2026-05	1:New	1809	343	353
 2026-05	2:Returning (earlier application only)	704	112	115
-2026-05	3:Returning (previous loan)	640	363	378
+2026-05	3:Returning (previous loan)	640	362	378
 2026-06	1:New	3187	614	627
 2026-06	2:Returning (earlier application only)	977	172	172
 2026-06	3:Returning (previous loan)	727	337	349
@@ -95,6 +95,6 @@ m	type	n	active_n	loan_n
 2026-08	1:New	1988	325	337
 2026-08	2:Returning (earlier application only)	771	89	90
 2026-08	3:Returning (previous loan)	696	266	279
-2026-09	1:New	614	64	64
-2026-09	2:Returning (earlier application only)	388	29	29
-2026-09	3:Returning (previous loan)	246	56	56
+2026-09	1:New	625	76	76
+2026-09	2:Returning (earlier application only)	398	32	32
+2026-09	3:Returning (previous loan)	257	63	63

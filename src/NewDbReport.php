@@ -387,27 +387,44 @@ final class NewDbReport
             $add($r['d'], $r['seg'], ['applications' => (int) $r['applications'], 'terms' => (int) $r['terms'], 'uw' => (int) $r['uw'], 'dp' => (float) $r['dp']]);
         }
 
-        // Deals Closed / Amount Sold — order date, active only; amount = full installment amount (schedule
-        // total, plus the advance where the schedule was built net of it), price kept for the Segment rule.
+        // Deals Closed / Amount Sold — keyed to the day the loan reaches Active status (the Signed-to-Active
+        // transition in crm_activity_log, metadata.to=1) -- the date key the CRM's own Sales performance page
+        // uses (replaces the earlier crm_creator_date key, only possible from the cutover on). amount = full
+        // installment amount (schedule total, plus the advance where the schedule was built net of it).
         $seg = self::SEG;
-        $stmt = $this->pdo->prepare("SELECT DATE(o.crm_creator_date) d, $seg seg, COUNT(*) deals,
-              SUM(CASE WHEN s.tot IS NULL THEN o.base_grand_total
-                       WHEN s.tot + COALESCE(o.crm_advance_amount,0) <= o.base_grand_total + 0.01 THEN s.tot + COALESCE(o.crm_advance_amount,0)
-                       ELSE s.tot END) amount
-            FROM orders o LEFT JOIN (SELECT installment_id, SUM(schedule_amount) tot FROM crm_installment_schedules GROUP BY installment_id) s ON s.installment_id=o.id
-            WHERE o.crm_active=1 AND DATE(o.crm_creator_date) BETWEEN :cutover AND :end GROUP BY d, seg ORDER BY d, seg");
+        $stmt = $this->pdo->prepare("WITH act AS (SELECT entity_id, MIN(created_at) t FROM crm_activity_log WHERE action='installment.status_change' AND JSON_EXTRACT(metadata,'\$.to')=1 GROUP BY entity_id)
+              SELECT DATE(act.t) d, $seg seg, COUNT(*) deals,
+                SUM(CASE WHEN s.tot IS NULL THEN o.base_grand_total
+                         WHEN s.tot + COALESCE(o.crm_advance_amount,0) <= o.base_grand_total + 0.01 THEN s.tot + COALESCE(o.crm_advance_amount,0)
+                         ELSE s.tot END) amount
+              FROM act JOIN orders o ON o.id=act.entity_id AND o.crm_active=1
+              LEFT JOIN (SELECT installment_id, SUM(schedule_amount) tot FROM crm_installment_schedules GROUP BY installment_id) s ON s.installment_id=o.id
+              WHERE DATE(act.t) BETWEEN :cutover AND :end GROUP BY d, seg ORDER BY d, seg");
         $stmt->execute(['cutover' => self::CUTOVER, 'end' => $end]);
         foreach ($stmt->fetchAll() as $r) {
             $add($r['d'], $r['seg'], ['closed' => (int) $r['deals'], 'amount' => (float) $r['amount']]);
         }
 
-        // Applications / Terms / Underwriting / Downpayment — application date (created_at)
+        // Applications / Terms / Underwriting — application date (created_at)
         $stmt = $this->pdo->prepare("SELECT DATE(o.created_at) d, $seg seg, COUNT(*) applications, SUM(o.crm_underwriter_status_id IS NOT NULL) terms,
-              SUM(o.crm_underwriter_status_id=16) uw, ROUND(SUM(COALESCE(o.crm_advance_amount,0)),2) dp
+              SUM(o.crm_underwriter_status_id=16) uw
             FROM orders o WHERE DATE(o.created_at) BETWEEN :cutover AND :end GROUP BY d, seg ORDER BY d, seg");
         $stmt->execute(['cutover' => self::CUTOVER, 'end' => $end]);
         foreach ($stmt->fetchAll() as $r) {
-            $add($r['d'], $r['seg'], ['applications' => (int) $r['applications'], 'terms' => (int) $r['terms'], 'uw' => (int) $r['uw'], 'dp' => (float) $r['dp']]);
+            $add($r['d'], $r['seg'], ['applications' => (int) $r['applications'], 'terms' => (int) $r['terms'], 'uw' => (int) $r['uw']]);
+        }
+
+        // Downpayment Collected — REAL cash collected, keyed to the payment date: a crm_payments row whose
+        // amount equals the order's crm_advance_amount (crm_payments' own `advance` column is a different,
+        // much rarer flag, verified not to be the downpayment).
+        $stmt = $this->pdo->prepare("SELECT DATE(p.payment_date) d, $seg seg, ROUND(SUM(p.amount),2) dp
+              FROM crm_payments p JOIN orders o ON o.id=p.installment_id
+              WHERE p.reversed_at IS NULL AND o.crm_advance_amount > 0 AND p.amount = o.crm_advance_amount
+                AND DATE(p.payment_date) BETWEEN :cutover AND :end
+              GROUP BY d, seg ORDER BY d, seg");
+        $stmt->execute(['cutover' => self::CUTOVER, 'end' => $end]);
+        foreach ($stmt->fetchAll() as $r) {
+            $add($r['d'], $r['seg'], ['dp' => (float) $r['dp']]);
         }
 
         // full daily series, zeros for missing days
