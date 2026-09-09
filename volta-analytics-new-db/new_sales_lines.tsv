@@ -138,6 +138,7 @@ period	d	order_id	product_id	qty	sales	deal_type	brand	sku	product_name
 2026-09	2026-09-05	55954	2182	1	679.0000	installment	JANOME	Janome-J925S	საკერავი მანქანა Janome J925S
 2026-09	2026-09-05	55962	1086	1	1049.0000	installment	MIDEA	MIDEA-MF01610US40-W	სარეცხი მანქანა MIDEA MF01610US40/W
 2026-09	2026-09-05	55966	24438	1	1059.0000	installment	KARIZZMA	JSG31-16NT02	წყლის გამაცხელებელი KARIZZMA JSG31-16NT02
+2026-09	2026-09-05	55981	848	1	919.0000	installment	CHIGO	CHIGO-CWF804G	სარეცხი მანქანა CHIGO CWF804G
 2026-09	2026-09-05	55991	1086	1	709.0000	installment	MIDEA	MIDEA-MF01610US40-W	სარეცხი მანქანა MIDEA MF01610US40/W
 2026-09	2026-09-05	56004	932	1	389.0000	installment	FRANKO	FRANKO-FCO-9037	ელექტრო ღუმელი FRANKO FCO-9037
 2026-09	2026-09-07	55376	876	1	649.0000	installment	SHARK	SHARK-HD424SLEU	თმის სტაილერი SHARK HD424SLEU
@@ -195,6 +196,7 @@ period	d	order_id	product_id	qty	sales	deal_type	brand	sku	product_name
 2026-09	2026-09-08	56033	21802	1	209.0000	installment		113706	პერფორატორი Ingco RGH9028 800W
 2026-09	2026-09-08	56079	1193	1	569.0000	installment	MARAZZI	MARAZZI-D-E-1206	გაზის წყლის გამაცხელებელი MARAZZI DE 1206
 2026-09	2026-09-08	56082	355	1	389.0000	installment	SAMSUNG	SAMSUNG-VCC8835V37-XEV	მტვერსასრუტი SAMSUNG VCC8835V37/XEV
+2026-09	2026-09-08	56086	41548	1	380.0000	installment	KARCHER GEORGIA	SC-1-Multi-Comfort	ორთქლის აპარატი Karcher SC 1 Multi Comfort
 2026-09	2026-09-08	56088	2140	1	629.0000	installment	MIDEA	MIDEA-MWH100-20ED6-CIS-W	დენის წყლის გამაცხელებელი MIDEA MWH100-20ED6(CIS)W
 2026-09	2026-09-08	56092	142276	1	1419.0000	installment	OnePlus	176664	Mobile and Smartphones/ OnePlus/ OnePlus Nord CE 6 8GB/256GB Pitch Black
 2026-09	2026-09-08	56145	39061	1	429.0000	installment	SAMSUNG	80092	Vacuum Cleaner/ Samsung VCC885HH3P/XEV Red  Rambo
@@ -221,4 +223,5 @@ period	d	order_id	product_id	qty	sales	deal_type	brand	sku	product_name
 2026-09	2026-09-08	56449	72394	1	379.0000	installment		968	ბავშვის სასეირნო ველო ეტლი სამთვალა 968
 2026-09	2026-09-08	56449	75719	1	239.0000	installment		130CER	სათამაშო მოედანი პატარებისთვის 130CER
 2026-09	2026-09-08	56449	73036	1	189.0000	installment		624-SKY	ჭოჭინა Baby მუსიკალური 624-SKY
+2026-09	2026-09-08	56455	142303	1	1199.0000	installment	SAMSUNG	176264	Mobile and Smartphones/ Samsung/ Samsung A276B Galaxy A27 8GB/256GB 5G Duos Black
 2026-09	2026-09-08	56461	1102	1	729.0000	single	MIDEA	MIDEA-MP08GEBK-DS	მტვერსასრუტი MIDEA MP08GEBK-DS

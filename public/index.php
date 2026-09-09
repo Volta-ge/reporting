@@ -38,7 +38,7 @@ if (!isset($config['voltastoredb'])) {
     $cacheFile = $cacheDir . '/newdb_' . $end . '.json';
     $force = isset($_GET['refresh']);
     $cached = (!$force && is_file($cacheFile) && (time() - filemtime($cacheFile)) < CACHE_TTL) ? json_decode((string) file_get_contents($cacheFile), true) : null;
-    $complete = static fn ($c) => is_array($c) && isset($c['report'], $c['sales']) && !array_diff_key(array_filter(NewDbReport::GROUPS, static fn ($cls) => is_file(__DIR__ . '/../src/' . $cls . '.php')), $c);
+    $complete = static fn ($c) => is_array($c) && isset($c['report'], $c['sales']) && !array_diff_key(NewDbReport::GROUPS, $c);
     if (!$complete($cached)) {
         try {
             set_time_limit(120);

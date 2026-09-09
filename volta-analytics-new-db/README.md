@@ -5,8 +5,14 @@ Gia's" in Workbench), in the same spreadsheet-replica format as the old-DB dashb
 claude.ai Artifact **Volta_Analytics_New DB** (`https://claude.ai/code/artifact/c743a673-9b73-4798-88bf-389d45cbe608`)
 and refreshed on request — it is a snapshot, not a live page.
 
-Tabs: **Daily Mail** (Report, MTD Statistics, Daily Statistics) and **Sales Analyze** (Sales Monthly, Brand
-Analyze, Subcategory Analyze, Category / Brand). Income/Delinquency is not ported yet.
+Tabs: **Daily Mail** (Report, MTD Statistics, Daily Statistics), **Sales Analyze** (Sales Monthly, Brand
+Analyze, Subcategory Analyze, Category / Brand), **Logistics** (Logistics Daily), **Marketing** (Leads),
+**Operations** (Applications, Committee), **Customers** (Customers Analyze), **Collections** (Collections
+Analyze) and **Portfolio** (Portfolio Analyze). Income/Delinquency is not ported yet.
+
+Everything lives in two files per side: `pull_new.sh` (one Bash script, every group's SQL, run once) /
+`build_logistics.js` (one Node script, every group's aggregation + HTML injection, run once) on the static
+side, and `src/NewDbReport.php` (one class per group in the same file) / `bin/newdb_dump.php` on the live side.
 
 ## Hybrid source
 
@@ -39,27 +45,31 @@ last committed build and says so in a yellow note. The top-right stamp shows whe
 
 ### Live PHP for the five newer groups
 
-`src/NewDbMkt.php`, `NewDbOps.php`, `NewDbCust.php`, `NewDbColl.php`, `NewDbPf.php` are the PHP twins of
-`build_<prefix>.js` (same SQL as `pull_<prefix>.sh`, same aggregation, verified byte-identical to `<prefix>_data.json`);
-`NewDbReport::build()` loads them via its `GROUPS` map and `public/index.php` swaps the `MKT/OPS/CUST/COLL/PF_JSON`
-lines. They run through *today* (last column "(today)" / "(MTD)"). Measured live on RDS: mkt 1.3 s, ops 1.0 s,
-cust 6.5 s, coll 4.3 s, pf 4.7 s - the whole page build (all 14 tabs) is ~23 s, paid once per hour thanks to the
-cache; a group that throws falls back to the committed numbers for that tab only (yellow note names it).
-Cross-check: `php bin/newdb_dump.php` writes every `php_<prefix>_data.json`; `php bin/newdb_<prefix>_dump.php` prints
-per-query timings for one group.
+`NewDbMkt`, `NewDbOps`, `NewDbCust`, `NewDbColl` and `NewDbPf` are five more classes in `src/NewDbReport.php`
+(same file as `NewDbReport` itself — PHP classes don't need their own file), the PHP twins of the matching
+section of `build_logistics.js` (same SQL as `pull_new.sh`, same aggregation, verified byte-identical to
+`<prefix>_data.json`). `NewDbReport::build()` instantiates all five directly and `public/index.php` swaps the
+`MKT/OPS/CUST/COLL/PF_JSON` lines. They run through *today* (last column "(today)" / "(MTD)"). Measured live
+on RDS: mkt 1.3 s, ops 1.0 s, cust 6.5 s, coll 4.3 s, pf 4.7 s - the whole page build (all 14 tabs) is ~23 s,
+paid once per hour thanks to the cache; a group that throws falls back to the committed numbers for that tab
+only (yellow note names it). Cross-check: `php bin/newdb_dump.php` writes every `php_<prefix>_data.json` in
+one run (and the existing three) for comparison against the Node output.
 
 ## Refresh (static build — the Artifact copy and the fallback page)
 
 ```
 cp config.example.sh config.sh    # once; fill in the passwords
-bash pull_new.sh                  # new-DB extracts through yesterday (or pass YYYY-MM-DD)
+bash pull_new.sh                  # every group's extracts through today (Daily Mail/Sales Analyze stop at yesterday; pass YYYY-MM-DD to override)
 node merge.js && node build_report_data.js        # Daily Mail    -> REPORT_JSON in the HTML
 node build_sales.js && node patch_sales_tabs.js   # Sales Analyze -> SALES_JSON in the HTML
-node build_logistics.js                            # Logistics Daily -> LOGI_JSON in the HTML
+node build_logistics.js                            # Logistics/Marketing/Operations/Customers/Collections/Portfolio -> the other six *_JSON lines
 ```
 
+`build_logistics.js` runs all six of its groups in one pass, each self-contained (own CSS/nav/page/render
+block, own `<prefix>_data.json`); pass `DASH_HTML=<path>` to build into a copy instead of the real file.
+
 Then open `deals_amount_migration.html` over a local http server (a `file://` load does not run the JS),
-check the three Daily Mail tabs and the four Sales tabs, and republish the Artifact from that file.
+check all 14 tabs, and republish the Artifact from that file.
 
 Excel export of the Daily Mail group: `node build_daily_mail_xlsx.js`, then
 `powershell -File write_daily_mail_xlsx.ps1 -JsonPath daily_mail_xlsx.json -OutPath Volta_Daily_Mail_New_DB.xlsx`
@@ -72,18 +82,20 @@ Excel export of Logistics Daily: `node build_logistics_xlsx.js`, then the same w
 
 | File | Role |
 |---|---|
-| `deals_amount_migration.html` | the dashboard (single file; data embedded as `REPORT_JSON` / `SALES_JSON`) |
-| `pull_new.sh` / `pull_old.sh` | DB extracts (new DB: rolling; old DB: frozen, only if the TSVs are lost) |
+| `deals_amount_migration.html` | the dashboard (single file; every tab's data embedded as its own `const ..._JSON`) |
+| `pull_new.sh` / `pull_old.sh` | DB extracts for every group in one script each (new DB: rolling; old DB: frozen, only if the TSVs are lost) |
 | `merge.js`, `build_report_data.js` | Daily Mail series (daily + monthly) and injection into the HTML |
-| `build_logistics.js` | Logistics Daily (pending-by-age from crm_activity_log, delivery status from crm_shipment_status_history, city/goods/open cases; populations anchored at 2026-09-02, the first day of the CRM logistics module) and injection |
+| `build_logistics.js` | Logistics Daily, Marketing/Leads, Operations, Customers Analyze, Collections Analyze and Portfolio Analyze — one script, six self-contained sections (each its own CSS/nav/page/render block and its own `<prefix>_data.json`), run in that order |
 | `build_sales.js`, `patch_sales_tabs.js` | Sales Analyze reports (JS port of `FunnelRepository`'s bucketed reports + `ProductClassifier`) and injection |
 | `build_daily_mail_xlsx.js`, `build_logistics_xlsx.js`, `write_daily_mail_xlsx.ps1` | Excel exports (Daily Mail / Logistics Daily); the .ps1 is the shared Excel-COM writer |
-| `old_*.tsv`, `new_*.tsv` | inputs |
+| `old_*.tsv`, `new_*.tsv`, `logi_*.tsv`, `mkt_*.tsv`, `ops_*.tsv`, `cust_*.tsv`, `coll_*.tsv`, `pf_*.tsv` | inputs, all written by `pull_new.sh` |
+| `src/NewDbReport.php` | six PHP classes in one file (`NewDbReport` + `NewDbMkt`/`NewDbOps`/`NewDbCust`/`NewDbColl`/`NewDbPf`), the live twin of the Node build above |
 
 ## Operations — Applications / Committee
 
-Nav group **Operations** with two sub-tabs, both from the new CRM only (`pull_ops.sh` → `ops_*.tsv` → `build_ops.js` →
-gitignored `ops_data.json` + `const OPS_JSON` in the HTML; `DASH_HTML=<path>` builds into a copy). Day series run from
+Nav group **Operations** with two sub-tabs, both from the new CRM only (the Operations section of
+`pull_new.sh` → `ops_*.tsv` → the Operations section of `build_logistics.js` → gitignored `ops_data.json` +
+`const OPS_JSON` in the HTML; `DASH_HTML=<path>` builds into a copy). Day series run from
 the cutover (2026-08-31; log-based tables from 2026-09-01, the first status-change event) through today; month series
 from January 2026 (application rows exist for all of 2026, status history only from September). Dates are UTC calendar
 days like every other tab (reproduces the CRM's Applications count for Sep 1–7 exactly, 987).
@@ -107,11 +119,12 @@ manager who rejects a case before committee); (4) *Committee rejection reasons* 
 = `orders.crm_reason`); (5) *All rejections by stage*. `crm_approve_date` is NULL on post-cutover approvals, so the
 audit-trail timestamp is the only decision date.
 
-Refresh: `bash pull_ops.sh` (optional `YYYY-MM-DD` = last day, default today) then `node build_ops.js`.
+Refresh: `bash pull_new.sh` then `node build_logistics.js` (both run every group; see Refresh above).
 
 ## Marketing — Leads
 
-Nav group **Marketing**, sub-tab **Leads** (`data-page="leads"`), built by `pull_mkt.sh` + `build_mkt.js` (data constant
+Nav group **Marketing**, sub-tab **Leads** (`data-page="leads"`), built by the Marketing sections of
+`pull_new.sh` + `build_logistics.js` (data constant
 `MKT_JSON`, gitignored `mkt_data.json`). Source: the new CRM's lead table `volta_leads` (the website's pre-application
 lead form; rows exist from 2026-03-19, real history from the first day — nothing was migrated). Every table comes twice,
 **by day** (2026-08-01 → today) and **by month** (Mar 2026 → current month MTD), Logistics look, with trailing share
@@ -133,10 +146,10 @@ total and its share). All counts are flows keyed to the lead's creation day (`DA
   matched. The last 30 days' 30-day rate is still open; a floor, not a ceiling (a different phone on the application is
   not matched). Only one lead source exists so far (`source = 'application_form'`), so there is no by-source table.
 
-Refresh: `bash pull_mkt.sh` (≈40 s, daily aggregates only, no PII in the TSVs) then `node build_mkt.js`
-(`DASH_HTML=<file>` to build into a copy). Idempotent — re-injects the page, CSS and render code each run.
+Refresh: `bash pull_new.sh` then `node build_logistics.js` (both run every group; the Marketing section takes
+≈40 s and writes daily aggregates only, no PII in the TSVs). Idempotent — re-injects the page, CSS and render code each run.
 
-## Portfolio → Portfolio Analyze (`pull_pf.sh` / `build_pf.js`)
+## Portfolio → Portfolio Analyze
 
 The loan book itself — stocks and flows by day (from the cutover 2026-08-31, last column = today) and by month (from
 Jan 2025, last column = current month to date), the structure of each month's disbursements, a vintage table and a
@@ -159,20 +172,17 @@ of a migrated 11-row schedule is the advance). Segment A/B, city and goods type 
 (`src/product_mapping.json`; ~36% of loans since 2025 fall in Uncategorized because the sheet does not know the new
 catalog's category names). Risk = `crm_risk_status` with Georgian/English spellings merged.
 
-Refresh:
-```
-bash pull_pf.sh              # pf_*.tsv, through today (or pass YYYY-MM-DD); ~25 s
-node build_pf.js             # pf_data.json + injects the tab (DASH_HTML=<file> to build into a copy)
-```
-Reads `new_categories.tsv` / `new_product_categories.tsv` from `pull_new.sh` for the goods-type mapping.
+Refresh: `bash pull_new.sh` then `node build_logistics.js` (both run every group; the Portfolio section alone
+is ~25 s of the pull and reads `new_categories.tsv` / `new_product_categories.tsv`, also from `pull_new.sh`,
+for the goods-type mapping).
 
 ## Customers → Customers Analyze
 
 Customer statistics from the new DB only (no old-DB half): who applies and who borrows, by gender, age, city, employment
 status, social status, declared salary, "how did you hear about us", CRM risk status, job title and CRM rating, plus
 new-vs-returning applicants by month and by day, applications/loans per customer, and the CRM's payment-behaviour
-statistics. Aggregates only — no names, phones or ID numbers ever leave the database (`pull_cust.sh` uses the personal ID
-only inside `GROUP BY` / window functions).
+statistics. Aggregates only — no names, phones or ID numbers ever leave the database (the Customers section of
+`pull_new.sh` uses the personal ID only inside `GROUP BY` / window functions).
 
 Definitions: **customer** = a distinct person, identity = `volta_application_data.personal_ID` (99.4% of orders), else
 `customers.id_number` through the account, else the account id / e-mail; **application** = one `orders` row by
@@ -191,10 +201,10 @@ form asks fewer questions); CRM rating covers ~12% of customers; `crm_customer_p
 computed when the CRM opens a customer (1.7k rows, ~45% of active-loan customers with an account). Month series from
 Jan 2024, day series from 1 Aug 2026 (timestamps exact from the cutover, migrated ±1 day before it).
 
-Refresh: `bash pull_cust.sh [YYYY-MM-DD]` (END = last day of the day series, default today; ~70 s, writes `cust_*.tsv`),
-then `node build_cust.js` (writes `cust_data.json`, injects `CUST_JSON` + the tab; `DASH_HTML=<file>` to build into a copy).
+Refresh: `bash pull_new.sh` then `node build_logistics.js` (both run every group; the Customers section alone is
+~70 s of the pull and writes `cust_*.tsv` / `cust_data.json` / `const CUST_JSON`).
 
-## Collections → Collections Analyze (`pull_coll.sh` / `build_coll.js`)
+## Collections → Collections Analyze
 
 Payments, overdue portfolio and collection activity from the new CRM. Day series from the cutover (2026-08-31) to
 today, month series from 2023-01 (the schedule table covers every loan from 2023 on). Tables: **Overdue portfolio**
@@ -206,4 +216,4 @@ and the migrated 99,999,999.99 sentinel row excluded) with principal / advance /
 dues** by due date with on-time / late / open performance (knowable for due dates since the cutover); **Collection
 activity** (promises, calls, tasks, marks, comments… from the crm_* collections tables — live since the cutover);
 today's snapshots by portfolio manager, CRM loan status and the customer payment-stats cache; a "what is populated"
-note with row counts. Refresh: `bash pull_coll.sh && node build_coll.js` (`DASH_HTML=<copy> node build_coll.js` to test on a copy).
+note with row counts. Refresh: `bash pull_new.sh` then `node build_logistics.js` (both run every group).

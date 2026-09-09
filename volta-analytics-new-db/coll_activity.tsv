@@ -172,25 +172,26 @@ d	metric	n	amt
 2026-09-08	status_New schedule	1	0.00
 2026-09-08	status_Promised	2	0.00
 2026-09-08	status_Refused to pay	1	0.00
-2026-09-09	call_loans	91	0.00
+2026-09-09	call_loans	108	0.00
 2026-09-09	call_promised	1	0.00
-2026-09-09	call_reached	123	0.00
-2026-09-09	chan_call	74	0.00
+2026-09-09	call_reached	141	0.00
+2026-09-09	chan_call	92	0.00
 2026-09-09	chan_email	19	0.00
 2026-09-09	chan_sms	31	0.00
-2026-09-09	crm_case_settled	2	0.00
+2026-09-09	crm_case_settled	3	0.00
 2026-09-09	crm_overdue_bucket_up	103	0.00
 2026-09-09	crm_overdue_cured	156	0.00
 2026-09-09	crm_overdue_entered	47	0.00
-2026-09-09	pm_assigned_pm	6	0.00
+2026-09-09	pm_assigned_pm	7	0.00
 2026-09-09	promise_broken	1	0.00
 2026-09-09	promise_kept	1	0.00
 2026-09-09	promise_made	4	572.00
-2026-09-09	reminder_created	53	0.00
+2026-09-09	reminder_created	65	0.00
 2026-09-09	reminder_due	105	0.00
 2026-09-09	restructure_requested	2	1146.00
 2026-09-09	sms_Collections	31	0.00
-2026-09-09	sms_დასაფარია მიმდინარე	6	0.00
+2026-09-09	sms_გადახდისუუნარო	1	0.00
+2026-09-09	sms_დასაფარია მიმდინარე	7	0.00
 2026-09-09	sms_ვერ ვუკავშირდები	10	0.00
 2026-09-09	sms_მოვალეთა რეესტრი	1	0.00
 2026-09-09	sms_პროდუქციის არ ქონა	2	0.00
