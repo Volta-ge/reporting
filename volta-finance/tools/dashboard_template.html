@@ -45,9 +45,13 @@ button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid 
 .seg button:last-child{border-right:0}
 .seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
 .seg.lang button{padding:6px 10px;font-size:12px;letter-spacing:.04em}
+.seg.theme button{padding:5px 11px;font-size:14px;line-height:1}
 select{font:inherit;font-size:13px;padding:6px 28px 6px 10px;border:1px solid var(--line);border-radius:6px;background:var(--surface2);color:var(--ink);appearance:none;
  background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),linear-gradient(135deg,var(--muted) 50%,transparent 50%);background-position:calc(100% - 15px) 55%,calc(100% - 10px) 55%;background-size:5px 5px;background-repeat:no-repeat}
-.tabs{max-width:1380px;margin:0 auto;padding:0 28px;display:flex;gap:2px;overflow-x:auto}
+.tabs{max-width:1380px;margin:0 auto;padding:6px 28px 0;display:flex;flex-direction:column;gap:5px}
+.tab-row-wrap{display:flex;flex-direction:column;gap:1px}
+.tab-row-label{font-size:10px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--faint);padding:0 2px}
+.tab-row{display:flex;gap:2px;overflow-x:auto;overflow-y:hidden}
 .tabs button{padding:10px 14px;font-size:13.5px;font-weight:500;color:var(--muted);border-bottom:2px solid transparent;white-space:nowrap;margin-bottom:-1px}
 .tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent)}
 .tabs button:hover{color:var(--ink)}
@@ -70,7 +74,9 @@ main{max-width:1380px;margin:0 auto;padding:22px 28px 60px}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
 @media (max-width:900px){.grid2{grid-template-columns:1fr}}
 .card{background:var(--surface);border:1px solid var(--line2);border-radius:8px;box-shadow:var(--shadow);padding:14px 16px 12px}
-.card h3{margin:0 0 2px;font-size:14px;font-weight:600}
+.card h3{margin:0 0 2px;font-size:14px;font-weight:600;display:flex;align-items:baseline;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.compact-btn{font-size:11.5px;font-weight:500;color:var(--accent);border:1px solid var(--line);border-radius:6px;padding:4px 10px;background:var(--surface2);white-space:nowrap}
+.compact-btn:hover{background:var(--accent-soft)}
 .card .cap{color:var(--muted);font-size:12px;margin-bottom:8px}
 .legend{display:flex;gap:14px;font-size:12px;color:var(--muted);margin:2px 0 6px}
 .legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px}
@@ -79,12 +85,13 @@ main{max-width:1380px;margin:0 auto;padding:22px 28px 60px}
 .tip{position:absolute;pointer-events:none;background:var(--ink);color:var(--bg);font-size:12px;padding:6px 9px;border-radius:5px;white-space:nowrap;transform:translate(-50%,-110%);display:none;z-index:5;box-shadow:var(--shadow)}
 .tip b{font-weight:600}
 
-.tablewrap{overflow-x:auto;background:var(--surface);border:1px solid var(--line2);border-radius:8px;box-shadow:var(--shadow)}
+.tablewrap{overflow:auto;max-height:74vh;background:var(--surface);border:1px solid var(--line2);border-radius:8px;box-shadow:var(--shadow);position:relative}
 table.ledger{border-collapse:collapse;width:100%;min-width:640px}
-.ledger th{font-size:11.5px;font-weight:500;color:var(--muted);text-align:left;padding:9px 12px;border-bottom:1px solid var(--line);letter-spacing:.02em;white-space:nowrap;background:var(--surface)}
+.ledger th{font-size:11.5px;font-weight:500;color:var(--muted);text-align:left;padding:9px 12px;border-bottom:1px solid var(--line);letter-spacing:.02em;white-space:nowrap;background:var(--surface);position:sticky;top:0;z-index:2}
 .ledger th.n,.ledger td.n{text-align:right}
 .ledger td{padding:6px 12px;border-bottom:1px solid var(--line2);vertical-align:middle;white-space:nowrap}
-.ledger td.name{white-space:normal;min-width:260px;max-width:520px}
+.ledger td.name{white-space:normal;min-width:340px;max-width:600px;position:sticky;left:0;z-index:1;background:var(--surface)}
+.ledger thead th:first-child{left:0;z-index:3}
 #p-ex .ledger td.name{white-space:nowrap;min-width:0;max-width:none}
 .ledger tr:last-child td{border-bottom:0}
 .ledger tr.lvl1 td{font-weight:600;background:var(--surface2)}
@@ -138,47 +145,105 @@ footer{max-width:1380px;margin:0 auto;padding:0 28px 40px;color:var(--faint);fon
       <span class="ctl-label" id="l-year"></span><div class="seg" id="years"></div>
       <span class="ctl-label" id="l-month"></span><select id="month"></select>
       <div class="seg lang" id="lang"><button data-l="ka">ქარ</button><button data-l="en">EN</button></div>
+      <div class="seg theme" id="theme"><button data-th="light" aria-label="light">☀</button><button data-th="dark" aria-label="dark">☾</button></div>
     </div>
   </div>
   <nav class="tabs" role="tablist" id="tabs">
-    <button role="tab" data-p="ov"></button>
-    <button role="tab" data-p="bs"></button>
-    <button role="tab" data-p="pl"></button>
-    <button role="tab" data-p="tb"></button>
-    <button role="tab" data-p="cf"></button>
-    <button role="tab" data-p="ar"></button>
-    <button role="tab" data-p="ex"></button>
-    <button role="tab" data-p="wb"></button>
+    <div class="tab-row-wrap">
+      <span class="tab-row-label" data-rl="general"></span>
+      <div class="tab-row">
+        <button role="tab" data-p="ov"></button>
+        <button role="tab" data-p="ar"></button>
+        <button role="tab" data-p="ex"></button>
+      </div>
+    </div>
+    <div class="tab-row-wrap" data-budget-group="1">
+      <span class="tab-row-label" data-rl="budgets"></span>
+      <div class="tab-row">
+        <button role="tab" data-p="pb"></button>
+        <button role="tab" data-p="bb"></button>
+        <button role="tab" data-p="cfb"></button>
+        <button role="tab" data-p="pob"></button>
+        <button role="tab" data-p="asb"></button>
+      </div>
+    </div>
+    <div class="tab-row-wrap">
+      <span class="tab-row-label" data-rl="statements"></span>
+      <div class="tab-row">
+        <button role="tab" data-p="pl"></button>
+        <button role="tab" data-p="bs"></button>
+        <button role="tab" data-p="cf"></button>
+        <button role="tab" data-p="tb"></button>
+      </div>
+    </div>
+    <div class="tab-row-wrap" data-budget-group="1">
+      <span class="tab-row-label" data-rl="avb"></span>
+      <div class="tab-row">
+        <button role="tab" data-p="avpl"></button>
+        <button role="tab" data-p="avbs"></button>
+        <button role="tab" data-p="avcf"></button>
+        <button role="tab" data-p="avpf"></button>
+        <button role="tab" data-p="avas"></button>
+      </div>
+    </div>
   </nav>
 </header>
 
 <main>
   <section class="panel" id="p-ov"></section>
-  <section class="panel" id="p-bs"></section>
-  <section class="panel" id="p-pl"></section>
-  <section class="panel" id="p-tb"></section>
-  <section class="panel" id="p-cf"></section>
   <section class="panel" id="p-ar"></section>
   <section class="panel" id="p-ex"></section>
-  <section class="panel" id="p-wb"></section>
+  <section class="panel" id="p-pb"></section>
+  <section class="panel" id="p-bb"></section>
+  <section class="panel" id="p-cfb"></section>
+  <section class="panel" id="p-pob"></section>
+  <section class="panel" id="p-asb"></section>
+  <section class="panel" id="p-bs"></section>
+  <section class="panel" id="p-pl"></section>
+  <section class="panel" id="p-cf"></section>
+  <section class="panel" id="p-tb"></section>
+  <section class="panel" id="p-avpl"></section>
+  <section class="panel" id="p-avbs"></section>
+  <section class="panel" id="p-avcf"></section>
+  <section class="panel" id="p-avpf"></section>
+  <section class="panel" id="p-avas"></section>
 </main>
 <footer id="foot"></footer>
 <div class="tip" id="tip"></div>
 
 <script>
 const D = __DATA__;
-const WB = __WBDATA__;   // RS.ge <-> Oris waybill reconciliation data (null if not built)
+const BUDGET = __BUDGET__;   // 2026 P&L/BS budget, extracted from the finance team's Excel model (null if not built)
 const M = D.months, NM = M.length;
 const years = [...new Set(M.map(m=>m.slice(0,4)))];
-const state = { year: years[years.length-1], month: null, tab: 'ov', lang: 'ka', open: new Set(), arLedger: '1 4 10', arQ: '', arN: 100 };
+const state = { year: years[years.length-1], month: null, tab: 'ov', lang: 'ka', open: new Set(), arLedger: '1 4 10', arQ: '', arN: 100, compactTabs: new Set(), theme: null };
 try{ const l=localStorage.getItem('volta-fin-lang'); if(l==='en'||l==='ka') state.lang=l; }catch(_){}
+try{ const th=localStorage.getItem('volta-fin-theme'); if(th==='light'||th==='dark'){ state.theme=th; document.documentElement.dataset.theme=th; } }catch(_){}
 
 /* ---------- i18n ---------- */
 const L = {
 ka:{
   title:'შპს ვოლტა · ფინანსური ანგარიშგება', src:'წყარო: ორისი, ბაზის ასლი', journal:'ჟურნალი', allGel:'ყველა თანხა ლარში (₾)',
   year:'წელი', month:'თვე', wholeYear:'მთელი წელი',
-  tabs:{ov:'მიმოხილვა',bs:'ბალანსი',pl:'მოგება-ზარალი',tb:'ბრუნვითი უწყისი',cf:'ფულადი ნაკადები',ar:'დებიტორები · კრედიტორები',ex:'ხარჯების ანალიზი'},
+  tabs:{ov:'მიმოხილვა',bs:'ბალანსი',pl:'მოგება-ზარალი',tb:'ბრუნვითი უწყისი',cf:'ფულადი ნაკადები',ar:'დებიტორები · კრედიტორები',ex:'ხარჯების ანალიზი',pb:'PL Budget',bb:'BS Budget',cfb:'CF Budget',pob:'Portfolio Budget',asb:'Assumptions Budget',avpl:'PL Actual vs Budget',avbs:'BS Actual vs Budget',avcf:'CF Actual vs Budget',avpf:'Portfolio Actual vs Budget',avas:'Assumptions Actual vs Budget'},
+  tabGroups:{general:'ზოგადი',budgets:'ბიუჯეტები',statements:'ანგარიშგებები',avb:'ფაქტი vs ბიუჯეტი'},
+  compactAll:'მხოლოდ მთავარი მუხლები', expandAll:'ყველა მუხლი',
+  actual:'ფაქტი', budget:'ბიუჯეტი', diff:'სხვაობა', ytd:'დაგროვილი',
+  avTitlePL:'მოგება-ზარალი: ფაქტი vs ბიუჯეტი', avTitleBS:'ბალანსი: ფაქტი vs ბიუჯეტი', avTitleCF:'ფულადი ნაკადები: ფაქტი vs ბიუჯეტი',
+  avNotePL:'ფაქტი ორისის ანგარიშთა გეგმის მიხედვითაა დაშლილი, ისე რომ ჯამში ზუსტად შეესატყვისებოდეს დანარჩენ ტაბებში დათვლილ წმინდა მოგებას (გაჟონვის/ორმაგი დათვლის გარეშე) — ყოველი ანგარიში, რომელსაც ბიუჯეტში საკუთარი სტრიქონი არ აქვს, თავს იყრის „სხვა შემოსავალში". „პარტნიორების/სხვა პერსონალის ხელფასი" (92/93), „მარკეტინგის ხელფასები" (101), „საეჭვო მოთხოვნების რეზერვი" (102 — ეს ანგარიში ორისში საერთოდ არაა გამოყენებული), „კორპორატიული ღონისძიება" (103), ცვეთა/პროცენტები/დივიდენდები (109/111-114/117) ცალკე ჩანაწერად ორისში არ იძებნება — ჯამური „არასაოპერაციო ხარჯები" (108) ხელმისაწვდომია, დეტალები არა. შემოსავალი/თვითღირებულება დღგ-ს ჩათვლით (78/80) გამოთვლილია x1.18-ით. სხვაობის % ბიუჯეტის სიდიდესთან შედარებით.',
+  avNoteBS:'ფაქტი ორისის ბალანსის ანგარიშებიდან, იმავე ლოგიკით რაც ბალანსის ტაბზეა. გრძელვადიანი სესხები ორისში ერთ ანგარიშზეა თავმოყრილი (4 1 90) კონტრაგენტის მიხედვით — ბანკის/ზუკის/პარტნიორის სესხები დაშლილია კონკრეტული კონტრაგენტის კოდების მიხედვით, გადამოწმებული იანვრის ბიუჯეტთან (სხვაობა 1-14%). „მოთხოვნების კორექტირება" (127) და „საპენსიო შენატანი" (145) ორისში შესატყვისი ანგარიში არ არსებობს.',
+  avNoteCF:'ფულადი ნაკადები ორისში მხოლოდ ~20 ფართო კონტრ-ანგარიშის მიხედვით იყოფა (მაგ. ოფისის ქირაც და მარკეტინგის ხარჯიც ერთსა და იმავე „მომწოდებლების" გადასახდელში იხდის, არა თავ-თავიანთ ხარჯის ანგარიშში) — ამიტომ დეტალური მუხლებიდან მხოლოდ მყიდველების/ავანსის შემოსვლა და გრძელვადიანი სესხის მოძრაობა/დაფარვა ცალკეა გამოსაყოფი; დანარჩენი „–"-ითაა ნაჩვენები. საინვესტიციო საქმიანობის ცალკე კონტრ-ანგარიში ორისში საერთოდ არ ფიქსირდება.',
+  avTitlePF:'პორტფელი: ფაქტი vs ბიუჯეტი', avTitleAS:'ბიუჯეტის დაშვებები: ფაქტი vs ბიუჯეტი',
+  avNotePF:'„პორტფელი თვის დასაწყისში" და „დარჩენილი პორტფელი" ფაქტობრივად მიახლოებულია ორისის მოთხოვნების ანგარიშის (1 4 10, მყიდველების მთლიანი დავალიანება) ნაშთით — ეს ზუსტად არ ემთხვევა სესხის პორტფელის საკუთარ განმარტებას (მხოლოდ ძირი, დარიცხული ჯარიმის/საკომისიოს გარეშე), ამიტომ ბიუჯეტთან სხვაობა ნაწილობრივ განმარტების განსხვავებითაც შეიძლება იყოს გამოწვეული, არა მხოლოდ რეალური გადახრით. „სულ ინკასაცია", „CAC" და „დარჩენილი კლიენტები" სესხების/მარკეტინგის სისტემის მონაცემია და ორისის ბუღალტრულ აღრიცხვაში საერთოდ არ ფიქსირდება — ფაქტი ამ სამ მუხლზე არ ჩანს.',
+  avNoteAS:'ფაქტობრივად გამოთვლილია მხოლოდ ის მუხლები, რომლებისთვისაც ორისში პირდაპირი შესატყვისი ანგარიშია: „მარკირება" = (შემოსავალი − თვითღირებულება) / თვითღირებულება (გაყიდვების მთელ მოცულობაზე, განვადება და ნაღდი გაყიდვები ერთმანეთისგან განუცალკევებლად); „მარკეტინგის ხარჯი" = ანგარიში 7 4 90 39 / შემოსავალი; „ჯარიმის შემოსავალი" = ანგარიში 8 1 25 / შემოსავალი — ეს ბოლო რიცხვი საგრძნობლად აღემატება ბიუჯეტის დაშვებას, ღირს გადამოწმდეს, ორისი ამ ანგარიშზე ბიუჯეტის მოდელთან შედარებით უფრო ფართო წრეს ხომ არ ითვლის. დანარჩენი მუხლები (გაყიდვების ზრდის ტემპი, მხოლოდ განვადებაზე მარკირება, რეზერვის განაკვეთი, ინკასაციის განაკვეთი, თავდებულის %) სესხის გრაფიკის, კლიენტების რაოდენობის ან წინა წლის თვიური დეტალის მონაცემს მოითხოვს — ესეც ორისში ან ამ დაფის 2026-წლიან ფარგლებში ხელმისაწვდომი არ არის.',
+  budgetTitlePL:'მოგება-ზარალის ბიუჯეტი 2026', budgetTitleBS:'ბალანსის ბიუჯეტი 2026', budgetTitleCF:'ფულადი ნაკადების ბიუჯეტი 2026', budgetTitlePF:'პორტფელის ბიუჯეტი 2026', budgetTitleAS:'ბიუჯეტის დაშვებები 2026',
+  budgetSrc:s=>`წყარო: ${s.source} (ფურცელი ${s.sheet}) · ბიუჯეტის სვეტები, ფაქტობრივი მონაცემები არ არის შერეული`,
+  budgetNotePL:'ერთხელ, ხელით გადმოტანილი ფაილიდან — ავტომატურად არ განახლდება ორისის განახლებასთან ერთად. „საერთო მოგება", „EBITDA" და „წმინდა მოგება" გამუქებულია, დანარჩენი ცალკეული მუხლებია.',
+  budgetNoteBS:'ერთხელ, ხელით გადმოტანილი ფაილიდან — ავტომატურად არ განახლდება ორისის განახლებასთან ერთად. ვალდებულებები და კაპიტალი ორიგინალ ფაილში უარყოფითი ნიშნით ინახება, აქ დადებითადაა ნაჩვენები (თანხვედრისთვის დანარჩენ ჩანართებთან); სქემის საკუთარი მრგვალების ცდომილება ~0.14 ₾-ია და შენარჩუნებულია წყაროდან.',
+  budgetNoteCF:'ერთხელ, ხელით გადმოტანილი ფაილიდან — ავტომატურად არ განახლდება ორისის განახლებასთან ერთად. სამი საქმიანობა: საოპერაციო, საინვესტიციო, საფინანსო; თითოეულში შემოსვლა/გასავალის ქვეჯამი გამუქებულია.',
+  budgetNotePF:'ერთხელ, ხელით გადმოტანილი ფაილიდან — ავტომატურად არ განახლდება ორისის განახლებასთან ერთად. ნაშთის ტიპის მუხლები (პორტფელი, დარჩენილი კლიენტები) თვის ბოლოს მდგომარეობას აჩვენებს, ჯამური სვეტი არ ერთვის.',
+  budgetNoteAS:'ერთხელ, ხელით გადმოტანილი ფაილიდან — ავტომატურად არ განახლდება ორისის განახლებასთან ერთად. ეს არის ბიუჯეტის საფუძველში ჩადებული განაკვეთები/კოეფიციენტები, არა ფაქტობრივი შედეგი.',
+  budgetMissing:'ბიუჯეტის მონაცემები ამ ვერსიაში არ არის ჩატვირთული.',
   mS:['იან','თებ','მარ','აპრ','მაი','ივნ','ივლ','აგვ','სექ','ოქტ','ნოე','დეკ'],
   mL:['იანვარი','თებერვალი','მარტი','აპრილი','მაისი','ივნისი','ივლისი','აგვისტო','სექტემბერი','ოქტომბერი','ნოემბერი','დეკემბერი'],
   period:'პერიოდი', compare:'შედარება', prev:'წინა', asOf:'მდგომარეობა', start:'დასაწყისი', mln:'მლნ', ths:'ათ.', months:'თვე',
@@ -211,12 +276,31 @@ ka:{
   arNoteA:'დებეტური ნაშთი = მოთხოვნა კონტრაგენტის მიმართ, კრედიტული = ავანსი ან ზედმეტად გადახდილი.', arNoteL:'კრედიტული ნაშთი = ჩვენი დავალიანება, დებეტური = ჩვენს მიერ გადახდილი ავანსი.', negRed:'ნაშთი უარყოფითი ნიშნით წითლადაა.',
   exTitle:'ხარჯების ანალიზი', exSub:'ხარჯები თვეების მიხედვით, ₾', selMonth:'არჩეული თვე', ga:'საერთო და ადმინისტრაციული (7 4)', dist:'მიწოდების ხარჯები (7 3)', nonOpEx:'არასაოპერაციო ხარჯები (8 2)', totEx:'სულ საოპერაციო + სხვა ხარჯები', avgMonth:'თვეში საშუალოდ', exItem:'ხარჯის მუხლი', avgCol:'საშ. თვე',
   exNote:'თვითღირებულება (7 2) აქ არ შედის, ის მოგება-ზარალის ჩანართშია. ფონის ინტენსივობა თითოეული სტრიქონის საკუთარ მაქსიმუმთანაა შედარებული.',
-  foot:(s,fx)=>`ჟურნალის ${s.total} გატარებიდან გამოყენებულია ${s.kept}: გამორიცხულია ${s.closing} თვიური დახურვის გატარება (5 3 30 ↔ 6–9) და ${s.offbal} ბალანსგარეშე (B); ${fx} სავალუტო ოპერაცია გადაყვანილია ლარში ორისის კურსების ცხრილით. ბალანსები შემოწმებულია ორისის წლის საწყის ნაშთებთან (2020–2025): განსხვავება მხოლოდ 1,155 ₾ ერთ სავალუტო ოპერაციაზე (1 2 ↔ 1 6).`
+  scopeNote:y=>`ჩანართები ${y} წლის მონაცემებს აჩვენებს, თვეების მიხედვით. წელს გადმორჩენილი ნაშთები (${y}-ის 1 იანვრისთვის) ჩართულია როგორც ერთიანი საწყისი ნაშთი თითო ანგარიშზე, წლების მიხედვით ცალ-ცალკე არ ჩანს.`,
+  foot:(s,fx)=>`ჟურნალის ${s.total} გატარებიდან გამოყენებულია ${s.kept}: გამორიცხულია ${s.closing} თვიური დახურვის გატარება (5 3 30 ↔ 6–9) და ${s.offbal} ბალანსგარეშე (B); ${s.pre2026} ჩანაწერი 2026 წლის წინაა და თითო ანგარიშის საწყის ნაშთშია ჩამატებული; ${fx} სავალუტო ოპერაცია გადაყვანილია ლარში ორისის კურსების ცხრილით. ბალანსები შემოწმებულია ორისის წლის საწყის ნაშთებთან (2020–2025): განსხვავება მხოლოდ 1,155 ₾ ერთ სავალუტო ოპერაციაზე (1 2 ↔ 1 6).`
 },
 en:{
   title:'Volta LLC · Financial Statements', src:'Source: Oris accounting, database copy of', journal:'journal', allGel:'all amounts in Georgian lari (₾)',
   year:'Year', month:'Month', wholeYear:'Whole year',
-  tabs:{ov:'Overview',bs:'Balance Sheet',pl:'Profit & Loss',tb:'Trial Balance',cf:'Cash Flow',ar:'Receivables · Payables',ex:'Expense Analysis'},
+  tabs:{ov:'Overview',bs:'Balance Sheet',pl:'Profit & Loss',tb:'Trial Balance',cf:'Cash Flow',ar:'Receivables · Payables',ex:'Expense Analysis',pb:'PL Budget',bb:'BS Budget',cfb:'CF Budget',pob:'Portfolio Budget',asb:'Assumptions Budget',avpl:'PL Actual vs Budget',avbs:'BS Actual vs Budget',avcf:'CF Actual vs Budget',avpf:'Portfolio Actual vs Budget',avas:'Assumptions Actual vs Budget'},
+  tabGroups:{general:'General',budgets:'Budgets',statements:'Statements',avb:'Actual vs Budget'},
+  compactAll:'Main items only', expandAll:'All items',
+  actual:'Actual', budget:'Budget', diff:'Diff', ytd:'YTD',
+  avTitlePL:'Profit & Loss: Actual vs Budget', avTitleBS:'Balance Sheet: Actual vs Budget', avTitleCF:'Cash Flow: Actual vs Budget',
+  avNotePL:'Actual is broken down by Oris account so the total reconciles exactly to the net profit shown on the other tabs (no leakage, no double-counting) - every account without its own budget line is folded into "Other Revenue". "Salary of Shareholders/Other Staff" (92/93), "Marketing Salaries" (101), "Provision" (102 - this Oris account is never actually posted to), "Corporate Party" (103), and depreciation/interest/dividends (109/111-114/117) have no isolable Oris line - the "Non-Operational Expenses" total (108) is available, its detail rows are not. Revenue/Cogs incl. VAT (78/80) are derived as x1.18. Diff % is relative to the budget figure.',
+  avNoteBS:'Actual is from Oris\'s own balance-sheet accounts, same logic as the Balance Sheet tab. Long-term loans all sit in one Oris account (4 1 90) split only by contragent - Bank/Zuk/Shareholder loans are separated by the specific contragent codes that name them, checked against the January budget (1-14% variance). "Provision" (127, the receivables allowance) and "Pension Contribution" (145) have no matching Oris account.',
+  avNoteCF:'Cash flow in Oris only splits by ~20 broad counter-accounts (office rent and marketing expense, for instance, both settle through the same supplier-payable account rather than their own expense account) - so only customer/advance collections and long-term-loan draws/repayments can be isolated; everything else shows "–". Oris records no separate counter-account for investing activity at all.',
+  avTitlePF:'Portfolio: Actual vs Budget', avTitleAS:'Budget Assumptions: Actual vs Budget',
+  avNotePF:'"Portfolio at Start of Month" and "Remaining Portfolio" actuals are approximated from Oris\'s total customer-receivables balance (account 1 4 10) — this doesn\'t exactly match the loan portfolio\'s own definition (principal only, excluding accrued fees/penalties), so part of the variance against budget may reflect a definitional difference rather than real performance. "Total Collection", "CAC" and "Remaining Clients" are loan-system/marketing metrics that Oris\'s bookkeeping never records — no actual is shown for these three.',
+  avNoteAS:'Only the rows with a direct matching Oris account get a computed actual: "Mark Up" = (Revenue − Cogs) / Cogs (whole sales volume, installment and cash sales not split apart); "Marketing Expense" = account 7 4 90 39 / Revenue; "Fine Income" = account 8 1 25 / Revenue — this last figure comes out noticeably above the budget assumption, worth checking whether Oris books a wider set of transactions under this account than the budget model intends. The remaining rows (Sales Growth, Markup on installments only, Provision Rate, Collection Rate, Downpayment %) need a loan schedule, a customer count, or last year\'s monthly detail — none of which are available from Oris or within this dashboard\'s 2026-only scope.',
+  budgetTitlePL:'2026 P&L Budget', budgetTitleBS:'2026 Balance Sheet Budget', budgetTitleCF:'2026 Cash Flow Budget', budgetTitlePF:'2026 Portfolio Budget', budgetTitleAS:'2026 Budget Assumptions',
+  budgetSrc:s=>`Source: ${s.source} (sheet ${s.sheet}) · budget columns only, no actuals mixed in`,
+  budgetNotePL:'Imported once, by hand, from the finance team\'s Excel model - it does not refresh automatically with the Oris updates. "Gross Profit", "EBITDA" and "Net Profit" are bolded subtotals; everything else is an individual line item.',
+  budgetNoteBS:'Imported once, by hand, from the finance team\'s Excel model - it does not refresh automatically with the Oris updates. Liabilities and equity are stored as negative in the source file; shown positive here to match the rest of the app. The source workbook carries its own ~0.14 ₾ rounding residual, kept as-is.',
+  budgetNoteCF:'Imported once, by hand, from the finance team\'s Excel model - it does not refresh automatically with the Oris updates. Three activities: operating, investing, financing; each activity\'s Cash In / Cash Out subtotal is bolded.',
+  budgetMissing:'Budget data is not loaded in this build.',
+  budgetNotePF:'Imported once, by hand, from the finance team\'s Excel model - it does not refresh automatically with the Oris updates. Balance-type rows (portfolio, remaining clients) show the position at month end; no total column is shown for them.',
+  budgetNoteAS:'Imported once, by hand, from the finance team\'s Excel model - it does not refresh automatically with the Oris updates. These are the rate/ratio assumptions the budget is built on, not an actual result.',
   mS:['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],
   mL:['January','February','March','April','May','June','July','August','September','October','November','December'],
   period:'Period', compare:'compared with', prev:'prior', asOf:'As of', start:'Start', mln:'M', ths:'K', months:'months',
@@ -249,7 +333,8 @@ en:{
   arNoteA:'Debit balance = amount owed by the counterparty, credit = advance or overpayment.', arNoteL:'Credit balance = amount we owe, debit = advance we have paid.', negRed:'Negative balances are shown in red.',
   exTitle:'Expense Analysis', exSub:'expenses by month, ₾', selMonth:'selected month', ga:'General and administrative (7 4)', dist:'Distribution expenses (7 3)', nonOpEx:'Non-operating expenses (8 2)', totEx:'Total operating + other expenses', avgMonth:'monthly average', exItem:'Expense item', avgCol:'Avg / month',
   exNote:'Cost of sales (7 2) is not included here; see the Profit & Loss tab. Background intensity is relative to each row\'s own maximum.',
-  foot:(s,fx)=>`Of ${s.total} journal entries, ${s.kept} are used: ${s.closing} monthly closing entries (5 3 30 ↔ 6–9) and ${s.offbal} off-balance (B) entries are excluded; ${fx} foreign-currency entries are converted to lari using the Oris exchange-rate table. Balances were verified against Oris year-opening balances (2020–2025): the only difference is 1,155 ₾ on one FX transaction (1 2 ↔ 1 6).`
+  scopeNote:y=>`Every tab shows ${y} data, by month. Balances carried over from before ${y} (as of Jan 1, ${y}) are included as a single opening balance per account; earlier years are not broken out separately.`,
+  foot:(s,fx)=>`Of ${s.total} journal entries, ${s.kept} are used: ${s.closing} monthly closing entries (5 3 30 ↔ 6–9) and ${s.offbal} off-balance (B) entries are excluded; ${s.pre2026} entries predate 2026 and are folded into each account's opening balance; ${fx} foreign-currency entries are converted to lari using the Oris exchange-rate table. Balances were verified against Oris year-opening balances (2020–2025): the only difference is 1,155 ₾ on one FX transaction (1 2 ↔ 1 6).`
 }};
 const ACC_EN = {
 '1':'Current assets','1 1':'Cash on hand','1 1 10':'Cash in national currency','1 1 20':'Cash in foreign currency','1 2':'Cash at bank','1 2 10':'National currency, resident banks','1 2 20':'Foreign currency, resident banks','1 2 30':'Foreign currency, non-resident banks','1 2 90':'Cash on other bank accounts',
@@ -287,6 +372,13 @@ const level = c => c.split(' ').length;
 
 /* ---------- period ---------- */
 function monthsOf(y){ const a=[]; M.forEach((m,i)=>{ if(m.slice(0,4)===y) a.push(i); }); return a; }
+/* Full Jan-Dec column set for a year, for month-by-month comparison tables/charts.
+   Months with no data yet get a virtual index (> any real one) so stats()'s existing "m < s -> opening"
+   rule carries the last real balance forward unchanged, and "m <= e" flow sums stay correctly at 0 -
+   no change needed to stats()/close()/bsVal() themselves. */
+function yearMonths(y){ const out=[]; for(let mm=1; mm<=12; mm++){ const key=`${y}-${String(mm).padStart(2,'0')}`; const real=M.indexOf(key); out.push({idx: real>=0?real:(NM+mm), mm, real:real>=0}); } return out; }
+const ymLabel = x => GM()[x.mm-1];
+const ymLabelF = x => GMF()[x.mm-1];
 const mName = i => GMF()[+M[i].slice(5)-1];
 const yLbl = y => state.lang==='en' ? y : `${y} წელი`;
 function period(){
@@ -333,6 +425,7 @@ function cell(n,opts={}){ const cls=['n']; if(Math.abs(n)<0.005) cls.push('zero'
 function delta(cur,prev,invert){ if(prev===null||prev===undefined||Math.abs(prev)<0.005) return `<span>${T().prev}: –</span>`; const d=cur-prev; const p=d/Math.abs(prev)*100; const good=invert?d<0:d>0; return `<span class="${Math.abs(p)<0.05?'':(good?'up':'dn')}">${d>=0?'+':'−'}${fmt(Math.abs(d),0)} (${p>=0?'+':'−'}${Math.abs(p).toFixed(1)}%)</span>`; }
 const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 function periodHead(title, sub){ return `<div class="period"><h2>${title}</h2><span class="win">${sub}</span></div>`; }
+function compactBtn(id){ const t=T(); const on=state.compactTabs.has(id); return `<button class="compact-btn" data-compact="${id}" aria-pressed="${on}">${on?t.expandAll:t.compactAll}</button>`; }
 const gel = `<span style="font-size:13px;color:var(--muted)"> ₾</span>`;
 
 /* ---------- generic tree table ---------- */
@@ -416,7 +509,7 @@ function renderOV(){
   const prevAR=bsPrev?S(bsPrev,'1 4').o:null, prevCash=bsPrev?(S(bsPrev,'1 1').o+S(bsPrev,'1 2').o):null, prevLiab=bsPrev?-(S(bsPrev,'3').o+S(bsPrev,'4').o):null;
   let h=periodHead(t.tabs.ov, `${t.period}: <b>${P.label}</b>${P.cmp?` · ${t.compare}: ${P.cmp.label}`:''}`);
   h+=`<div class="kpis">${kpi(t.revenue,pl.rev,pp&&delta(pl.rev,pp.rev))}${kpi(t.gross,pl.gross,pp&&delta(pl.gross,pp.gross))}${kpi(t.net,pl.net,pp&&delta(pl.net,pp.net))}${kpi(t.cash+' · '+endLabel(P.e),cash,prevCash!==null&&delta(cash,prevCash))}${kpi(t.ar,ar,prevAR!==null&&delta(ar,prevAR))}${kpi(t.liab,liab,prevLiab!==null&&delta(liab,prevLiab,true))}</div>`;
-  const ys=monthsOf(state.year); const labels=ys.map(i=>GM()[+M[i].slice(5)-1]);
+  const YM=yearMonths(state.year); const ys=YM.map(x=>x.idx); const labels=YM.map(ymLabel);
   const revV=[],netV=[],cashV=[],arV=[];
   ys.forEach(i=>{ const s1=stats(i,i); const p1=plLines(s1); revV.push(p1.rev); netV.push(p1.net); cashV.push(cashClose(s1)); arV.push(close(S(s1,'1 4'))); });
   h+=`<div class="grid2"><div class="card"><h3>${t.chRev}</h3><div class="cap">${yLbl(state.year)}, ₾</div><div class="legend"><span><i style="background:${cssVar('--accent')}"></i>${t.revenue}</span><span><i style="background:${cssVar('--amber')}"></i>${t.net}</span></div><div class="chart" id="c-rev"></div></div>
@@ -434,51 +527,53 @@ function bsVal(st,code){ const v=S(st,code); let x=close(v); if(code==='5'||code
 function bsOpen(st,code){ const v=S(st,code); let x=v.o; if(code==='5'||code==='5 3'||code==='5 3 30'){ x+=plNet(st).o; } const cls=code[0]; return (cls==='1'||cls==='2')? x : -x; }
 function renderBS(){
   const t=T(); const P=period(); const st=stats(P.s,P.e);
-  const keep=(k,s)=>{ const v=S(s,k); return Math.abs(v.o)+v.d+v.c>0.004 || k==='5 3 30'; };
-  const row=(code,lv,has,open,id)=>{ const cur=bsVal(st,code), prev=bsOpen(st,code); const l=lv<=2?`lvl${lv}`:''; return `<tr class="${l}">${nameCell(code,lv,has,open,id)}${cell(cur)}${cell(prev)}${cell(cur-prev)}</tr>`; };
-  const opts={prefix:'bs',openTo:2,maxLevel:4,keep,row,sortVal:(k,s)=>close(S(s,k))};
   const A=bsVal(st,'1')+bsVal(st,'2'), Lb=bsVal(st,'3')+bsVal(st,'4'), E=bsVal(st,'5');
-  const A0=bsOpen(st,'1')+bsOpen(st,'2'), L0=bsOpen(st,'3')+bsOpen(st,'4'), E0=bsOpen(st,'5');
-  let h=periodHead(t.bs, `${t.asOf}: <b>${endOfLbl(P.e)}</b> · ${t.compare}: ${P.cmpBS?P.cmpBS.label:'–'} (${t.periodStart})`);
-  h+=`<div class="tablewrap"><table class="ledger"><thead><tr><th>${t.account}</th><th class="n">${endLabel(P.e)}</th><th class="n">${P.cmpBS?P.cmpBS.label:t.start}</th><th class="n">${t.change}</th></tr></thead><tbody>`;
-  h+=`<tr class="head"><td colspan="4">${t.assets}</td></tr>${treeRows(['1','2'],st,opts)}<tr class="sub"><td>${t.totAssets}</td>${cell(A)}${cell(A0)}${cell(A-A0)}</tr>`;
-  h+=`<tr class="head"><td colspan="4">${t.liabilities}</td></tr>${treeRows(['3','4'],st,opts)}<tr class="sub"><td>${t.totLiab}</td>${cell(Lb)}${cell(L0)}${cell(Lb-L0)}</tr>`;
-  h+=`<tr class="head"><td colspan="4">${t.equity}</td></tr>${treeRows(['5'],st,opts)}<tr class="sub"><td>${t.totEq}</td>${cell(E)}${cell(E0)}${cell(E-E0)}</tr>`;
-  h+=`<tr class="total"><td>${t.totLE}</td>${cell(Lb+E)}${cell(L0+E0)}${cell(Lb+E-L0-E0)}</tr></tbody></table></div>`;
   const diff=A-(Lb+E);
+  let h=periodHead(t.bs, `${t.asOf}: <b>${endOfLbl(P.e)}</b>`);
   h+=`<div class="check">${t.bsCheck} <span class="${Math.abs(diff)<0.05?'ok':'bad'} num">${fmt(diff)}</span></div>`;
   h+=`<p class="note">${t.bsNote}</p>`;
+  const YM=yearMonths(state.year); const ys=YM.map(x=>x.idx);
+  if(ys.length>1){
+    const mkeep=(k)=>ys.some(j=>Math.abs(bsVal(stats(ys[0],j),k))>0.004) || k==='5 3 30';
+    const mrow=(code,lv,has,open,id)=>{ const l=lv<=2?`lvl${lv}`:''; return `<tr class="${l}">${nameCell(code,lv,has,open,id)}${ys.map(j=>cell(bsVal(stats(ys[0],j),code))).join('')}</tr>`; };
+    const mopts={prefix:'bsm',openTo:1,maxLevel:state.compactTabs.has('bs')?1:4,keep:mkeep,row:mrow,sortVal:(k)=>bsVal(stats(ys[0],ys[ys.length-1]),k)};
+    const mtot=(codes)=>ys.map(j=>{ const s2=stats(ys[0],j); return codes.reduce((s,c)=>s+bsVal(s2,c),0); });
+    let hm=`<div class="card mt"><h3><span>${t.bs} · ${t.byMonth} · ${state.year}</span>${compactBtn('bs')}</h3><div class="cap">${t.eomBal}, ₾</div><div class="tablewrap" style="box-shadow:none;border:0"><table class="ledger"><thead><tr><th>${t.account}</th>${YM.map(x=>`<th class="n" ${!x.real?'style="color:var(--faint)"':''}>${ymLabel(x)}</th>`).join('')}</tr></thead><tbody>`;
+    hm+=`<tr class="head"><td colspan="${ys.length+1}">${t.assets}</td></tr>${treeRows(['1','2'],null,mopts)}`;
+    hm+=`<tr class="sub"><td>${t.totAssets}</td>${mtot(['1','2']).map(v=>cell(v)).join('')}</tr>`;
+    hm+=`<tr class="head"><td colspan="${ys.length+1}">${t.liabilities}</td></tr>${treeRows(['3','4'],null,mopts)}`;
+    hm+=`<tr class="sub"><td>${t.totLiab}</td>${mtot(['3','4']).map(v=>cell(v)).join('')}</tr>`;
+    hm+=`<tr class="head"><td colspan="${ys.length+1}">${t.equity}</td></tr>${treeRows(['5'],null,mopts)}`;
+    hm+=`<tr class="sub"><td>${t.totEq}</td>${mtot(['5']).map(v=>cell(v)).join('')}</tr>`;
+    hm+=`</tbody></table></div></div>`;
+    h+=hm;
+  }
   document.getElementById('p-bs').innerHTML=h;
 }
 
 /* ---------- P&L ---------- */
 function renderPL(){
-  const t=T(); const P=period(); const st=stats(P.s,P.e); const cs=P.cmp?stats(P.cmp.s,P.cmp.e):null;
-  const pl=plLines(st), pp=cs?plLines(cs):null;
+  const t=T(); const P=period();
   const incSign=c=>c[0]==='6'||c==='8 1'||c==='9 1'||c.startsWith('8 1 ')||c.startsWith('9 1 ');
   const val=(s,c)=>{ const v=S(s,c); return incSign(c)? v.c-v.d : v.d-v.c; };
-  const keep=(k,s)=>{ const v=S(s,k); const w=cs?S(cs,k):{o:0,d:0,c:0}; return v.d+v.c+w.d+w.c>0.004; };
-  const pc=(a,b)=>`<td class="n">${b&&Math.abs(b)>0.004?((a-b)/Math.abs(b)*100).toFixed(1)+'%':'–'}</td>`;
-  const row=(code,lv,has,open,id)=>{ const cur=val(st,code), prev=cs?val(cs,code):null; const l=lv<=2?`lvl${lv}`:''; return `<tr class="${l}">${nameCell(code,lv,has,open,id)}${cell(cur)}${cs?cell(prev):''}${cs?pc(cur,prev):''}</tr>`; };
-  const opts={prefix:'pl',openTo:1,maxLevel:4,keep,row,sortVal:(k,s)=>val(s,k)};
-  const sub=(label,a,b)=>`<tr class="sub"><td>${label}</td>${cell(a,{pos:true})}${cs?cell(b,{pos:true}):''}${cs?pc(a,b):''}</tr>`;
-  const pct=(a,b)=>b?` <span class="pct">${(a/b*100).toFixed(1)}% ${t.ofRev}</span>`:'';
-  let h=periodHead(t.plTitle, `${t.period}: <b>${P.label}</b>${P.cmp?` · ${t.compare}: ${P.cmp.label}`:''}`);
-  h+=`<div class="tablewrap"><table class="ledger"><thead><tr><th>${t.item}</th><th class="n">${P.label}</th>${cs?`<th class="n">${P.cmp.label}</th><th class="n">${t.chg}</th>`:''}</tr></thead><tbody>`;
-  h+=`<tr class="head"><td colspan="4">${t.opRev}</td></tr>${treeRows(['6'],st,opts)}`;
-  h+=`<tr class="head"><td colspan="4">${t.cogs}</td></tr>${treeRows(['7 2','7 1'],st,{...opts,openTo:0})}`;
-  h+=sub(`${t.gross}${pct(pl.gross,pl.rev)}`,pl.gross,pp&&pp.gross);
-  h+=`<tr class="head"><td colspan="4">${t.opEx}</td></tr>${treeRows(['7 3','7 4'],st,{...opts,openTo:0})}`;
-  h+=sub(`${t.opProfit}${pct(pl.op,pl.rev)}`,pl.op,pp&&pp.op);
-  h+=`<tr class="head"><td colspan="4">${t.nonOp}</td></tr>${treeRows(['8 1','8 2','9 1','9 2'],st,{...opts,openTo:0})}`;
-  h+=`<tr class="total"><td>${t.netPL}${pct(pl.net,pl.rev)}</td>${cell(pl.net,{pos:true})}${cs?cell(pp.net,{pos:true}):''}${cs?pc(pl.net,pp.net):''}</tr>`;
-  h+=`</tbody></table></div>`;
-  const ys=monthsOf(state.year);
-  h+=`<div class="card mt"><h3>${t.byMonth} · ${state.year}</h3><div class="cap">${t.exPos}</div><div class="tablewrap" style="box-shadow:none;border:0"><table class="ledger"><thead><tr><th>${t.month}</th><th class="n">${t.revenue}</th><th class="n">${t.cogsCol}</th><th class="n">${t.gross}</th><th class="n">${t.distCol}</th><th class="n">${t.adm}</th><th class="n">${t.opProfit}</th><th class="n">${t.nonOpCol}</th><th class="n">${t.net}</th></tr></thead><tbody>`;
-  let tot={rev:0,cogs:0,gross:0,dist:0,adm:0,op:0,no:0,net:0};
-  ys.forEach(i=>{ const p1=plLines(stats(i,i)); const no=p1.noi-p1.noe+p1.ext-p1.oth; tot.rev+=p1.rev;tot.cogs+=p1.cogs;tot.gross+=p1.gross;tot.dist+=p1.dist;tot.adm+=p1.adm;tot.op+=p1.op;tot.no+=no;tot.net+=p1.net;
-    const hl = state.month!==null && M[i].slice(5)===state.month; h+=`<tr${hl?' style="background:var(--accent-soft)"':''}><td>${mName(i)}</td>${cell(p1.rev)}${cell(p1.cogs)}${cell(p1.gross)}${cell(p1.dist)}${cell(p1.adm)}${cell(p1.op,{pos:true})}${cell(no)}${cell(p1.net,{pos:true})}</tr>`; });
-  h+=`<tr class="total"><td>${t.total} ${state.year}</td>${cell(tot.rev)}${cell(tot.cogs)}${cell(tot.gross)}${cell(tot.dist)}${cell(tot.adm)}${cell(tot.op,{pos:true})}${cell(tot.no)}${cell(tot.net,{pos:true})}</tr></tbody></table></div></div>`;
+  let h=periodHead(t.plTitle, `${t.period}: <b>${P.label}</b>`);
+  const YM=yearMonths(state.year); const ys=YM.map(x=>x.idx);
+  const mp=ys.map(j=>plLines(stats(j,j)));
+  const monthlyVal=(code,j)=>val(stats(j,j),code);
+  const mkeep=(k)=>ys.some(j=>Math.abs(monthlyVal(k,j))>0.004);
+  const mrow=(code,lv,has,open,id)=>{ const l=lv<=2?`lvl${lv}`:''; const vals=ys.map(j=>monthlyVal(code,j)); return `<tr class="${l}">${nameCell(code,lv,has,open,id)}${vals.map(v=>cell(v)).join('')}${cell(vals.reduce((a,b)=>a+b,0))}</tr>`; };
+  const mopts={prefix:'plm',openTo:1,maxLevel:state.compactTabs.has('pl')?1:4,keep:mkeep,row:mrow,sortVal:(k)=>ys.reduce((s,j)=>s+Math.abs(monthlyVal(k,j)),0)};
+  const msub=(label,arr)=>`<tr class="sub"><td>${label}</td>${arr.map(v=>cell(v,{pos:true})).join('')}${cell(arr.reduce((a,b)=>a+b,0),{pos:true})}</tr>`;
+  let hm=`<div class="card mt"><h3><span>${t.plTitle} · ${t.byMonth} · ${state.year}</span>${compactBtn('pl')}</h3><div class="cap">${t.exPos}</div><div class="tablewrap" style="box-shadow:none;border:0"><table class="ledger"><thead><tr><th>${t.item}</th>${YM.map(x=>`<th class="n" ${!x.real?'style="color:var(--faint)"':''}>${ymLabel(x)}</th>`).join('')}<th class="n">${t.total}</th></tr></thead><tbody>`;
+  hm+=`<tr class="head"><td colspan="${ys.length+2}">${t.opRev}</td></tr>${treeRows(['6'],null,mopts)}`;
+  hm+=`<tr class="head"><td colspan="${ys.length+2}">${t.cogs}</td></tr>${treeRows(['7 2','7 1'],null,{...mopts,openTo:0})}`;
+  hm+=msub(t.gross, mp.map(x=>x.gross));
+  hm+=`<tr class="head"><td colspan="${ys.length+2}">${t.opEx}</td></tr>${treeRows(['7 3','7 4'],null,{...mopts,openTo:0})}`;
+  hm+=msub(t.opProfit, mp.map(x=>x.op));
+  hm+=`<tr class="head"><td colspan="${ys.length+2}">${t.nonOp}</td></tr>${treeRows(['8 1','8 2','9 1','9 2'],null,{...mopts,openTo:0})}`;
+  hm+=`<tr class="total"><td>${t.netPL}</td>${mp.map(x=>cell(x.net,{pos:true})).join('')}${cell(mp.reduce((s,x)=>s+x.net,0),{pos:true})}</tr>`;
+  hm+=`</tbody></table></div></div>`;
+  h+=hm;
   h+=`<p class="note">${t.plNote}</p>`;
   document.getElementById('p-pl').innerHTML=h;
 }
@@ -486,16 +581,20 @@ function renderPL(){
 /* ---------- TRIAL BALANCE ---------- */
 function renderTB(){
   const t=T(); const P=period(); const st=stats(P.s,P.e);
-  const keep=(k,s)=>{ const v=S(s,k); return Math.abs(v.o)+v.d+v.c>0.004; };
-  const row=(code,lv,has,open,id)=>{ const v=S(st,code); const l=lv<=2?`lvl${lv}`:''; return `<tr class="${l}">${nameCell(code,lv,has,open,id)}${cell(v.o)}${cell(v.d)}${cell(v.c)}${cell(close(v))}</tr>`; };
-  const opts={prefix:'tb',openTo:1,maxLevel:4,keep,row,sortVal:(k,s)=>close(S(s,k))};
   let o=0,d=0,c=0,e=0; for(const r of ['1','2','3','4','5','6','7','8','9']){ const v=S(st,r); o+=v.o; d+=v.d; c+=v.c; e+=close(v); }
   let h=periodHead(t.tbTitle, `${t.period}: <b>${P.label}</b> · ${t.tbSub}`);
-  h+=`<div class="tablewrap"><table class="ledger"><thead><tr><th>${t.account}</th><th class="n">${t.openBal}</th><th class="n">${t.debit}</th><th class="n">${t.credit}</th><th class="n">${t.closeBal}</th></tr></thead><tbody>`;
-  h+=treeRows(['1','2','3','4','5','6','7','8','9'],st,opts);
-  h+=`<tr class="total"><td>${t.total}</td>${cell(o)}${cell(d)}${cell(c)}${cell(e)}</tr></tbody></table></div>`;
   h+=`<div class="check">${t.tbCheck1} <span class="${Math.abs(d-c)<0.05?'ok':'bad'} num">${fmt(d-c)}</span> · ${t.tbCheck2} <span class="${Math.abs(e)<0.05?'ok':'bad'} num">${fmt(e)}</span></div>`;
   h+=`<p class="note">${t.tbNote}</p>`;
+  const YM=yearMonths(state.year); const ys=YM.map(x=>x.idx);
+  if(ys.length>1){
+    const mkeep=(k)=>ys.some(j=>Math.abs(close(S(stats(ys[0],j),k)))>0.004);
+    const mrow=(code,lv,has,open,id)=>{ const l=lv<=2?`lvl${lv}`:''; return `<tr class="${l}">${nameCell(code,lv,has,open,id)}${ys.map(j=>cell(close(S(stats(ys[0],j),code)))).join('')}</tr>`; };
+    const mopts={prefix:'tbm',openTo:1,maxLevel:state.compactTabs.has('tb')?1:4,keep:mkeep,row:mrow,sortVal:(k)=>close(S(stats(ys[0],ys[ys.length-1]),k))};
+    let hm=`<div class="card mt"><h3><span>${t.tbTitle} · ${t.byMonth} · ${state.year}</span>${compactBtn('tb')}</h3><div class="cap">${t.closeBal}, ₾</div><div class="tablewrap" style="box-shadow:none;border:0"><table class="ledger"><thead><tr><th>${t.account}</th>${YM.map(x=>`<th class="n" ${!x.real?'style="color:var(--faint)"':''}>${ymLabel(x)}</th>`).join('')}</tr></thead><tbody>`;
+    hm+=treeRows(['1','2','3','4','5','6','7','8','9'],null,mopts);
+    hm+=`</tbody></table></div></div>`;
+    h+=hm;
+  }
   document.getElementById('p-tb').innerHTML=h;
 }
 
@@ -516,30 +615,33 @@ function cfGroup(c){ for(let i=0;i<CF_RULES.length;i++) if(CF_RULES[i](c)) retur
 const isCash=c=>c.startsWith('1 1')||c.startsWith('1 2');
 function renderCF(){
   const t=T(); const P=period(); const st=stats(P.s,P.e);
-  const groups=new Map(); const byAcc=new Map(); let tin=0,tout=0,trIn=0,trOut=0;
+  const byAcc=new Map(); let tin=0,tout=0,trIn=0,trOut=0;
   for(const [cash,ctr,m,i,o] of D.cf){ if(m<P.s||m>P.e) continue;
     const a=byAcc.get(cash)||{i:0,o:0,ti:0,to:0}; byAcc.set(cash,a);
     if(isCash(ctr)){ a.ti+=i; a.to+=o; trIn+=i; trOut+=o; continue; }
-    a.i+=i; a.o+=o; tin+=i; tout+=o;
-    const g=cfGroup(ctr); const G=groups.get(g)||{i:0,o:0,items:new Map()}; groups.set(g,G); G.i+=i; G.o+=o;
-    const it=G.items.get(ctr)||{i:0,o:0}; it.i+=i; it.o+=o; G.items.set(ctr,it); }
+    a.i+=i; a.o+=o; tin+=i; tout+=o; }
   const open=S(st,'1 1').o+S(st,'1 2').o, end=cashClose(st);
   let h=periodHead(t.cfTitle, `${t.period}: <b>${P.label}</b> · ${t.cfSub}`);
   h+=`<div class="kpis">${kpi(t.cashOpen,open)}${kpi(t.inflow,tin)}${kpi(t.outflow,tout)}${kpi(t.netFlow,tin-tout)}${kpi(t.cashEnd,end)}</div>`;
-  const ys=monthsOf(state.year); const labels=ys.map(i=>GM()[+M[i].slice(5)-1]); const inV=ys.map(()=>0), outV=ys.map(()=>0);
+  const YM=yearMonths(state.year); const ys=YM.map(x=>x.idx); const labels=YM.map(ymLabel); const inV=ys.map(()=>0), outV=ys.map(()=>0);
   for(const [cash,ctr,m,i,o] of D.cf){ const j=ys.indexOf(m); if(j<0||isCash(ctr)) continue; inV[j]+=i; outV[j]+=o; }
   h+=`<div class="card"><h3>${t.cfChart}</h3><div class="cap">${yLbl(state.year)}, ${t.cfChartCap}</div><div class="legend"><span><i style="background:${cssVar('--accent')}"></i>${t.inflow}</span><span><i style="background:${cssVar('--amber')}"></i>${t.outflow}</span></div><div class="chart" id="c-cf"></div></div>`;
-  h+=`<div class="tablewrap mt"><table class="ledger"><thead><tr><th>${t.flowCtr}</th><th class="n">${t.inflow}</th><th class="n">${t.outflow}</th><th class="n">${t.netCol}</th></tr></thead><tbody>`;
-  for(let gi=0; gi<CF_RULES.length; gi++){ if(!groups.has(gi)) continue; const G=groups.get(gi); const id='cf'+gi; const open_=state.open.has(id);
-    h+=`<tr class="lvl2"><td class="name">${tgl(true,open_,id)}${esc(t.cfGroups[gi])}</td>${cell(G.i)}${cell(G.o)}${cell(G.i-G.o)}</tr>`;
-    if(open_){ const items=[...G.items.entries()].sort((a,b)=>(b[1].i+b[1].o)-(a[1].i+a[1].o)); for(const [c,it] of items) h+=`<tr><td class="name ind1"><span class="code">${esc(c)}</span>${esc(name(c))}</td>${cell(it.i)}${cell(it.o)}${cell(it.i-it.o)}</tr>`; } }
-  h+=`<tr class="total"><td>${t.total}</td>${cell(tin)}${cell(tout)}${cell(tin-tout)}</tr>`;
-  h+=`<tr><td class="name" style="color:var(--muted)">${t.transfers}</td>${cell(trIn)}${cell(trOut)}${cell(trIn-trOut)}</tr></tbody></table></div>`;
   h+=`<div class="tablewrap mt"><table class="ledger"><thead><tr><th>${t.account}</th><th class="n">${t.atStart}</th><th class="n">${t.inflow}</th><th class="n">${t.outflow}</th><th class="n">${t.transfersNet}</th><th class="n">${t.atEnd}</th></tr></thead><tbody>`;
   const accs=[...new Set([...byAcc.keys(), ...Object.keys(ACC).filter(c=>isCash(c)&&level(c)>=3&&!children[c]&&Math.abs(close(S(st,c)))>0.004)])].sort(cmpCode);
   for(const c of accs){ const a=byAcc.get(c)||{i:0,o:0,ti:0,to:0}; const v=S(st,c); if(Math.abs(v.o)+v.d+v.c<0.004) continue; h+=`<tr><td class="name"><span class="code">${esc(c)}</span>${esc(name(c))}</td>${cell(v.o)}${cell(a.i)}${cell(a.o)}${cell(a.ti-a.to)}${cell(close(v))}</tr>`; }
   h+=`<tr class="total"><td>${t.totCash}</td>${cell(open)}${cell(tin)}${cell(tout)}${cell(trIn-trOut)}${cell(end)}</tr></tbody></table></div>`;
   h+=`<p class="note">${t.cfNote}</p>`;
+  const gm=new Map();
+  for(const [cash,ctr,m,i,o] of D.cf){ const j=ys.indexOf(m); if(j<0||isCash(ctr)) continue; const g=cfGroup(ctr); if(!gm.has(g)) gm.set(g, ys.map(()=>[0,0])); const arr=gm.get(g)[j]; arr[0]+=i; arr[1]+=o; }
+  if(ys.length>1 && gm.size){
+    let hm=`<div class="card mt"><h3>${t.cfTitle} · ${t.byMonth} · ${state.year}</h3><div class="cap">${t.netCol}, ₾</div><div class="tablewrap" style="box-shadow:none;border:0"><table class="ledger"><thead><tr><th>${t.flowCtr}</th>${YM.map(x=>`<th class="n" ${!x.real?'style="color:var(--faint)"':''}>${ymLabel(x)}</th>`).join('')}<th class="n">${t.total}</th></tr></thead><tbody>`;
+    for(let gi=0; gi<CF_RULES.length; gi++){ if(!gm.has(gi)) continue; const arr=gm.get(gi); const rowTot=arr.reduce((s,[i,o])=>s+i-o,0);
+      hm+=`<tr><td class="name">${esc(t.cfGroups[gi])}</td>${arr.map(([i,o])=>cell(i-o)).join('')}${cell(rowTot)}</tr>`; }
+    const mtotals=ys.map((_,j)=>[...gm.values()].reduce((s,arr)=>s+arr[j][0]-arr[j][1],0));
+    hm+=`<tr class="total"><td>${t.netFlow}</td>${mtotals.map(v=>cell(v)).join('')}${cell(mtotals.reduce((a,b)=>a+b,0))}</tr>`;
+    hm+=`</tbody></table></div></div>`;
+    h+=hm;
+  }
   const el=document.getElementById('p-cf'); el.innerHTML=h;
   barChart(el.querySelector('#c-cf'),labels,[{name:t.inflow,color:cssVar('--accent'),vals:inV},{name:t.outflow,color:cssVar('--amber'),vals:outV}],null);
 }
@@ -558,6 +660,9 @@ function renderAR(){
   h+=`<div class="toolbar"><div class="pills">${AR_LEDGERS.filter(l=>children[l]).map(l=>`<button data-led="${l}" aria-pressed="${l===led}"><span class="code" style="margin-right:5px">${l}</span>${t.arLedgers[l]}</button>`).join('')}</div></div>`;
   h+=`<div class="toolbar"><input type="search" id="arq" placeholder="${t.search}" value="${esc(state.arQ)}"><span style="color:var(--muted);font-size:12.5px">${rows.length} ${t.contragents}${q?' '+t.filtered:''}</span></div>`;
   h+=`<div class="kpis">${kpi(t.balEnd,tot.e,`${t.atStartLbl}: ${fmt(tot.o,0)} ₾`)}${kpi(t.toDr,tot.d)}${kpi(t.toCr,tot.k)}${kpi(t.nonZero,'<span class="num">'+nz+'</span>',`${t.top10}: ${posTot?(top10/posTot*100).toFixed(0):0}% ${t.ofBal}`)}${kpi(isA?t.oppA:t.oppL,'<span class="num">'+opp.length+'</span>',`${fmt(opp.reduce((s,r)=>s+r.e,0),0)} ₾`)}</div>`;
+  const YM=yearMonths(state.year); const ys=YM.map(x=>x.idx); const trendLbl=YM.map(ymLabel);
+  const trend = ys.length>1 ? ys.map(j=>close(S(stats(ys[0],j),led))*sign) : null;
+  if(trend) h+=`<div class="card"><h3>${t.arLedgers[led]} · ${t.byMonth}</h3><div class="cap">${state.year}, ${t.eomBal}, ₾</div><div class="chart" id="c-artrend"></div></div>`;
   const mx=Math.max(...rows.map(r=>Math.abs(r.e)),1);
   h+=`<div class="tablewrap"><table class="ledger"><thead><tr><th>${t.code}</th><th>${t.contragent}</th><th class="n">${t.openBal}</th><th class="n">${t.debit}</th><th class="n">${t.credit}</th><th class="n">${t.closeBal}</th><th></th></tr></thead><tbody>`;
   const show=rows.slice(0,state.arN);
@@ -566,6 +671,7 @@ function renderAR(){
   if(rows.length>state.arN) h+=`<div class="more"><button id="armore" style="color:var(--accent);font-weight:500">${t.showMore(Math.min(300,rows.length-state.arN),rows.length)}</button></div>`;
   h+=`</div><p class="note">${isA?t.arNoteA:t.arNoteL} ${t.negRed}</p>`;
   const el=document.getElementById('p-ar'); el.innerHTML=h;
+  if(trend) lineChart(el.querySelector('#c-artrend'),trendLbl,[{name:t.balEnd,color:cssVar('--accent'),vals:trend}]);
   el.querySelectorAll('[data-led]').forEach(b=>b.addEventListener('click',()=>{ state.arLedger=b.dataset.led; state.arN=100; renderAR(); }));
   const inp=el.querySelector('#arq'); let tm; inp.addEventListener('input',()=>{ clearTimeout(tm); tm=setTimeout(()=>{ state.arQ=inp.value; state.arN=100; const pos=inp.selectionStart; renderAR(); const n=document.getElementById('arq'); n.focus(); n.setSelectionRange(pos,pos); },250); });
   const mb=el.querySelector('#armore'); if(mb) mb.addEventListener('click',()=>{ state.arN+=300; renderAR(); });
@@ -573,107 +679,289 @@ function renderAR(){
 
 /* ---------- EXPENSES ---------- */
 function renderEX(){
-  const t=T(); const ys=monthsOf(state.year);
+  const t=T(); const YM=yearMonths(state.year); const ys=YM.map(x=>x.idx); const realCount=YM.filter(x=>x.real).length||1;
   const ms=ys.map(i=>stats(i,i)); const yst=stats(ys[0],ys[ys.length-1]);
   const val=(s,c)=>{ const v=S(s,c); return v.d-v.c; };
   const roots=['7 4','7 3','7 1','8 2','9 2'];
   const keep=(k,s)=>Math.abs(val(yst,k))>0.004 || (S(yst,k).d+S(yst,k).c)>0.004;
   const row=(code,lv,has,open,id)=>{ const vals=ms.map(s=>val(s,code)); const mx=Math.max(...vals.map(Math.abs),0.01); const tot=val(yst,code); const l=lv<=1?'lvl1':lv===2?'lvl2':'';
-    return `<tr class="${l}">${nameCell(code,lv,has,open,id)}${vals.map(v=>`<td class="n ${lv>=2?'heat':''}" style="--h:${(Math.abs(v)/mx).toFixed(2)}">${Math.abs(v)<0.005?'<span style="color:var(--faint)">·</span>':fmt(v,0)}</td>`).join('')}${cell(tot)}<td class="n">${fmt(tot/ys.length,0)}</td></tr>`; };
+    return `<tr class="${l}">${nameCell(code,lv,has,open,id)}${vals.map(v=>`<td class="n ${lv>=2?'heat':''}" style="--h:${(Math.abs(v)/mx).toFixed(2)}">${Math.abs(v)<0.005?'<span style="color:var(--faint)">·</span>':fmt(v,0)}</td>`).join('')}${cell(tot)}<td class="n">${fmt(tot/realCount,0)}</td></tr>`; };
   const opts={prefix:'ex',openTo:1,maxLevel:4,keep,row,sortVal:(k,s)=>val(yst,k)};
   const total=roots.reduce((s,c)=>s+val(yst,c),0); const rev=plLines(yst).rev;
   let h=periodHead(t.exTitle, `${t.year}: <b>${state.year}</b> · ${t.exSub}${state.month!==null?` · ${t.selMonth}: ${GMF()[+state.month-1]}`:''}`);
-  h+=`<div class="kpis">${kpi(t.ga,val(yst,'7 4'),rev?`${(val(yst,'7 4')/rev*100).toFixed(1)}% ${t.ofRev}`:'')}${kpi(t.dist,val(yst,'7 3'))}${kpi(t.nonOpEx,val(yst,'8 2'))}${kpi(t.totEx,total,`${t.avgMonth} ${fmt(total/ys.length,0)} ₾`)}</div>`;
-  h+=`<div class="tablewrap"><table class="ledger"><thead><tr><th>${t.exItem}</th>${ys.map(i=>`<th class="n" ${state.month!==null&&M[i].slice(5)===state.month?'style="color:var(--accent)"':''}>${GM()[+M[i].slice(5)-1]}</th>`).join('')}<th class="n">${t.total} ${state.year}</th><th class="n">${t.avgCol}</th></tr></thead><tbody>`;
+  h+=`<div class="kpis">${kpi(t.ga,val(yst,'7 4'),rev?`${(val(yst,'7 4')/rev*100).toFixed(1)}% ${t.ofRev}`:'')}${kpi(t.dist,val(yst,'7 3'))}${kpi(t.nonOpEx,val(yst,'8 2'))}${kpi(t.totEx,total,`${t.avgMonth} ${fmt(total/realCount,0)} ₾`)}</div>`;
+  h+=`<div class="tablewrap"><table class="ledger"><thead><tr><th>${t.exItem}</th>${YM.map(x=>`<th class="n" ${(state.month!==null&&x.real&&x.mm===+state.month)?'style="color:var(--accent)"':(!x.real?'style="color:var(--faint)"':'')}>${ymLabel(x)}</th>`).join('')}<th class="n">${t.total} ${state.year}</th><th class="n">${t.avgCol}</th></tr></thead><tbody>`;
   h+=treeRows(roots,yst,opts);
-  h+=`<tr class="total"><td>${t.total}</td>${ys.map((i,j)=>cell(roots.reduce((s,c)=>s+val(ms[j],c),0))).join('')}${cell(total)}<td class="n">${fmt(total/ys.length,0)}</td></tr></tbody></table></div>`;
+  h+=`<tr class="total"><td>${t.total}</td>${ys.map((i,j)=>cell(roots.reduce((s,c)=>s+val(ms[j],c),0))).join('')}${cell(total)}<td class="n">${fmt(total/realCount,0)}</td></tr></tbody></table></div>`;
   h+=`<p class="note">${t.exNote}</p>`;
   document.getElementById('p-ex').innerHTML=h;
 }
 
-/* ---------- WAYBILLS: RS.ge <-> Oris ---------- */
-const WBL={
-ka:{tab:'ზედნადებები RS ↔ ორისი', title:'ზედნადებების შედარება: RS.ge ↔ ორისი', rsData:'RS.ge მონაცემები', orisData:'ორისის ასლი', from:'დან', to:'მდე',
-  sides:{sell:'გაყიდვები (ჩვენი ზედნადებები)', buy:'შესყიდვები (მომწოდებლების ზედნადებები)'},
-  status:{all:'ყველა ზედნადები', ok:'დაწყვილებული', no_oris:'აკლია ორისში', no_rs:'აკლია RS-ზე', diff:'თანხა განსხვავდება'},
-  search:'ძებნა: ნომერი, კონტრაგენტი, ს/კ', reset:'ფილტრის გასუფთავება', count:'რაოდენობა', rsAmt:'თანხა RS.ge-ზე', orisAmt:'თანხა ორისში', diffAmt:'სხვაობა (RS − ორისი)',
-  ofFiltered:'არჩეული ფილტრით', byStatus:'ჯამები სტატუსების მიხედვით', byStatusCap:'არჩეული პერიოდი და მიმართულება · სტატუსის ფილტრის მიუხედავად · დააკლიკე სტრიქონს ფილტრისთვის',
-  statusCol:'სტატუსი', cntCol:'რაოდენობა', rsCol:'RS.ge თანხა', orisCol:'ორისის თანხა', diffCol:'სხვაობა', share:'წილი',
-  monthly:'თვეების მიხედვით', monthlyCap:'არჩეული პერიოდი და მიმართულება · რაოდენობა / თანხა', month:'თვე', rsAll:'RS.ge სულ', orisAll:'ორისი სულ',
-  num:'ნომერი', date:'თარიღი', party:'კონტრაგენტი', tin:'ს/კ', type:'RS ტიპი', rows:'ზედნადები', showMore:(n,t)=>`მეტის ჩვენება (კიდევ ${n} · სულ ${t})`,
-  late:'ორისის ასლის შემდეგ', ret:'დაბრუნება', notBuilt:'RS.ge-ს მონაცემები ამ ვერსიაში არ არის ჩატვირთული.',
-  note:'დაწყვილება ზედნადების ნომრით. RS.ge თანხა = FULL_AMOUNT (დაბრუნების ზედნადებები უარყოფითი ნიშნით), ორისის თანხა = ამ ნომრით გატარებული საქონლის ღირებულება დღგ-ს ჩათვლით (მყიდველის/მომწოდებლის ანგარიშის კორესპონდენცია შემოსავალთან, საქონელთან და დღგ-სთან; ბანკის გადახდები არ ითვლება). გაუქმებული (STATUS −2) RS ზედნადებები არ შედის. ორისში ზედნადების ნომრის გარეშე გატარებული დოკუმენტები (ინვოისები და სხვ.) „აკლია RS-ზე" სვეტში ჩანს. ორისის ასლის თარიღის შემდეგ გამოწერილი RS ზედნადებები ცალკე ნიშნულითაა.'},
-en:{tab:'Waybills RS ↔ Oris', title:'Waybill reconciliation: RS.ge ↔ Oris', rsData:'RS.ge data', orisData:'Oris copy', from:'From', to:'To',
-  sides:{sell:'Sales (our waybills)', buy:'Purchases (supplier waybills)'},
-  status:{all:'All waybills', ok:'Matched', no_oris:'Missing in Oris', no_rs:'Missing on RS.ge', diff:'Amount differs'},
-  search:'Search: number, counterparty, TIN', reset:'Reset filters', count:'Count', rsAmt:'Amount on RS.ge', orisAmt:'Amount in Oris', diffAmt:'Difference (RS − Oris)',
-  ofFiltered:'with the selected filter', byStatus:'Totals by status', byStatusCap:'selected period and direction · regardless of the status filter · click a row to filter',
-  statusCol:'Status', cntCol:'Count', rsCol:'RS.ge amount', orisCol:'Oris amount', diffCol:'Difference', share:'Share',
-  monthly:'By month', monthlyCap:'selected period and direction · count / amount', month:'Month', rsAll:'RS.ge total', orisAll:'Oris total',
-  num:'Number', date:'Date', party:'Counterparty', tin:'TIN', type:'RS type', rows:'waybills', showMore:(n,t)=>`Show more (${n} more · ${t} total)`,
-  late:'after the Oris copy', ret:'return', notBuilt:'RS.ge data is not loaded in this build.',
-  note:'Matched by waybill number. RS.ge amount = FULL_AMOUNT (return waybills negative); Oris amount = the goods value incl. VAT booked under that number (customer/supplier account against revenue, goods and VAT; bank payments are ignored). Cancelled RS waybills (STATUS −2) are excluded. Documents booked in Oris without a waybill number (invoices etc.) appear under "Missing on RS.ge". RS waybills issued after the Oris copy date carry a separate marker.'}};
-const WBS = {side:'sell', from:null, to:null, status:'all', q:'', n:200};
-const wbStatus = r => r[4]===null ? 'no_rs' : r[5]===null ? 'no_oris' : Math.abs(r[4]-r[5])>0.05 ? 'diff' : 'ok';
-function renderWB(){
-  const t=WBL[state.lang]; const el=document.getElementById('p-wb');
-  if(!WB){ el.innerHTML=periodHead(t.title,'')+`<p class="note">${t.notBuilt}</p>`; return; }
-  const asof=D.meta.asof; if(!WBS.from){ WBS.from=WB.meta.start; WBS.to=asof; }
-  const all=WB[WBS.side]; const inPeriod=all.filter(r=>r[1]>=WBS.from && r[1]<=WBS.to);
-  const q=WBS.q.trim().toLowerCase();
-  let rows=inPeriod.filter(r=>(WBS.status==='all'||wbStatus(r)===WBS.status) && (!q || r[0].toLowerCase().includes(q) || r[2].toLowerCase().includes(q) || r[3].includes(q)));
-  const sum=(a,f)=>a.reduce((s,r)=>s+(f(r)||0),0);
-  const rsA=sum(rows,r=>r[4]), orA=sum(rows,r=>r[5]);
-  let h=periodHead(t.title, `${t.rsData}: <b>${WB.meta.rs_fetched}</b> · ${t.orisData}: <b>${asof.split('-').reverse().join('.')}</b>`);
-  h+=`<div class="toolbar"><div class="pills">${['sell','buy'].map(s=>`<button data-wbside="${s}" aria-pressed="${s===WBS.side}">${t.sides[s]}</button>`).join('')}</div></div>`;
-  h+=`<div class="toolbar"><span class="fl">${t.from} <input type="date" id="wbFrom" value="${WBS.from}" min="${WB.meta.start}"></span><span class="fl">${t.to} <input type="date" id="wbTo" value="${WBS.to}"></span>
-    <select id="wbStatus">${Object.entries(t.status).map(([k,v])=>`<option value="${k}" ${k===WBS.status?'selected':''}>${v}</option>`).join('')}</select>
-    <input type="search" id="wbQ" placeholder="${t.search}" value="${esc(WBS.q)}"><button class="reset" id="wbReset">${t.reset}</button></div>`;
-  h+=`<div class="kpis">${kpi(t.count+' · '+t.ofFiltered,'<span class="num">'+rows.length+'</span>',`${inPeriod.length} ${t.rows}`)}${kpi(t.rsAmt,rsA)}${kpi(t.orisAmt,orA)}${kpi(t.diffAmt,rsA-orA)}</div>`;
-  // status summary
-  const groups={}; for(const k of ['ok','no_oris','no_rs','diff']) groups[k]={n:0,rs:0,or:0};
-  for(const r of inPeriod){ const g=groups[wbStatus(r)]; g.n++; g.rs+=r[4]||0; g.or+=r[5]||0; }
-  const totN=inPeriod.length||1;
-  h+=`<div class="grid2"><div class="card"><h3>${t.byStatus}</h3><div class="cap">${t.byStatusCap}</div><div class="tablewrap" style="box-shadow:none;border:0"><table class="ledger" style="min-width:0"><thead><tr><th>${t.statusCol}</th><th class="n">${t.cntCol}</th><th class="n">${t.share}</th><th class="n">${t.rsCol}</th><th class="n">${t.orisCol}</th><th class="n">${t.diffCol}</th></tr></thead><tbody>`;
-  for(const k of ['ok','no_oris','no_rs','diff']){ const g=groups[k]; h+=`<tr class="${WBS.status===k?'cur':''}" data-wbst="${k}" style="cursor:pointer"><td><span class="st ${k}">${t.status[k]}</span></td><td class="n">${g.n}</td><td class="n">${(g.n/totN*100).toFixed(1)}%</td>${cell(g.rs)}${cell(g.or)}${cell(g.rs-g.or)}</tr>`; }
-  h+=`<tr class="total ${WBS.status==='all'?'cur':''}" data-wbst="all" style="cursor:pointer"><td>${t.status.all}</td><td class="n">${inPeriod.length}</td><td class="n">100%</td>${cell(sum(inPeriod,r=>r[4]))}${cell(sum(inPeriod,r=>r[5]))}${cell(sum(inPeriod,r=>r[4])-sum(inPeriod,r=>r[5]))}</tr></tbody></table></div></div>`;
-  // monthly
-  const mon=new Map(); for(const r of inPeriod){ const m=r[1].slice(0,7); const g=mon.get(m)||{rsN:0,rs:0,orN:0,or:0,noO:0,noOA:0,noR:0,noRA:0,df:0}; mon.set(m,g);
-    if(r[4]!==null){g.rsN++; g.rs+=r[4];} if(r[5]!==null){g.orN++; g.or+=r[5];} const s=wbStatus(r); if(s==='no_oris'){g.noO++; g.noOA+=r[4];} if(s==='no_rs'){g.noR++; g.noRA+=r[5];} if(s==='diff') g.df++; }
-  h+=`<div class="card"><h3>${t.monthly}</h3><div class="cap">${t.monthlyCap}</div><div class="tablewrap" style="box-shadow:none;border:0"><table class="ledger" style="min-width:0"><thead><tr><th>${t.month}</th><th class="n">${t.rsAll}</th><th class="n">${t.orisAll}</th><th class="n">${t.status.no_oris}</th><th class="n">${t.status.no_rs}</th><th class="n">${t.status.diff}</th></tr></thead><tbody>`;
-  for(const [m,g] of [...mon.entries()].sort((a,b)=>b[0]<a[0]?-1:1)) h+=`<tr><td class="num">${m}</td><td class="n">${g.rsN} · ${fmt(g.rs,0)}</td><td class="n">${g.orN} · ${fmt(g.or,0)}</td><td class="n ${g.noO?'neg':'zero'}">${g.noO} · ${fmt(g.noOA,0)}</td><td class="n ${g.noR?'':'zero'}" ${g.noR?'style="color:var(--accent)"':''}>${g.noR} · ${fmt(g.noRA,0)}</td><td class="n ${g.df?'':'zero'}" ${g.df?'style="color:var(--amber)"':''}>${g.df}</td></tr>`;
-  h+=`</tbody></table></div></div></div>`;
-  // rows table
-  const TYPES=state.lang==='en'?{'1':'internal','2':'with transport','3':'no transport','4':'distribution','5':'return','6':'sub-waybill'}:{'1':'შიდა გადაზიდვა','2':'ტრანსპორტირებით','3':'ტრანსპორტირების გარეშე','4':'დისტრიბუცია','5':'დაბრუნება','6':'ქვე-ზედნადები'};
-  h+=`<div class="tablewrap mt"><table class="ledger"><thead><tr><th>${t.num}</th><th>${t.date}</th><th>${t.party}</th><th>${t.tin}</th><th class="n">${t.rsCol}</th><th class="n">${t.orisCol}</th><th class="n">${t.diffCol}</th><th>${t.statusCol}</th><th>${t.type}</th></tr></thead><tbody>`;
-  for(const r of rows.slice(0,WBS.n)){ const s=wbStatus(r); const late=s==='no_oris'&&r[1]>asof;
-    h+=`<tr><td class="num">${esc(r[0])}</td><td class="num">${r[1]}</td><td class="name" style="min-width:180px">${esc(r[2])}</td><td class="num" style="color:var(--muted)">${esc(r[3])}</td>${r[4]===null?'<td class="n zero">–</td>':cell(r[4])}${r[5]===null?'<td class="n zero">–</td>':cell(r[5])}${(r[4]===null||r[5]===null)?'<td class="n zero">–</td>':cell(r[4]-r[5])}<td><span class="st ${s}">${t.status[s]}</span>${late?` <span class="st late">${t.late}</span>`:''}</td><td style="color:var(--muted);font-size:12px">${r[7]?(TYPES[r[7]]||r[7]):''}</td></tr>`; }
-  h+=`<tr class="total"><td colspan="4">${t.status.all==='All waybills'?'Total':'სულ'} (${rows.length})</td>${cell(rsA)}${cell(orA)}${cell(rsA-orA)}<td></td><td></td></tr></tbody></table>`;
-  if(rows.length>WBS.n) h+=`<div class="more"><button id="wbMore" style="color:var(--accent);font-weight:500">${t.showMore(Math.min(500,rows.length-WBS.n),rows.length)}</button></div>`;
-  h+=`</div><p class="note">${t.note}</p>`;
+/* ---------- BUDGET (P&L / BS, from the finance team's Excel) ---------- */
+function budgetRow(r,cols){ const label=state.lang==='en'?(r.en||r.ka):r.ka; const cls=r.level===1?(r.bold?'total':'lvl1'):''; const ind=r.level===2?'ind1':'';
+  return `<tr class="${cls}"><td class="name ${ind}">${esc(label)}</td>${cols.map(v=>cell(v,{pos:true})).join('')}</tr>`; }
+function renderPB(){
+  const t=T(); const el=document.getElementById('p-pb');
+  if(!BUDGET){ el.innerHTML=periodHead(t.budgetTitlePL,'')+`<p class="note">${WBL[state.lang].notBuilt}</p>`; return; }
+  const mlabels=BUDGET.months.map(m=>GM()[+m.slice(5)-1]);
+  let h=periodHead(t.budgetTitlePL, t.budgetSrc(BUDGET));
+  h+=`<div class="tablewrap"><table class="ledger"><thead><tr><th>${t.item}</th>${mlabels.map(l=>`<th class="n">${l}</th>`).join('')}<th class="n">${t.total}</th></tr></thead><tbody>`;
+  for(const r of BUDGET.pl) h+=budgetRow(r,[...r.vals,r.vals.reduce((a,b)=>a+b,0)]);
+  h+=`</tbody></table></div>`;
+  h+=`<p class="note">${t.budgetNotePL}</p>`;
   el.innerHTML=h;
-  el.querySelectorAll('[data-wbside]').forEach(b=>b.addEventListener('click',()=>{ WBS.side=b.dataset.wbside; WBS.n=200; renderWB(); }));
-  el.querySelectorAll('[data-wbst]').forEach(r=>r.addEventListener('click',()=>{ WBS.status=r.dataset.wbst; WBS.n=200; renderWB(); }));
-  el.querySelector('#wbFrom').addEventListener('change',e=>{ if(e.target.value){ WBS.from=e.target.value; renderWB(); } });
-  el.querySelector('#wbTo').addEventListener('change',e=>{ if(e.target.value){ WBS.to=e.target.value; renderWB(); } });
-  el.querySelector('#wbStatus').addEventListener('change',e=>{ WBS.status=e.target.value; WBS.n=200; renderWB(); });
-  el.querySelector('#wbReset').addEventListener('click',()=>{ WBS.from=WB.meta.start; WBS.to=asof; WBS.status='all'; WBS.q=''; WBS.n=200; renderWB(); });
-  const inp=el.querySelector('#wbQ'); let tm; inp.addEventListener('input',()=>{ clearTimeout(tm); tm=setTimeout(()=>{ WBS.q=inp.value; WBS.n=200; const pos=inp.selectionStart; renderWB(); const n=document.getElementById('wbQ'); n.focus(); n.setSelectionRange(pos,pos); },250); });
-  const mb=el.querySelector('#wbMore'); if(mb) mb.addEventListener('click',()=>{ WBS.n+=500; renderWB(); });
+}
+function renderBB(){
+  const t=T(); const el=document.getElementById('p-bb');
+  if(!BUDGET){ el.innerHTML=periodHead(t.budgetTitleBS,'')+`<p class="note">${WBL[state.lang].notBuilt}</p>`; return; }
+  const mlabels=BUDGET.months.map(m=>GM()[+m.slice(5)-1]);
+  let h=periodHead(t.budgetTitleBS, t.budgetSrc(BUDGET));
+  h+=`<div class="tablewrap"><table class="ledger"><thead><tr><th>${t.item}</th>${mlabels.map(l=>`<th class="n">${l}</th>`).join('')}</tr></thead><tbody>`;
+  for(const r of BUDGET.bs) h+=budgetRow(r,r.vals);
+  h+=`</tbody></table></div>`;
+  const A=BUDGET.bs.find(r=>r.row===135), LE=BUDGET.bs.find(r=>r.row===157);
+  if(A && LE){ const diffs=A.vals.map((v,i)=>v-LE.vals[i]); const maxDiff=Math.max(...diffs.map(Math.abs));
+    h+=`<div class="check">${t.bsCheck} <span class="${maxDiff<1?'ok':'bad'} num">${fmt(diffs[diffs.length-1])}</span></div>`; }
+  h+=`<p class="note">${t.budgetNoteBS}</p>`;
+  el.innerHTML=h;
+}
+function renderCFB(){
+  const t=T(); const el=document.getElementById('p-cfb');
+  if(!BUDGET){ el.innerHTML=periodHead(t.budgetTitleCF,'')+`<p class="note">${WBL[state.lang].notBuilt}</p>`; return; }
+  const mlabels=BUDGET.months.map(m=>GM()[+m.slice(5)-1]);
+  let h=periodHead(t.budgetTitleCF, t.budgetSrc(BUDGET));
+  h+=`<div class="tablewrap"><table class="ledger"><thead><tr><th>${t.item}</th>${mlabels.map(l=>`<th class="n">${l}</th>`).join('')}<th class="n">${t.total}</th></tr></thead><tbody>`;
+  for(const r of BUDGET.cf) h+=budgetRow(r,[...r.vals,r.vals.reduce((a,b)=>a+b,0)]);
+  h+=`</tbody></table></div>`;
+  h+=`<p class="note">${t.budgetNoteCF}</p>`;
+  el.innerHTML=h;
+}
+function renderPOB(){
+  const t=T(); const el=document.getElementById('p-pob');
+  if(!BUDGET){ el.innerHTML=periodHead(t.budgetTitlePF,'')+`<p class="note">${WBL[state.lang].notBuilt}</p>`; return; }
+  const mlabels=BUDGET.months.map(m=>GM()[+m.slice(5)-1]);
+  let h=periodHead(t.budgetTitlePF, t.budgetSrc(BUDGET));
+  h+=`<div class="tablewrap"><table class="ledger"><thead><tr><th>${t.item}</th>${mlabels.map(l=>`<th class="n">${l}</th>`).join('')}</tr></thead><tbody>`;
+  for(const r of BUDGET.portfolio) h+=budgetRow(r,r.vals);
+  h+=`</tbody></table></div>`;
+  h+=`<p class="note">${t.budgetNotePF}</p>`;
+  el.innerHTML=h;
+}
+function pctCell(v){ return `<td class="n">${(v*100).toFixed(2)}%</td>`; }
+function renderASB(){
+  const t=T(); const el=document.getElementById('p-asb');
+  if(!BUDGET){ el.innerHTML=periodHead(t.budgetTitleAS,'')+`<p class="note">${WBL[state.lang].notBuilt}</p>`; return; }
+  const mlabels=BUDGET.months.map(m=>GM()[+m.slice(5)-1]);
+  let h=periodHead(t.budgetTitleAS, t.budgetSrc(BUDGET));
+  h+=`<div class="tablewrap"><table class="ledger"><thead><tr><th>${t.item}</th>${mlabels.map(l=>`<th class="n">${l}</th>`).join('')}</tr></thead><tbody>`;
+  for(const r of BUDGET.assumptions){ const label=state.lang==='en'?(r.en||r.ka):r.ka; h+=`<tr><td class="name">${esc(label)}</td>${r.vals.map(v=>pctCell(v)).join('')}</tr>`; }
+  h+=`</tbody></table></div>`;
+  h+=`<p class="note">${t.budgetNoteAS}</p>`;
+  el.innerHTML=h;
 }
 
+/* ---------- ACTUAL vs BUDGET (PL / BS / CF) ---------- */
+function fixAvHead(el){ const rows=el.querySelectorAll('.ledger thead tr'); if(rows.length===2){ const h=rows[0].getBoundingClientRect().height; rows[1].querySelectorAll('th').forEach(th=>th.style.top=h+'px'); } }
+function avHead(t,months,withYTD){
+  const r1=`<th></th>`+months.map(m=>`<th colspan="3">${m}</th>`).join('')+(withYTD?`<th colspan="3">${t.ytd}</th>`:'');
+  const trip=`<th class="n">${t.actual}</th><th class="n">${t.budget}</th><th class="n">${t.diff}</th>`;
+  const r2=`<th>${t.item}</th>`+months.map(()=>trip).join('')+(withYTD?trip:'');
+  return `<thead><tr>${r1}</tr><tr>${r2}</tr></thead>`;
+}
+function diffCell(act,bud){
+  if(act===undefined||isNaN(act)) return `<td class="n zero">–</td>`;
+  const d=act-bud; const cls=['n']; if(Math.abs(d)<0.005) cls.push('zero'); else if(d<0) cls.push('neg');
+  const pct=Math.abs(bud)>0.5 ? (d/Math.abs(bud)*100) : null;
+  const pctTxt=pct===null?'':` <span style="font-size:10px;color:var(--muted)">(${pct>=0?'+':'−'}${Math.abs(pct).toFixed(1)}%)</span>`;
+  return `<td class="${cls.join(' ')}">${fmt(d)}${pctTxt}</td>`;
+}
+function avRowTds(acts,buds,withYTD,ytdOk){
+  if(ytdOk===undefined) ytdOk=true;
+  let tds=''; for(let i=0;i<acts.length;i++) tds+=cell(acts[i])+cell(buds[i])+diffCell(acts[i],buds[i]);
+  if(withYTD){
+    if(ytdOk){ const ya=acts.reduce((s,v)=>s+v,0), yb=buds.reduce((s,v)=>s+v,0); tds+=cell(ya)+cell(yb)+diffCell(ya,yb); }
+    else tds+='<td class="n zero">–</td><td class="n zero">–</td><td class="n zero">–</td>';
+  }
+  return tds;
+}
+function avItemRow(b,actFn,withYTD,ytdOk,n){
+  const label=state.lang==='en'?(b.en||b.ka):b.ka; const cls=b.level===1?(b.bold?'total':'lvl1'):''; const ind=b.level===2?'ind1':'';
+  const acts=[]; for(let j=0;j<n;j++) acts.push(actFn?actFn(j):undefined);
+  return `<tr class="${cls}"><td class="name ${ind}">${esc(label)}</td>${avRowTds(acts,b.vals.slice(0,n),withYTD,ytdOk)}</tr>`;
+}
+/* Full P&L waterfall by Oris account, decomposed to exactly reconcile (no double count / no gap)
+   with the dashboard's own already-verified plLines().net: revenue/cogs/opex use the narrow core
+   accounts (6 1 10/6 1 20, 7 1+7 2, 7 3+7 4); every remaining class-6/class-8-1 sub-account not
+   individually named by the budget gets folded into "Other Revenue" (87) as a catch-all, so nothing
+   from class 6-9 is silently dropped. See avNotePL for what's approximate/unavailable and why. */
+const PL_ACTUALS=(()=>{
+  const incA=c=>j=>{ const v=S(stats(j,j),c); return v.c-v.d; };
+  const expA=c=>j=>{ const v=S(stats(j,j),c); return v.d-v.c; };
+  const sumA=(...fns)=>j=>fns.reduce((s,f)=>s+f(j),0);
+  const rev79=sumA(incA('6 1 10'),incA('6 1 20'));
+  const cogs81=sumA(expA('7 2'),expA('7 1'));
+  const gross82=j=>rev79(j)-cogs81(j);
+  const serv84=incA('6 1 91'), pen85=incA('8 1 25'), pbs86=incA('6 1 90 1');
+  const oth87=sumA(incA('6 1 90 2'),incA('8 1 10'),incA('8 1 20'),incA('8 1 30'),incA('8 1 50'),incA('8 1 90'));
+  const opex90=sumA(expA('7 3'),expA('7 4'));
+  const ebitda105=j=>gross82(j)+serv84(j)+pen85(j)+pbs86(j)+oth87(j)-opex90(j);
+  const nonop108=expA('8 2');
+  const net118=j=>ebitda105(j)-nonop108(j)+incA('9 1')(j)-expA('9 2')(j);
+  return {
+    78:j=>rev79(j)*1.18, 79:rev79, 80:j=>cogs81(j)*1.18, 81:cogs81, 82:gross82,
+    84:serv84, 85:pen85, 86:pbs86, 87:oth87, 90:opex90, 91:expA('7 3'),
+    94:expA('7 4 90 49'), 95:sumA(expA('7 4 25'),expA('7 4 90 5')), 96:expA('7 4 20'),
+    98:sumA(expA('7 4 22'),expA('7 4 90 32'),expA('7 4 90 34'),expA('7 4 90 42'),expA('7 4 90 48'),expA('7 4 90 52'),expA('7 4 45')),
+    99:sumA(expA('7 4 90 11'),expA('7 4 90 27'),expA('7 4 90 28'),expA('7 4 90 50')),
+    100:expA('7 4 90 39'), 104:expA('7 4 18'), 105:ebitda105, 108:nonop108, 118:net118,
+  };
+})();
+function renderAVPL(){
+  const t=T(); const el=document.getElementById('p-avpl');
+  if(!BUDGET){ el.innerHTML=periodHead(t.avTitlePL,'')+`<p class="note">${t.budgetMissing}</p>`; return; }
+  const n=D.months.length; const mlabels=D.months.slice(0,n).map(m=>GM()[+m.slice(5)-1]);
+  let h=periodHead(t.avTitlePL, t.budgetSrc(BUDGET));
+  h+=`<div class="tablewrap"><table class="ledger">${avHead(t,mlabels,true)}<tbody>`;
+  for(const b of BUDGET.pl) h+=avItemRow(b, PL_ACTUALS[b.row], true, true, n);
+  h+=`</tbody></table></div>`;
+  h+=`<p class="note">${t.avNotePL}</p>`;
+  el.innerHTML=h; fixAvHead(el);
+}
+/* Full Balance Sheet by Oris account, via the dashboard's own bsVal() so every row uses the exact
+   same sign convention/closing-entry handling already verified (BS check = 0.00) elsewhere. Long-term
+   loans (all lumped into Oris account 4 1 90 by contragent) are split into Bank/Zuk/Shareholder by
+   the specific contragent sub-codes actually named that way in Oris - not a guess, verified against
+   the budget's own Jan values (within 1-14%). See avNotePF-style disclosure in avNoteBS for gaps. */
+const BS_ACTUALS=(()=>{
+  const bv=(c,j)=>bsVal(stats(0,j),c);
+  const sumBv=(...codes)=>j=>codes.reduce((s,c)=>s+bv(c,j),0);
+  const BANK=['4 1 90 10611','4 1 90 3746','4 1 90 4693','4 1 90 5506','4 1 90 7426'];
+  const ZUK=['4 1 90 8018'];
+  const SH=['4 1 90 11677','4 1 90 11998','4 1 90 12284','4 1 90 1318','4 1 90 1684','4 1 90 2426','4 1 90 5959','4 1 90 8019'];
+  return {
+    124:j=>bsVal(stats(0,j),'1'), 125:j=>cashClose(stats(0,j)), 126:j=>bv('1 4 10',j), 128:j=>bv('1 6',j),
+    129:j=>bsVal(stats(0,j),'2'), 130:j=>bv('2 1 60',j), 131:j=>bv('2 1 80',j), 132:j=>bv('2 1 90',j), 133:j=>bv('2 5',j),
+    134:sumBv('2 2','2 6'), 135:j=>bsVal(stats(0,j),'1')+bsVal(stats(0,j),'2'),
+    137:j=>bsVal(stats(0,j),'3'), 138:j=>bv('3 1 10',j), 139:j=>bv('3 1 20',j), 140:sumBv('3 1 30','3 1 32'),
+    141:j=>bv('3 3 10',j), 142:j=>bv('3 3 20',j), 143:j=>bv('3 3 30',j), 144:j=>bv('3 3 40',j),
+    146:j=>bv('3 3 80',j), 147:j=>bv('3 4 10',j), 148:j=>bsVal(stats(0,j),'4'),
+    149:sumBv(...SH), 150:sumBv(...BANK), 151:sumBv(...ZUK),
+    152:j=>bsVal(stats(0,j),'3')+bsVal(stats(0,j),'4'), 154:j=>bsVal(stats(0,j),'5'),
+    155:j=>bv('5 3 10',j), 156:j=>bv('5 3 30',j), 157:j=>bsVal(stats(0,j),'3')+bsVal(stats(0,j),'4')+bsVal(stats(0,j),'5'),
+  };
+})();
+function renderAVBS(){
+  const t=T(); const el=document.getElementById('p-avbs');
+  if(!BUDGET){ el.innerHTML=periodHead(t.avTitleBS,'')+`<p class="note">${t.budgetMissing}</p>`; return; }
+  const n=D.months.length; const mlabels=D.months.slice(0,n).map(m=>GM()[+m.slice(5)-1]);
+  let h=periodHead(t.avTitleBS, t.budgetSrc(BUDGET));
+  h+=`<div class="tablewrap"><table class="ledger">${avHead(t,mlabels,false)}<tbody>`;
+  for(const b of BUDGET.bs) h+=avItemRow(b, BS_ACTUALS[b.row], false, false, n);
+  h+=`</tbody></table></div>`;
+  h+=`<p class="note">${t.avNoteBS}</p>`;
+  el.innerHTML=h; fixAvHead(el);
+}
+/* Cash flow can only be split by counter-account, and Oris's cash ledger only ever settles against
+   ~20 broad counter accounts (most G&A bills route through the supplier-payable account 3 1 10, not
+   their own expense account, before being paid) - so most budget CF line items simply have no
+   isolable actual at this granularity. Only customer/advance collections and long-term-loan
+   draws/repayments are cleanly attributable; everything else is dash, disclosed in avNoteCF. */
+const CF_ACTUALS=(()=>{
+  const byCtr={};
+  for(const [,ctr,m,i,o] of D.cf){ if(isCash(ctr)) continue;
+    const e=(byCtr[ctr]||(byCtr[ctr]={}))[m]||((byCtr[ctr][m])={i:0,o:0}); e.i+=i; e.o+=o; }
+  const cIn=c=>j=>(byCtr[c]&&byCtr[c][j]?byCtr[c][j].i:0), cOut=c=>j=>(byCtr[c]&&byCtr[c][j]?byCtr[c][j].o:0);
+  const finIn=cIn('4 1 90'), finOut=cOut('4 1 90');
+  const cashAt=j=>cashClose(stats(0,j)); const openingCash=S(stats(0,0),'1 1').o+S(stats(0,0),'1 2').o;
+  const startAt=j=>j===0?openingCash:cashAt(j-1);
+  return {
+    28:cIn('1 4 10'), 29:cIn('3 1 20'), 61:j=>finIn(j)-finOut(j), 62:finIn, 67:finOut, 71:finOut,
+    72:j=>cashAt(j)-startAt(j), 73:startAt, 74:cashAt,
+  };
+})();
+function renderAVCF(){
+  const t=T(); const el=document.getElementById('p-avcf');
+  if(!BUDGET){ el.innerHTML=periodHead(t.avTitleCF,'')+`<p class="note">${t.budgetMissing}</p>`; return; }
+  const n=D.months.length; const mlabels=D.months.slice(0,n).map(m=>GM()[+m.slice(5)-1]);
+  const BAL_ROWS=new Set([73,74]);
+  let h=periodHead(t.avTitleCF, t.budgetSrc(BUDGET));
+  h+=`<div class="tablewrap"><table class="ledger">${avHead(t,mlabels,true)}<tbody>`;
+  for(const b of BUDGET.cf) h+=avItemRow(b, CF_ACTUALS[b.row], true, !BAL_ROWS.has(b.row), n);
+  h+=`</tbody></table></div>`;
+  h+=`<p class="note">${t.avNoteCF}</p>`;
+  el.innerHTML=h; fixAvHead(el);
+}
+function renderAVPF(){
+  const t=T(); const el=document.getElementById('p-avpf');
+  if(!BUDGET){ el.innerHTML=periodHead(t.avTitlePF,'')+`<p class="note">${t.budgetMissing}</p>`; return; }
+  const n=D.months.length; const mlabels=D.months.slice(0,n).map(m=>GM()[+m.slice(5)-1]);
+  const findP=row=>BUDGET.portfolio.find(r=>r.row===row);
+  const arAt=j=>close(S(stats(0,j),'1 4 10')); const openingAR=S(stats(0,0),'1 4 10').o;
+  const items=[
+    [14, ()=>undefined, false],
+    [15, j=>j===0?openingAR:arAt(j-1), false],
+    [16, j=>arAt(j), true],
+    [21, ()=>undefined, false],
+    [22, ()=>undefined, false],
+  ];
+  let h=periodHead(t.avTitlePF, t.budgetSrc(BUDGET));
+  h+=`<div class="tablewrap"><table class="ledger">${avHead(t,mlabels,false)}<tbody>`;
+  for(const [row,actFn,bold] of items){ const p=findP(row); if(!p) continue;
+    const label=state.lang==='en'?(p.en||p.ka):p.ka; const acts=[]; for(let j=0;j<n;j++) acts.push(actFn(j));
+    h+=`<tr class="${bold?'total':''}"><td class="name">${esc(label)}</td>${avRowTds(acts,p.vals.slice(0,n),false)}</tr>`; }
+  h+=`</tbody></table></div>`;
+  h+=`<p class="note">${t.avNotePF}</p>`;
+  el.innerHTML=h; fixAvHead(el);
+}
+function avPctCell(n){ const bad=n===null||n===undefined||isNaN(n); const cls=['n']; if(!bad){ if(Math.abs(n)<0.0005) cls.push('zero'); else if(n<0) cls.push('neg'); } return `<td class="${cls.join(' ')}">${bad?'–':(n*100).toFixed(2)+'%'}</td>`; }
+function avRowTdsPct(acts,buds){ let tds=''; for(let i=0;i<acts.length;i++) tds+=avPctCell(acts[i])+avPctCell(buds[i])+avPctCell(acts[i]-buds[i]); return tds; }
+function renderAVAS(){
+  const t=T(); const el=document.getElementById('p-avas');
+  if(!BUDGET){ el.innerHTML=periodHead(t.avTitleAS,'')+`<p class="note">${t.budgetMissing}</p>`; return; }
+  const n=D.months.length; const mlabels=D.months.slice(0,n).map(m=>GM()[+m.slice(5)-1]);
+  const findA=row=>BUDGET.assumptions.find(r=>r.row===row);
+  const markup=j=>{ const p=plLines(stats(j,j)); return p.cogs?(p.rev-p.cogs)/p.cogs:undefined; };
+  const mktExp=j=>{ const s=stats(j,j); const v=S(s,'7 4 90 39'); const mk=v.d-v.c; const rev=plLines(s).rev; return rev?mk/rev:undefined; };
+  const fineInc=j=>{ const s=stats(j,j); const v=S(s,'8 1 25'); const fine=v.c-v.d; const rev=plLines(s).rev; return rev?fine/rev:undefined; };
+  const items=[
+    [4, ()=>undefined],
+    [5, markup],
+    [6, ()=>undefined],
+    [7, ()=>undefined],
+    [8, mktExp],
+    [9, fineInc],
+    [10, ()=>undefined],
+    [11, ()=>undefined],
+  ];
+  let h=periodHead(t.avTitleAS, t.budgetSrc(BUDGET));
+  h+=`<div class="tablewrap"><table class="ledger">${avHead(t,mlabels,false)}<tbody>`;
+  for(const [row,actFn] of items){ const a=findA(row); if(!a) continue;
+    const label=state.lang==='en'?(a.en||a.ka):a.ka; const acts=[]; for(let j=0;j<n;j++) acts.push(actFn(j));
+    h+=`<tr><td class="name">${esc(label)}</td>${avRowTdsPct(acts,a.vals.slice(0,n))}</tr>`; }
+  h+=`</tbody></table></div>`;
+  h+=`<p class="note">${t.avNoteAS}</p>`;
+  el.innerHTML=h; fixAvHead(el);
+}
+
+
 /* ---------- wiring ---------- */
-const R={ov:renderOV,bs:renderBS,pl:renderPL,tb:renderTB,cf:renderCF,ar:renderAR,ex:renderEX,wb:renderWB};
-function render(){ document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('on',p.id==='p-'+state.tab)); document.querySelectorAll('#tabs button').forEach(b=>b.setAttribute('aria-selected',b.dataset.p===state.tab)); R[state.tab](); }
+const R={ov:renderOV,bs:renderBS,pl:renderPL,tb:renderTB,cf:renderCF,ar:renderAR,ex:renderEX,pb:renderPB,bb:renderBB,cfb:renderCFB,pob:renderPOB,asb:renderASB,avpl:renderAVPL,avbs:renderAVBS,avcf:renderAVCF,avpf:renderAVPF,avas:renderAVAS};
+const BUDGET_TABS=['pb','bb','cfb','pob','asb','avpl','avbs','avcf','avpf','avas'];
+function render(){ document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('on',p.id==='p-'+state.tab)); document.querySelectorAll('#tabs button').forEach(b=>b.setAttribute('aria-selected',b.dataset.p===state.tab));
+  const noMonth=BUDGET_TABS.includes(state.tab); document.getElementById('l-month').hidden=noMonth; document.getElementById('month').hidden=noMonth;
+  R[state.tab](); }
 function buildChrome(){
   const t=T(); document.documentElement.lang=state.lang;
   document.getElementById('h-title').textContent=t.title;
   const dmy=s=>s.split('-').reverse().join('.');
   document.getElementById('h-sub').innerHTML=`${t.src} <b>${dmy(D.meta.asof)}</b> · ${t.journal} <b>${dmy(D.meta.first)} – ${dmy(D.meta.last)}</b> · ${t.allGel}`;
   document.getElementById('l-year').textContent=t.year; document.getElementById('l-month').textContent=t.month;
-  document.querySelectorAll('#tabs button').forEach(b=>{ b.textContent=b.dataset.p==='wb'?WBL[state.lang].tab:t.tabs[b.dataset.p]; if(b.dataset.p==='wb') b.hidden=!WB; });
+  document.querySelectorAll('#tabs button').forEach(b=>{ b.textContent=t.tabs[b.dataset.p]; if(BUDGET_TABS.includes(b.dataset.p)) b.hidden=!BUDGET; });
+  document.querySelectorAll('[data-rl]').forEach(el=>{ el.textContent=t.tabGroups[el.dataset.rl]; });
+  document.querySelectorAll('.tab-row-wrap[data-budget-group]').forEach(w=>{ w.hidden=!BUDGET; });
   document.querySelectorAll('#lang button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.l===state.lang));
-  const s=D.meta.stats; document.getElementById('foot').textContent=t.foot({total:fmt(s.total,0),kept:fmt(s.kept,0),closing:fmt(s.skip_closing,0),offbal:s.skip_offbal},s.fx_converted);
+  document.querySelectorAll('#theme button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.th===state.theme));
+  const s=D.meta.stats; document.getElementById('foot').textContent=t.foot({total:fmt(s.total,0),kept:fmt(s.kept,0),closing:fmt(s.skip_closing,0),offbal:s.skip_offbal,pre2026:fmt(s.pre2026,0)},s.fx_converted);
   const yr=document.getElementById('years'); yr.innerHTML=years.map(y=>`<button aria-pressed="${y===state.year}" data-y="${y}">${y}</button>`).join('');
   yr.querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{ state.year=b.dataset.y; if(state.month!==null && M.indexOf(`${state.year}-${state.month}`)<0) state.month=null; buildChrome(); render(); }));
   const ms=document.getElementById('month'); const avail=monthsOf(state.year).map(i=>M[i].slice(5));
@@ -681,8 +969,11 @@ function buildChrome(){
   ms.onchange=()=>{ state.month=ms.value||null; render(); };
 }
 document.getElementById('lang').addEventListener('click',e=>{ const b=e.target.closest('button[data-l]'); if(!b) return; state.lang=b.dataset.l; try{localStorage.setItem('volta-fin-lang',state.lang);}catch(_){} buildChrome(); render(); });
+document.getElementById('theme').addEventListener('click',e=>{ const b=e.target.closest('button[data-th]'); if(!b) return; state.theme=b.dataset.th; document.documentElement.dataset.theme=state.theme; try{localStorage.setItem('volta-fin-theme',state.theme);}catch(_){} buildChrome(); });
 document.getElementById('tabs').addEventListener('click',e=>{ const b=e.target.closest('button[data-p]'); if(!b) return; state.tab=b.dataset.p; try{localStorage.setItem('volta-fin-tab',state.tab);}catch(_){} render(); });
-document.querySelector('main').addEventListener('click',e=>{ const t=e.target.closest('[data-tg]'); if(!t) return; const id=t.dataset.tg; if(state.open.has(id)) state.open.delete(id); else state.open.add(id); render(); });
+document.querySelector('main').addEventListener('click',e=>{
+  const c=e.target.closest('[data-compact]'); if(c){ const id=c.dataset.compact; if(state.compactTabs.has(id)) state.compactTabs.delete(id); else state.compactTabs.add(id); render(); return; }
+  const t=e.target.closest('[data-tg]'); if(!t) return; const id=t.dataset.tg; if(state.open.has(id)) state.open.delete(id); else state.open.add(id); render(); });
 try{ const t=localStorage.getItem('volta-fin-tab'); if(t&&R[t]) state.tab=t; }catch(_){}
 buildChrome(); render();
 </script>

@@ -29,9 +29,8 @@ env = dict(os.environ, PYTHONIOENCODING='utf-8')
 log('exporting TPS -> SQLite (~5 min)')
 subprocess.run([PY, os.path.join(TOOLS, 'export_sqlite.py'), volta, os.path.join(BASE, 'oris.sqlite')], check=True, env=env)
 log('aggregating'); subprocess.run([PY, os.path.join(TOOLS, 'build_data.py')], check=True, env=env)
-log('fetching RS.ge waybills'); rc = subprocess.run([PY, os.path.join(TOOLS, 'fetch_rs_waybills.py')], env=env).returncode
-if rc: log('RS.ge fetch failed (rc', rc, ') - using the previous rs_waybills.json if present')
-if os.path.exists(os.path.join(BASE, 'rs_waybills.json')):
-    log('joining waybills RS <-> Oris'); subprocess.run([PY, os.path.join(TOOLS, 'build_waybills.py')], check=True, env=env)
+# RS.ge <-> Oris waybill reconciliation moved to the RS_New DB artifact (2026-09-10) -
+# fetch_rs_waybills.py / build_waybills.py stay in this folder (their Oris-side join logic is
+# reused there) but are no longer run as part of this refresh.
 log('building HTML'); subprocess.run([PY, os.path.join(TOOLS, 'build_dashboard.py')] + sys.argv[2:3], check=True, env=env)
 log('DONE -> Volta_Finance.html in', os.path.dirname(TOOLS), '| now commit+push and republish the Artifact from this file')
