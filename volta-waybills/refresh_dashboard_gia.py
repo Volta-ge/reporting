@@ -10,23 +10,48 @@ refresh_dashboard.py.
 Field mapping (verified against a known ground-truth case, see
 volta_voltastoredb_schema.md memory):
   Instalment_ID -> orders.my_volta_installment_id
-  PID           -> customers.id_number, via orders.customer_id when present
-                    (76% of orders), else via orders.customer_email =
-                    customers.email (guest orders, resolves ~30% of those)
+  PID           -> customers.id_number, via orders.customer_id ONLY
+                    (a real FK, ID-to-ID) — deliberately NOT via email or
+                    any other fuzzy match (see below)
   Order_Date    -> orders.crm_order_date
-  Full_Cost     -> orders.grand_total
+  Full_Cost     -> orders.base_grand_total (NOT grand_total — see below)
   Manager_Name  -> crm_users (via orders.crm_sales_manager_id)
   Product_Name  -> order_items.name (concatenated if an order has >1 item —
                     the old DB was always exactly one product per row, the
                     new schema allows more)
 
-Real, unavoidable data gap: ~17% of orders (mostly guest checkouts with no
-matching customer record at all) have no discoverable PID anywhere in this
-schema. Per user's explicit decision (2026-09-01): these are EXCLUDED from
-the CRM sales pulled here entirely, not just left unmatched — they never
-enter reconciliation. A one-off list of them was exported separately
-(export script not kept; re-derive from this same query's HAVING clause,
-inverted, if asked again).
+IMPORTANT — matching is ID-only, never email (2026-09-02, per explicit user
+requirement): an earlier version of this script fell back to `orders.
+customer_email = customers.email` for guest orders (orders.customer_id IS
+NULL). That was removed — email is not an identifier, it's contact info,
+and matching on it risks pulling in the wrong customer (e.g. a shared
+family email, a typo, a reused address). Every PID here now comes from one
+of exactly two ID-based bridges: (1) `orders.customer_id = customers.id`
+(a real FK) when VoltaStoreDB has it, or (2) `orders.
+my_volta_installment_id = <old Instalment_ID>` -> myvolta.info's
+`instalments.Customer_ID = customers.Customer_ID` -> `customers.PID` for
+everything else. Verified 2026-09-02: this ID-only path still recovers
+100% of the ~17% of orders VoltaStoreDB alone can't resolve (1,812/1,812
+on the 2025-09-01+ window) — losing the email fallback cost nothing, the
+old-DB bridge alone was already sufficient. Only an order with no
+`my_volta_installment_id` at all (never existed in the old system — ~0.7%
+of all orders per the schema memory) would still be unrecoverable; none
+observed in this window.
+
+Sale amount is `base_grand_total`, not `grand_total` (2026-09-04): on
+2026-09-04, between the 10:15Z scheduled build and a 14:35 local rebuild,
+`orders.grand_total` was lowered for 275 status-5 orders in this window
+(mostly to ~0.90x, some far lower) by a direct DB update — `updated_at` was
+not touched — while `base_grand_total`, `sub_total`, `order_items.total`
+and myvolta's `Full_Cost` all kept the original full price. The effect on
+this dashboard was 204 buyers flipping from "matched" to a false "აკლია
+გაყიდვა" (their sale now looked smaller than their waybill). Checked
+against the old DB over the whole window: base_grand_total == Full_Cost
+for 99.7% of orders (grand_total only 96.1% after the change), and the
+waybill FULL_AMOUNT is the goods value, i.e. the full price — so
+base_grand_total is the right field for this comparison regardless of what
+grand_total now means (unknown: not a discount, down payment, loan
+principal or current catalog price — ask the developer).
 """
 import sys
 from pathlib import Path
@@ -38,13 +63,42 @@ sys.path.insert(0, str(HERE))
 
 # Reuse everything except CRM fetching from the myvolta.info pipeline.
 from refresh_dashboard import (
-    START, fetch_waybills, build_waybill_rows, fetch_invoices, build_invoice_rows,
+    START, OWN_TIN, fetch_waybills, build_waybill_rows, fetch_invoices, build_invoice_rows,
     build_reconciliation, build_geo_summary, load_logistics_status,
+    fetch_purchase_waybills, build_purchase_rows,
+    fetch_purchase_goods, build_purchase_items, fetch_buyer_invoices,
 )
+import oris_reconciliation
 import json
 from datetime import datetime
 
-from config import GIA_DB_HOST, GIA_DB_PORT, GIA_DB_USER, GIA_DB_PASS, GIA_DB_NAME
+from config import (
+    GIA_DB_HOST, GIA_DB_PORT, GIA_DB_USER, GIA_DB_PASS, GIA_DB_NAME,
+    DB_HOST, DB_PORT, DB_USER, DB_PASS, DB_NAME,
+)
+
+
+def backfill_pid_from_old_db(case_ids):
+    """For case_ids (== old Instalment_ID) whose PID couldn't be found in
+    VoltaStoreDB, look it up in myvolta.info directly — same bridge key,
+    verified 100% recovery rate on the current dataset (see module
+    docstring). Returns {case_id: PID}."""
+    if not case_ids:
+        return {}
+    conn = pymysql.connect(
+        host=DB_HOST, port=DB_PORT, user=DB_USER, password=DB_PASS,
+        database=DB_NAME, connect_timeout=15,
+    )
+    cur = conn.cursor(pymysql.cursors.DictCursor)
+    fmt_ids = ",".join(str(c) for c in case_ids)
+    cur.execute(f"""
+        SELECT i.Instalment_ID, c.PID
+        FROM instalments i JOIN customers c ON i.Customer_ID = c.Customer_ID
+        WHERE i.Instalment_ID IN ({fmt_ids}) AND c.PID IS NOT NULL AND c.PID <> ''
+    """)
+    result = {r["Instalment_ID"]: r["PID"] for r in cur.fetchall()}
+    conn.close()
+    return result
 
 
 def fetch_crm_sales_gia():
@@ -56,36 +110,49 @@ def fetch_crm_sales_gia():
     cur.execute("""
         SELECT
             o.my_volta_installment_id AS Instalment_ID,
-            ANY_VALUE(COALESCE(c1.id_number, c2.id_number)) AS PID,
+            ANY_VALUE(c1.id_number) AS PID,
             ANY_VALUE(COALESCE(
                 NULLIF(TRIM(CONCAT(c1.first_name, ' ', c1.last_name)), ''),
-                NULLIF(TRIM(CONCAT(c2.first_name, ' ', c2.last_name)), ''),
                 CONCAT(o.customer_first_name, ' ', o.customer_last_name)
             )) AS FullName,
             ANY_VALUE(o.crm_order_date) AS Order_Date,
-            ANY_VALUE(o.grand_total) AS Full_Cost,
+            ANY_VALUE(o.base_grand_total) AS Full_Cost,
             ANY_VALUE(NULLIF(TRIM(CONCAT(cu.first_name, ' ', cu.last_name)), '')) AS Manager_Name,
             GROUP_CONCAT(DISTINCT oi.name SEPARATOR '; ') AS Product_Name
         FROM orders o
         LEFT JOIN customers c1 ON o.customer_id = c1.id
-        LEFT JOIN customers c2 ON o.customer_id IS NULL AND o.customer_email = c2.email
         LEFT JOIN crm_users cu ON o.crm_sales_manager_id = cu.id
         LEFT JOIN order_items oi ON oi.order_id = o.id
         WHERE o.crm_order_status = 5
           AND o.crm_order_date >= %s
           AND o.my_volta_installment_id IS NOT NULL
         GROUP BY o.id
-        HAVING PID IS NOT NULL AND PID <> ''
     """, (START,))
     rows = cur.fetchall()
     conn.close()
-    # Instalment_ID needs to be an int downstream (case-id display, joins) —
-    # it comes back as a string from my_volta_installment_id (varchar).
+
     for r in rows:
         r["Instalment_ID"] = int(r["Instalment_ID"])
         r["Manager_Name"] = r["Manager_Name"] or "—"
         r["Product_Name"] = r["Product_Name"] or "—"
-    return rows
+
+    no_pid_ids = [r["Instalment_ID"] for r in rows if not r["PID"]]
+    recovered = backfill_pid_from_old_db(no_pid_ids)
+    recovered_count = 0
+    for r in rows:
+        if not r["PID"] and r["Instalment_ID"] in recovered:
+            r["PID"] = recovered[r["Instalment_ID"]]
+            recovered_count += 1
+    print(f"  PID backfilled from myvolta.info for {recovered_count}/{len(no_pid_ids)} "
+          f"orders with no PID in VoltaStoreDB", file=sys.stderr)
+
+    # Whatever's still unresolved after the old-DB fallback (never existed
+    # in the old system either) can't be matched to a waybill at all —
+    # exclude, same as before.
+    still_missing = sum(1 for r in rows if not r["PID"])
+    if still_missing:
+        print(f"  {still_missing} orders still have no PID after the fallback — excluded", file=sys.stderr)
+    return [r for r in rows if r["PID"]]
 
 
 def main():
@@ -99,9 +166,30 @@ def main():
     inv_rows = build_invoice_rows(raw_inv)
     print(f"invoices: fetched {len(inv_rows)}", file=sys.stderr)
 
+    print(f"[{datetime.now()}] fetching purchase (buyer-side) waybills from RS.ge...", file=sys.stderr)
+    raw_pur = fetch_purchase_waybills()
+    vend_rows, pur_skipped = build_purchase_rows(raw_pur)
+    print(f"purchases: fetched {len(raw_pur)}, kept {len(vend_rows)}, skipped {pur_skipped} "
+          f"(cancelled/unnumbered/internal); {len({r['t'] for r in vend_rows})} vendors, "
+          f"net {sum(r['a'] for r in vend_rows):,.0f} GEL", file=sys.stderr)
+    raw_goods = fetch_purchase_goods()
+    vend_items = build_purchase_items(raw_goods, vend_rows)
+    print(f"purchase goods lines: fetched {len(raw_goods)}, kept {len(vend_items)}, "
+          f"{len({it[1] for it in vend_items})} distinct products", file=sys.stderr)
+
+    print(f"[{datetime.now()}] fetching received (buyer-side) invoices from RS.ge...", file=sys.stderr)
+    binv_rows = build_invoice_rows(fetch_buyer_invoices())
+    print(f"received invoices: {len(binv_rows)}, {len({r['t'] for r in binv_rows})} sellers, "
+          f"{sum(r['a'] for r in binv_rows):,.0f} GEL incl. VAT", file=sys.stderr)
+
     print(f"[{datetime.now()}] fetching CRM sales from VoltaStoreDB (Gia's)...", file=sys.stderr)
     crm_rows = fetch_crm_sales_gia()
     print(f"CRM sales (crm_order_status=5, PID resolvable): {len(crm_rows)}", file=sys.stderr)
+
+    print(f"[{datetime.now()}] joining Oris <-> RS.ge waybills...", file=sys.stderr)
+    oris_wb = oris_reconciliation.build(raw_wb, raw_pur, OWN_TIN, START.strftime("%Y-%m-%d"))
+    print(f"  sell: RS {len(oris_wb['sell'])} rows, buy: RS {len(oris_wb['buy'])} rows "
+          f"(fx rows sell/buy: {oris_wb['meta']['oris_fx_rows']})", file=sys.stderr)
 
     logistics_status = load_logistics_status()
     print(f"logistics status snapshot: {len(logistics_status)} case_ids", file=sys.stderr)
@@ -120,6 +208,10 @@ def main():
     inv_json = json.dumps(inv_rows, ensure_ascii=False, separators=(",", ":"))
     recon_json = json.dumps(recon, ensure_ascii=False, separators=(",", ":"), default=str)
     geo_json = json.dumps(geo, ensure_ascii=False, separators=(",", ":"))
+    vend_json = json.dumps(vend_rows, ensure_ascii=False, separators=(",", ":"))
+    vend_items_json = json.dumps(vend_items, ensure_ascii=False, separators=(",", ":"))
+    binv_json = json.dumps(binv_rows, ensure_ascii=False, separators=(",", ":"))
+    oris_wb_json = json.dumps(oris_wb, ensure_ascii=False, separators=(",", ":"))
 
     template = (HERE / "template.html").read_text(encoding="utf-8")
     out_html = (template
@@ -127,6 +219,15 @@ def main():
                 .replace("__DATA_INV__", inv_json)
                 .replace("__DATA_RECON__", recon_json)
                 .replace("__DATA_GEO__", geo_json)
+                .replace("__DATA_VEND__", vend_json)
+                .replace("__DATA_VEND_ITEMS__", vend_items_json)
+                .replace("__DATA_BINV__", binv_json)
+                .replace("__DATA_ORIS_WB__", oris_wb_json)
+                # The <title> tag is what names the Artifact in the gallery —
+                # every republish overwrote the user's manual rename until the
+                # tag itself was set (2026-09-04). Keep in sync with the name
+                # the user chose: "RS_New DB".
+                .replace("<title>ვოლტას ზედნადებები და ფაქტურები</title>", "<title>RS_New DB</title>")
                 .replace("ვოლტას სავაჭრო რეესტრები", "ვოლტას სავაჭრო რეესტრები (Gia's DB)")
                 .replace("Volta Trade Registers", "Volta Trade Registers (Gia's DB)"))
     out_path = HERE / "waybill_dashboard_gia.html"

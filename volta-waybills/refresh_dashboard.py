@@ -415,6 +415,135 @@ def build_waybill_rows(raw):
     return rows, skipped
 
 
+OWN_TIN = SU.split(":")[-1]  # "API:402145362" -> company TIN, see volta_rsge_api.md
+
+
+def fetch_purchase_waybills():
+    """
+    Buyer-side register: every waybill where Volta is the BUYER (i.e. Volta's
+    purchases from its suppliers), via get_buyer_waybills. Two quirks found by
+    testing directly against the live API (2026-09-04):
+      - the buyer-side call ignores begin_date_s/e entirely (returned 0 rows
+        for any begin_date window) and only filters on create_date_s/e — so
+        the window is passed as create_date here. In practice CREATE_DATE ==
+        BEGIN_DATE for every one of the ~4,900 rows in the current window, so
+        the dashboard still displays BEGIN_DATE for consistency with the
+        seller-side tab.
+      - the response schema differs from get_waybills: the counterparty is
+        SELLER_NAME/SELLER_TIN (BUYER_* is always Volta itself), plus extra
+        IS_CONFIRMED / INVOICE_ID / WAYBILL_COMMENT fields.
+    """
+    client = Client(WAYBILL_WSDL)
+    end = datetime.now()
+    result = client.service.get_buyer_waybills(
+        su=SU, sp=SP,
+        itypes=None, seller_tin=None, statuses=None, car_number=None,
+        begin_date_s=None, begin_date_e=None,
+        create_date_s=START, create_date_e=end,
+        driver_tin=None,
+        delivery_date_s=None, delivery_date_e=None,
+        full_amount=None, waybill_number=None,
+        close_date_s=None, close_date_e=None,
+        s_user_ids=None, comment=None,
+    )
+    waybills = []
+    for wb in result.findall("WAYBILL"):
+        row = {child.tag: (child.text or "") for child in wb if child.tag not in ("SUB_WAYBILLS", "GOODS_LIST")}
+        waybills.append(row)
+    return waybills
+
+
+def build_purchase_rows(raw):
+    """
+    Compact rows for the Vendors (მომწოდებლები) tab. Excluded up front, not
+    just filtered client-side, because the tab is a purchases pivot and none
+    of these are purchases: cancelled waybills (STATUS=-2 — never delivered),
+    unnumbered ones (same rule as the seller-side register), and Volta→Volta
+    internal transfers (SELLER_TIN == own TIN, TYPE=1, zero amount — warehouse
+    moves that happen to show up on the buyer side too). TYPE=5 (goods
+    return) rows here are issued by the VENDOR with Volta as buyer — i.e.
+    Volta sending goods back to the supplier — so the amount is negated
+    (purchase reduction), mirroring the validated sign convention for Volta's
+    own customer returns on the seller-side tab. Checked 2026-09-04: every
+    TYPE=5 seller in the window is one of the known suppliers, none are
+    retail customers, so negating them is a pure vendor-netting effect.
+    """
+    rows = []
+    skipped = 0
+    for r in raw:
+        if not r.get("WAYBILL_NUMBER") or r.get("STATUS") == "-2" or r.get("SELLER_TIN") == OWN_TIN:
+            skipped += 1
+            continue
+        amount = float(r["FULL_AMOUNT"]) if r.get("FULL_AMOUNT") else 0.0
+        if r.get("TYPE") == "5":
+            amount = -amount
+        rows.append({
+            "i": r.get("ID", ""),
+            "n": r.get("WAYBILL_NUMBER", ""),
+            "d": r.get("BEGIN_DATE") or r.get("CREATE_DATE") or "",
+            "v": (r.get("SELLER_NAME") or "დაუდგენელი").strip(),
+            "t": r.get("SELLER_TIN", ""),
+            "a": amount,
+            "s": r.get("STATUS", ""),
+            "y": r.get("TYPE", ""),
+            "c": (r.get("WAYBILL_COMMENT") or "").strip(),
+        })
+    return rows, skipped
+
+
+def fetch_purchase_goods():
+    """
+    Line items for every buyer-side waybill in one call —
+    get_buyer_waybilll_goods_list (sic, RS.ge's own triple-l spelling) returns
+    one <WAYBILL> element PER GOODS LINE (waybill header fields repeated on
+    each, plus W_NAME/QUANTITY/PRICE/AMOUNT), so unlike the seller side no
+    per-waybill get_waybill() loop is needed. Same create_date-only filtering
+    quirk as fetch_purchase_waybills(). Verified 2026-09-04 on the full
+    window: every waybill's SUM(AMOUNT) equals its FULL_AMOUNT exactly
+    (0 mismatches over 4,931 waybills / 9,966 lines).
+    """
+    client = Client(WAYBILL_WSDL)
+    end = datetime.now()
+    result = client.service.get_buyer_waybilll_goods_list(
+        su=SU, sp=SP,
+        itypes=None, seller_tin=None, statuses=None, car_number=None,
+        begin_date_s=None, begin_date_e=None,
+        create_date_s=START, create_date_e=end,
+        driver_tin=None,
+        delivery_date_s=None, delivery_date_e=None,
+        full_amount=None, waybill_number=None,
+        close_date_s=None, close_date_e=None,
+        s_user_ids=None, comment=None,
+    )
+    items = []
+    for el in result.findall("WAYBILL"):
+        items.append({child.tag: (child.text or "") for child in el})
+    return items
+
+
+def build_purchase_items(raw_items, vend_rows):
+    """
+    Compact [waybill_number, product_name, qty, amount] lines for the Vendors
+    tab's per-product breakdown, restricted to waybills that survived
+    build_purchase_rows() (so cancelled/internal lines never leak in) and
+    with the amount sign following the waybill's (negative for TYPE=5
+    returns to the vendor). Product names are trimmed with inner whitespace
+    collapsed — RS.ge free text, the same product often arrives with a
+    stray double space.
+    """
+    sign_by_wb = {r["n"]: (-1.0 if r["a"] < 0 else 1.0) for r in vend_rows}
+    out = []
+    for it in raw_items:
+        n = it.get("WAYBILL_NUMBER") or ""
+        if n not in sign_by_wb:
+            continue
+        name = " ".join((it.get("W_NAME") or "").split()) or "—"
+        qty = float(it["QUANTITY"]) if it.get("QUANTITY") else 0.0
+        amount = float(it["AMOUNT"]) if it.get("AMOUNT") else 0.0
+        out.append([n, name, qty, sign_by_wb[n] * amount])
+    return out
+
+
 def fetch_invoices():
     """
     get_seller_invoices returns a DataTable as an ADO.NET diffgram whose row
@@ -443,6 +572,36 @@ def fetch_invoices():
         if etree.QName(el).localname == "invoices":
             row = {etree.QName(child).localname: child.text for child in el}
             rows.append(row)
+    return rows
+
+
+def fetch_buyer_invoices():
+    """
+    Received (buyer-side) invoices — get_buyer_invoices on the same
+    ntosservice, identical parameter list and identical diffgram row shape
+    as get_seller_invoices (ORG_NAME/SA_IDENT_NO are the SELLER here), so
+    build_invoice_rows() is reused as-is. Same zeep-can't-bind quirk, same
+    raw-POST workaround as fetch_invoices(). Probed 2026-09-04: 2,758 rows /
+    126 sellers since 2025-09-01; TANXA is VAT-inclusive (VAT == TANXA*18/118).
+    """
+    client = Client(INVOICE_WSDL)
+    end = datetime.now()
+    node = client.create_message(
+        client.service, "get_buyer_invoices",
+        user_id=INVOICE_USER_ID, un_id=INVOICE_UN_ID,
+        s_dt=START, e_dt=end,
+        op_s_dt=START, op_e_dt=end,
+        invoice_no="", sa_ident_no="", desc="", doc_mos_nom="",
+        su=SU, sp=SP,
+    )
+    envelope = etree.tostring(node)
+    headers = {"Content-Type": "text/xml; charset=utf-8", "SOAPAction": "http://tempuri.org/get_buyer_invoices"}
+    response = client.transport.post(INVOICE_ENDPOINT, envelope, headers)
+    root = etree.fromstring(response.content)
+    rows = []
+    for el in root.iter():
+        if etree.QName(el).localname == "invoices":
+            rows.append({etree.QName(child).localname: child.text for child in el})
     return rows
 
 
@@ -542,7 +701,23 @@ def fetch_goods_names_bulk(waybill_ids, max_workers=25):
     return cache
 
 
-def build_reconciliation(crm_rows, waybill_raw):
+LOGISTICS_STATUS_PATH = HERE / "logistics_status_by_case.json"
+
+
+def load_logistics_status():
+    """Case_id (== CRM Instalment_ID) -> logistics status, manually extracted
+    from the "შეკვეთები" sheet of the separate Volta Order Management Google
+    Sheet (see extract_logistics_status.py) — NOT a live connection, this
+    file is a point-in-time snapshot refreshed by re-running that script
+    whenever a fresh pull is needed. Missing file just means no logistics
+    data is shown, not a pipeline error."""
+    if not LOGISTICS_STATUS_PATH.is_file():
+        return {}
+    return json.loads(LOGISTICS_STATUS_PATH.read_text(encoding="utf-8"))
+
+
+def build_reconciliation(crm_rows, waybill_raw, logistics_status=None):
+    logistics_status = logistics_status or {}
     """
     Per-PID bipartite match: each CRM sale is paired with at most one
     waybill on the same buyer TIN, within RECON_DATE_TOL_DAYS days and a
@@ -691,6 +866,7 @@ def build_reconciliation(crm_rows, waybill_raw):
                     "a": float(c["Full_Cost"]),
                     "mgr": c.get("Manager_Name") or "—",
                     "matched": ci in used_ci,
+                    "logi": logistics_status.get(str(c["Instalment_ID"])),
                 }
                 for ci, c in enumerate(sales)
             ],
@@ -1103,7 +1279,9 @@ def main():
     crm_rows = fetch_crm_sales()
     print(f"CRM sales (Order_Status=5, Product_ID>1): {len(crm_rows)}", file=sys.stderr)
 
-    recon = build_reconciliation(crm_rows, raw_wb)
+    logistics_status = load_logistics_status()
+    print(f"logistics status snapshot: {len(logistics_status)} case_ids", file=sys.stderr)
+    recon = build_reconciliation(crm_rows, raw_wb, logistics_status)
     s = recon["summary"]
     print(f"reconciliation (person-level): matched {s['matchedPeople']}, "
           f"missing waybill {s['missingWbPeople']} people ({s['riskAmountWb']:.0f} GEL), "
@@ -1127,7 +1305,21 @@ def main():
                 .replace("__DATA_WB__", wb_json)
                 .replace("__DATA_INV__", inv_json)
                 .replace("__DATA_RECON__", recon_json)
-                .replace("__DATA_GEO__", geo_json))
+                .replace("__DATA_GEO__", geo_json)
+                # Vendors (purchases) tab is only built for the Gia's-DB copy
+                # (refresh_dashboard_gia.py) per the 2026-09-04 request; null
+                # here makes template.html hide that tab entirely.
+                .replace("__DATA_VEND__", "null")
+                .replace("__DATA_VEND_ITEMS__", "null")
+                .replace("__DATA_BINV__", "null")
+                # Oris <-> RS.ge reconciliation tab is only built for the Gia's-DB copy
+                # (refresh_dashboard_gia.py) per the 2026-09-10 request; null here
+                # makes the new tab hide itself, same as Vendors/Binv above.
+                .replace("__DATA_ORIS_WB__", "null")
+                # <title> names the Artifact in the gallery; the user renamed
+                # this one "RS_Old DB" (2026-09-04) — keep the tag in sync so a
+                # daily republish doesn't revert the name.
+                .replace("<title>ვოლტას ზედნადებები და ფაქტურები</title>", "<title>RS_Old DB</title>"))
     out_path = HERE / "waybill_dashboard.html"
     out_path.write_text(out_html, encoding="utf-8")
     print(f"wrote {out_path} ({len(out_html.encode('utf-8'))} bytes)", file=sys.stderr)
