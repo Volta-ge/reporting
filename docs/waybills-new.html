@@ -450,14 +450,14 @@
     <div class="topbar-right">
       <div class="gen-stamp" id="globalGenStamp">—</div>
       <div class="tabbar">
-        <button class="tabbtn active" data-tab="recon" data-i18n="tabRecon">გაყიდვა ↔ ზედნადები</button>
+        <button class="tabbtn active" data-tab="recon" data-i18n="tabRecon">CRM ↔ RS.ge</button>
+        <button class="tabbtn" data-tab="oris" id="tabBtnOris" data-i18n="tabOris">Oris ↔ RS.ge</button>
         <button class="tabbtn" data-tab="wb" data-i18n="tabWb">ზედნადებები</button>
         <button class="tabbtn" data-tab="inv" data-i18n="tabInv">ანგარიშ-ფაქტურები</button>
         <button class="tabbtn" data-tab="geo" data-i18n="tabGeo">გეოგრაფია</button>
         <button class="tabbtn" data-tab="vend" id="tabBtnVend" data-i18n="tabVend">მომწოდებლები</button>
         <button class="tabbtn" data-tab="prod" id="tabBtnProd" data-i18n="tabProd">პროდუქტები</button>
       <button class="tabbtn" data-tab="binv" id="tabBtnBinv" data-i18n="tabBinv">მიღებული ფაქტურები</button>
-      <button class="tabbtn" data-tab="oris" id="tabBtnOris" data-i18n="tabOris">ორისი ↔ RS.ge</button>
         <button class="tabbtn" id="langToggle" style="margin-left:6px;">EN</button>
       </div>
     </div>
@@ -654,6 +654,9 @@
 
     <footer><span data-i18n="reconFooterSource">წყარო: myvolta.info CRM (instalments, Order_Status=5) &middot; RS.ge WayBillService</span></footer>
   </div>
+
+  <!-- ======================= ORIS <-> RS.ge TAB ======================= -->
+  <div class="tabpanel" id="tab-oris"><div id="orisRoot"></div></div>
 
   <!-- ======================= GEOGRAPHY TAB ======================= -->
   <div class="tabpanel" id="tab-geo">
@@ -956,9 +959,6 @@
     <footer><span data-i18n="binvFooterSource">წყარო: შემოსავლების სამსახური &middot; ელექტრონული ანგარიშ-ფაქტურის სერვისი (RS.ge NtosService, get_buyer_invoices)</span></footer>
   </div>
 
-  <!-- ======================= ORIS <-> RS.ge TAB ======================= -->
-  <div class="tabpanel" id="tab-oris"><div id="orisRoot"></div></div>
-
 </div>
 
 <script>
@@ -986,7 +986,7 @@ function t(key){
 }
 const T = {
   title: {ka:"ვოლტას სავაჭრო რეესტრები (Gia's DB)", en:"Volta Trade Registers (Gia's DB)"},
-  tabRecon: {ka:"გაყიდვა ↔ ზედნადები", en:"Sale ↔ Waybill"},
+  tabRecon: {ka:"CRM ↔ RS.ge", en:"CRM ↔ RS.ge"},
   tabWb: {ka:"ზედნადებები", en:"Waybills"},
   tabInv: {ka:"ანგარიშ-ფაქტურები", en:"Invoices"},
   tabGeo: {ka:"გეოგრაფია", en:"Geography"},
@@ -1198,7 +1198,7 @@ const T = {
 
   // received invoices tab
   tabBinv: {ka:"მიღებული ფაქტურები", en:"Received invoices"},
-  tabOris: {ka:"ორისი ↔ RS.ge", en:"Oris ↔ RS.ge"},
+  tabOris: {ka:"Oris ↔ RS.ge", en:"Oris ↔ RS.ge"},
   orisTitle: {ka:"ზედნადებების შედარება: RS.ge ↔ ორისი", en:"Waybill reconciliation: RS.ge ↔ Oris"},
   orisRsData: {ka:"RS.ge მონაცემები", en:"RS.ge data"}, orisOrisData: {ka:"ორისის ასლი", en:"Oris copy"},
   orisSideSell: {ka:"გაყიდვები (ჩვენი ზედნადებები)", en:"Sales (our waybills)"}, orisSideBuy: {ka:"შესყიდვები (მომწოდებლების ზედნადებები)", en:"Purchases (supplier waybills)"},
