@@ -459,6 +459,7 @@
         <button class="tabbtn" data-tab="prod" id="tabBtnProd" data-i18n="tabProd">პროდუქტები</button>
       <button class="tabbtn" data-tab="binv" id="tabBtnBinv" data-i18n="tabBinv">მიღებული ფაქტურები</button>
         <button class="tabbtn" id="langToggle" style="margin-left:6px;">EN</button>
+        <button class="tabbtn" id="themeToggle" style="margin-left:6px;" title="ფონის რეჟიმი">🌙</button>
       </div>
     </div>
   </div>
@@ -3225,6 +3226,29 @@ function setLang(lang){
 }
 document.getElementById("langToggle").addEventListener("click", ()=>{ setLang(LANG === "ka" ? "en" : "ka"); });
 applyStaticI18n();
+
+/* ---------- dark/light theme toggle ----------
+   The CSS already carries three layers of tokens: a light :root default, a
+   @media(prefers-color-scheme:dark) override (guarded by :not([data-theme=
+   "light"])) for viewers who haven't chosen, and an explicit :root[data-
+   theme="dark"/"light"] pair this toggle writes to override either way.
+   Persisted per-browser via localStorage, same pattern as the language
+   toggle — never assume a fixed default across viewers. */
+function systemPrefersDark(){ return window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches; }
+function currentTheme(){
+  const stored = localStorage.getItem("voltaTheme");
+  return stored === "light" || stored === "dark" ? stored : (systemPrefersDark() ? "dark" : "light");
+}
+function applyTheme(theme){
+  document.documentElement.setAttribute("data-theme", theme);
+  document.getElementById("themeToggle").textContent = theme === "dark" ? "☀️" : "🌙";
+}
+function setTheme(theme){
+  localStorage.setItem("voltaTheme", theme);
+  applyTheme(theme);
+}
+document.getElementById("themeToggle").addEventListener("click", ()=>{ setTheme(currentTheme() === "dark" ? "light" : "dark"); });
+applyTheme(currentTheme());
 </script>
 
 </body>
