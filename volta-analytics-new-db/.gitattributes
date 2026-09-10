@@ -1,0 +1,4 @@
+# bash scripts must stay LF even on Windows checkouts (CRLF breaks them under Git Bash)
+*.sh text eol=lf
+*.js text eol=lf
+*.ps1 text eol=crlf

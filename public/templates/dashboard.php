@@ -1,41 +1,16 @@
 <?php
 /**
- * @var array{mtd: array, yest: array}|null $data
+ * The page shell. This is sent and painted before any query runs — see public/index.php, which
+ * streams each report's data in afterwards with __section(). So the only values this file needs
+ * are the ones that cost no database work; every report dataset arrives later, over the wire.
+ *
  * @var string|null $connectionError
+ * @var \DateTimeImmutable $now
  * @var array{applications: int, amount: int, workingDaysLeft: int} $targets
  * @var string $headerYesterday
  * @var string $headerMtdRange
  * @var string $generatedAt
- * @var array<string, array{A: array, B: array}>|null $monthlyStats
- * @var array<string, array{A: array, B: array}>|null $dailyStats
- * @var array|null $salesMonthlyStats
- * @var array|null $brandStats
- * @var array|null $subcategoryStats
- * @var array|null $categoryBrandBreakdown
- * @var array|null $incomeDelinquencyByCategory
- * @var array|null $incomeDelinquencyBySubcategory
- * @var array|null $incomeDelinquencyByBrand
- * @var array|null $incomeDelinquencyByProduct
  * @var array<string, array{count: int, capturedAt: string}> $pendingStatusLog
- * @var array|null $customerAnalysis
- * @var array|null $customerAgeGenderAnalysis
- * @var array|null $customerWorkshopAnalysis
- * @var array|null $customerWorkposAnalysis
- * @var array|null $customerIncomeAnalysis
- * @var array|null $customerDistrictAnalysis
- * @var array|null $riskSegmentation
- * @var array|null $closedLoansMonthly
- * @var array|null $delinquencyAnalysis
- * @var array|null $rejectionReasonsMonthly
- * @var array|null $clientRefusedReasonsMonthly
- * @var array|null $expiredReasonsMonthly
- * @var array|null $notRespondingReasonsMonthly
- * @var array|null $approvedReasonsMonthly
- * @var array|null $applicationStatusesMonthly
- * @var array|null $leadStatusesMonthly
- * @var array|null $exCustomers
- * @var array|null $neverBorrowedByStatus
- * @var array|null $neverBorrowedDetail
  */
 
 declare(strict_types=1);
@@ -145,6 +120,15 @@ body {
 .table-card table { width: 100%; border-collapse: collapse; font-size: 12.5px; min-width: 320px; }
 .table-card th, .table-card td { text-align: right; padding: 7px 10px; border-bottom: 1px solid var(--grid); font-variant-numeric: tabular-nums; white-space: nowrap; }
 .table-card th:first-child, .table-card td:first-child { text-align: left; font-variant-numeric: normal; }
+
+/* Collection tab KPI position tiles — this dashboard has no chart infrastructure elsewhere, so
+   these plus the plain tables below are the whole visual language for this tab, matching the
+   rest of the file rather than introducing new charting code. */
+.kpi-grid { display: flex; flex-wrap: wrap; gap: 10px; margin: 4px 0 18px; }
+.kpi-tile { background: var(--surface-1); border: 1px solid var(--border); border-radius: 10px; padding: 12px 16px; flex: 1 1 160px; min-width: 160px; }
+.kpi-tile .kpi-label { font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-muted); }
+.kpi-tile .kpi-value { font-size: 21px; font-weight: 700; color: var(--text-primary); margin: 4px 0 2px; font-variant-numeric: tabular-nums; }
+.kpi-tile .kpi-sub { font-size: 11px; color: var(--text-secondary); }
 .table-card th { color: var(--text-secondary); font-weight: 650; font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.03em; }
 .table-card tbody tr:hover { background: color-mix(in srgb, var(--text-primary) 4%, transparent); }
 .table-card tr.total td { font-weight: 650; border-top: 2px solid var(--baseline); border-bottom: none; }
@@ -304,6 +288,17 @@ table.logi-open tr.logi-open-head td { background: #4472c4; color: #fff; font-we
 table.rpt-pivot td.col-collapsed { display: none; }
 table.rpt-pivot td.rpt-group-toggle { cursor: pointer; user-select: none; text-align: center; }
 
+/* Streaming progress: the page is interactive before any report has arrived, so this shows
+   what is still coming. It removes itself once the last section lands. */
+.load-banner { position: sticky; top: 0; z-index: 50; background: var(--surface-1);
+  border-bottom: 1px solid var(--grid); padding: 6px 14px; font-size: 11px;
+  color: var(--text-secondary); display: flex; align-items: center; gap: 10px; }
+.load-banner.is-done { display: none; }
+.load-track { flex: 0 0 160px; height: 4px; background: var(--grid); border-radius: 2px; overflow: hidden; }
+.load-track > div { height: 100%; width: 0; background: var(--text-secondary); transition: width .2s ease; }
+.load-failed { color: var(--critical); }
+.tbl-pending td { color: var(--text-muted); font-style: italic; }
+
 /* duplicate top scrollbar for the two pivot tables (many columns — the bottom scrollbar can be
    far below the viewport), kept in sync with the real horizontal scroll via JS */
 .report-scroll-top { overflow-x: auto; overflow-y: hidden; height: 14px; margin-bottom: -1px; }
@@ -329,6 +324,11 @@ table.rpt-pivot td.rpt-group-toggle { cursor: pointer; user-select: none; text-a
 <?php return; endif; ?>
 
 <div class="app">
+  <div class="load-banner" id="loadBanner">
+    <div class="load-track"><div id="loadBar"></div></div>
+    <span id="loadLabel">loading reports&hellip;</span>
+    <span id="loadStatus"></span>
+  </div>
   <div class="hdr">
     <div>
       <h1>Volta &mdash; Sales &amp; Product-Terms Funnel</h1>
@@ -364,6 +364,14 @@ table.rpt-pivot td.rpt-group-toggle { cursor: pointer; user-select: none; text-a
       <div class="nav-group-items">
         <button data-page="logistics">Logistics Daily</button>
         <a href="https://volta-ge.github.io/reporting/waybills.html" target="_blank" rel="noopener">CRM Sales &harr; RS Waybills &#8599;</a>
+      </div>
+    </div>
+    <div class="nav-group" data-group="collection">
+      <div class="nav-group-title">Collection</div>
+      <div class="nav-group-items">
+        <button data-page="collectionoverview">Overview</button>
+        <button data-page="collectionbuckets">Delinquency Buckets</button>
+        <button data-page="collectionfinancials">Financials</button>
       </div>
     </div>
     <div class="nav-group" data-group="customers">
@@ -611,6 +619,36 @@ table.rpt-pivot td.rpt-group-toggle { cursor: pointer; user-select: none; text-a
   </div>
 </div>
 
+<div class="page" id="page-collectionoverview">
+  <p class="section-title">Collection &mdash; Overview</p>
+  <p class="note" style="margin:-8px 0 0;">A partial port of the separate collections.volta.ge system's Overview tab, fed from this project's own live DB instead. Only current-position KPIs are shown here &mdash; that system's day-over-day trend charts, auto-generated insight cards, and contact-status breakdown all depend on historical daily snapshots this DB doesn't reliably retain (see the Delinquency Buckets tab's note), so they aren't reproduced. <b>DPD</b> (days past due) = days since a loan's next-due installment (<code>instalments.Days_Age</code>); a customer with several active loans is judged by their worst (highest-DPD) loan, with their whole balance attributed there.</p>
+  <div class="kpi-grid" id="collectionOverviewKpis"></div>
+</div>
+
+<div class="page" id="page-collectionbuckets">
+  <p class="section-title">Collection &mdash; Delinquency Buckets</p>
+  <p class="note" style="margin:-8px 0 0;">Current position only, by customer &mdash; a customer holding several active loans is placed in the bucket of their single worst (highest-DPD) loan, with their <i>entire</i> balance across all active loans attributed to that one bucket, matching the source site's own rule. <b>Due today</b> (DPD&nbsp;0) is shown but excluded from &ldquo;% of overdue&rdquo; and from every other tab's overdue KPIs &mdash; it isn't actually late yet. Not reproduced here: the source site's monthly collection-yield-by-bucket table, which needs to know balances as of past dates &mdash; the only table with per-installment due dates (<code>instalment_shedules</code>) turned out not to reliably retain history (compared two real loans: one still-active loan had its paid-off schedule rows deleted, a closed one hadn't), so building that table now risked shipping silently wrong numbers.</p>
+  <div class="table-card">
+    <table id="collectionBucketsTable"><tbody></tbody></table>
+  </div>
+</div>
+
+<div class="page" id="page-collectionfinancials">
+  <p class="section-title">Collection &mdash; Financials</p>
+  <p class="note" style="margin:-8px 0 0;">Loan book position and cash collected, scoped to currently active loans (<code>Active = 1</code>) except the monthly collections table, which is company-wide cash regardless of a loan's current status. One data-quality fix applied here: a single sentinel row in <code>payments</code> (Amount = 99,999,999.99, clearly a placeholder) is excluded from every total on this page.</p>
+  <div class="kpi-grid" id="collectionFinancialsKpis"></div>
+  <p class="section-title" style="margin-top:20px;">Collections by month</p>
+  <p class="note" style="margin:-8px 0 0;">Principal and penalty received, GEL &mdash; the one sentinel payment row excluded, last 13 months.</p>
+  <div class="table-card">
+    <table id="collectionMonthlyTable"><tbody></tbody></table>
+  </div>
+  <p class="section-title" style="margin-top:20px;">Loan-level DPD split</p>
+  <p class="note" style="margin:-8px 0 0;">One row per loan (not per customer, unlike the Delinquency Buckets tab) &mdash; coarser bucket boundaries matching the source site's own "CFO reconciliation view". The two tables agree on grand totals only, never bucket by bucket, since the boundaries differ.</p>
+  <div class="table-card">
+    <table id="collectionLoanBucketsTable"><tbody></tbody></table>
+  </div>
+</div>
+
 <div class="page" id="page-customers">
   <p class="section-title">Customers &mdash; portfolio customer analysis</p>
   <p class="note" style="margin:-8px 0 0;">Aggregate counts only, scoped to customers with at least one real application (Product_ID &gt; 1) &mdash; no individual customer data shown. "New" = exactly one loan ever; "Repeat" = two or more. Live from the database on every page load.</p>
@@ -708,7 +746,6 @@ table.rpt-pivot td.rpt-group-toggle { cursor: pointer; user-select: none; text-a
       </table>
     </div>
   </div>
-
   <p class="section-title" style="margin-top:20px;">Never Became a Customer &mdash; full list</p>
   <p class="note" style="margin:-8px 0 0;">Same ~26,500 people as the status breakdown above, now with contact detail &mdash; every application they ever submitted was rejected, refused, or expired before disbursement, so there's no closed-loan history to grade (no Grade/Collected %/Purchased/Written Off columns here, unlike the graded list above). <b>Products</b> = what they applied for/expressed interest in, not what they bought. Sorted by most recent application first.</p>
   <div class="excust-search">
@@ -827,41 +864,107 @@ table.rpt-pivot td.rpt-group-toggle { cursor: pointer; user-select: none; text-a
 </div>
 
 <script>
-const data = <?= json_encode($data, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) ?>;
+/* Values that need no database work — available the moment the page starts streaming. */
 const targets = <?= json_encode($targets, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>;
 const generatedAt = <?= json_encode($generatedAt, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>;
 const headerYesterday = <?= json_encode($headerYesterday, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>;
 const headerMtdRange = <?= json_encode($headerMtdRange, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>;
-const monthlyStats = <?= json_encode($monthlyStats, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>;
-const dailyStats = <?= json_encode($dailyStats, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>;
-const salesMonthlyStats = <?= json_encode($salesMonthlyStats, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) ?>;
-const brandStats = <?= json_encode($brandStats, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) ?>;
-const subcategoryStats = <?= json_encode($subcategoryStats, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) ?>;
-const categoryBrandBreakdown = <?= json_encode($categoryBrandBreakdown, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) ?>;
-const incomeDelinquencyByCategory = <?= json_encode($incomeDelinquencyByCategory, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) ?>;
-const incomeDelinquencyBySubcategory = <?= json_encode($incomeDelinquencyBySubcategory, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) ?>;
-const incomeDelinquencyByBrand = <?= json_encode($incomeDelinquencyByBrand, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) ?>;
-const incomeDelinquencyByProduct = <?= json_encode($incomeDelinquencyByProduct, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) ?>;
 const pendingStatusLog = <?= json_encode($pendingStatusLog, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) ?>;
-const customerAnalysis = <?= json_encode($customerAnalysis, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) ?>;
-const customerAgeGenderAnalysis = <?= json_encode($customerAgeGenderAnalysis, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) ?>;
-const customerWorkshopAnalysis = <?= json_encode($customerWorkshopAnalysis, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) ?>;
-const customerWorkposAnalysis = <?= json_encode($customerWorkposAnalysis, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) ?>;
-const customerIncomeAnalysis = <?= json_encode($customerIncomeAnalysis, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) ?>;
-const customerDistrictAnalysis = <?= json_encode($customerDistrictAnalysis, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) ?>;
-const riskSegmentation = <?= json_encode($riskSegmentation, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) ?>;
-const exCustomers = <?= json_encode($exCustomers, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) ?>;
-const neverBorrowedByStatus = <?= json_encode($neverBorrowedByStatus, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) ?>;
-const neverBorrowedDetail = <?= json_encode($neverBorrowedDetail, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) ?>;
-const closedLoansMonthly = <?= json_encode($closedLoansMonthly, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) ?>;
-const delinquencyAnalysis = <?= json_encode($delinquencyAnalysis, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) ?>;
-const rejectionReasonsMonthly = <?= json_encode($rejectionReasonsMonthly, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) ?>;
-const clientRefusedReasonsMonthly = <?= json_encode($clientRefusedReasonsMonthly, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) ?>;
-const expiredReasonsMonthly = <?= json_encode($expiredReasonsMonthly, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) ?>;
-const notRespondingReasonsMonthly = <?= json_encode($notRespondingReasonsMonthly, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) ?>;
-const approvedReasonsMonthly = <?= json_encode($approvedReasonsMonthly, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) ?>;
-const applicationStatusesMonthly = <?= json_encode($applicationStatusesMonthly, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) ?>;
-const leadStatusesMonthly = <?= json_encode($leadStatusesMonthly, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) ?>;
+
+/* Everything below arrives later. The page is streamed: this shell — markup, styles and every
+   render function — is sent and painted before a single query has run, then index.php pushes
+   each report's data with __section() as soon as that report's query returns, and only that
+   report's tables are drawn. Nothing waits on the slowest query, and nothing is cached: every
+   value is still read live from the database on every page load. */
+var data = null;
+var monthlyStats = null;
+var dailyStats = null;
+var salesMonthlyStats = null;
+var brandStats = null;
+var subcategoryStats = null;
+var categoryBrandBreakdown = null;
+var incomeDelinquencyByCategory = null;
+var incomeDelinquencyBySubcategory = null;
+var incomeDelinquencyByBrand = null;
+var incomeDelinquencyByProduct = null;
+var customerAnalysis = null;
+var customerAgeGenderAnalysis = null;
+var customerWorkshopAnalysis = null;
+var customerWorkposAnalysis = null;
+var customerIncomeAnalysis = null;
+var customerDistrictAnalysis = null;
+var riskSegmentation = null;
+var exCustomers = null;
+var neverBorrowedByStatus = null;
+var neverBorrowedDetail = null;
+var collectionsOverview = null;
+var collectionsBuckets = null;
+var collectionsFinancials = null;
+var closedLoansMonthly = null;
+var delinquencyAnalysis = null;
+var rejectionReasonsMonthly = null;
+var clientRefusedReasonsMonthly = null;
+var expiredReasonsMonthly = null;
+var notRespondingReasonsMonthly = null;
+var approvedReasonsMonthly = null;
+var applicationStatusesMonthly = null;
+var leadStatusesMonthly = null;
+
+const __sections = {};
+const __pending = new Set(Object.keys(__sections));
+
+/** Registers the renderer for one streamed dataset. */
+function __onSection(name, render) {
+  __sections[name] = render;
+  __pending.add(name);
+}
+
+/**
+ * Called by each chunk index.php streams. Assigns the dataset, runs its renderer, and marks
+ * that section done. A renderer that throws is contained: its own panel shows the failure and
+ * every other section still arrives.
+ */
+function __section(name, payload) {
+  window[name] = payload;
+  try {
+    if (__sections[name]) { __sections[name](payload); }
+  } catch (e) {
+    __sectionFailed(name, e && e.message ? e.message : String(e));
+    return;
+  } finally {
+    __pending.delete(name);
+    __progress();
+  }
+}
+
+/** Called instead of __section() when the query behind a section failed server-side. */
+function __sectionFailed(name, message) {
+  const el = document.getElementById('loadStatus');
+  if (el) {
+    const li = document.createElement('div');
+    li.className = 'load-failed';
+    li.textContent = name + ' \u2014 ' + message;
+    el.appendChild(li);
+  }
+  __pending.delete(name);
+  __progress();
+}
+
+function __progress() {
+  const bar = document.getElementById('loadBar');
+  if (!bar) { return; }
+  const total = Object.keys(__sections).length;
+  const done = total - __pending.size;
+  bar.style.width = total ? Math.round((done / total) * 100) + '%' : '100%';
+  const label = document.getElementById('loadLabel');
+  if (label) { label.textContent = done + ' / ' + total + ' reports loaded'; }
+}
+
+/** Streamed last, once every section has been sent. */
+function __streamComplete() {
+  const el = document.getElementById('loadBanner');
+  if (el) { el.classList.add('is-done'); }
+}
 
 const fmt = n => Math.round(n).toLocaleString('en-US');
 const fmt1 = n => n.toLocaleString('en-US', { maximumFractionDigits: 1 });
@@ -980,7 +1083,7 @@ function renderReport() {
   });
 }
 
-renderReport();
+__onSection('data', renderReport);
 
 /* ---------- MTD/Daily Statistics: same Section A/B/C report layout as the Report tab,
    pivoted so each column pair is one period (a month or a day) instead of Yesterday/MTD ---------- */
@@ -1143,22 +1246,22 @@ function dayLabel(ymd) {
 const PIVOT_FOOTER = 'Segment A = TV, Phone, or any single product &gt; 2,500 GEL. Segment B = everything else. Excludes unassigned "lead" placeholder rows. Applications, Terms Approved, and Underwriting Approved are keyed to Application Date. Deals Closed is keyed to Application Date and counts active/disbursed instalments. Amount Sold is keyed to Order Date (the disbursement/issue date) and equals Full Cost (Initial Amount + First Payment), the full sale price &mdash; not just the financed principal. Downpayment Collected = sum of the first payment on every application in the period, regardless of underwriting/active status; it is already included inside Amount Sold, not additive to it. Source: myvolta8_voltadb, table instalments. Generated ' + generatedAt + '.';
 
 const mtdScrollUpdate = setupTopScrollSync('mtdStatsScrollTop', 'mtdStatsScrollBody');
-renderPivotReport(
+__onSection('monthlyStats', () => renderPivotReport(
   'mtdStatsTable', monthlyStats, monthLabel,
   'One column pair per calendar month',
   PIVOT_FOOTER + ' A completed month shows its final total; the current month shows MTD-to-date.',
   null,
   mtdScrollUpdate
-);
+));
 
 const dailyScrollUpdate = setupTopScrollSync('dailyStatsScrollTop', 'dailyStatsScrollBody');
-renderPivotReport(
+__onSection('dailyStats', () => renderPivotReport(
   'dailyStatsTable', dailyStats, dayLabel,
   'One column pair per calendar day, from June 1. Click a month header below to collapse its days.',
   PIVOT_FOOTER + ' Today is excluded (not yet finished). Recent days are undercounted and will keep rising on refresh, because Active/Order Date can be set several days after Application Date.',
   { keyFn: ymd => ymd.slice(0, 7), labelFn: ym => monthLabel(ym).replace(' (MTD)', '') },
   dailyScrollUpdate
-);
+));
 
 /* ---------- Sales Monthly / Brand Analyze / Subcategory Analyze: bucket x month breakdown,
    live from the DB (FunnelRepository::salesMonthlyStats / brandMonthlyStats /
@@ -1266,8 +1369,10 @@ function renderSalesMonthlyForDealType() {
     GARBAGE_NOTE);
   salesMonthlyScrollUpdate();
 }
-renderSalesMonthlyForDealType();
-wireDealTypeFilter('salesMonthlyDealTypeNav', dt => { salesMonthlyDealType = dt; renderSalesMonthlyForDealType(); });
+__onSection('salesMonthlyStats', () => {
+  renderSalesMonthlyForDealType();
+  wireDealTypeFilter('salesMonthlyDealTypeNav', dt => { salesMonthlyDealType = dt; renderSalesMonthlyForDealType(); });
+});
 
 const brandScrollUpdate = setupTopScrollSync('brandScrollTop', 'brandScrollBody');
 let brandDealType = 'all';
@@ -1278,8 +1383,10 @@ function renderBrandForDealType() {
     GARBAGE_NOTE);
   brandScrollUpdate();
 }
-renderBrandForDealType();
-wireDealTypeFilter('brandDealTypeNav', dt => { brandDealType = dt; renderBrandForDealType(); });
+__onSection('brandStats', () => {
+  renderBrandForDealType();
+  wireDealTypeFilter('brandDealTypeNav', dt => { brandDealType = dt; renderBrandForDealType(); });
+});
 
 const subcategoryScrollUpdate = setupTopScrollSync('subcategoryScrollTop', 'subcategoryScrollBody');
 let subcategoryDealType = 'all';
@@ -1290,8 +1397,10 @@ function renderSubcategoryForDealType() {
     GARBAGE_NOTE);
   subcategoryScrollUpdate();
 }
-renderSubcategoryForDealType();
-wireDealTypeFilter('subcategoryDealTypeNav', dt => { subcategoryDealType = dt; renderSubcategoryForDealType(); });
+__onSection('subcategoryStats', () => {
+  renderSubcategoryForDealType();
+  wireDealTypeFilter('subcategoryDealTypeNav', dt => { subcategoryDealType = dt; renderSubcategoryForDealType(); });
+});
 
 /* ---------- Category/Brand: one block per category (title bar + header + brand rows + total
    row), mirroring the business's own reference report's "Top 4 — Brands" sheet layout for every
@@ -1324,8 +1433,10 @@ let categoryBrandDealType = 'all';
 function renderCategoryBrandForDealType() {
   renderCategoryBrandTable(categoryBrandBreakdown ? categoryBrandBreakdown[categoryBrandDealType] : null);
 }
-renderCategoryBrandForDealType();
-wireDealTypeFilter('categoryBrandDealTypeNav', dt => { categoryBrandDealType = dt; renderCategoryBrandForDealType(); });
+__onSection('categoryBrandBreakdown', () => {
+  renderCategoryBrandForDealType();
+  wireDealTypeFilter('categoryBrandDealTypeNav', dt => { categoryBrandDealType = dt; renderCategoryBrandForDealType(); });
+});
 
 /* ---------- Income & Delinquency by Product (Category/Subcategory/Brand/Product): two pivot
    tables per dimension, sharing the same period/Q1/Q2/Total column structure as Sales Monthly
@@ -1477,18 +1588,18 @@ function renderIncomeDelinquencyDimension(pageKey, dimKey, data, incomeTitleText
   delinquencyScrollUpdate();
   incomeDelinquencyScrollUpdaters[pageKey] = [incomeScrollUpdate, delinquencyScrollUpdate];
 }
-renderIncomeDelinquencyDimension('incomecategory', 'Category', incomeDelinquencyByCategory,
+__onSection('incomeDelinquencyByCategory', () => renderIncomeDelinquencyDimension('incomecategory', 'Category', incomeDelinquencyByCategory,
   'Income &mdash; by Product Category (Realized Margin, Closed Loans)', 'Delinquency &mdash; Write-off Rate by Product Category',
-  'Product Category', 'Uncategorized');
-renderIncomeDelinquencyDimension('incomesubcategory', 'Subcategory', incomeDelinquencyBySubcategory,
+  'Product Category', 'Uncategorized'));
+__onSection('incomeDelinquencyBySubcategory', () => renderIncomeDelinquencyDimension('incomesubcategory', 'Subcategory', incomeDelinquencyBySubcategory,
   'Income &mdash; by Subcategory (Realized Margin, Closed Loans)', 'Delinquency &mdash; Write-off Rate by Subcategory',
-  'Subcategory', 'Uncategorized');
-renderIncomeDelinquencyDimension('incomebrand', 'Brand', incomeDelinquencyByBrand,
+  'Subcategory', 'Uncategorized'));
+__onSection('incomeDelinquencyByBrand', () => renderIncomeDelinquencyDimension('incomebrand', 'Brand', incomeDelinquencyByBrand,
   'Income &mdash; by Brand (Realized Margin, Closed Loans)', 'Delinquency &mdash; Write-off Rate by Brand',
-  'Brand', 'No Brand');
-renderIncomeDelinquencyDimension('incomeproduct', 'Product', incomeDelinquencyByProduct,
+  'Brand', 'No Brand'));
+__onSection('incomeDelinquencyByProduct', () => renderIncomeDelinquencyDimension('incomeproduct', 'Product', incomeDelinquencyByProduct,
   'Income &mdash; by Product (Realized Margin, Closed Loans)', 'Delinquency &mdash; Write-off Rate by Product',
-  'Product', 'Uncategorized');
+  'Product', 'Uncategorized'));
 
 /* ---------- Sales — Pending Status: same "one column per date, transferred unchanged"
    pattern as the Logistics Delivery Status table below it, from the same source sheet.
@@ -1708,7 +1819,7 @@ function renderCustomerAnalysis() {
   document.getElementById('customersByGenderTable').querySelector('tbody').innerHTML =
     `<tr><th>Gender</th><th>Customers</th><th>Share</th></tr>${genderHtml}<tr class="total"><td>Total</td><td>${fmt(genderTotal)}</td><td>100.0%</td></tr>`;
 }
-renderCustomerAnalysis();
+__onSection('customerAnalysis', renderCustomerAnalysis);
 
 function renderCustomerAgeGender() {
   const d = customerAgeGenderAnalysis;
@@ -1729,7 +1840,7 @@ function renderCustomerAgeGender() {
 
   document.getElementById('customersAgeGenderTable').querySelector('tbody').innerHTML = html;
 }
-renderCustomerAgeGender();
+__onSection('customerAgeGenderAnalysis', renderCustomerAgeGender);
 
 function renderCustomerGroupedField(stats, tableId, headLabel, noteId, noteTemplate) {
   if (!stats) return;
@@ -1742,11 +1853,11 @@ function renderCustomerGroupedField(stats, tableId, headLabel, noteId, noteTempl
     document.getElementById(noteId).innerHTML = noteTemplate.replace('{distinct}', fmt(stats.distinctValues));
   }
 }
-renderCustomerGroupedField(customerWorkshopAnalysis, 'customersWorkshopTable', 'Workshop', 'customersWorkshopNote',
-  `From <code>customers.Workshop</code> &mdash; free text (employer/field), top 20 exact values shown + "Other" for the long tail ({distinct} distinct raw values total). Spelling/typo variants (e.g. "თვითდასაქმებული" vs "თვით დასაქმებული") are shown separately, not merged &mdash; merging them would mean guessing which strings mean the same thing.`);
-renderCustomerGroupedField(customerWorkposAnalysis, 'customersWorkposTable', 'Workpos',  'customersWorkposNote',
-  `From <code>customers.Workpos</code> &mdash; job title/position, top 20 exact values shown + "Other" for the long tail ({distinct} distinct raw values total). Same convention as Workshop: no spelling-variant merging.`);
-renderCustomerGroupedField(customerIncomeAnalysis, 'customersIncomeTable', 'Income (GEL)', null, null);
+__onSection('customerWorkshopAnalysis', () => renderCustomerGroupedField(customerWorkshopAnalysis, 'customersWorkshopTable', 'Workshop', 'customersWorkshopNote',
+  `From <code>customers.Workshop</code> &mdash; free text (employer/field), top 20 exact values shown + "Other" for the long tail ({distinct} distinct raw values total). Spelling/typo variants (e.g. "თვითდასაქმებული" vs "თვით დასაქმებული") are shown separately, not merged &mdash; merging them would mean guessing which strings mean the same thing.`));
+__onSection('customerWorkposAnalysis', () => renderCustomerGroupedField(customerWorkposAnalysis, 'customersWorkposTable', 'Workpos',  'customersWorkposNote',
+  `From <code>customers.Workpos</code> &mdash; job title/position, top 20 exact values shown + "Other" for the long tail ({distinct} distinct raw values total). Same convention as Workshop: no spelling-variant merging.`));
+__onSection('customerIncomeAnalysis', () => renderCustomerGroupedField(customerIncomeAnalysis, 'customersIncomeTable', 'Income (GEL)', null, null));
 
 function renderCustomerDistrict() {
   const d = customerDistrictAnalysis;
@@ -1759,7 +1870,7 @@ function renderCustomerDistrict() {
   const matchedShare = 1 - undetermined.share;
   document.getElementById('customersDistrictNote').innerHTML += ` Matched on ${pct(matchedShare)} of Tbilisi addresses.`;
 }
-renderCustomerDistrict();
+__onSection('customerDistrictAnalysis', renderCustomerDistrict);
 
 function renderRiskSegmentation() {
   const d = riskSegmentation;
@@ -1772,7 +1883,7 @@ function renderRiskSegmentation() {
     + `<tr class="total"><td>Total</td><td>${fmt(d.total.n)}</td><td>${fmt(d.total.debt)}</td><td></td><td>100.0%</td></tr>`;
   document.getElementById('riskSegmentationTable').querySelector('tbody').innerHTML = html;
 }
-renderRiskSegmentation();
+__onSection('riskSegmentation', renderRiskSegmentation);
 
 /* ---------- Ex Customers: individual-row PII report (name/PID/phone/email + payment grade),
    the one report in this project that isn't aggregate-only — see ExCustomerRepository's docblock
@@ -1790,7 +1901,11 @@ function renderExCustomersSummary() {
     + `<tr class="total"><td>Total</td><td>${fmt(d.summary.grandTotal.count)}</td><td>100.0%</td><td>${fmt(d.summary.grandTotal.totalPurchased)}</td><td>${fmt(d.summary.grandTotal.totalWrittenOff)}</td></tr>`;
   document.getElementById('exCustomersSummaryTable').querySelector('tbody').innerHTML = html;
 }
-renderExCustomersSummary();
+__onSection('exCustomers', () => {
+  renderExCustomersSummary();
+  renderExCustomersTable('');
+  document.getElementById('exCustomersSearch').addEventListener('input', e => renderExCustomersTable(e.target.value));
+});
 
 function renderNeverBorrowedByStatus() {
   const d = neverBorrowedByStatus;
@@ -1803,7 +1918,102 @@ function renderNeverBorrowedByStatus() {
     + `<tr class="total"><td>Total</td><td>${fmt(d.total)}</td><td>100.0%</td></tr>`;
   document.getElementById('neverBorrowedTable').querySelector('tbody').innerHTML = html;
 }
-renderNeverBorrowedByStatus();
+__onSection('neverBorrowedByStatus', renderNeverBorrowedByStatus);
+
+function renderNeverBorrowedDetailTable(filterText) {
+  const d = neverBorrowedDetail;
+  const table = document.getElementById('neverBorrowedDetailTable');
+  if (!d || !d.rows) {
+    table.querySelector('tbody').innerHTML = '<tr><td>No data.</td></tr>';
+    return;
+  }
+  const needle = (filterText || '').trim().toLowerCase();
+  const rows = needle
+    ? d.rows.filter(r => `${r.name} ${r.pid} ${r.phone} ${r.email} ${r.products}`.toLowerCase().includes(needle))
+    : d.rows;
+
+  const html = rows.map(r => `<tr>
+    <td>${r.name}</td><td>${r.pid}</td><td>${r.phone}</td><td>${r.email}</td><td>${r.city}</td>
+    <td>${r.lastStatus}</td><td>${r.lastAppDate || '&ndash;'}</td>
+    <td class="num">${fmt(r.appCount)}</td><td class="products-cell">${r.products}</td>
+  </tr>`).join('');
+  table.querySelector('tbody').innerHTML = html || '<tr><td colspan="9">No matches.</td></tr>';
+
+  const countEl = document.getElementById('neverBorrowedSearchCount');
+  if (countEl) countEl.textContent = needle ? `${rows.length} of ${d.rows.length}` : `${d.rows.length} customers`;
+}
+__onSection('neverBorrowedDetail', () => {
+  renderNeverBorrowedDetailTable('');
+  document.getElementById('neverBorrowedSearch').addEventListener('input', e => renderNeverBorrowedDetailTable(e.target.value));
+});
+
+/* ---------- Collection: partial port of collections.volta.ge (Overview KPIs, Delinquency
+   Buckets, Financials only — see each page's own note for what's not reproduced and why). */
+function kpiTileHtml(label, value, sub) {
+  return `<div class="kpi-tile"><div class="kpi-label">${label}</div><div class="kpi-value">${value}</div><div class="kpi-sub">${sub}</div></div>`;
+}
+
+function renderCollectionOverview() {
+  const d = collectionsOverview;
+  if (!d) return;
+  const html = [
+    kpiTileHtml('Open Loan Book', fmt(d.openLoanBook), `${fmt(d.loanCount)} loans &middot; ${fmt(d.customerCount)} customers`),
+    kpiTileHtml('Penalties', fmt(d.penalties), 'outside the loan balance'),
+    kpiTileHtml('Total Open Debt', fmt(d.totalOpenDebt), 'principal + penalties'),
+    kpiTileHtml('Overdue Balance', fmt(d.overdueBalance), 'principal + penalties, DPD &ge; 1'),
+    kpiTileHtml('Overdue Customers', fmt(d.overdueCustomers), 'DPD &ge; 1'),
+    kpiTileHtml('Collected Today', fmt(d.collectedToday), 'principal + penalty'),
+  ].join('');
+  document.getElementById('collectionOverviewKpis').innerHTML = html;
+}
+__onSection('collectionsOverview', renderCollectionOverview);
+
+function renderCollectionBuckets() {
+  const d = collectionsBuckets;
+  if (!d) return;
+  const rowsHtml = d.rows.map(r =>
+    `<tr><td>${r.bucket}</td><td>${r.stage}</td><td>${fmt(r.customers)}</td><td>${fmt(r.balance)}</td><td>${r.pctOfOverdue === null ? '&mdash;' : pct(r.pctOfOverdue)}</td></tr>`
+  ).join('');
+  const totalCust = d.rows.reduce((s, r) => s + r.customers, 0);
+  const totalBal = d.rows.reduce((s, r) => s + r.balance, 0);
+  const html = `<tr><th>Bucket</th><th>Stage</th><th>Customers</th><th>Balance (GEL)</th><th>% of Overdue</th></tr>`
+    + rowsHtml
+    + `<tr class="total"><td>Total</td><td></td><td>${fmt(totalCust)}</td><td>${fmt(totalBal)}</td><td></td></tr>`;
+  document.getElementById('collectionBucketsTable').querySelector('tbody').innerHTML = html;
+}
+__onSection('collectionsBuckets', renderCollectionBuckets);
+
+function renderCollectionFinancials() {
+  const d = collectionsFinancials;
+  if (!d) return;
+
+  const k = d.kpis;
+  const kpiHtml = [
+    kpiTileHtml('Original Debt', fmt(k.originalDebt), 'total contracted receivable'),
+    kpiTileHtml('Repaid to Date', fmt(k.repaidToDate), `${pct(k.repaidShare)} of original`),
+    kpiTileHtml('Open Loan Book', fmt(k.openLoanBook), 'principal outstanding'),
+    kpiTileHtml('Penalties Accrued', fmt(k.penaltiesAccrued), 'reported separately'),
+    kpiTileHtml('Total Open Debt', fmt(k.totalOpenDebt), `${fmt(k.activeLoans)} active loans`),
+  ].join('');
+  document.getElementById('collectionFinancialsKpis').innerHTML = kpiHtml;
+
+  const monthRows = d.collectionsByMonth.map(m =>
+    `<tr><td>${m.month}</td><td>${fmt(m.principal)}</td><td>${fmt(m.penalty)}</td><td>${fmt(m.principal + m.penalty)}</td></tr>`
+  ).join('');
+  const monthHtml = `<tr><th>Month</th><th>Principal (GEL)</th><th>Penalty (GEL)</th><th>Total (GEL)</th></tr>` + monthRows;
+  document.getElementById('collectionMonthlyTable').querySelector('tbody').innerHTML = monthHtml;
+
+  const bucketRows = d.loanLevelBuckets.map(b =>
+    `<tr><td>${b.bucket}</td><td>${fmt(b.loans)}</td><td>${pct(b.pctLoans)}</td><td>${fmt(b.principal)}</td><td>${fmt(b.penalties)}</td><td>${fmt(b.totalDebt)}</td><td>${pct(b.pctOfDebt)}</td></tr>`
+  ).join('');
+  const totalLoans = d.loanLevelBuckets.reduce((s, b) => s + b.loans, 0);
+  const totalDebt = d.loanLevelBuckets.reduce((s, b) => s + b.totalDebt, 0);
+  const bucketHtml = `<tr><th>Bucket (DPD)</th><th>Loans</th><th>% Loans</th><th>Principal (GEL)</th><th>Penalties (GEL)</th><th>Total Debt (GEL)</th><th>% of Debt</th></tr>`
+    + bucketRows
+    + `<tr class="total"><td>Total</td><td>${fmt(totalLoans)}</td><td>100.0%</td><td></td><td></td><td>${fmt(totalDebt)}</td><td>100.0%</td></tr>`;
+  document.getElementById('collectionLoanBucketsTable').querySelector('tbody').innerHTML = bucketHtml;
+}
+__onSection('collectionsFinancials', renderCollectionFinancials);
 
 function renderExCustomersTable(filterText) {
   const d = exCustomers;
@@ -1829,33 +2039,6 @@ function renderExCustomersTable(filterText) {
   const countEl = document.getElementById('exCustomersSearchCount');
   if (countEl) countEl.textContent = needle ? `${rows.length} of ${d.rows.length}` : `${d.rows.length} customers`;
 }
-renderExCustomersTable('');
-document.getElementById('exCustomersSearch').addEventListener('input', e => renderExCustomersTable(e.target.value));
-
-function renderNeverBorrowedDetailTable(filterText) {
-  const d = neverBorrowedDetail;
-  const table = document.getElementById('neverBorrowedDetailTable');
-  if (!d || !d.rows) {
-    table.querySelector('tbody').innerHTML = '<tr><td>No data.</td></tr>';
-    return;
-  }
-  const needle = (filterText || '').trim().toLowerCase();
-  const rows = needle
-    ? d.rows.filter(r => `${r.name} ${r.pid} ${r.phone} ${r.email} ${r.products}`.toLowerCase().includes(needle))
-    : d.rows;
-
-  const html = rows.map(r => `<tr>
-    <td>${r.name}</td><td>${r.pid}</td><td>${r.phone}</td><td>${r.email}</td><td>${r.city}</td>
-    <td>${r.lastStatus}</td><td>${r.lastAppDate || '&ndash;'}</td>
-    <td class="num">${fmt(r.appCount)}</td><td class="products-cell">${r.products}</td>
-  </tr>`).join('');
-  table.querySelector('tbody').innerHTML = html || '<tr><td colspan="9">No matches.</td></tr>';
-
-  const countEl = document.getElementById('neverBorrowedSearchCount');
-  if (countEl) countEl.textContent = needle ? `${rows.length} of ${d.rows.length}` : `${d.rows.length} customers`;
-}
-renderNeverBorrowedDetailTable('');
-document.getElementById('neverBorrowedSearch').addEventListener('input', e => renderNeverBorrowedDetailTable(e.target.value));
 
 function renderClosedLoans() {
   const d = closedLoansMonthly;
@@ -1877,7 +2060,7 @@ function renderClosedLoans() {
 
   table.querySelector('tbody').innerHTML = html;
 }
-renderClosedLoans();
+__onSection('closedLoansMonthly', renderClosedLoans);
 const closedLoansScrollUpdate = setupTopScrollSync('closedLoansScrollTop', 'closedLoansScrollBody');
 
 function renderDelinquency() {
@@ -1897,7 +2080,7 @@ function renderDelinquency() {
   document.getElementById('delinquencyParNote').innerHTML =
     `<strong>Portfolio at Risk:</strong> PAR30 = ${pct(d.par30)} &middot; PAR60 = ${pct(d.par60)} &middot; PAR90 = ${pct(d.par90)} of total outstanding debt.`;
 }
-renderDelinquency();
+__onSection('delinquencyAnalysis', renderDelinquency);
 
 // Hand-translated English labels for the free-text Georgian Reason values (no English field
 // exists in the database) — shown as a second column alongside the original. Falls back to the
@@ -1958,11 +2141,11 @@ function renderReasonsPivotTable(d, tableId, title, emptyMessage) {
 
   table.querySelector('tbody').innerHTML = html;
 }
-renderReasonsPivotTable(rejectionReasonsMonthly, 'rejectionReasonsTable', 'Rejected');
-renderReasonsPivotTable(clientRefusedReasonsMonthly, 'clientRefusedReasonsTable', 'Client Refused');
-renderReasonsPivotTable(expiredReasonsMonthly, 'expiredReasonsTable', 'Expired');
-renderReasonsPivotTable(notRespondingReasonsMonthly, 'notRespondingReasonsTable', 'Not Responding');
-renderReasonsPivotTable(approvedReasonsMonthly, 'approvedReasonsTable', 'Approved');
+__onSection('rejectionReasonsMonthly', () => renderReasonsPivotTable(rejectionReasonsMonthly, 'rejectionReasonsTable', 'Rejected'));
+__onSection('clientRefusedReasonsMonthly', () => renderReasonsPivotTable(clientRefusedReasonsMonthly, 'clientRefusedReasonsTable', 'Client Refused'));
+__onSection('expiredReasonsMonthly', () => renderReasonsPivotTable(expiredReasonsMonthly, 'expiredReasonsTable', 'Expired'));
+__onSection('notRespondingReasonsMonthly', () => renderReasonsPivotTable(notRespondingReasonsMonthly, 'notRespondingReasonsTable', 'Not Responding'));
+__onSection('approvedReasonsMonthly', () => renderReasonsPivotTable(approvedReasonsMonthly, 'approvedReasonsTable', 'Approved'));
 const rejectionReasonsScrollUpdate = setupTopScrollSync('rejectionReasonsScrollTop', 'rejectionReasonsScrollBody');
 const clientRefusedReasonsScrollUpdate = setupTopScrollSync('clientRefusedReasonsScrollTop', 'clientRefusedReasonsScrollBody');
 const expiredReasonsScrollUpdate = setupTopScrollSync('expiredReasonsScrollTop', 'expiredReasonsScrollBody');
@@ -2005,9 +2188,9 @@ function renderStatusPivotTable(d, tableId, title) {
 
   table.querySelector('tbody').innerHTML = html;
 }
-renderStatusPivotTable(applicationStatusesMonthly, 'applicationStatusesTable', 'Application Statuses');
+__onSection('applicationStatusesMonthly', () => renderStatusPivotTable(applicationStatusesMonthly, 'applicationStatusesTable', 'Application Statuses'));
 const applicationStatusesScrollUpdate = setupTopScrollSync('applicationStatusesScrollTop', 'applicationStatusesScrollBody');
-renderStatusPivotTable(leadStatusesMonthly, 'leadsTable', 'Leads');
+__onSection('leadStatusesMonthly', () => renderStatusPivotTable(leadStatusesMonthly, 'leadsTable', 'Leads'));
 const leadsScrollUpdate = setupTopScrollSync('leadsScrollTop', 'leadsScrollBody');
 
 /* ---------- Per-tab "as of" badge (top-right corner) — replaces one dashboard-wide Yesterday/MTD

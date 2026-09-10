@@ -1,0 +1,27 @@
+metric	val	n
+worst	0	446
+worst	1	275
+worst	6	422
+worst	4	140
+worst	2	213
+worst	3	216
+worst	5	94
+overdue	0	775
+overdue	1	1031
+dpd	0:Not overdue	775
+dpd	5:90+ days	422
+dpd	3:31 - 60 days	131
+dpd	1:1 - 7 days	143
+dpd	2:8 - 30 days	243
+dpd	4:61 - 90 days	92
+ontime	9:No settled instalment yet	1181
+ontime	1:90%+	493
+ontime	5:< 25%	121
+ontime	3:50 - 69%	8
+ontime	4:25 - 49%	2
+ontime	2:70 - 89%	1
+coverage	stats_rows	1806
+coverage	active_customers_by_account	3648
+coverage	active_customers_with_stats	1729
+coverage	computed_from	2026-09-01
+coverage	computed_to	2026-09-10

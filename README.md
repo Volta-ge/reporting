@@ -39,7 +39,6 @@ config.php                 Real credentials (git-ignored, delivered filled in)
 .gitignore
 src/
   Segment.php               Enum: Segment A (high-downpayment) / B (standard)
-  SegmentMetrics.php        Value object for one segment's six funnel figures
   Database.php              PDO connection factory
   DateHelper.php            Yesterday / MTD date ranges, live "remaining working days"
   FunnelRepository.php      All SQL — the only place queries live

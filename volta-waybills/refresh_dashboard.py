@@ -1312,6 +1312,10 @@ def main():
                 .replace("__DATA_VEND__", "null")
                 .replace("__DATA_VEND_ITEMS__", "null")
                 .replace("__DATA_BINV__", "null")
+                # Oris <-> RS.ge reconciliation tab is only built for the Gia's-DB copy
+                # (refresh_dashboard_gia.py) per the 2026-09-10 request; null here
+                # makes the new tab hide itself, same as Vendors/Binv above.
+                .replace("__DATA_ORIS_WB__", "null")
                 # <title> names the Artifact in the gallery; the user renamed
                 # this one "RS_Old DB" (2026-09-04) — keep the tag in sync so a
                 # daily republish doesn't revert the name.

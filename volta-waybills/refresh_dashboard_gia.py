@@ -63,11 +63,12 @@ sys.path.insert(0, str(HERE))
 
 # Reuse everything except CRM fetching from the myvolta.info pipeline.
 from refresh_dashboard import (
-    START, fetch_waybills, build_waybill_rows, fetch_invoices, build_invoice_rows,
+    START, OWN_TIN, fetch_waybills, build_waybill_rows, fetch_invoices, build_invoice_rows,
     build_reconciliation, build_geo_summary, load_logistics_status,
     fetch_purchase_waybills, build_purchase_rows,
     fetch_purchase_goods, build_purchase_items, fetch_buyer_invoices,
 )
+import oris_reconciliation
 import json
 from datetime import datetime
 
@@ -185,6 +186,11 @@ def main():
     crm_rows = fetch_crm_sales_gia()
     print(f"CRM sales (crm_order_status=5, PID resolvable): {len(crm_rows)}", file=sys.stderr)
 
+    print(f"[{datetime.now()}] joining Oris <-> RS.ge waybills...", file=sys.stderr)
+    oris_wb = oris_reconciliation.build(raw_wb, raw_pur, OWN_TIN, START.strftime("%Y-%m-%d"))
+    print(f"  sell: RS {len(oris_wb['sell'])} rows, buy: RS {len(oris_wb['buy'])} rows "
+          f"(fx rows sell/buy: {oris_wb['meta']['oris_fx_rows']})", file=sys.stderr)
+
     logistics_status = load_logistics_status()
     print(f"logistics status snapshot: {len(logistics_status)} case_ids", file=sys.stderr)
     recon = build_reconciliation(crm_rows, raw_wb, logistics_status)
@@ -205,6 +211,7 @@ def main():
     vend_json = json.dumps(vend_rows, ensure_ascii=False, separators=(",", ":"))
     vend_items_json = json.dumps(vend_items, ensure_ascii=False, separators=(",", ":"))
     binv_json = json.dumps(binv_rows, ensure_ascii=False, separators=(",", ":"))
+    oris_wb_json = json.dumps(oris_wb, ensure_ascii=False, separators=(",", ":"))
 
     template = (HERE / "template.html").read_text(encoding="utf-8")
     out_html = (template
@@ -215,6 +222,7 @@ def main():
                 .replace("__DATA_VEND__", vend_json)
                 .replace("__DATA_VEND_ITEMS__", vend_items_json)
                 .replace("__DATA_BINV__", binv_json)
+                .replace("__DATA_ORIS_WB__", oris_wb_json)
                 # The <title> tag is what names the Artifact in the gallery —
                 # every republish overwrote the user's manual rename until the
                 # tag itself was set (2026-09-04). Keep in sync with the name

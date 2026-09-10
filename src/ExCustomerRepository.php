@@ -44,14 +44,65 @@ final class ExCustomerRepository
     {
     }
 
+    /** @var array{active: string, closed: string}|null */
+    private ?array $idSets = null;
+
+    /**
+     * Sub-SELECTs for the two customer-ID sets this class filters against. Four queries here
+     * each carried `NOT IN (SELECT Customer_ID FROM instalments WHERE Active = 1 ...)` inline,
+     * and neverBorrowedByStatus() stacked a second one on top — six anti-join scans of
+     * `instalments` per page load, recomputing the same two sets every time. Materialising each
+     * set once (indexed, so `NOT IN` probes rather than rescans) leaves the surrounding queries
+     * textually identical apart from what they select the set from.
+     *
+     * `NOT IN` semantics are preserved exactly, NULL edge case included: DISTINCT keeps a NULL
+     * if one is present, so the whole predicate still goes UNKNOWN in that case, as before.
+     *
+     * Temporary tables are per-connection, so they are built fresh on every page load and drop
+     * with it — nothing is cached between requests. Falls back to the original inline
+     * sub-SELECTs if the DB user cannot create temporary tables.
+     */
+    private function idSets(): array
+    {
+        if ($this->idSets !== null) {
+            return $this->idSets;
+        }
+
+        $inline = [
+            'active' => 'SELECT Customer_ID FROM instalments WHERE Active = 1 AND Product_ID > 1',
+            'closed' => 'SELECT Customer_ID FROM instalments WHERE Close_Type IN (1, 2) AND Product_ID > 1',
+        ];
+
+        try {
+            foreach ($inline as $name => $select) {
+                // Index declared in the CREATE itself, and no DROP first: the connection is new
+                // on every page load, so there is nothing to drop and each extra statement is
+                // another round trip on a link where round trips are the cost.
+                $this->pdo->exec(
+                    "CREATE TEMPORARY TABLE {$name}_customer_ids (KEY (Customer_ID))"
+                    . " AS SELECT DISTINCT Customer_ID FROM ({$select}) s"
+                );
+            }
+            $this->idSets = [
+                'active' => 'SELECT Customer_ID FROM active_customer_ids',
+                'closed' => 'SELECT Customer_ID FROM closed_customer_ids',
+            ];
+        } catch (\PDOException) {
+            $this->idSets = $inline;
+        }
+
+        return $this->idSets;
+    }
+
     /**
      * @return array{summary: array{byGrade: array<int, array{grade: string, count: int, share: float, totalPurchased: float, totalWrittenOff: float}>, grandTotal: array{count: int, totalPurchased: float, totalWrittenOff: float}}, rows: array<int, array{customerId: int, name: string, pid: string, phone: string, email: string, city: string, grade: string, collectionRate: float, loanCount: int, totalPurchased: float, totalWrittenOff: float, lastCloseDate: ?string, products: string}>}
      */
     public function exCustomers(ProductClassifier $classifier): array
     {
+        $sets = $this->idSets();
         // Per-customer aggregate across their closed loans (Close_Type IN (1,2)) — the basis for
         // both the grade and the "how much did they buy / how much got written off" columns.
-        $aggStmt = $this->pdo->query(<<<'SQL'
+        $aggStmt = $this->pdo->query(<<<SQL
             SELECT
                 i.Customer_ID AS customer_id,
                 SUM(i.Full_Cost) AS total_full_cost,
@@ -61,7 +112,7 @@ final class ExCustomerRepository
             FROM instalments i
             WHERE i.Product_ID > 1
               AND i.Close_Type IN (1, 2)
-              AND i.Customer_ID NOT IN (SELECT Customer_ID FROM instalments WHERE Active = 1 AND Product_ID > 1)
+              AND i.Customer_ID NOT IN ({$sets['active']})
             GROUP BY i.Customer_ID
             SQL);
         $agg = $aggStmt->fetchAll(PDO::FETCH_ASSOC);
@@ -73,7 +124,7 @@ final class ExCustomerRepository
         // "Smartphones") for readability; falls back to the raw Model string when unclassified
         // (no category link, or a category the mapping sheet doesn't cover) rather than dropping
         // the purchase entirely.
-        $modelStmt = $this->pdo->query(<<<'SQL'
+        $modelStmt = $this->pdo->query(<<<SQL
             SELECT DISTINCT i.Customer_ID AS customer_id, p.Model AS model, pc.Category_Name AS category_name
             FROM instalments i
             JOIN instalment_products ip ON ip.Instalment_ID = i.Instalment_ID
@@ -81,7 +132,7 @@ final class ExCustomerRepository
             LEFT JOIN product_category pc ON pc.Category_ID = p.Category_ID
             WHERE i.Product_ID > 1
               AND i.Close_Type IN (1, 2)
-              AND i.Customer_ID NOT IN (SELECT Customer_ID FROM instalments WHERE Active = 1 AND Product_ID > 1)
+              AND i.Customer_ID NOT IN ({$sets['active']})
             SQL);
         $productsByCustomer = [];
         foreach ($modelStmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
@@ -90,14 +141,14 @@ final class ExCustomerRepository
         }
 
         // Contact details — join coverage confirmed 100% (every ex-customer has a customers row).
-        $contactStmt = $this->pdo->query(<<<'SQL'
+        $contactStmt = $this->pdo->query(<<<SQL
             SELECT Customer_ID AS customer_id, FullName AS name, PID AS pid, Mobile AS mobile,
                    Phone1 AS phone1, Email AS email, COALESCE(NULLIF(Fact_City, ''), City) AS city
             FROM customers
             WHERE Customer_ID IN (
                 SELECT DISTINCT i.Customer_ID FROM instalments i
                 WHERE i.Product_ID > 1 AND i.Close_Type IN (1, 2)
-                  AND i.Customer_ID NOT IN (SELECT Customer_ID FROM instalments WHERE Active = 1 AND Product_ID > 1)
+                  AND i.Customer_ID NOT IN ({$sets['active']})
             )
             SQL);
         $contactByCustomer = [];
@@ -189,10 +240,10 @@ final class ExCustomerRepository
      * compared this tab's 3,210 against Customer Analysis's own Total (35,894) minus Active
      * (6,126) = 29,768 and asked where the other ~26,558 went — they were never excluded on
      * purpose, just out of scope for a *payment-quality* grade, since someone who never actually
-     * borrowed has no collection history to grade. Originally kept aggregate-only (no PII) since
-     * there's no A–E grade for them and doubling the PII row count wasn't asked for at the time —
-     * the user later asked for the individual-row detail here too (2026-08-31), see
-     * neverBorrowedDetail() below; this aggregate method is kept as-is for the summary table.
+     * borrowed has no collection history to grade. Kept as an aggregate-only breakdown (no PII)
+     * rather than added to the individual-row list, since there's no meaningful A–E grade for
+     * them and doubling the PII row count wasn't asked for — see the memory note on this
+     * decision (asked the user directly rather than assuming either way).
      *
      * Bucketed by each customer's MOST RECENT application's `Order_Status` label (not every
      * application they ever made — a customer can have several rejected attempts over time; the
@@ -201,6 +252,7 @@ final class ExCustomerRepository
      */
     public function neverBorrowedByStatus(): array
     {
+        $sets = $this->idSets();
         $rows = $this->pdo->query(<<<SQL
             SELECT os.Order_Status AS status_label, COUNT(*) AS n
             FROM (
@@ -208,8 +260,8 @@ final class ExCustomerRepository
                        SUBSTRING_INDEX(GROUP_CONCAT(i.Order_Status ORDER BY i.Aplication_Date DESC), ',', 1) AS latest_status
                 FROM instalments i
                 WHERE i.Product_ID > 1
-                  AND i.Customer_ID NOT IN (SELECT Customer_ID FROM instalments WHERE Active = 1 AND Product_ID > 1)
-                  AND i.Customer_ID NOT IN (SELECT Customer_ID FROM instalments WHERE Close_Type IN (1, 2) AND Product_ID > 1)
+                  AND i.Customer_ID NOT IN ({$sets['active']})
+                  AND i.Customer_ID NOT IN ({$sets['closed']})
                 GROUP BY i.Customer_ID
             ) t
             LEFT JOIN order_statuses os ON os.Order_Status_ID = t.latest_status
@@ -237,19 +289,22 @@ final class ExCustomerRepository
     }
 
     /**
-     * Individual-row detail for the "never became a customer" population (see
-     * neverBorrowedByStatus() docblock for the population definition and why it's separate from
-     * the graded 3,210 — no closed loan, so no payment-quality grade applies). Added 2026-08-31
-     * per explicit user request to see the same level of contact detail for this group as for the
-     * graded ex-customers, at the bottom of the same tab. No `grade`/`collectionRate` fields (not
-     * meaningful here) — instead `lastStatus` (their most recent application's outcome) and
-     * `products` means "what they applied for / expressed interest in", not "what they bought"
-     * (they never actually completed a purchase). 26,777 rows as of this build — confirmed safe
-     * to fetch in full (~3s for both queries combined), same reasoning as exCustomers() above.
+     * Individual-row detail for the same never-borrowed population as neverBorrowedByStatus()
+     * above (see its docblock for the population definition) — added 2026-08-31 per explicit
+     * user request to see the same level of contact detail for this group as for the graded
+     * ex-customers, appended at the bottom of the same tab. No grade/collectionRate — not
+     * meaningful without a closed loan to measure collection against. `products` means what
+     * they applied for / expressed interest in, not what they bought (they never completed a
+     * purchase). Sorted by most recent application first (most actionable for a fresh
+     * follow-up), unlike exCustomers()'s worst-payer-first order. 26,781 rows as of this build.
+     *
+     * @return array{rows: array<int, array{customerId: int, name: string, pid: string, phone: string, email: string, city: string, lastStatus: string, lastAppDate: ?string, appCount: int, products: string}>, total: int}
      */
     public function neverBorrowedDetail(ProductClassifier $classifier): array
     {
-        $aggStmt = $this->pdo->query(<<<'SQL'
+        $sets = $this->idSets();
+
+        $aggStmt = $this->pdo->query(<<<SQL
             SELECT
                 t.Customer_ID AS customer_id,
                 t.last_app_date,
@@ -262,24 +317,26 @@ final class ExCustomerRepository
                        COUNT(*) AS app_count
                 FROM instalments i
                 WHERE i.Product_ID > 1
-                  AND i.Customer_ID NOT IN (SELECT Customer_ID FROM instalments WHERE Active = 1 AND Product_ID > 1)
-                  AND i.Customer_ID NOT IN (SELECT Customer_ID FROM instalments WHERE Close_Type IN (1, 2) AND Product_ID > 1)
+                  AND i.Customer_ID NOT IN ({$sets['active']})
+                  AND i.Customer_ID NOT IN ({$sets['closed']})
                 GROUP BY i.Customer_ID
             ) t
             LEFT JOIN order_statuses os ON os.Order_Status_ID = t.latest_status
             SQL);
         $agg = $aggStmt->fetchAll(PDO::FETCH_ASSOC);
 
-        // Products applied for (interest, not purchase — these people never closed a loan),
-        // deduped per customer, same ProductClassifier translation as exCustomers() above.
-        $modelStmt = $this->pdo->query(<<<'SQL'
+        // Products applied for, deduped per customer — same instalment_products join idSets()'s
+        // callers use elsewhere in this class (see exCustomers() above), not the single
+        // instalments.Product_ID column, since one instalment can carry several product lines.
+        $modelStmt = $this->pdo->query(<<<SQL
             SELECT DISTINCT i.Customer_ID AS customer_id, p.Model AS model, pc.Category_Name AS category_name
             FROM instalments i
-            JOIN products p ON p.Product_ID = i.Product_ID
+            JOIN instalment_products ip ON ip.Instalment_ID = i.Instalment_ID
+            JOIN products p ON p.Product_ID = ip.Product_ID
             LEFT JOIN product_category pc ON pc.Category_ID = p.Category_ID
             WHERE i.Product_ID > 1
-              AND i.Customer_ID NOT IN (SELECT Customer_ID FROM instalments WHERE Active = 1 AND Product_ID > 1)
-              AND i.Customer_ID NOT IN (SELECT Customer_ID FROM instalments WHERE Close_Type IN (1, 2) AND Product_ID > 1)
+              AND i.Customer_ID NOT IN ({$sets['active']})
+              AND i.Customer_ID NOT IN ({$sets['closed']})
             SQL);
         $productsByCustomer = [];
         foreach ($modelStmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
@@ -287,15 +344,15 @@ final class ExCustomerRepository
             $productsByCustomer[(int) $row['customer_id']][$label] = true;
         }
 
-        $contactStmt = $this->pdo->query(<<<'SQL'
+        $contactStmt = $this->pdo->query(<<<SQL
             SELECT Customer_ID AS customer_id, FullName AS name, PID AS pid, Mobile AS mobile,
                    Phone1 AS phone1, Email AS email, COALESCE(NULLIF(Fact_City, ''), City) AS city
             FROM customers
             WHERE Customer_ID IN (
                 SELECT DISTINCT i.Customer_ID FROM instalments i
                 WHERE i.Product_ID > 1
-                  AND i.Customer_ID NOT IN (SELECT Customer_ID FROM instalments WHERE Active = 1 AND Product_ID > 1)
-                  AND i.Customer_ID NOT IN (SELECT Customer_ID FROM instalments WHERE Close_Type IN (1, 2) AND Product_ID > 1)
+                  AND i.Customer_ID NOT IN ({$sets['active']})
+                  AND i.Customer_ID NOT IN ({$sets['closed']})
             )
             SQL);
         $contactByCustomer = [];

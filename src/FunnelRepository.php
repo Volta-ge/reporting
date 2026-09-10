@@ -37,62 +37,34 @@ final class FunnelRepository
     {
     }
 
-    public function segmentMetrics(DateTimeImmutable $from, DateTimeImmutable $to, Segment $segment): SegmentMetrics
+    /**
+     * The six funnel figures for one period out of a dailySegmentStats()/monthlySegmentStats()
+     * result, as `['A' => [...], 'B' => [...]]`.
+     *
+     * The Yesterday and MTD headline figures are not queried separately: DateHelper gives the
+     * yesterday, month-to-date and daily/monthly windows the same exclusive end (today 00:00),
+     * so the current-month row of monthlySegmentStats() *is* month-to-date and the yesterday
+     * row of dailySegmentStats() *is* yesterday — same date fields, same filters, same six
+     * sums. Reading them from those results instead of re-running four two-query
+     * segmentMetrics() lookups drops 8 of the page's round trips against a slow remote DB.
+     *
+     * A period with no rows in either underlying query is absent from the result entirely
+     * (see periodSegmentStats()), which means a genuine zero — hence the zero-filled fallback.
+     *
+     * @param array<string, array{A: array, B: array}> $periodStats
+     * @return array{A: array{applications: int, terms: int, uw: int, closed: int, amount: float, dp: float}, B: array{applications: int, terms: int, uw: int, closed: int, amount: float, dp: float}}
+     */
+    public static function periodFigures(array $periodStats, string $periodKey): array
     {
-        $segmentCondition = $segment->sqlCondition();
-        $params = [
-            'from' => $from->format('Y-m-d H:i:s'),
-            'to' => $to->format('Y-m-d H:i:s'),
-        ];
+        $zero = ['applications' => 0, 'terms' => 0, 'uw' => 0, 'closed' => 0, 'amount' => 0.0, 'dp' => 0.0];
 
-        // Applications / Terms Approved / Underwriting Approved / Downpayment Collected.
-        // Excludes unassigned "lead" placeholder rows (Product_ID = 1, no real product chosen yet).
-        // Downpayment Collected counts every First_Payment regardless of underwriting/active status —
-        // once collected it is not refunded, so it counts even on a rejected or still-pending deal.
-        $stmt = $this->pdo->prepare(<<<SQL
-            SELECT
-                COUNT(*) AS applications,
-                SUM(i.UnderWriter_Status_ID != 0) AS terms_approved,
-                SUM(i.UnderWriter_Status_ID = 16) AS uw_approved,
-                SUM(i.First_Payment) AS dp_collected
-            FROM instalments i
-            LEFT JOIN products p ON p.Product_ID = i.Product_ID
-            WHERE i.Aplication_Date >= :from AND i.Aplication_Date < :to
-              AND i.Product_ID > 1
-              AND {$segmentCondition}
-            SQL);
-        $stmt->execute($params);
-        $row = $stmt->fetch();
-
-        // Deals Closed / Amount Sold: both keyed to Order_Date (the disbursement/issue date),
-        // both restricted to Active = 1 — a deal counts toward the day it actually closed, not
-        // the day it was originally applied for.
-        $stmtAmount = $this->pdo->prepare(<<<SQL
-            SELECT COUNT(*) AS deals_closed, SUM(i.Full_Cost) AS amount_sold
-            FROM instalments i
-            LEFT JOIN products p ON p.Product_ID = i.Product_ID
-            WHERE i.Order_Date >= :from AND i.Order_Date < :to
-              AND i.Product_ID > 1
-              AND i.Active = 1
-              AND {$segmentCondition}
-            SQL);
-        $stmtAmount->execute($params);
-        $amountRow = $stmtAmount->fetch();
-
-        return new SegmentMetrics(
-            applications: (int) $row['applications'],
-            termsApproved: (int) $row['terms_approved'],
-            underwritingApproved: (int) $row['uw_approved'],
-            dealsClosed: (int) ($amountRow['deals_closed'] ?? 0),
-            amountSold: round((float) ($amountRow['amount_sold'] ?? 0.0), 2),
-            downpaymentCollected: round((float) ($row['dp_collected'] ?? 0.0), 2),
-        );
+        return $periodStats[$periodKey] ?? ['A' => $zero, 'B' => $zero];
     }
 
     /**
      * Same shape as segmentMetrics(), but grouped by calendar day and split by segment —
      * one entry per day from $from through the day before $to, each with an 'A' and 'B'
-     * SegmentMetrics-shaped array. Used to pivot the full Section A/B/C report layout across
+     * six-figure array. Used to pivot the full Section A/B/C report layout across
      * many periods (one column pair per day) instead of just Yesterday/MTD.
      *
      * @return array<string, array{A: array, B: array}> keyed by 'Y-m-d'
@@ -230,11 +202,11 @@ final class FunnelRepository
      * date reliably populated for single-payment rows and, for a one-step cash sale, is
      * effectively the transaction date anyway. Each of the three *MonthlyStats() methods below
      * returns `['all' => ..., 'installment' => ..., 'single' => ...]` — all three built from one
-     * DB fetch (see rawGroupedSales()/cogsGarbageStats()), not three separate queries.
+     * DB fetch (see rawSalesRows()/cogsGarbageStats()), not three separate queries.
      */
     public function salesMonthlyStats(DateTimeImmutable $from, DateTimeImmutable $to, ProductClassifier $classifier): array
     {
-        $rawRows = $this->rawGroupedSales($from, $to, 'pc.Category_Name');
+        $rawRows = $this->salesRowsFor($from, $to, 'category');
         $garbage = $this->cogsGarbageStats($from, $to);
         $result = [];
         foreach (['all', 'installment', 'single'] as $dealType) {
@@ -256,7 +228,7 @@ final class FunnelRepository
      */
     public function brandMonthlyStats(DateTimeImmutable $from, DateTimeImmutable $to): array
     {
-        $rawRows = $this->rawGroupedSales($from, $to, 'pb.Brand_Name', 'LEFT JOIN product_brands pb ON pb.Brand_ID = p.Brand_ID');
+        $rawRows = $this->salesRowsFor($from, $to, 'brand');
         $noBrandValues = ['none', 'n/a', 'ბრენდის გარეშე', ''];
         $classify = function (?string $raw) use ($noBrandValues): ?string {
             $name = trim((string) $raw);
@@ -292,19 +264,15 @@ final class FunnelRepository
      * Sales Monthly/Brand Analyze/Subcategory Analyze (`['all' => ..., 'installment' => ...,
      * 'single' => ...]`) — the reference sheet itself has no such distinction, but this project's
      * own convention across every other sales tab does, so kept consistent rather than being the
-     * one report without it. Uses the exact same `rawGroupedSales()` infra as Sales Monthly/Brand
-     * Analyze — grouped by category and brand together via a `CHAR(1)`-joined composite key so
-     * it's one query, not one query per category, and all three deal-type variants are built
-     * from that one fetch (PHP-side filtering), not three separate queries.
+     * one report without it. Uses the exact same `rawSalesRows()` infra as Brand Analyze —
+     * the two share a single category+brand fetch, and the `CHAR(1)`-joined composite key is
+     * assembled in PHP from that result's own category/brand columns, so it's one query, not
+     * one query per category, and all three deal-type variants are built from that one fetch
+     * (PHP-side filtering), not three separate queries.
      */
     public function categoryBrandBreakdown(DateTimeImmutable $from, DateTimeImmutable $to, ProductClassifier $classifier): array
     {
-        $rawRows = $this->rawGroupedSales(
-            $from,
-            $to,
-            "CONCAT(COALESCE(pc.Category_Name, ''), CHAR(1), COALESCE(pb.Brand_Name, ''))",
-            'LEFT JOIN product_brands pb ON pb.Brand_ID = p.Brand_ID'
-        );
+        $rawRows = $this->salesRowsFor($from, $to, 'catbrand');
 
         $result = [];
         foreach (['all', 'installment', 'single'] as $dealType) {
@@ -395,7 +363,7 @@ final class FunnelRepository
      */
     public function subcategoryMonthlyStats(DateTimeImmutable $from, DateTimeImmutable $to, ProductClassifier $classifier): array
     {
-        $rawRows = $this->rawGroupedSales($from, $to, 'pc.Category_Name');
+        $rawRows = $this->salesRowsFor($from, $to, 'category');
         $garbage = $this->cogsGarbageStats($from, $to);
         $result = [];
         foreach (['all', 'installment', 'single'] as $dealType) {
@@ -411,47 +379,89 @@ final class FunnelRepository
     private array $rawGroupedSalesCache = [];
 
     /**
-     * Shared raw query for the three *MonthlyStats() methods above — one row per
-     * (calendar month, raw grouping value), Order_Status = 5 filter, Sales/Cogs/Qty summed.
-     * $groupExpr is a trusted SQL expression (column reference), never user input.
+     * Shared raw query for the four sales reports above. All three groupings they need —
+     * by product category, by brand, and by the two together — come back from a single
+     * round trip as one UNION ALL, tagged with `grouping_key`, instead of the three separate
+     * queries this used to issue against a slow remote DB.
      *
-     * Memoized — Sales Monthly and Subcategory Analyze both group by the identical
-     * `pc.Category_Name` expression (they only differ in how the raw value gets classified
-     * afterward in PHP), so this avoids running the exact same query against a slow remote DB
-     * twice on one page load.
+     * Each branch keeps its own `GROUP BY`, so every Sales/Cogs figure is still summed by the
+     * database exactly as before, at exactly the grain its report consumes. That is deliberate:
+     * re-deriving the coarser groupings from the finest one in PHP would re-add the same money
+     * in a different order, and IEEE-754 addition is not associative — a one-ULP drift is
+     * enough to flip a figure that lands on `.50` when the dashboard rounds it to whole GEL.
+     *
+     * The date filter deliberately spells out the two COALESCE branches rather than wrapping
+     * the column in a function: `COALESCE(i.Order_Date, ...) >= :from` cannot use an index on
+     * Order_Date, this form can. It is exactly equivalent — a NULL Order_Date takes the
+     * Aplication_Date branch, and a non-NULL one (including a '0000-00-00' zero date, which
+     * COALESCE does not treat as NULL either) is compared on its own value, as before.
+     *
+     * Memoized for the request only — not a cache between page loads.
      */
-    private function rawGroupedSales(DateTimeImmutable $from, DateTimeImmutable $to, string $groupExpr, string $extraJoin = ''): array
+    private function rawSalesRows(DateTimeImmutable $from, DateTimeImmutable $to): array
     {
-        $cacheKey = $from->format('Y-m-d H:i:s') . '|' . $to->format('Y-m-d H:i:s') . '|' . $groupExpr . '|' . $extraJoin;
+        $cacheKey = $from->format('Y-m-d H:i:s') . '|' . $to->format('Y-m-d H:i:s');
         if (isset($this->rawGroupedSalesCache[$cacheKey])) {
             return $this->rawGroupedSalesCache[$cacheKey];
         }
 
-        $params = [
-            'from' => $from->format('Y-m-d H:i:s'),
-            'to' => $to->format('Y-m-d H:i:s'),
-        ];
-        $stmt = $this->pdo->prepare(<<<SQL
-            SELECT
-                DATE_FORMAT(COALESCE(i.Order_Date, i.Aplication_Date), '%Y-%m') AS period,
-                {$groupExpr} AS raw_key,
-                CASE WHEN i.Type_Of_Sales = 99 THEN 'single' ELSE 'installment' END AS deal_type,
-                SUM(ip.Final_Price) AS sales,
-                SUM(ip.Start_Price) AS cogs,
-                COUNT(*) AS qty
-            FROM instalment_products ip
-            JOIN instalments i ON i.Instalment_ID = ip.Instalment_ID
-            JOIN products p ON p.Product_ID = ip.Product_ID
-            LEFT JOIN product_category pc ON pc.Category_ID = p.Category_ID
-            {$extraJoin}
-            WHERE COALESCE(i.Order_Date, i.Aplication_Date) >= :from AND COALESCE(i.Order_Date, i.Aplication_Date) < :to
-              AND (i.Order_Status = 5 OR (i.Order_Status IN (1, 3) AND i.Type_Of_Sales = 99))
-            GROUP BY period, {$groupExpr}, deal_type
-            SQL);
+        // Every occurrence gets its own placeholder name: Database sets ATTR_EMULATE_PREPARES
+        // to false, and PDO cannot bind one named placeholder to several positions in a native
+        // prepared statement.
+        $branch = static function (string $tag, string $groupExpr, string $extraJoin, int $i): string {
+            return <<<SQL
+                SELECT
+                    '{$tag}' AS grouping_key,
+                    DATE_FORMAT(COALESCE(i.Order_Date, i.Aplication_Date), '%Y-%m') AS period,
+                    {$groupExpr} AS raw_key,
+                    CASE WHEN i.Type_Of_Sales = 99 THEN 'single' ELSE 'installment' END AS deal_type,
+                    SUM(ip.Final_Price) AS sales,
+                    SUM(ip.Start_Price) AS cogs,
+                    COUNT(*) AS qty
+                FROM instalment_products ip
+                JOIN instalments i ON i.Instalment_ID = ip.Instalment_ID
+                JOIN products p ON p.Product_ID = ip.Product_ID
+                LEFT JOIN product_category pc ON pc.Category_ID = p.Category_ID
+                {$extraJoin}
+                WHERE (
+                        (i.Order_Date IS NOT NULL AND i.Order_Date >= :fromA{$i} AND i.Order_Date < :toA{$i})
+                     OR (i.Order_Date IS NULL AND i.Aplication_Date >= :fromB{$i} AND i.Aplication_Date < :toB{$i})
+                      )
+                  AND (i.Order_Status = 5 OR (i.Order_Status IN (1, 3) AND i.Type_Of_Sales = 99))
+                GROUP BY period, {$groupExpr}, deal_type
+                SQL;
+        };
+
+        $brandJoin = 'LEFT JOIN product_brands pb ON pb.Brand_ID = p.Brand_ID';
+        $sql = implode("\nUNION ALL\n", [
+            $branch('category', 'pc.Category_Name', '', 1),
+            $branch('brand', 'pb.Brand_Name', $brandJoin, 2),
+            $branch('catbrand', "CONCAT(COALESCE(pc.Category_Name, ''), CHAR(1), COALESCE(pb.Brand_Name, ''))", $brandJoin, 3),
+        ]);
+
+        $params = [];
+        foreach ([1, 2, 3] as $i) {
+            $params["fromA{$i}"] = $from->format('Y-m-d H:i:s');
+            $params["toA{$i}"] = $to->format('Y-m-d H:i:s');
+            $params["fromB{$i}"] = $from->format('Y-m-d H:i:s');
+            $params["toB{$i}"] = $to->format('Y-m-d H:i:s');
+        }
+
+        $stmt = $this->pdo->prepare($sql);
         $stmt->execute($params);
         $rows = $stmt->fetchAll();
         $this->rawGroupedSalesCache[$cacheKey] = $rows;
+
         return $rows;
+    }
+
+    /** The rows of one UNION ALL branch of rawSalesRows(), in the order the DB returned them. */
+    private function salesRowsFor(DateTimeImmutable $from, DateTimeImmutable $to, string $groupingKey): array
+    {
+        return array_values(array_filter(
+            $this->rawSalesRows($from, $to),
+            static fn (array $r) => $r['grouping_key'] === $groupingKey,
+        ));
     }
 
     /**
@@ -589,9 +599,12 @@ final class FunnelRepository
             return $this->garbageStatsCache[$cacheKey];
         }
 
+        // Distinct placeholder names per occurrence — see rawSalesRows().
         $params = [
-            'from' => $from->format('Y-m-d H:i:s'),
-            'to' => $to->format('Y-m-d H:i:s'),
+            'fromA' => $from->format('Y-m-d H:i:s'),
+            'toA' => $to->format('Y-m-d H:i:s'),
+            'fromB' => $from->format('Y-m-d H:i:s'),
+            'toB' => $to->format('Y-m-d H:i:s'),
         ];
         $stmt = $this->pdo->prepare(<<<SQL
             SELECT
@@ -599,7 +612,10 @@ final class FunnelRepository
                 CASE WHEN i.Type_Of_Sales = 99 THEN 'single' ELSE 'installment' END AS deal_type
             FROM instalment_products ip
             JOIN instalments i ON i.Instalment_ID = ip.Instalment_ID
-            WHERE COALESCE(i.Order_Date, i.Aplication_Date) >= :from AND COALESCE(i.Order_Date, i.Aplication_Date) < :to
+            WHERE (
+                    (i.Order_Date IS NOT NULL AND i.Order_Date >= :fromA AND i.Order_Date < :toA)
+                 OR (i.Order_Date IS NULL AND i.Aplication_Date >= :fromB AND i.Aplication_Date < :toB)
+                  )
               AND (i.Order_Status = 5 OR (i.Order_Status IN (1, 3) AND i.Type_Of_Sales = 99))
             SQL);
         $stmt->execute($params);

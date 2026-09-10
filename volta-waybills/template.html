@@ -417,6 +417,21 @@
     .geo-grid{ grid-template-columns:1fr; }
     .geo-row{ grid-template-columns:90px 1fr 40px 70px; }
   }
+
+  /* ---- Oris <-> RS.ge tab (scoped, added 2026-09-10) ---- */
+  .owb-tablewrap{ overflow-x:auto; border:1px solid var(--line); border-radius:var(--radius); }
+  table.owb-t{ border-collapse:collapse; width:100%; min-width:640px; }
+  .owb-t th{ font-size:11px; font-weight:600; color:var(--muted); text-align:left; padding:8px 10px; border-bottom:1px solid var(--line); white-space:nowrap; }
+  .owb-t th.n, .owb-t td.n{ text-align:right; }
+  .owb-t td{ padding:6px 10px; border-bottom:1px solid var(--line); white-space:nowrap; }
+  .owb-t tr:last-child td{ border-bottom:0; }
+  .owb-t tr.owb-total td{ font-weight:600; background:var(--surface-2); border-top:2px solid var(--ink); }
+  .owb-t tr.owb-cur td{ background:var(--accent-soft); }
+  .owb-neg{ color:var(--danger); }
+  .owb-zero{ color:var(--faint); }
+  .owb-pill{ display:inline-block; font-size:11px; padding:1px 8px; border-radius:999px; font-weight:600; white-space:nowrap; }
+  .owb-more{ padding:8px 10px; font-size:12px; color:var(--accent); font-weight:600; cursor:pointer; }
+  .owb-note{ color:var(--muted); font-size:12px; margin:10px 0 0; max-width:90ch; }
 </style>
 
 <div class="wrap">
@@ -429,7 +444,8 @@
     <div class="topbar-right">
       <div class="gen-stamp" id="globalGenStamp">—</div>
       <div class="tabbar">
-        <button class="tabbtn active" data-tab="recon" data-i18n="tabRecon">გაყიდვა ↔ ზედნადები</button>
+        <button class="tabbtn active" data-tab="recon" data-i18n="tabRecon">CRM ↔ RS.ge</button>
+        <button class="tabbtn" data-tab="oris" id="tabBtnOris" data-i18n="tabOris">Oris ↔ RS.ge</button>
         <button class="tabbtn" data-tab="wb" data-i18n="tabWb">ზედნადებები</button>
         <button class="tabbtn" data-tab="inv" data-i18n="tabInv">ანგარიშ-ფაქტურები</button>
         <button class="tabbtn" data-tab="geo" data-i18n="tabGeo">გეოგრაფია</button>
@@ -437,6 +453,7 @@
         <button class="tabbtn" data-tab="prod" id="tabBtnProd" data-i18n="tabProd">პროდუქტები</button>
       <button class="tabbtn" data-tab="binv" id="tabBtnBinv" data-i18n="tabBinv">მიღებული ფაქტურები</button>
         <button class="tabbtn" id="langToggle" style="margin-left:6px;">EN</button>
+        <button class="tabbtn" id="themeToggle" style="margin-left:6px;" title="ფონის რეჟიმი">🌙</button>
       </div>
     </div>
   </div>
@@ -632,6 +649,9 @@
 
     <footer><span data-i18n="reconFooterSource">წყარო: myvolta.info CRM (instalments, Order_Status=5) &middot; RS.ge WayBillService</span></footer>
   </div>
+
+  <!-- ======================= ORIS <-> RS.ge TAB ======================= -->
+  <div class="tabpanel" id="tab-oris"><div id="orisRoot"></div></div>
 
   <!-- ======================= GEOGRAPHY TAB ======================= -->
   <div class="tabpanel" id="tab-geo">
@@ -947,6 +967,8 @@ const RAW_VEND = __DATA_VEND__;
 const RAW_VEND_ITEMS = __DATA_VEND_ITEMS__;
 // Received (buyer-side) invoices, same row shape as RAW_INV; null on the myvolta.info build.
 const RAW_BINV = __DATA_BINV__;
+// Oris <-> RS.ge waybill reconciliation ({meta, sell:[...], buy:[...]}); null on the myvolta.info build (tab hides itself).
+const ORIS_WB = __DATA_ORIS_WB__;
 
 /* ---------- i18n ---------- */
 let LANG = localStorage.getItem("voltaLang") || "ka";
@@ -959,7 +981,7 @@ function t(key){
 }
 const T = {
   title: {ka:"ვოლტას სავაჭრო რეესტრები", en:"Volta Trade Registers"},
-  tabRecon: {ka:"გაყიდვა ↔ ზედნადები", en:"Sale ↔ Waybill"},
+  tabRecon: {ka:"CRM ↔ RS.ge", en:"CRM ↔ RS.ge"},
   tabWb: {ka:"ზედნადებები", en:"Waybills"},
   tabInv: {ka:"ანგარიშ-ფაქტურები", en:"Invoices"},
   tabGeo: {ka:"გეოგრაფია", en:"Geography"},
@@ -1171,6 +1193,23 @@ const T = {
 
   // received invoices tab
   tabBinv: {ka:"მიღებული ფაქტურები", en:"Received invoices"},
+  tabOris: {ka:"Oris ↔ RS.ge", en:"Oris ↔ RS.ge"},
+  orisTitle: {ka:"ზედნადებების შედარება: RS.ge ↔ ორისი", en:"Waybill reconciliation: RS.ge ↔ Oris"},
+  orisRsData: {ka:"RS.ge მონაცემები", en:"RS.ge data"}, orisOrisData: {ka:"ორისის ასლი", en:"Oris copy"},
+  orisSideSell: {ka:"გაყიდვები (ჩვენი ზედნადებები)", en:"Sales (our waybills)"}, orisSideBuy: {ka:"შესყიდვები (მომწოდებლების ზედნადებები)", en:"Purchases (supplier waybills)"},
+  orisStAll: {ka:"ყველა ზედნადები", en:"All waybills"}, orisStOk: {ka:"დაწყვილებული", en:"Matched"},
+  orisStNoOris: {ka:"აკლია ორისში", en:"Missing in Oris"}, orisStNoRs: {ka:"აკლია RS-ზე", en:"Missing on RS.ge"}, orisStDiff: {ka:"თანხა განსხვავდება", en:"Amount differs"},
+  orisFrom: {ka:"დან", en:"From"}, orisTo: {ka:"მდე", en:"To"}, orisSearchPh: {ka:"ძებნა: ნომერი, კონტრაგენტი, ს/კ", en:"Search: number, counterparty, TIN"},
+  orisKpiCount: {ka:"რაოდენობა (ფილტრით)", en:"Count (filtered)"}, orisKpiRs: {ka:"თანხა RS.ge-ზე", en:"Amount on RS.ge"},
+  orisKpiOris: {ka:"თანხა ორისში", en:"Amount in Oris"}, orisKpiDiff: {ka:"სხვაობა (RS − ორისი)", en:"Difference (RS − Oris)"},
+  orisByStatus: {ka:"ჯამები სტატუსების მიხედვით", en:"Totals by status"}, orisByMonth: {ka:"თვეების მიხედვით", en:"By month"},
+  orisColStatus: {ka:"სტატუსი", en:"Status"}, orisColCount: {ka:"რაოდენობა", en:"Count"}, orisColShare: {ka:"წილი", en:"Share"},
+  orisColRs: {ka:"RS.ge თანხა", en:"RS.ge amount"}, orisColOris: {ka:"ორისის თანხა", en:"Oris amount"}, orisColDiff: {ka:"სხვაობა", en:"Difference"},
+  orisColMonth: {ka:"თვე", en:"Month"}, orisColNum: {ka:"ნომერი", en:"Number"}, orisColDate: {ka:"თარიღი", en:"Date"},
+  orisColParty: {ka:"კონტრაგენტი", en:"Counterparty"}, orisColTin: {ka:"ს/კ", en:"TIN"}, orisColType: {ka:"RS ტიპი", en:"RS type"},
+  orisLate: {ka:"ორისის ასლის შემდეგ", en:"after the Oris copy"}, orisTotal: {ka:"სულ", en:"Total"}, orisWordOris: {ka:"ორისი", en:"Oris"},
+  orisNote: {ka:"დაწყვილება ზედნადების ნომრით. RS.ge თანხა = FULL_AMOUNT (დაბრუნების ზედნადებები უარყოფითი ნიშნით), ორისის თანხა = ამ ნომრით გატარებული საქონლის ღირებულება დღგ-ს ჩათვლით. გაუქმებული (STATUS −2) RS ზედნადებები არ შედის. ორისში ზედნადების ნომრის გარეშე გატარებული დოკუმენტები „აკლია RS-ზე\" სვეტში ჩანს. ორისის ასლის თარიღის შემდეგ გამოწერილი RS ზედნადებები ცალკე ნიშნულითაა.",
+    en:"Matched by waybill number. RS.ge amount = FULL_AMOUNT (return waybills negative); Oris amount = the goods value incl. VAT booked under that number. Cancelled RS waybills (STATUS −2) are excluded. Documents booked in Oris without a waybill number appear under \"Missing on RS.ge\". RS waybills issued after the Oris copy date carry a separate marker."},
   binvNote: {ka:"ანგარიშ-ფაქტურები, სადაც ვოლტა მყიდველია (RS.ge get_buyer_invoices). თარიღი აღნიშნავს ოპერაციის პერიოდს (თვის დასაწყისი), არა რეგისტრაციის დღეს; თანხა დღგ-ს შეიცავს", en:"Invoices where Volta is the buyer (RS.ge get_buyer_invoices). Date is the operation period (start of month), not the filing day; amounts include VAT"},
   sellerLabel: {ka:"გამყიდველი", en:"Seller"},
   metricVat: {ka:"დღგ (₾)", en:"VAT (₾)"},
@@ -2763,6 +2802,100 @@ function drawTrend(svg, buckets, keys){
 })();
 
 /* =========================================================
+   ORIS <-> RS.ge WAYBILL RECONCILIATION TAB (added 2026-09-10)
+   Moved here from the Volta_Finance project's now-removed "wb" tab, per the
+   user's request to keep it out of Volta_Finance and have RS_New DB stay a
+   single self-contained file. Data comes from ORIS_WB (null on the
+   myvolta.info build — the tab hides itself, same pattern as Vendors/Binv).
+   ========================================================= */
+(function(){
+  if (!ORIS_WB){
+    document.getElementById("tabBtnOris").hidden = true;
+    return;
+  }
+  const S = {side:"sell", from:null, to:null, status:"all", q:"", n:200};
+  const asof = (function(){ // "as of" = the latest date either side has data for
+    let m = ORIS_WB.meta.start;
+    for (const side of ["sell","buy"]) for (const r of ORIS_WB[side]) { if (r[1] > m) m = r[1]; if (r[6] && r[6] > m) m = r[6]; }
+    return m;
+  })();
+  const gel = n => n===null||n===undefined ? "–" : fmtGel(n);
+  const gelCell = n => n===null||n===undefined ? '<td class="n owb-zero">–</td>' : `<td class="n${n<0?" owb-neg":""}">${gel(n)}</td>`;
+  const stKey = r => r[4]===null ? "no_rs" : r[5]===null ? "no_oris" : Math.abs(r[4]-r[5])>0.05 ? "diff" : "ok";
+  const stLabel = k => t({ok:"orisStOk", no_oris:"orisStNoOris", no_rs:"orisStNoRs", diff:"orisStDiff", all:"orisStAll"}[k]);
+  const stCls = k => ({ok:"tag-completed", no_oris:"tag-cancelled", no_rs:"tag-active", diff:"tag-carrier"}[k] || "tag-other");
+  function render(){
+    const root = document.getElementById("orisRoot");
+    if (!S.from){ S.from = ORIS_WB.meta.start; S.to = asof; }
+    const all = ORIS_WB[S.side];
+    const inPeriod = all.filter(r => r[1] >= S.from && r[1] <= S.to);
+    const q = S.q.trim().toLowerCase();
+    const rows = inPeriod.filter(r => (S.status==="all"||stKey(r)===S.status) && (!q || r[0].toLowerCase().includes(q) || r[2].toLowerCase().includes(q) || (r[3]||"").includes(q)));
+    const sum = (a,f) => a.reduce((s,r)=>s+(f(r)||0),0);
+    const rsA = sum(rows,r=>r[4]), orA = sum(rows,r=>r[5]);
+    let h = `<div class="subhead"><div class="brand-block"><h2 style="margin:0;font-size:20px;">${escapeHtml(t("orisTitle"))}</h2>
+      <div class="subline">${escapeHtml(t("orisRsData"))}: <b>${escapeHtml(ORIS_WB.meta.rs_fetched)}</b> &middot; ${escapeHtml(t("orisOrisData"))}: <b>${asof.split("-").reverse().join(".")}</b></div></div></div>`;
+    h += `<div class="filters">
+      <div class="field"><button class="btn-reset owb-side" data-side="sell" style="${S.side==="sell"?"border-color:var(--ink);color:var(--ink)":""}">${escapeHtml(t("orisSideSell"))}</button></div>
+      <div class="field"><button class="btn-reset owb-side" data-side="buy" style="${S.side==="buy"?"border-color:var(--ink);color:var(--ink)":""}">${escapeHtml(t("orisSideBuy"))}</button></div>
+      <div class="field"><label>${escapeHtml(t("orisFrom"))}</label><input type="date" id="orisFrom" value="${S.from}" min="${ORIS_WB.meta.start}"></div>
+      <div class="field"><label>${escapeHtml(t("orisTo"))}</label><input type="date" id="orisTo" value="${S.to}"></div>
+      <div class="field"><label>${escapeHtml(t("orisColStatus"))}</label><select id="orisStatus">
+        ${["all","ok","no_oris","no_rs","diff"].map(k=>`<option value="${k}" ${k===S.status?"selected":""}>${escapeHtml(stLabel(k))}</option>`).join("")}
+      </select></div>
+      <input class="search-input" id="orisSearchBox" placeholder="${escapeHtml(t("orisSearchPh"))}" value="${escapeHtml(S.q)}">
+      <button class="btn-reset" id="orisReset">${escapeHtml(t("resetFilters"))}</button>
+    </div>`;
+    h += `<div class="kpis">
+      <div class="kpi"><span class="kpi-label">${escapeHtml(t("orisKpiCount"))}</span><span class="kpi-value num">${fmtInt(rows.length)}</span><span class="kpi-sub">${fmtInt(inPeriod.length)}</span></div>
+      <div class="kpi"><span class="kpi-label">${escapeHtml(t("orisKpiRs"))}</span><span class="kpi-value num">${gel(rsA)}</span><span class="kpi-sub">&nbsp;</span></div>
+      <div class="kpi"><span class="kpi-label">${escapeHtml(t("orisKpiOris"))}</span><span class="kpi-value num">${gel(orA)}</span><span class="kpi-sub">&nbsp;</span></div>
+      <div class="kpi"><span class="kpi-label">${escapeHtml(t("orisKpiDiff"))}</span><span class="kpi-value num">${gel(rsA-orA)}</span><span class="kpi-sub">&nbsp;</span></div>
+    </div>`;
+    // status summary
+    const groups = {}; for (const k of ["ok","no_oris","no_rs","diff"]) groups[k] = {n:0,rs:0,or:0};
+    for (const r of inPeriod){ const g = groups[stKey(r)]; g.n++; g.rs += r[4]||0; g.or += r[5]||0; }
+    const totN = inPeriod.length || 1;
+    h += `<div class="panel"><div class="panel-head"><span class="panel-title">${escapeHtml(t("orisByStatus"))}</span></div>
+      <div class="owb-tablewrap"><table class="owb-t"><thead><tr><th>${escapeHtml(t("orisColStatus"))}</th><th class="n">${escapeHtml(t("orisColCount"))}</th><th class="n">${escapeHtml(t("orisColShare"))}</th><th class="n">${escapeHtml(t("orisColRs"))}</th><th class="n">${escapeHtml(t("orisColOris"))}</th><th class="n">${escapeHtml(t("orisColDiff"))}</th></tr></thead><tbody>`;
+    for (const k of ["ok","no_oris","no_rs","diff"]){ const g = groups[k];
+      h += `<tr class="owb-status-row${S.status===k?" owb-cur":""}" data-st="${k}" style="cursor:pointer"><td><span class="owb-pill ${stCls(k)}">${escapeHtml(stLabel(k))}</span></td><td class="n">${fmtInt(g.n)}</td><td class="n">${(g.n/totN*100).toFixed(1)}%</td>${gelCell(g.rs)}${gelCell(g.or)}${gelCell(g.rs-g.or)}</tr>`; }
+    h += `<tr class="owb-total owb-status-row${S.status==="all"?" owb-cur":""}" data-st="all" style="cursor:pointer"><td>${escapeHtml(t("orisStAll"))}</td><td class="n">${fmtInt(inPeriod.length)}</td><td class="n">100%</td>${gelCell(sum(inPeriod,r=>r[4]))}${gelCell(sum(inPeriod,r=>r[5]))}${gelCell(sum(inPeriod,r=>r[4])-sum(inPeriod,r=>r[5]))}</tr>`;
+    h += `</tbody></table></div></div>`;
+    // monthly
+    const mon = new Map();
+    for (const r of inPeriod){ const m = r[1].slice(0,7); const g = mon.get(m) || {rsN:0,rs:0,orN:0,or:0,noO:0,noR:0,df:0}; mon.set(m,g);
+      if (r[4]!==null){ g.rsN++; g.rs += r[4]; } if (r[5]!==null){ g.orN++; g.or += r[5]; }
+      const s = stKey(r); if (s==="no_oris") g.noO++; if (s==="no_rs") g.noR++; if (s==="diff") g.df++; }
+    h += `<div class="panel"><div class="panel-head"><span class="panel-title">${escapeHtml(t("orisByMonth"))}</span></div>
+      <div class="owb-tablewrap"><table class="owb-t"><thead><tr><th>${escapeHtml(t("orisColMonth"))}</th><th class="n">RS.ge</th><th class="n">${escapeHtml(t("orisWordOris"))}</th><th class="n">${escapeHtml(t("orisStNoOris"))}</th><th class="n">${escapeHtml(t("orisStNoRs"))}</th><th class="n">${escapeHtml(t("orisStDiff"))}</th></tr></thead><tbody>`;
+    for (const [m,g] of [...mon.entries()].sort((a,b)=>a[0]<b[0]?1:-1))
+      h += `<tr><td>${m}</td><td class="n">${fmtInt(g.rsN)} &middot; ${fmtGelShort(g.rs)}</td><td class="n">${fmtInt(g.orN)} &middot; ${fmtGelShort(g.or)}</td><td class="n${g.noO?" owb-neg":" owb-zero"}">${fmtInt(g.noO)}</td><td class="n${g.noR?"":" owb-zero"}">${fmtInt(g.noR)}</td><td class="n${g.df?"":" owb-zero"}">${fmtInt(g.df)}</td></tr>`;
+    h += `</tbody></table></div></div>`;
+    // rows
+    h += `<div class="panel"><div class="table-toolbar"><span class="panel-title">${escapeHtml(t("orisTitle"))} (${fmtInt(rows.length)})</span></div>
+      <div class="owb-tablewrap"><table class="owb-t"><thead><tr><th>${escapeHtml(t("orisColNum"))}</th><th>${escapeHtml(t("orisColDate"))}</th><th>${escapeHtml(t("orisColParty"))}</th><th>${escapeHtml(t("orisColTin"))}</th><th class="n">${escapeHtml(t("orisColRs"))}</th><th class="n">${escapeHtml(t("orisColOris"))}</th><th class="n">${escapeHtml(t("orisColDiff"))}</th><th>${escapeHtml(t("orisColStatus"))}</th></tr></thead><tbody>`;
+    for (const r of rows.slice(0, S.n)){ const s = stKey(r); const late = s==="no_oris" && r[1] > asof;
+      h += `<tr><td>${escapeHtml(r[0])}</td><td>${r[1]}</td><td style="max-width:220px;white-space:normal">${escapeHtml(r[2])}</td><td style="color:var(--muted)">${escapeHtml(r[3]||"")}</td>${gelCell(r[4])}${gelCell(r[5])}${(r[4]===null||r[5]===null)?'<td class="n owb-zero">–</td>':gelCell(r[4]-r[5])}<td><span class="owb-pill ${stCls(s)}">${escapeHtml(stLabel(s))}</span>${late?` <span class="owb-pill tag-other">${escapeHtml(t("orisLate"))}</span>`:""}</td></tr>`; }
+    h += `<tr class="owb-total"><td colspan="4">${escapeHtml(t("orisTotal"))} (${fmtInt(rows.length)})</td>${gelCell(rsA)}${gelCell(orA)}${gelCell(rsA-orA)}<td></td></tr></tbody></table>`;
+    if (rows.length > S.n) h += `<div class="owb-more" id="orisMore">${escapeHtml(LANG==="en"?`Show more (${rows.length-S.n} more)`:`მეტის ჩვენება (კიდევ ${rows.length-S.n})`)}</div>`;
+    h += `</div><p class="owb-note">${escapeHtml(t("orisNote"))}</p></div>`;
+    root.innerHTML = h;
+    root.querySelectorAll(".owb-side").forEach(b => b.addEventListener("click", ()=>{ S.side = b.dataset.side; S.n = 200; render(); }));
+    root.querySelectorAll(".owb-status-row").forEach(tr => tr.addEventListener("click", ()=>{ S.status = tr.dataset.st; S.n = 200; render(); }));
+    root.querySelector("#orisFrom").addEventListener("change", e => { if (e.target.value){ S.from = e.target.value; render(); } });
+    root.querySelector("#orisTo").addEventListener("change", e => { if (e.target.value){ S.to = e.target.value; render(); } });
+    root.querySelector("#orisStatus").addEventListener("change", e => { S.status = e.target.value; S.n = 200; render(); });
+    root.querySelector("#orisReset").addEventListener("click", ()=>{ S.from = ORIS_WB.meta.start; S.to = asof; S.status = "all"; S.q = ""; S.n = 200; render(); });
+    const inp = root.querySelector("#orisSearchBox"); let tm;
+    inp.addEventListener("input", ()=>{ clearTimeout(tm); const pos = inp.selectionStart; tm = setTimeout(()=>{ S.q = inp.value; S.n = 200; render(); const n = document.getElementById("orisSearchBox"); if (n){ n.focus(); n.setSelectionRange(pos,pos); } }, 250); });
+    const mb = root.querySelector("#orisMore"); if (mb) mb.addEventListener("click", ()=>{ S.n += 500; render(); });
+  }
+  onRerender(render);
+  render();
+})();
+
+/* =========================================================
    RECEIVED INVOICES TAB (buyer side — Volta is the buyer)
    ========================================================= */
 (function(){
@@ -3087,4 +3220,27 @@ function setLang(lang){
 }
 document.getElementById("langToggle").addEventListener("click", ()=>{ setLang(LANG === "ka" ? "en" : "ka"); });
 applyStaticI18n();
+
+/* ---------- dark/light theme toggle ----------
+   The CSS already carries three layers of tokens: a light :root default, a
+   @media(prefers-color-scheme:dark) override (guarded by :not([data-theme=
+   "light"])) for viewers who haven't chosen, and an explicit :root[data-
+   theme="dark"/"light"] pair this toggle writes to override either way.
+   Persisted per-browser via localStorage, same pattern as the language
+   toggle — never assume a fixed default across viewers. */
+function systemPrefersDark(){ return window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches; }
+function currentTheme(){
+  const stored = localStorage.getItem("voltaTheme");
+  return stored === "light" || stored === "dark" ? stored : (systemPrefersDark() ? "dark" : "light");
+}
+function applyTheme(theme){
+  document.documentElement.setAttribute("data-theme", theme);
+  document.getElementById("themeToggle").textContent = theme === "dark" ? "☀️" : "🌙";
+}
+function setTheme(theme){
+  localStorage.setItem("voltaTheme", theme);
+  applyTheme(theme);
+}
+document.getElementById("themeToggle").addEventListener("click", ()=>{ setTheme(currentTheme() === "dark" ? "light" : "dark"); });
+applyTheme(currentTheme());
 </script>

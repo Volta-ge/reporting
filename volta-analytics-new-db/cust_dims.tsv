@@ -1,0 +1,84 @@
+dim	val	all_c	active_c	loan_c
+age	NULL	1731	220	549
+age	1:< 18	5	1	1
+age	2:18 - 24	2771	296	400
+age	3:25 - 34	12574	1909	2705
+age	4:35 - 44	10132	1917	2941
+age	5:45 - 59	5811	1164	2118
+age	6:60+	1759	232	526
+city	NULL	473	8	344
+city	Other cities	5265	779	942
+city	ბათუმი	2366	351	415
+city	გარდაბანი	323	47	75
+city	გორი	849	116	135
+city	გურჯაანი	277	37	55
+city	ზუგდიდი	886	122	149
+city	თბილისი	19128	3487	6075
+city	მცხეთა	502	78	161
+city	ოზურგეთი	371	50	59
+city	რუსთავი	1369	237	311
+city	სამტრედია	285	37	48
+city	სენაკი	262	42	49
+city	ფოთი	480	77	88
+city	ქობულეთი	390	52	64
+city	ქუთაისი	1224	168	202
+city	ხაშური	333	51	68
+emp	NULL	21948	2610	5934
+emp	Not specified	4	0	0
+emp	Private sector	5627	1512	1601
+emp	Public sector	2369	726	770
+emp	Self-employed	4234	747	785
+emp	Unemployed	601	144	150
+gender	NULL	597	38	160
+gender	Female	19649	3983	6564
+gender	Male	14537	1718	2516
+pos	NULL	9324	1006	3106
+pos	Other	18488	3530	4593
+pos	ადმინისტრატორი	294	79	95
+pos	გამყიდველი	249	37	45
+pos	დამლაგებელი	252	38	45
+pos	დიასახლისი	653	123	176
+pos	დირექტორი	214	56	81
+pos	კონსულტანტი	294	69	87
+pos	კურიერი	291	31	39
+pos	მენეჯერი	792	211	256
+pos	მზარეული	412	82	111
+pos	მოლარე	712	150	184
+pos	მუშა	337	17	20
+pos	მძღოლი	632	67	92
+pos	ოპერატორი	413	77	95
+pos	ძიძა	591	96	131
+pos	ხელოსანი	835	70	84
+rating	NULL	30802	4613	5343
+rating	1	258	3	248
+rating	2	130	13	130
+rating	3	198	29	168
+rating	4	1283	419	1263
+rating	5	2112	662	2088
+risk	NULL	27336	22	1917
+risk	High	661	251	656
+risk	Low	428	131	426
+risk	Medium	6358	5335	6241
+sal	NULL	21951	2616	5940
+sal	0:0 (no salary)	16	4	4
+sal	1:< 500	124	14	17
+sal	2:500 - 999	1053	253	275
+sal	3:1,000 - 1,999	5074	1316	1390
+sal	4:2,000 - 2,999	3423	787	820
+sal	5:3,000 - 4,999	2296	511	547
+sal	6:5,000+	839	237	246
+sal	7:Not specified	7	1	1
+soc	NULL	23361	2952	6301
+soc	Housewife	4128	1126	1187
+soc	None of these	5370	1330	1399
+soc	Pensioner	457	88	95
+soc	Student	1467	243	258
+src	NULL	21885	2591	5914
+src	Facebook	7410	1411	1451
+src	Friend / family recommendation	2515	563	580
+src	Google	110	24	25
+src	Instagram	990	170	172
+src	Other	367	81	87
+src	Outdoor banner	12	1	1
+src	TikTok	521	122	125
+src	Used Volta before	973	776	885
