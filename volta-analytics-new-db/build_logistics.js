@@ -311,7 +311,7 @@ else {
 if (!html.includes(JS_MARK)) {
   const js = `
 ${JS_MARK}
-(function () {
+window.__registerPage(['logistics'], function () {
   const L = LOGI_JSON;
   const dayLabelL = d => { const [, m, day] = d.split('-').map(Number); return MONTH_NAMES[m - 1] + ' ' + day; };
   document.getElementById('logiBanner').innerHTML = '<b>წყარო:</b> ახალი CRM-ის ლოგისტიკის მოდული (VoltaStoreDB: <code>crm_order_logistics</code>, <code>crm_shipment_status_history</code>, სტატუსების ლოგი). ისტორია ' + L.cutover + '-დან ლოგებიდან ზუსტადაა აღდგენილი; ძველი ცხრილების (Google Sheet) წინა ისტორია ძველ დაშბორდზე რჩება. ლოგისტიკის მოდული 2 სექტემბრიდან მუშაობს; ითვლება ყველა შეკვეთა, რომელიც მოდულშია, CRM სტატუსით Signed ან Active; ეს ზუსტად CRM-ის ლოჯისტიკის გვერდის პოპულაციაა.';
@@ -391,7 +391,7 @@ ${JS_MARK}
     setupTopScrollSync('logisticsCityNdScrollTop', 'logisticsCityNdScrollBody'), setupTopScrollSync('logisticsCityAllScrollTop', 'logisticsCityAllScrollBody'),
     setupTopScrollSync('logisticsGoodsNdScrollTop', 'logisticsGoodsNdScrollBody'), setupTopScrollSync('logisticsGoodsAllScrollTop', 'logisticsGoodsAllScrollBody'),
     setupTopScrollSync('logisticsStatusOrdersScrollTop', 'logisticsStatusOrdersScrollBody'), setupTopScrollSync('logisticsStatusLinesScrollTop', 'logisticsStatusLinesScrollBody'), setupTopScrollSync('logisticsStatusCollScrollTop', 'logisticsStatusCollScrollBody')];
-})();
+});
 `;
   must('// ---- top-level page nav (grows as more reports get added) ----', 'nav handler');
   html = html.replace('// ---- top-level page nav (grows as more reports get added) ----', js + '// ---- top-level page nav (grows as more reports get added) ----');
@@ -597,7 +597,7 @@ const JS_MARK = '/* ---------- mkt ---------- */', JS_END = '/* ---------- /mkt 
 removeBetween(JS_MARK, JS_END + NL, 'mkt js');
 {
   const js = NL + JS_MARK + `
-(function () {
+window.__registerPage(['leads'], function () {
   const M = MKT_JSON;
   const dayLabelM = d => { const [, m, day] = d.split('-').map(Number); return MONTH_NAMES[m - 1] + ' ' + day; };
   const monthLabelM = m => MONTH_NAMES[Number(m.slice(5, 7)) - 1] + ' ' + m.slice(0, 4);
@@ -623,7 +623,7 @@ removeBetween(JS_MARK, JS_END + NL, 'mkt js');
   const ids = [['mktStatus', M.status], ['mktStep', M.step], ['mktCity', M.city], ['mktConv', M.conv]];
   ids.forEach(([id, sec]) => { render(id + 'Day', sec, true); render(id + 'Month', sec, false); });
   window.mktScrollUpdaters = ids.flatMap(([id]) => [setupTopScrollSync(id + 'DayScrollTop', id + 'DayScrollBody'), setupTopScrollSync(id + 'MonthScrollTop', id + 'MonthScrollBody')]);
-})();
+});
 ` + JS_END + NL;
   const a = '// ---- top-level page nav (grows as more reports get added) ----';
   must(a, 'nav handler');
@@ -939,7 +939,7 @@ const JS_MARK = '/* ---------- ops ---------- */', JS_END = '/* ---------- /ops 
 removeBlock(JS_MARK, JS_END, true);
 const js = `
 ${JS_MARK}
-(function () {
+window.__registerPage(['opsapplications', 'opscommittee'], function () {
   const O = OPS_JSON, ARROW = String.fromCharCode(8594);
   const dayLabel = d => { const p = d.split('-').map(Number); return MONTH_NAMES[p[1] - 1] + ' ' + p[2]; };
   const monthLabel = m => MONTH_NAMES[Number(m.slice(5, 7)) - 1] + ' ' + m.slice(0, 4);
@@ -1001,7 +1001,7 @@ ${JS_MARK}
   const ids = ['opsAppsStatus', 'opsFlow', 'opsFunnel', 'opsDecisions', 'opsUwOutcome', 'opsPerUw', 'opsReasons', 'opsStages'];
   window.opsScrollUpdaters = [];
   ids.forEach(id => ['Day', 'Month'].forEach(s => window.opsScrollUpdaters.push(setupTopScrollSync(id + s + 'Top', id + s + 'Body'))));
-})();
+});
 ${JS_END}`;
 const navJsAnchor = '// ---- top-level page nav (grows as more reports get added) ----';
 must(navJsAnchor, 'nav handler');
@@ -1267,7 +1267,7 @@ const JS_MARK = '/* ---------- cust ---------- */', JS_END = '/* ---------- /cus
 removeBetween(NL + JS_MARK, JS_END, 'cust js');   // the newline after JS_END stays: it is the one before the nav-handler comment
 const js = `
 ${JS_MARK}
-(function () {
+window.__registerPage(['customers'], function () {
   const C = CUST_JSON, S = C.summary;
   const monthLabel = m => MONTH_NAMES[Number(m.slice(5, 7)) - 1] + ' ' + m.slice(0, 4);
   const dayLabel = d => { const [, m, day] = d.split('-').map(Number); return MONTH_NAMES[m - 1] + ' ' + day; };
@@ -1349,7 +1349,7 @@ ${JS_MARK}
 
   window.custScrollUpdaters = [setupTopScrollSync('custNrMonthTop', 'custNrMonthBody'), setupTopScrollSync('custNrDayTop', 'custNrDayBody')]
     .concat(C.dims.filter(d => d.monthly).map(d => setupTopScrollSync('custMonth_' + d.key + '_Top', 'custMonth_' + d.key + '_Body')));
-})();
+});
 ${JS_END}`;
 must('// ---- top-level page nav (grows as more reports get added) ----', 'nav handler');
 html = html.replace('// ---- top-level page nav (grows as more reports get added) ----', js.replace(/^\n/, '') + NL + '// ---- top-level page nav (grows as more reports get added) ----');
@@ -1593,7 +1593,7 @@ const JS_MARK = '/* ---------- coll ---------- */', JS_END = '/* ---------- /col
 removeBetween(JS_MARK, JS_END, 'coll js');
 const js = `
 ${JS_MARK}
-(function () {
+window.__registerPage(['collections'], function () {
   const C = COLL_JSON, n = C.days.length, DASH = '&ndash;';
   const dayLabel = d => { const [, m, day] = d.split('-').map(Number); return MONTH_NAMES[m - 1] + ' ' + day; };
   const monthLabel = m => MONTH_NAMES[Number(m.slice(5, 7)) - 1] + ' ' + m.slice(0, 4);
@@ -1817,7 +1817,7 @@ ${JS_MARK}
 
   const ids = ['collPayDay', 'collPayMonth', 'collOdDay', 'collOdMonth', 'collPmDay', 'collDueDay', 'collDueMonth', 'collActDay', 'collActMonth'];
   window.collScrollUpdaters = ids.map(id => setupTopScrollSync(id + 'ScrollTop', id + 'ScrollBody'));
-})();
+});
 ${JS_END}
 `;
 must('// ---- top-level page nav (grows as more reports get added) ----', 'nav handler');
@@ -2118,7 +2118,7 @@ cutBetween(NL + JS_MARK, JS_END + NL, 'pf js');
 {
   const js = `
 ${JS_MARK}
-(function () {
+window.__registerPage(['portfolio'], function () {
   const P = PF_JSON;
   const dayLabel = d => { const [, m, day] = d.split('-').map(Number); return MONTH_NAMES[m - 1] + ' ' + day; };
   const monthLabel = m => MONTH_NAMES[Number(m.slice(5, 7)) - 1] + ' ' + m.slice(0, 4);
@@ -2222,7 +2222,7 @@ ${JS_MARK}
   renderBook('pfBookAmt', P.book.amt); renderBook('pfBookSeg', P.book.seg); renderBook('pfBookCity', P.book.city); renderBook('pfBookGoods', P.book.goods);
   renderQuality();
   window.pfScrollUpdaters = ['pfStockDay', 'pfStockMonth', 'pfFlowDay', 'pfFlowMonth', 'pfStructTerm', 'pfStructAmt', 'pfStructSeg', 'pfStructGoods', 'pfStructCity', 'pfStructRisk', 'pfVintage'].map(id => setupTopScrollSync(id + 'ScrollTop', id + 'ScrollBody'));
-})();
+});
 ${JS_END}
 `;
   must('// ---- top-level page nav (grows as more reports get added) ----', 'nav handler');
