@@ -24,7 +24,11 @@ SEG="CASE WHEN EXISTS (SELECT 1 FROM order_items oi JOIN product_flat pf ON pf.p
 # schedule total; the advance is added only when the schedule was built net of it (schedule + advance <= price),
 # because in the other convention the advance is already posted against the first schedule row.
 # price = product price (base_grand_total), kept for reference / the Segment A rule.
-Q "WITH act AS (SELECT entity_id, MIN(created_at) t FROM crm_activity_log WHERE action='installment.status_change' AND JSON_EXTRACT(metadata,'\$.to')=1 GROUP BY entity_id)
+# Single-payment sales (crm_order_status=99) never go through the installment Signed->Active log (they are
+# retail.create'd already-complete, no schedule) -- unioned in here keyed to their own created_at so they count
+# in Deals Closed/Amount Sold like the CRM's own Sales performance page does (user's decision 2026-09-10).
+Q "WITH act AS (SELECT entity_id, MIN(created_at) t FROM crm_activity_log WHERE action='installment.status_change' AND JSON_EXTRACT(metadata,'\$.to')=1 GROUP BY entity_id
+                UNION ALL SELECT id, created_at FROM orders WHERE crm_order_status=99)
    SELECT DATE(act.t) d, $SEG seg, COUNT(*) deals,
    SUM(CASE WHEN s.tot IS NULL THEN o.base_grand_total
             WHEN s.tot + COALESCE(o.crm_advance_amount,0) <= o.base_grand_total + 0.01 THEN s.tot + COALESCE(o.crm_advance_amount,0)

@@ -31,7 +31,7 @@ age	NULL	2026-05	219
 age	NULL	2026-06	454
 age	NULL	2026-07	362
 age	NULL	2026-08	269
-age	NULL	2026-09	181
+age	NULL	2026-09	195
 age	1:< 18	2024-03	1
 age	1:< 18	2024-09	2
 age	1:< 18	2024-10	2
@@ -75,7 +75,7 @@ age	2:18 - 24	2026-05	196
 age	2:18 - 24	2026-06	347
 age	2:18 - 24	2026-07	376
 age	2:18 - 24	2026-08	228
-age	2:18 - 24	2026-09	76
+age	2:18 - 24	2026-09	85
 age	3:25 - 34	2024-01	175
 age	3:25 - 34	2024-02	184
 age	3:25 - 34	2024-03	324
@@ -108,7 +108,7 @@ age	3:25 - 34	2026-05	1330
 age	3:25 - 34	2026-06	2155
 age	3:25 - 34	2026-07	1849
 age	3:25 - 34	2026-08	1390
-age	3:25 - 34	2026-09	488
+age	3:25 - 34	2026-09	543
 age	4:35 - 44	2024-01	165
 age	4:35 - 44	2024-02	192
 age	4:35 - 44	2024-03	255
@@ -141,7 +141,7 @@ age	4:35 - 44	2026-05	924
 age	4:35 - 44	2026-06	1326
 age	4:35 - 44	2026-07	1216
 age	4:35 - 44	2026-08	1007
-age	4:35 - 44	2026-09	352
+age	4:35 - 44	2026-09	387
 age	5:45 - 59	2024-01	103
 age	5:45 - 59	2024-02	103
 age	5:45 - 59	2024-03	182
@@ -174,7 +174,7 @@ age	5:45 - 59	2026-05	396
 age	5:45 - 59	2026-06	508
 age	5:45 - 59	2026-07	487
 age	5:45 - 59	2026-08	485
-age	5:45 - 59	2026-09	166
+age	5:45 - 59	2026-09	180
 age	6:60+	2024-01	23
 age	6:60+	2024-02	36
 age	6:60+	2024-03	53
@@ -207,7 +207,7 @@ age	6:60+	2026-05	88
 age	6:60+	2026-06	99
 age	6:60+	2026-07	95
 age	6:60+	2026-08	76
-age	6:60+	2026-09	17
+age	6:60+	2026-09	19
 city	NULL	2024-01	12
 city	NULL	2024-02	12
 city	NULL	2024-03	11
@@ -239,7 +239,7 @@ city	NULL	2026-05	6
 city	NULL	2026-06	11
 city	NULL	2026-07	6
 city	NULL	2026-08	12
-city	NULL	2026-09	220
+city	NULL	2026-09	236
 city	Other cities	2024-01	35
 city	Other cities	2024-02	45
 city	Other cities	2024-03	163
@@ -272,7 +272,7 @@ city	Other cities	2026-05	688
 city	Other cities	2026-06	679
 city	Other cities	2026-07	609
 city	Other cities	2026-08	484
-city	Other cities	2026-09	157
+city	Other cities	2026-09	172
 city	ბათუმი	2024-01	1
 city	ბათუმი	2024-02	11
 city	ბათუმი	2024-03	87
@@ -305,7 +305,7 @@ city	ბათუმი	2026-05	201
 city	ბათუმი	2026-06	394
 city	ბათუმი	2026-07	383
 city	ბათუმი	2026-08	280
-city	ბათუმი	2026-09	80
+city	ბათუმი	2026-09	91
 city	გარდაბანი	2024-01	5
 city	გარდაბანი	2024-02	8
 city	გარდაბანი	2024-03	11
@@ -371,7 +371,7 @@ city	გორი	2026-05	54
 city	გორი	2026-06	128
 city	გორი	2026-07	92
 city	გორი	2026-08	98
-city	გორი	2026-09	25
+city	გორი	2026-09	29
 city	გურჯაანი	2024-01	4
 city	გურჯაანი	2024-02	6
 city	გურჯაანი	2024-03	7
@@ -437,7 +437,7 @@ city	ზუგდიდი	2026-05	65
 city	ზუგდიდი	2026-06	133
 city	ზუგდიდი	2026-07	120
 city	ზუგდიდი	2026-08	99
-city	ზუგდიდი	2026-09	34
+city	ზუგდიდი	2026-09	39
 city	თბილისი	2024-01	434
 city	თბილისი	2024-02	435
 city	თბილისი	2024-03	404
@@ -470,7 +470,7 @@ city	თბილისი	2026-05	1677
 city	თბილისი	2026-06	2705
 city	თბილისი	2026-07	2388
 city	თბილისი	2026-08	1892
-city	თბილისი	2026-09	600
+city	თბილისი	2026-09	665
 city	მცხეთა	2024-01	8
 city	მცხეთა	2024-02	13
 city	მცხეთა	2024-03	13
@@ -569,7 +569,7 @@ city	რუსთავი	2026-05	135
 city	რუსთავი	2026-06	204
 city	რუსთავი	2026-07	159
 city	რუსთავი	2026-08	156
-city	რუსთავი	2026-09	36
+city	რუსთავი	2026-09	44
 city	სამტრედია	2024-03	11
 city	სამტრედია	2024-04	8
 city	სამტრედია	2024-05	2
@@ -600,7 +600,7 @@ city	სამტრედია	2026-05	24
 city	სამტრედია	2026-06	45
 city	სამტრედია	2026-07	31
 city	სამტრედია	2026-08	24
-city	სამტრედია	2026-09	10
+city	სამტრედია	2026-09	11
 city	სენაკი	2024-03	18
 city	სენაკი	2024-04	5
 city	სენაკი	2024-05	7
@@ -729,7 +729,7 @@ city	ქუთაისი	2026-05	86
 city	ქუთაისი	2026-06	199
 city	ქუთაისი	2026-07	208
 city	ქუთაისი	2026-08	139
-city	ქუთაისი	2026-09	40
+city	ქუთაისი	2026-09	43
 city	ხაშური	2024-01	3
 city	ხაშური	2024-02	1
 city	ხაშური	2024-03	21
@@ -762,7 +762,7 @@ city	ხაშური	2026-05	33
 city	ხაშური	2026-06	48
 city	ხაშური	2026-07	39
 city	ხაშური	2026-08	25
-city	ხაშური	2026-09	11
+city	ხაშური	2026-09	12
 emp	NULL	2024-01	522
 emp	NULL	2024-02	584
 emp	NULL	2024-03	934
@@ -795,7 +795,7 @@ emp	NULL	2026-05	766
 emp	NULL	2026-06	589
 emp	NULL	2026-07	865
 emp	NULL	2026-08	879
-emp	NULL	2026-09	1113
+emp	NULL	2026-09	1235
 emp	Not specified	2026-04	4
 emp	Private sector	2026-03	307
 emp	Private sector	2026-04	858
@@ -803,21 +803,21 @@ emp	Private sector	2026-05	1031
 emp	Private sector	2026-06	1832
 emp	Private sector	2026-07	1601
 emp	Private sector	2026-08	1124
-emp	Private sector	2026-09	105
+emp	Private sector	2026-09	108
 emp	Public sector	2026-03	105
 emp	Public sector	2026-04	379
 emp	Public sector	2026-05	454
 emp	Public sector	2026-06	823
 emp	Public sector	2026-07	707
 emp	Public sector	2026-08	495
-emp	Public sector	2026-09	28
+emp	Public sector	2026-09	29
 emp	Self-employed	2026-03	196
 emp	Self-employed	2026-04	669
 emp	Self-employed	2026-05	815
 emp	Self-employed	2026-06	1400
 emp	Self-employed	2026-07	1065
 emp	Self-employed	2026-08	820
-emp	Self-employed	2026-09	26
+emp	Self-employed	2026-09	29
 emp	Unemployed	2026-03	22
 emp	Unemployed	2026-04	93
 emp	Unemployed	2026-05	87
@@ -856,7 +856,7 @@ gender	NULL	2026-05	73
 gender	NULL	2026-06	75
 gender	NULL	2026-07	77
 gender	NULL	2026-08	66
-gender	NULL	2026-09	92
+gender	NULL	2026-09	95
 gender	Female	2024-01	376
 gender	Female	2024-02	386
 gender	Female	2024-03	669
@@ -889,7 +889,7 @@ gender	Female	2026-05	1567
 gender	Female	2026-06	2428
 gender	Female	2026-07	2416
 gender	Female	2026-08	1782
-gender	Female	2026-09	673
+gender	Female	2026-09	742
 gender	Male	2024-01	143
 gender	Male	2024-02	193
 gender	Male	2024-03	259
@@ -922,7 +922,7 @@ gender	Male	2026-05	1513
 gender	Male	2026-06	2388
 gender	Male	2026-07	1892
 gender	Male	2026-08	1607
-gender	Male	2026-09	515
+gender	Male	2026-09	572
 risk	NULL	2024-01	522
 risk	NULL	2024-02	584
 risk	NULL	2024-03	933
@@ -955,7 +955,7 @@ risk	NULL	2026-05	2288
 risk	NULL	2026-06	3685
 risk	NULL	2026-07	3323
 risk	NULL	2026-08	2759
-risk	NULL	2026-09	1110
+risk	NULL	2026-09	1232
 risk	High	2024-05	26
 risk	High	2024-06	30
 risk	High	2024-07	49
@@ -1006,7 +1006,7 @@ risk	Low	2026-05	2
 risk	Low	2026-06	1
 risk	Low	2026-07	1
 risk	Low	2026-08	8
-risk	Low	2026-09	56
+risk	Low	2026-09	59
 risk	Medium	2024-05	65
 risk	Medium	2024-06	88
 risk	Medium	2024-07	79
@@ -1035,7 +1035,7 @@ risk	Medium	2026-05	863
 risk	Medium	2026-06	1203
 risk	Medium	2026-07	1060
 risk	Medium	2026-08	688
-risk	Medium	2026-09	114
+risk	Medium	2026-09	118
 sal	NULL	2024-01	522
 sal	NULL	2024-02	584
 sal	NULL	2024-03	934
@@ -1068,7 +1068,7 @@ sal	NULL	2026-05	766
 sal	NULL	2026-06	589
 sal	NULL	2026-07	865
 sal	NULL	2026-08	879
-sal	NULL	2026-09	1128
+sal	NULL	2026-09	1251
 sal	0:0 (no salary)	2026-04	1
 sal	0:0 (no salary)	2026-05	4
 sal	0:0 (no salary)	2026-06	5
@@ -1086,7 +1086,7 @@ sal	2:500 - 999	2026-05	161
 sal	2:500 - 999	2026-06	299
 sal	2:500 - 999	2026-07	305
 sal	2:500 - 999	2026-08	174
-sal	2:500 - 999	2026-09	12
+sal	2:500 - 999	2026-09	14
 sal	3:1,000 - 1,999	2026-02	7
 sal	3:1,000 - 1,999	2026-03	277
 sal	3:1,000 - 1,999	2026-04	811
@@ -1094,21 +1094,21 @@ sal	3:1,000 - 1,999	2026-05	1025
 sal	3:1,000 - 1,999	2026-06	1704
 sal	3:1,000 - 1,999	2026-07	1376
 sal	3:1,000 - 1,999	2026-08	1014
-sal	3:1,000 - 1,999	2026-09	71
+sal	3:1,000 - 1,999	2026-09	73
 sal	4:2,000 - 2,999	2026-03	167
 sal	4:2,000 - 2,999	2026-04	546
 sal	4:2,000 - 2,999	2026-05	603
 sal	4:2,000 - 2,999	2026-06	1196
 sal	4:2,000 - 2,999	2026-07	911
 sal	4:2,000 - 2,999	2026-08	688
-sal	4:2,000 - 2,999	2026-09	38
+sal	4:2,000 - 2,999	2026-09	39
 sal	5:3,000 - 4,999	2026-03	70
 sal	5:3,000 - 4,999	2026-04	282
 sal	5:3,000 - 4,999	2026-05	418
 sal	5:3,000 - 4,999	2026-06	765
 sal	5:3,000 - 4,999	2026-07	664
 sal	5:3,000 - 4,999	2026-08	471
-sal	5:3,000 - 4,999	2026-09	22
+sal	5:3,000 - 4,999	2026-09	23
 sal	6:5,000+	2026-01	1
 sal	6:5,000+	2026-02	1
 sal	6:5,000+	2026-03	17
@@ -1154,7 +1154,7 @@ soc	NULL	2026-05	1455
 soc	NULL	2026-06	589
 soc	NULL	2026-07	865
 soc	NULL	2026-08	879
-soc	NULL	2026-09	1246
+soc	NULL	2026-09	1375
 soc	Housewife	2026-03	163
 soc	Housewife	2026-04	611
 soc	Housewife	2026-05	718
@@ -1214,7 +1214,7 @@ src	NULL	2026-05	766
 src	NULL	2026-06	589
 src	NULL	2026-07	865
 src	NULL	2026-08	879
-src	NULL	2026-09	1065
+src	NULL	2026-09	1172
 src	Facebook	2026-02	2
 src	Facebook	2026-03	255
 src	Facebook	2026-04	1051
@@ -1222,7 +1222,7 @@ src	Facebook	2026-05	1391
 src	Facebook	2026-06	2538
 src	Facebook	2026-07	1945
 src	Facebook	2026-08	1474
-src	Facebook	2026-09	132
+src	Facebook	2026-09	143
 src	Friend / family recommendation	2026-01	1
 src	Friend / family recommendation	2026-03	163
 src	Friend / family recommendation	2026-04	376
@@ -1230,7 +1230,7 @@ src	Friend / family recommendation	2026-05	434
 src	Friend / family recommendation	2026-06	828
 src	Friend / family recommendation	2026-07	727
 src	Friend / family recommendation	2026-08	499
-src	Friend / family recommendation	2026-09	19
+src	Friend / family recommendation	2026-09	22
 src	Google	2026-02	1
 src	Google	2026-03	11
 src	Google	2026-04	22
@@ -1245,7 +1245,7 @@ src	Instagram	2026-05	171
 src	Instagram	2026-06	386
 src	Instagram	2026-07	271
 src	Instagram	2026-08	208
-src	Instagram	2026-09	7
+src	Instagram	2026-09	10
 src	Other	2026-03	26
 src	Other	2026-04	106
 src	Other	2026-05	96
@@ -1270,4 +1270,4 @@ src	Used Volta before	2026-05	208
 src	Used Volta before	2026-06	306
 src	Used Volta before	2026-07	291
 src	Used Volta before	2026-08	239
-src	Used Volta before	2026-09	53
+src	Used Volta before	2026-09	58
