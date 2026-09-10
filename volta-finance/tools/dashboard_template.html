@@ -77,6 +77,17 @@ main{max-width:1380px;margin:0 auto;padding:22px 28px 60px}
 .card h3{margin:0 0 2px;font-size:14px;font-weight:600;display:flex;align-items:baseline;justify-content:space-between;gap:10px;flex-wrap:wrap}
 .compact-btn{font-size:11.5px;font-weight:500;color:var(--accent);border:1px solid var(--line);border-radius:6px;padding:4px 10px;background:var(--surface2);white-space:nowrap;margin-left:auto}
 .compact-btn:hover{background:var(--accent-soft)}
+.ledger td.n.clickable{cursor:pointer;text-decoration:underline dotted;text-underline-offset:3px;text-decoration-color:var(--faint)}
+.ledger td.n.clickable:hover{background:var(--accent-soft);color:var(--accent)}
+.ledger td.n.cell-open{background:var(--accent-soft);color:var(--accent);font-weight:600;text-decoration:none}
+.postings-wrap{padding:4px 12px 10px 34px;position:sticky;left:0;width:-moz-fit-content;width:fit-content;max-width:calc(100vw - 48px);overflow-x:auto}
+.postings-wrap .more{color:var(--muted);font-size:11px;margin-top:4px}
+table.postings{border-collapse:collapse;width:auto;font-size:12px}
+table.postings th{font-size:10px;font-weight:500;color:var(--muted);text-align:left;padding:3px 8px;border-bottom:1px solid var(--line);white-space:nowrap}
+table.postings th.n,table.postings td.n{text-align:right}
+table.postings td{padding:3px 8px;border-bottom:1px solid var(--line2);white-space:nowrap;line-height:1.35;vertical-align:top}
+table.postings td.purpose{white-space:normal;width:240px;max-width:240px}
+@media (max-width:700px){ table.postings td.purpose{width:150px;max-width:150px} }
 .card .cap{color:var(--muted);font-size:12px;margin-bottom:8px}
 .legend{display:flex;gap:14px;font-size:12px;color:var(--muted);margin:2px 0 6px}
 .legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px}
@@ -218,7 +229,7 @@ const D = __DATA__;
 const BUDGET = __BUDGET__;   // 2026 P&L/BS budget, extracted from the finance team's Excel model (null if not built)
 const M = D.months, NM = M.length;
 const years = [...new Set(M.map(m=>m.slice(0,4)))];
-const state = { year: years[years.length-1], month: null, tab: 'ov', lang: 'ka', open: new Set(), arLedger: '1 4 10', arQ: '', arN: 100, compactTabs: new Set(), theme: null };
+const state = { year: years[years.length-1], month: null, tab: 'ov', lang: 'ka', open: new Set(), arLedger: '1 4 10', arQ: '', arN: 100, compactTabs: new Set(), theme: null, exOpenCell: new Map() };
 try{ const l=localStorage.getItem('volta-fin-lang'); if(l==='en'||l==='ka') state.lang=l; }catch(_){}
 try{ const th=localStorage.getItem('volta-fin-theme'); if(th==='light'||th==='dark'){ state.theme=th; document.documentElement.dataset.theme=th; } }catch(_){}
 
@@ -234,7 +245,7 @@ ka:{
   avTitlePL:'მოგება-ზარალი: ფაქტი vs ბიუჯეტი', avTitleBS:'ბალანსი: ფაქტი vs ბიუჯეტი', avTitleCF:'ფულადი ნაკადები: ფაქტი vs ბიუჯეტი',
   avNotePL:'ფაქტი ორისის ანგარიშთა გეგმის მიხედვითაა დაშლილი, ისე რომ ჯამში ზუსტად შეესატყვისებოდეს დანარჩენ ტაბებში დათვლილ წმინდა მოგებას (გაჟონვის/ორმაგი დათვლის გარეშე) — ყოველი ანგარიში, რომელსაც ბიუჯეტში საკუთარი სტრიქონი არ აქვს, თავს იყრის „სხვა შემოსავალში". „პარტნიორების/სხვა პერსონალის ხელფასი" (92/93), „მარკეტინგის ხელფასები" (101), „საეჭვო მოთხოვნების რეზერვი" (102 — ეს ანგარიში ორისში საერთოდ არაა გამოყენებული), „კორპორატიული ღონისძიება" (103), ცვეთა/პროცენტები/დივიდენდები (109/111-114/117) ცალკე ჩანაწერად ორისში არ იძებნება — ჯამური „არასაოპერაციო ხარჯები" (108) ხელმისაწვდომია, დეტალები არა. შემოსავალი/თვითღირებულება დღგ-ს ჩათვლით (78/80) გამოთვლილია x1.18-ით. სხვაობის % ბიუჯეტის სიდიდესთან შედარებით.',
   avNoteBS:'ფაქტი ორისის ბალანსის ანგარიშებიდან, იმავე ლოგიკით რაც ბალანსის ტაბზეა. გრძელვადიანი სესხები ორისში ერთ ანგარიშზეა თავმოყრილი (4 1 90) კონტრაგენტის მიხედვით — ბანკის/ზუკის/პარტნიორის სესხები დაშლილია კონკრეტული კონტრაგენტის კოდების მიხედვით, გადამოწმებული იანვრის ბიუჯეტთან (სხვაობა 1-14%). „მოთხოვნების კორექტირება" (127) და „საპენსიო შენატანი" (145) ორისში შესატყვისი ანგარიში არ არსებობს.',
-  avNoteCF:'ფულადი ნაკადები ორისში მხოლოდ ~20 ფართო კონტრ-ანგარიშის მიხედვით იყოფა (მაგ. ოფისის ქირაც და მარკეტინგის ხარჯიც ერთსა და იმავე „მომწოდებლების" გადასახდელში იხდის, არა თავ-თავიანთ ხარჯის ანგარიშში) — ამიტომ დეტალური მუხლებიდან მხოლოდ მყიდველების/ავანსის შემოსვლა და გრძელვადიანი სესხის მოძრაობა/დაფარვა ცალკეა გამოსაყოფი; დანარჩენი „–"-ითაა ნაჩვენები. საინვესტიციო საქმიანობის ცალკე კონტრ-ანგარიში ორისში საერთოდ არ ფიქსირდება.',
+  avNoteCF:'საოპერაციო, საინვესტიციო და საფინანსო საქმიანობის ჯამები ფაქტობრივადაც არის გამოთვლილი (საინვესტიციო საქმიანობაზე ნაღდი ფული გადამოწმებით ნულის ტოლია მთელი წლის განმავლობაში — გადამოწმებული ფაქტია, არა უცნობი). ხარჯების დეტალურ მუხლებში ორისის უმეტესი გადახდა ერთი ზოგადი „მომწოდებლების" ანგარიშიდან გადის, არა თავისივე ხარჯის ანგარიშიდან — მაგრამ თითოეული კონკრეტული მომწოდებელი ხშირად მთელი წლის განმავლობაში მხოლოდ ერთი სახის საქონელს/მომსახურებას აწვდის, ამიტომ იმ მომწოდებლების ნაღდი გადახდა კონკრეტულ მუხლს მივაკუთვნეთ (მაგ. მარკეტინგი, ოფისის ქირა, მენეჯმენტის მომსახურება, ტრანსპორტირება, თვითღირებულება) — ეს ნამდვილი, ცალსახა შესატყვისობაა, არა ვარაუდი. სადაც მომწოდებელი ერთზე მეტ სახის ხარჯს ფარავდა (და ჩამოყრა ცალსახად ვერ ხერხდება), ეს გადახდები კონკრეტულ მუხლში არ შედის — ამიტომ ეს რიცხვები ნაწილობრივია, არა სრული ხარჯი (მაგ. მარკეტინგის პირდაპირი ანგარიშიდან მხოლოდ 539 ₾ გადიოდა წელიწადში, დანარჩენი ~352,000 ₾ სწორედ ამ მომწოდებელთა ჩამოყრით აღდგა). იგივე პრინციპით გაიხსნა პროცენტისა (3 4 10) და ხელფასის (3 1 32) ანგარიშებიც: პროცენტის ქვე-კოდებს განსხვავებული ნომრები აქვთ სესხის ძირის (4 1 90) ანგარიშთან შედარებით, მაგრამ სახელი ზუსტად ემთხვევა — ამიტომ იგივე ბანკის/ზუკის/პარტნიორის დაყოფა (რომელიც უკვე გადამოწმებულია ბალანსზე) გავრცელდა პროცენტზეც: „საინვესტიციო პროცენტი 15%"=ზუკის სესხის პროცენტი, „პარტნიორთა კაპიტალის პროცენტი"=დანარჩენი 7 პარტნიორის სესხის პროცენტი, „საბანკო პროცენტი"=ბანკის სესხების პროცენტი. ხელფასის 71 თანამშრომლიდან მხოლოდ ერთი ემთხვევა უკვე ცნობილ პარტნიორს (გიორგი ზავრაშვილი) — დანარჩენი ორი პარტნიორი საერთოდ არ ფიგურირებს ხელფასის უწყისში — ამიტომ „პარტნიორთა ხელფასი" და „სხვა პერსონალის ხელფასი" ცალსახად იყოფა. დანარჩენი „–"-იანი მუხლები კონკრეტულად შემოწმდა და დარჩა ასახსნელი მიზეზით: შემოსავლის მხარეს (მომსახურებიდან, ჯარიმა, პორტფელის უიმედო დავალიანების გაყიდვა) კლიენტების ანგარიშები არ იყოფა ტიპის მიხედვით ისე, როგორც მომწოდებლები იყოფოდა — პირდაპირ გადამოწმდა: 2026 წელს ჯარიმა დარიცხული 2,206 კლიენტიდან 71.8%-ს იმავე ანგარიშზე ჩვეულებრივი გაყიდვაც აქვს გატარებული, ანუ ერთი კლიენტის ანგარიში რამდენიმე სახის შემოსავალს ერევა და ცალსახად ვერ იყოფა. „მარკეტინგის ხელფასი" ვერ გამოიყო, რადგან 71 თანამშრომლის უწყისში დეპარტამენტი საერთოდ არ ჩანს. დღგ-ს (3 3 30/3 3 40) ანგარიშს პირდაპირი ნაღდი გადახდა საერთოდ არ უკავშირდება მთელი წლის განმავლობაში — თანხა კვლავ საერთო საოპერაციო გადინებაშია, უბრალოდ ცალკე ვერ გამოიყოფა. „კორპორატიული წვეულება", „გიორგის ქონებით სესხის უზრუნველყოფა" და „გაუთვალისწინებელი ხარჯები" ორისში დასახელებით საერთოდ არ იძებნება (გიორგი უაღრესად გავრცელებული სახელია, სახელით ძებნა ასობით არარელევანტურ თანხმობას იძლევა) — ალბათ ერთჯერადი/დაუფიქსირებელი გადახდებია, ცალკე ანგარიში არ არსებობს.',
   avTitlePF:'პორტფელი: ფაქტი vs ბიუჯეტი', avTitleAS:'ბიუჯეტის დაშვებები: ფაქტი vs ბიუჯეტი',
   avNotePF:'„პორტფელი თვის დასაწყისში" და „დარჩენილი პორტფელი" ფაქტობრივად მიახლოებულია ორისის მოთხოვნების ანგარიშის (1 4 10, მყიდველების მთლიანი დავალიანება) ნაშთით — ეს ზუსტად არ ემთხვევა სესხის პორტფელის საკუთარ განმარტებას (მხოლოდ ძირი, დარიცხული ჯარიმის/საკომისიოს გარეშე), ამიტომ ბიუჯეტთან სხვაობა ნაწილობრივ განმარტების განსხვავებითაც შეიძლება იყოს გამოწვეული, არა მხოლოდ რეალური გადახრით. „სულ ინკასაცია", „CAC" და „დარჩენილი კლიენტები" სესხების/მარკეტინგის სისტემის მონაცემია და ორისის ბუღალტრულ აღრიცხვაში საერთოდ არ ფიქსირდება — ფაქტი ამ სამ მუხლზე არ ჩანს.',
   avNoteAS:'ფაქტობრივად გამოთვლილია მხოლოდ ის მუხლები, რომლებისთვისაც ორისში პირდაპირი შესატყვისი ანგარიშია: „მარკირება" = (შემოსავალი − თვითღირებულება) / თვითღირებულება (გაყიდვების მთელ მოცულობაზე, განვადება და ნაღდი გაყიდვები ერთმანეთისგან განუცალკევებლად); „მარკეტინგის ხარჯი" = ანგარიში 7 4 90 39 / შემოსავალი; „ჯარიმის შემოსავალი" = ანგარიში 8 1 25 / შემოსავალი — ეს ბოლო რიცხვი საგრძნობლად აღემატება ბიუჯეტის დაშვებას, ღირს გადამოწმდეს, ორისი ამ ანგარიშზე ბიუჯეტის მოდელთან შედარებით უფრო ფართო წრეს ხომ არ ითვლის. დანარჩენი მუხლები (გაყიდვების ზრდის ტემპი, მხოლოდ განვადებაზე მარკირება, რეზერვის განაკვეთი, ინკასაციის განაკვეთი, თავდებულის %) სესხის გრაფიკის, კლიენტების რაოდენობის ან წინა წლის თვიური დეტალის მონაცემს მოითხოვს — ესეც ორისში ან ამ დაფის 2026-წლიან ფარგლებში ხელმისაწვდომი არ არის.',
@@ -251,6 +262,7 @@ ka:{
   period:'პერიოდი', compare:'შედარება', prev:'წინა', asOf:'მდგომარეობა', start:'დასაწყისი', mln:'მლნ', ths:'ათ.', months:'თვე',
   expand:'გაშლა', collapse:'ჩაკეცვა', unknownAcc:'(უცნობი ანგარიში)',
   shownTop:(n,t)=>`ნაჩვენებია ${n} უდიდესი ${t} ქვეანგარიშიდან · სრული სია დებიტორ/კრედიტორთა ჩანართშია`,
+  pShownTop:(n,t)=>`ნაჩვენებია ${n} უახლესი ${t} გატარებიდან`,
   revenue:'შემოსავალი', gross:'საერთო მოგება', net:'წმინდა მოგება', cash:'ფულადი სახსრები', ar:'მოთხოვნები (დებიტორები)', liab:'ვალდებულებები (სულ)',
   chRev:'შემოსავალი და წმინდა მოგება თვეების მიხედვით', chCash:'ფულადი სახსრები და მოთხოვნები თვის ბოლოს', cashLeg:'ფული (სალარო + ბანკი)', arLeg:'მოთხოვნები', eomBal:'ნაშთი თვის ბოლოს',
   yearly:'წლიური შეჯამება', yearlyCap:'ყველა წელი, ₾ · მოგება/ზარალი დახურვის გატარებების გარეშე',
@@ -279,6 +291,8 @@ ka:{
   arNoteA:'დებეტური ნაშთი = მოთხოვნა კონტრაგენტის მიმართ, კრედიტული = ავანსი ან ზედმეტად გადახდილი.', arNoteL:'კრედიტული ნაშთი = ჩვენი დავალიანება, დებეტური = ჩვენს მიერ გადახდილი ავანსი.', negRed:'ნაშთი უარყოფითი ნიშნით წითლადაა.',
   exTitle:'ხარჯების ანალიზი', exSub:'ხარჯები თვეების მიხედვით, ₾', selMonth:'არჩეული თვე', ga:'საერთო და ადმინისტრაციული (7 4)', dist:'მიწოდების ხარჯები (7 3)', nonOpEx:'არასაოპერაციო ხარჯები (8 2)', totEx:'სულ საოპერაციო + სხვა ხარჯები', avgMonth:'თვეში საშუალოდ', exItem:'ხარჯის მუხლი', avgCol:'საშ. თვე',
   exNote:'თვითღირებულება (7 2) აქ არ შედის, ის მოგება-ზარალის ჩანართშია. ფონის ინტენსივობა თითოეული სტრიქონის საკუთარ მაქსიმუმთანაა შედარებული.',
+  pDate:'თარიღი', pDoc:'დოკუმენტი', pCounter:'კორ. ანგარიში', pAmount:'თანხა', pNone:'ამ თვეს გატარება არ ჰქონია', pShowPostings:'გატარებების ნახვა',
+  pPurpose:'დანიშნულება', pSupplier:'მომწოდებელი', pClickHint:'დააჭირეთ ცხრილში ნებისმიერ არანულოვან ციფრს, რომ ნახოთ იმ თვის გატარებები.',
   scopeNote:y=>`ჩანართები ${y} წლის მონაცემებს აჩვენებს, თვეების მიხედვით. წელს გადმორჩენილი ნაშთები (${y}-ის 1 იანვრისთვის) ჩართულია როგორც ერთიანი საწყისი ნაშთი თითო ანგარიშზე, წლების მიხედვით ცალ-ცალკე არ ჩანს.`,
   foot:(s,fx)=>`ჟურნალის ${s.total} გატარებიდან გამოყენებულია ${s.kept}: გამორიცხულია ${s.closing} თვიური დახურვის გატარება (5 3 30 ↔ 6–9) და ${s.offbal} ბალანსგარეშე (B); ${s.pre2026} ჩანაწერი 2026 წლის წინაა და თითო ანგარიშის საწყის ნაშთშია ჩამატებული; ${fx} სავალუტო ოპერაცია გადაყვანილია ლარში ორისის კურსების ცხრილით. ბალანსები შემოწმებულია ორისის წლის საწყის ნაშთებთან (2020–2025): განსხვავება მხოლოდ 1,155 ₾ ერთ სავალუტო ოპერაციაზე (1 2 ↔ 1 6).`
 },
@@ -292,7 +306,7 @@ en:{
   avTitlePL:'Profit & Loss: Actual vs Budget', avTitleBS:'Balance Sheet: Actual vs Budget', avTitleCF:'Cash Flow: Actual vs Budget',
   avNotePL:'Actual is broken down by Oris account so the total reconciles exactly to the net profit shown on the other tabs (no leakage, no double-counting) - every account without its own budget line is folded into "Other Revenue". "Salary of Shareholders/Other Staff" (92/93), "Marketing Salaries" (101), "Provision" (102 - this Oris account is never actually posted to), "Corporate Party" (103), and depreciation/interest/dividends (109/111-114/117) have no isolable Oris line - the "Non-Operational Expenses" total (108) is available, its detail rows are not. Revenue/Cogs incl. VAT (78/80) are derived as x1.18. Diff % is relative to the budget figure.',
   avNoteBS:'Actual is from Oris\'s own balance-sheet accounts, same logic as the Balance Sheet tab. Long-term loans all sit in one Oris account (4 1 90) split only by contragent - Bank/Zuk/Shareholder loans are separated by the specific contragent codes that name them, checked against the January budget (1-14% variance). "Provision" (127, the receivables allowance) and "Pension Contribution" (145) have no matching Oris account.',
-  avNoteCF:'Cash flow in Oris only splits by ~20 broad counter-accounts (office rent and marketing expense, for instance, both settle through the same supplier-payable account rather than their own expense account) - so only customer/advance collections and long-term-loan draws/repayments can be isolated; everything else shows "–". Oris records no separate counter-account for investing activity at all.',
+  avNoteCF:'The Operating/Investing/Financing section totals do have actuals (Investing was checked directly and is genuinely zero all year - a verified fact, not missing data). Within the expense detail rows, most of Oris\'s bills settle through one general supplier-payable account rather than their own expense account - but individual VENDORS under that account often supply only one kind of good or service all year, so cash paid to those vendors was attributed to their specific category (marketing, office rent, management fee, delivery, cost of goods, etc.) - a real, unambiguous match, not a guess. Where a vendor covered more than one category (and the split genuinely can\'t be determined), those payments are excluded rather than attributed - so these figures are a real but partial slice of actual spend, not the full total (marketing\'s own direct account, for comparison, carried only 539 ₾ of the ~352,000 ₾ spent all year - the rest was recovered exactly this way, through its vendors). The interest-payable (3 4 10) and salary-payable (3 1 32) accounts were opened up the same way: interest sub-codes carry different numbers than the matching loan-principal (4 1 90) code, but the exact same lender name, so the already-verified Bank/Zuk/Shareholder split from the Balance Sheet was extended to interest too - "Investors Interest 15%" is the Zuk loan\'s interest, "Interest of Shareholder\'s Equity" is the other 7 shareholder loans\' interest, "Bank Interest" is the bank loans\' interest. Of the 71 payroll accounts, only one is an already-identified shareholder (Giorgi Zavrashvili) - the other two shareholders aren\'t on payroll at all - so Salary of Shareholders vs. Other Staff splits cleanly. The remaining "–" rows were each checked directly: on the revenue side (Services, Penalty, Portfolio Bad Debt Sale), customer accounts don\'t separate by revenue type the way vendor accounts separated by expense category - checked directly, 71.8% of the 2,206 customers with a 2026 penalty also ran ordinary sales cash through that same account, so one customer\'s account genuinely mixes revenue types and can\'t be split. "Marketing Salaries" has no department tag anywhere in the 71-person payroll list. VAT (3 3 30/3 3 40) never pairs with cash directly all year - the amount is still inside total Operating Cash Out, just not separable. "Corporate Party," "Securing a Loan with Giorgi\'s Property," and "Unpredictable Expenses" have no matching Oris account by name or keyword at all (Giorgi is an extremely common first name, so a name search returns hundreds of irrelevant matches) - likely one-off, undocumented items with no dedicated ledger account.',
   avTitlePF:'Portfolio: Actual vs Budget', avTitleAS:'Budget Assumptions: Actual vs Budget',
   avNotePF:'"Portfolio at Start of Month" and "Remaining Portfolio" actuals are approximated from Oris\'s total customer-receivables balance (account 1 4 10) — this doesn\'t exactly match the loan portfolio\'s own definition (principal only, excluding accrued fees/penalties), so part of the variance against budget may reflect a definitional difference rather than real performance. "Total Collection", "CAC" and "Remaining Clients" are loan-system/marketing metrics that Oris\'s bookkeeping never records — no actual is shown for these three.',
   avNoteAS:'Only the rows with a direct matching Oris account get a computed actual: "Mark Up" = (Revenue − Cogs) / Cogs (whole sales volume, installment and cash sales not split apart); "Marketing Expense" = account 7 4 90 39 / Revenue; "Fine Income" = account 8 1 25 / Revenue — this last figure comes out noticeably above the budget assumption, worth checking whether Oris books a wider set of transactions under this account than the budget model intends. The remaining rows (Sales Growth, Markup on installments only, Provision Rate, Collection Rate, Downpayment %) need a loan schedule, a customer count, or last year\'s monthly detail — none of which are available from Oris or within this dashboard\'s 2026-only scope.',
@@ -309,6 +323,7 @@ en:{
   period:'Period', compare:'compared with', prev:'prior', asOf:'As of', start:'Start', mln:'M', ths:'K', months:'months',
   expand:'Expand', collapse:'Collapse', unknownAcc:'(unknown account)',
   shownTop:(n,t)=>`Showing the ${n} largest of ${t} sub-accounts · the full list is in the Receivables · Payables tab`,
+  pShownTop:(n,t)=>`Showing the ${n} most recent of ${t} postings`,
   revenue:'Revenue', gross:'Gross profit', net:'Net profit', cash:'Cash', ar:'Receivables', liab:'Liabilities (total)',
   chRev:'Revenue and net profit by month', chCash:'Cash and receivables at month end', cashLeg:'Cash (till + bank)', arLeg:'Receivables', eomBal:'balance at month end',
   yearly:'Yearly summary', yearlyCap:'All years, ₾ · profit/loss without closing entries',
@@ -337,6 +352,8 @@ en:{
   arNoteA:'Debit balance = amount owed by the counterparty, credit = advance or overpayment.', arNoteL:'Credit balance = amount we owe, debit = advance we have paid.', negRed:'Negative balances are shown in red.',
   exTitle:'Expense Analysis', exSub:'expenses by month, ₾', selMonth:'selected month', ga:'General and administrative (7 4)', dist:'Distribution expenses (7 3)', nonOpEx:'Non-operating expenses (8 2)', totEx:'Total operating + other expenses', avgMonth:'monthly average', exItem:'Expense item', avgCol:'Avg / month',
   exNote:'Cost of sales (7 2) is not included here; see the Profit & Loss tab. Background intensity is relative to each row\'s own maximum.',
+  pDate:'Date', pDoc:'Document', pCounter:'Counter-account', pAmount:'Amount', pNone:'No postings that month', pShowPostings:'Show postings',
+  pPurpose:'Purpose', pSupplier:'Supplier', pClickHint:'Click any non-zero number in the table to see that month\'s individual postings.',
   scopeNote:y=>`Every tab shows ${y} data, by month. Balances carried over from before ${y} (as of Jan 1, ${y}) are included as a single opening balance per account; earlier years are not broken out separately.`,
   foot:(s,fx)=>`Of ${s.total} journal entries, ${s.kept} are used: ${s.closing} monthly closing entries (5 3 30 ↔ 6–9) and ${s.offbal} off-balance (B) entries are excluded; ${s.pre2026} entries predate 2026 and are folded into each account's opening balance; ${fx} foreign-currency entries are converted to lari using the Oris exchange-rate table. Balances were verified against Oris year-opening balances (2020–2025): the only difference is 1,155 ₾ on one FX transaction (1 2 ↔ 1 6).`
 }};
@@ -373,6 +390,17 @@ function parentOf(c){ const i=c.lastIndexOf(' '); return i<0?null:c.slice(0,i); 
 function cmpCode(a,b){ const x=a.split(' '),y=b.split(' '); for(let i=0;i<Math.max(x.length,y.length);i++){ if(x[i]===undefined)return -1; if(y[i]===undefined)return 1; const nx=+x[i],ny=+y[i]; if(!isNaN(nx)&&!isNaN(ny)){ if(nx!==ny)return nx-ny; } else if(x[i]!==y[i]) return x[i]<y[i]?-1:1; } return 0; }
 const name = c => (state.lang==='en' && ACC_EN[c]) ? ACC_EN[c] : (ACC[c]||[T().unknownAcc])[0];
 const level = c => c.split(' ').length;
+
+/* ---------- Expense Analysis drill-down: raw journal postings behind each account's total ---------- */
+const POSTINGS = D.postings || {};
+const _postingsCache = new Map();
+function collectPostings(code){
+  if(_postingsCache.has(code)) return _postingsCache.get(code);
+  let arr=(POSTINGS[code]||[]).slice();
+  for(const c of (children[code]||[])) arr=arr.concat(collectPostings(c));
+  _postingsCache.set(code,arr);
+  return arr;
+}
 
 /* ---------- period ---------- */
 function monthsOf(y){ const a=[]; M.forEach((m,i)=>{ if(m.slice(0,4)===y) a.push(i); }); return a; }
@@ -685,6 +713,15 @@ function renderAR(){
 }
 
 /* ---------- EXPENSES ---------- */
+function monthPostingsRow(code,mm,colspan){
+  const t=T(); const CAP=40;
+  const posts=collectPostings(code).filter(p=>+p[0].slice(5,7)===mm);
+  const rowsHtml=posts.slice(0,CAP).map(([date,story,ctr,amt])=>
+    `<tr><td>${esc(date.slice(8,10))}.${esc(date.slice(5,7))}</td><td class="purpose">${story&&story.trim()?esc(story):'<span style="color:var(--faint)">–</span>'}</td><td class="purpose">${esc(name(ctr))}</td>${cell(amt)}</tr>`).join('')
+    || `<tr><td colspan="4" style="color:var(--faint)">${t.pNone}</td></tr>`;
+  const more = posts.length>CAP ? `<div class="more">${t.pShownTop(CAP,posts.length)}</div>` : '';
+  return `<tr><td colspan="${colspan}" style="padding:0;background:var(--surface2)"><div class="postings-wrap"><table class="postings"><thead><tr><th>${t.pDate}</th><th>${t.pPurpose}</th><th>${t.pSupplier}</th><th class="n">${t.pAmount}</th></tr></thead><tbody>${rowsHtml}</tbody></table>${more}</div></td></tr>`;
+}
 function renderEX(){
   const t=T(); const YM=yearMonths(state.year); const ys=YM.map(x=>x.idx); const realCount=YM.filter(x=>x.real).length||1;
   const ms=ys.map(i=>stats(i,i)); const yst=stats(ys[0],ys[ys.length-1]);
@@ -692,11 +729,19 @@ function renderEX(){
   const roots=['7 4','7 3','7 1','8 2','9 2'];
   const keep=(k,s)=>Math.abs(val(yst,k))>0.004 || (S(yst,k).d+S(yst,k).c)>0.004;
   const row=(code,lv,has,open,id)=>{ const vals=ms.map(s=>val(s,code)); const mx=Math.max(...vals.map(Math.abs),0.01); const tot=val(yst,code); const l=lv<=1?'lvl1':lv===2?'lvl2':'';
-    return `<tr class="${l}">${nameCell(code,lv,has,open,id)}${vals.map(v=>`<td class="n ${lv>=2?'heat':''}" style="--h:${(Math.abs(v)/mx).toFixed(2)}">${Math.abs(v)<0.005?'<span style="color:var(--faint)">·</span>':fmt(v,0)}</td>`).join('')}${cell(tot)}<td class="n">${fmt(tot/realCount,0)}</td></tr>`; };
+    const hasPosts=collectPostings(code).length>0; const openMm=state.exOpenCell.get(code);
+    const cellsHtml=vals.map((v,j)=>{ const x=YM[j]; const clickable=hasPosts&&x.real&&Math.abs(v)>=0.005;
+      const cls=['n']; if(lv>=2) cls.push('heat'); if(clickable) cls.push('clickable'); if(clickable&&openMm===x.mm) cls.push('cell-open');
+      const attr=clickable?` data-cellpost="${esc(code)}|${x.mm}"`:'';
+      return `<td class="${cls.join(' ')}" style="--h:${(Math.abs(v)/mx).toFixed(2)}"${attr}>${Math.abs(v)<0.005?'<span style="color:var(--faint)">·</span>':fmt(v,0)}</td>`; }).join('');
+    let tr=`<tr class="${l}">${nameCell(code,lv,has,open,id)}${cellsHtml}${cell(tot)}<td class="n">${fmt(tot/realCount,0)}</td></tr>`;
+    if(openMm!==undefined) tr+=monthPostingsRow(code, openMm, ys.length+3);
+    return tr; };
   const opts={prefix:'ex',openTo:1,maxLevel:state.compactTabs.has('ex')?1:4,keep,row,sortVal:(k,s)=>val(yst,k)};
   const total=roots.reduce((s,c)=>s+val(yst,c),0); const rev=plLines(yst).rev;
   let h=periodHead(t.exTitle, `${t.year}: <b>${state.year}</b> · ${t.exSub}${state.month!==null?` · ${t.selMonth}: ${GMF()[+state.month-1]}`:''}`, compactBtn('ex'));
   h+=`<div class="kpis">${kpi(t.ga,val(yst,'7 4'),rev?`${(val(yst,'7 4')/rev*100).toFixed(1)}% ${t.ofRev}`:'')}${kpi(t.dist,val(yst,'7 3'))}${kpi(t.nonOpEx,val(yst,'8 2'))}${kpi(t.totEx,total,`${t.avgMonth} ${fmt(total/realCount,0)} ₾`)}</div>`;
+  h+=`<p class="note">${t.pClickHint}</p>`;
   h+=`<div class="tablewrap"><table class="ledger"><thead><tr><th>${t.exItem}</th>${YM.map(x=>`<th class="n" ${(state.month!==null&&x.real&&x.mm===+state.month)?'style="color:var(--accent)"':(!x.real?'style="color:var(--faint)"':'')}>${ymLabel(x)}</th>`).join('')}<th class="n">${t.total} ${state.year}</th><th class="n">${t.avgCol}</th></tr></thead><tbody>`;
   h+=treeRows(roots,yst,opts);
   h+=`<tr class="total"><td>${t.total}</td>${ys.map((i,j)=>cell(roots.reduce((s,c)=>s+val(ms[j],c),0))).join('')}${cell(total)}<td class="n">${fmt(total/realCount,0)}</td></tr></tbody></table></div>`;
@@ -839,12 +884,12 @@ function renderAVPL(){
    loans (all lumped into Oris account 4 1 90 by contragent) are split into Bank/Zuk/Shareholder by
    the specific contragent sub-codes actually named that way in Oris - not a guess, verified against
    the budget's own Jan values (within 1-14%). See avNotePF-style disclosure in avNoteBS for gaps. */
+const LOAN_BANK=['4 1 90 10611','4 1 90 3746','4 1 90 4693','4 1 90 5506','4 1 90 7426'];
+const LOAN_ZUK=['4 1 90 8018'];
+const LOAN_SH=['4 1 90 11677','4 1 90 11998','4 1 90 12284','4 1 90 1318','4 1 90 1684','4 1 90 2426','4 1 90 5959','4 1 90 8019'];
 const BS_ACTUALS=(()=>{
   const bv=(c,j)=>bsVal(stats(0,j),c);
   const sumBv=(...codes)=>j=>codes.reduce((s,c)=>s+bv(c,j),0);
-  const BANK=['4 1 90 10611','4 1 90 3746','4 1 90 4693','4 1 90 5506','4 1 90 7426'];
-  const ZUK=['4 1 90 8018'];
-  const SH=['4 1 90 11677','4 1 90 11998','4 1 90 12284','4 1 90 1318','4 1 90 1684','4 1 90 2426','4 1 90 5959','4 1 90 8019'];
   return {
     124:j=>bsVal(stats(0,j),'1'), 125:j=>cashClose(stats(0,j)), 126:j=>bv('1 4 10',j), 128:j=>bv('1 6',j),
     129:j=>bsVal(stats(0,j),'2'), 130:j=>bv('2 1 60',j), 131:j=>bv('2 1 80',j), 132:j=>bv('2 1 90',j), 133:j=>bv('2 5',j),
@@ -852,7 +897,7 @@ const BS_ACTUALS=(()=>{
     137:j=>bsVal(stats(0,j),'3'), 138:j=>bv('3 1 10',j), 139:j=>bv('3 1 20',j), 140:sumBv('3 1 30','3 1 32'),
     141:j=>bv('3 3 10',j), 142:j=>bv('3 3 20',j), 143:j=>bv('3 3 30',j), 144:j=>bv('3 3 40',j),
     146:j=>bv('3 3 80',j), 147:j=>bv('3 4 10',j), 148:j=>bsVal(stats(0,j),'4'),
-    149:sumBv(...SH), 150:sumBv(...BANK), 151:sumBv(...ZUK),
+    149:sumBv(...LOAN_SH), 150:sumBv(...LOAN_BANK), 151:sumBv(...LOAN_ZUK),
     152:j=>bsVal(stats(0,j),'3')+bsVal(stats(0,j),'4'), 154:j=>bsVal(stats(0,j),'5'),
     155:j=>bv('5 3 10',j), 156:j=>bv('5 3 30',j), 157:j=>bsVal(stats(0,j),'3')+bsVal(stats(0,j),'4')+bsVal(stats(0,j),'5'),
   };
@@ -868,21 +913,66 @@ function renderAVBS(){
   h+=`<p class="note">${t.avNoteBS}</p>`;
   el.innerHTML=h; fixAvHead(el);
 }
-/* Cash flow can only be split by counter-account, and Oris's cash ledger only ever settles against
-   ~20 broad counter accounts (most G&A bills route through the supplier-payable account 3 1 10, not
-   their own expense account, before being paid) - so most budget CF line items simply have no
-   isolable actual at this granularity. Only customer/advance collections and long-term-loan
-   draws/repayments are cleanly attributable; everything else is dash, disclosed in avNoteCF. */
+/* Cash flow can only be split by counter-account. Oris's cash ledger mostly settles against ~20
+   broad counter accounts (nearly every expense, including marketing, routes through the general
+   supplier-payable account 3 1 10 rather than its own expense account before being paid - checked
+   directly: giving marketing's own sub-account (7 4 90 39) full depth() granularity like the loan
+   accounts below only recovered 539 GEL of direct cash out of ~352,000 GEL of real spend for the
+   year, too thin a sliver to show as an "actual" without being misleading, so that expansion was
+   reverted), so most operating-expense detail lines have no isolable actual at this granularity.
+   What build_data.py's `cf_counter()` DOES keep at full depth() detail: '4 1 90' (long-term loans,
+   only 11 sub-codes, each identifying a specific lender - the same Bank/Zuk/Shareholder split
+   already verified for the Balance Sheet, reused here for cash draws/repayments by lender). '1 4 50'
+   (a single-purpose ledger, the Finhub loan) and '1 7 91' (shareholder dividend prepayments) were
+   already fine-grained without any pipeline change. Customer/advance collections and total loan
+   movement were already mapped. */
 const CF_ACTUALS=(()=>{
   const byCtr={};
   for(const [,ctr,m,i,o] of D.cf){ if(isCash(ctr)) continue;
     const e=(byCtr[ctr]||(byCtr[ctr]={}))[m]||((byCtr[ctr][m])={i:0,o:0}); e.i+=i; e.o+=o; }
   const cIn=c=>j=>(byCtr[c]&&byCtr[c][j]?byCtr[c][j].i:0), cOut=c=>j=>(byCtr[c]&&byCtr[c][j]?byCtr[c][j].o:0);
-  const finIn=cIn('4 1 90'), finOut=cOut('4 1 90');
+  const sumIn=(...codes)=>j=>codes.reduce((s,c)=>s+cIn(c)(j),0), sumOut=(...codes)=>j=>codes.reduce((s,c)=>s+cOut(c)(j),0);
+  const LOAN_ALL=[...LOAN_BANK,...LOAN_ZUK,...LOAN_SH];
+  const finIn=sumIn(...LOAN_ALL), finOut=sumOut(...LOAN_ALL);
   const cashAt=j=>cashClose(stats(0,j)); const openingCash=S(stats(0,0),'1 1').o+S(stats(0,0),'1 2').o;
   const startAt=j=>j===0?openingCash:cashAt(j-1);
+  // Operating = every non-cash-to-cash counter that isn't a 4 1 90 (financing) or 2 */1 3 (investing)
+  // one. Investing checked empirically (2026-09-10): zero counter-accounts anywhere in the whole
+  // 2026 ledger start with class 2 or '1 3', so Operating net = Total Movement - Financing is exact,
+  // not an estimate - and In/Out are summed directly from the same source, not derived by residual.
+  const opByMonth={};
+  for(const [,ctr,m,i,o] of D.cf){ if(isCash(ctr)||ctr.startsWith('4 1 90')||ctr[0]==='2'||ctr.startsWith('1 3')) continue;
+    const e=opByMonth[m]||(opByMonth[m]={i:0,o:0}); e.i+=i; e.o+=o; }
+  const opIn=j=>(opByMonth[j]?opByMonth[j].i:0), opOut=j=>(opByMonth[j]?opByMonth[j].o:0);
+  // Vendor-traced categories (2026-09-10): build_data.py's cf_counter() now attributes cash paid to
+  // a "3 1 10"/"3 1 31" vendor to that vendor's own expense category, wherever the vendor's 2026
+  // accrual activity was 100% one category (no split/guess for the ambiguous ones - see the comment
+  // there). Same account groupings as PL_ACTUALS where a matching PL row exists, for consistency.
+  const netOut=(...codes)=>j=>codes.reduce((s,c)=>s+cOut(c)(j)-cIn(c)(j),0);
+  const sumOutPrefix=p=>j=>Object.keys(byCtr).filter(k=>k.startsWith(p)).reduce((s,k)=>s+cOut(k)(j),0);
+  // Interest payable ('3 4 10') and salary payable ('3 1 32') expanded to full depth() (2026-09-10,
+  // both tiny: 13 and 71 sub-codes) the same way '4 1 90' already was. Interest sub-codes carry
+  // DIFFERENT numeric suffixes than their matching '4 1 90' loan-principal code, but the account NAME
+  // is identical (e.g. '3 4 10 9019' and '4 1 90 8019' are both "Claret Horizon Holdings"), so lenders
+  // were matched by exact name, not suffix, then assigned to the same Bank/Zuk/Shareholder buckets
+  // already verified for principal - not a new guess, an extension of an existing verified taxonomy.
+  const INTEREST_BANK=['3 4 10 11658','3 4 10 3951','3 4 10 4820','3 4 10 5606','3 4 10 7536'];
+  const INTEREST_ZUK=['3 4 10 8018'];
+  const INTEREST_SH=['3 4 10 11677','3 4 10 12284','3 4 10 12285','3 4 10 1318','3 4 10 2426','3 4 10 5719','3 4 10 9019'];
+  // Salary payable ('3 1 32', 71 named employees): only ONE of the 8 shareholder/lender names from
+  // LOAN_SH exactly matches a payroll sub-account (Giorgi Zavrashvili, code 0109) - the other
+  // shareholders are not on payroll at all, so this split is unambiguous, not an estimate.
+  const SALARY_SH=['3 1 32 0109'];
   return {
-    28:cIn('1 4 10'), 29:cIn('3 1 20'), 61:j=>finIn(j)-finOut(j), 62:finIn, 67:finOut, 71:finOut,
+    26:j=>opIn(j)-opOut(j), 27:opIn, 28:cIn('1 4 10'), 29:cIn('3 1 20'), 33:opOut,
+    34:netOut('7 2 10','7 2 20'), 35:sumOut(...SALARY_SH), 36:j=>sumOutPrefix('3 1 32')(j)-sumOut(...SALARY_SH)(j),
+    37:cOut('7 4 90 49'), 38:cOut('7 3 40'),
+    39:cOut('7 4 90 39'), 41:cOut('7 4 20'), 42:sumOut('7 4 25','7 4 90 5'),
+    43:sumOut('7 4 22','7 4 90 32','7 4 90 48','7 4 90 52'), 44:sumOut('7 4 90 11','7 4 90 50'),
+    46:sumOut(...INTEREST_ZUK), 47:sumOut(...INTEREST_SH), 48:sumOut(...INTEREST_BANK),
+    52:()=>0, 53:()=>0, 54:()=>0, 55:()=>0, 56:()=>0, 57:()=>0, 58:()=>0, 59:()=>0, 60:()=>0,
+    61:j=>finIn(j)-finOut(j), 62:finIn, 63:sumIn(...LOAN_BANK), 64:sumIn(...LOAN_SH), 65:sumIn(...LOAN_ZUK),
+    67:finOut, 68:cOut('1 7 91'), 69:cOut('1 4 50'), 70:sumOut(...LOAN_SH), 71:sumOut(...LOAN_BANK),
     72:j=>cashAt(j)-startAt(j), 73:startAt, 74:cashAt,
   };
 })();
@@ -992,6 +1082,8 @@ document.getElementById('theme').addEventListener('click',e=>{ const b=e.target.
 document.getElementById('tabs').addEventListener('click',e=>{ const b=e.target.closest('button[data-p]'); if(!b) return; state.tab=b.dataset.p; try{localStorage.setItem('volta-fin-tab',state.tab);}catch(_){} render(); });
 document.querySelector('main').addEventListener('click',e=>{
   const c=e.target.closest('[data-compact]'); if(c){ const id=c.dataset.compact; if(state.compactTabs.has(id)) state.compactTabs.delete(id); else state.compactTabs.add(id); render(); return; }
+  const p=e.target.closest('[data-cellpost]'); if(p){ const [code,mmS]=p.dataset.cellpost.split('|'); const mm=+mmS;
+    if(state.exOpenCell.get(code)===mm) state.exOpenCell.delete(code); else state.exOpenCell.set(code,mm); render(); return; }
   const t=e.target.closest('[data-tg]'); if(!t) return; const id=t.dataset.tg; if(state.open.has(id)) state.open.delete(id); else state.open.add(id); render(); });
 try{ const t=localStorage.getItem('volta-fin-tab'); if(t&&R[t]) state.tab=t; }catch(_){}
 buildChrome(); render();

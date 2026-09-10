@@ -45,10 +45,13 @@ PL_ROWS = [
     (105, 'EBITDA', 1, True),
     (108, 'არასაოპერაციო ხარჯები', 1, True),
     (109, 'ცვეთა', 2, False),
+    (110, 'ძირითადი საშუალებების რეალიზაციის შედეგი', 2, False),
     (111, 'საინვესტორო პროცენტი 15%', 2, False),
     (112, 'პარტნიორის კაპიტალის პროცენტი', 2, False),
     (113, 'საბანკო პროცენტი', 2, False),
     (114, 'სესხის უზრუნველყოფა გიორგის ქონებით', 2, False),
+    (115, 'სავალუტო კურსთა სხვაობის ხარჯი', 2, False),
+    (116, 'სავალუტო კურსთა სხვაობის შემოსავალი', 2, False),
     (117, 'დივიდენდები', 2, False),
     (118, 'წმინდა მოგება', 1, True),
 ]
@@ -86,6 +89,7 @@ CF_ROWS = [
     (44, 'კომუნალური ხარჯები', 2, False),
     (45, 'დღგ', 2, False),
     (46, 'საინვესტორო პროცენტი 15%', 2, False),
+    (47, 'პარტნიორის კაპიტალის პროცენტი', 2, False),
     (48, 'საბანკო პროცენტი', 2, False),
     (49, 'სესხის უზრუნველყოფა გიორგის ქონებით', 2, False),
     (50, 'კორპორატიული ღონისძიება', 2, False),
@@ -102,8 +106,12 @@ CF_ROWS = [
     (61, 'ნაღდი ფული საფინანსო საქმიანობიდან', 1, True),
     (62, 'შემოსვლა', 1, False),
     (63, 'ახალი სესხი BOG-სგან', 2, False),
+    (64, 'ახალი სესხი პარტნიორისგან', 2, False),
     (65, 'ახალი სესხი ზუკისგან', 2, False),
     (67, 'გასავალი', 1, False),
+    (68, 'დივიდენდები', 2, False),
+    (69, 'სესხი ფინჰაბზე', 2, False),
+    (70, 'პარტნიორის სესხის დაფარვა', 2, False),
     (71, 'ბანკის სესხის დაფარვა', 2, False),
     (72, 'ფულის მთლიანი მოძრაობა', 1, True),
     (73, 'ნაშთი დასაწყისში', 1, True),
@@ -114,12 +122,13 @@ CF_EN = {26: 'Cash From Operations', 27: 'Cash In', 28: 'Principal', 29: 'Downpa
          34: 'Cogs', 35: 'Salary of Shareholders', 36: 'Salary of Other Staff', 37: 'Management Fee',
          38: 'Delivery Expenses', 39: 'Marketing Expenses', 40: 'Marketing Salaries', 41: 'Office Rent',
          42: 'Office Expenses', 43: 'System Development/Maintenance', 44: 'Utility Cost', 45: 'Vat',
-         46: 'Investors Interest 15%', 48: 'Bank Interest', 49: "Securing a Loan with Giorgi's Property",
+         46: 'Investors Interest 15%', 47: "Interest of Shareholder's Equity", 48: 'Bank Interest', 49: "Securing a Loan with Giorgi's Property",
          50: 'Corporate Party', 51: 'Unpredictable Expenses', 52: 'Cash From Investment', 53: 'Cash In',
          54: 'Sales of System Development', 55: 'Other Sales', 56: 'Sales of Car for Delivery',
          57: 'Cash Out', 58: 'System Development', 59: 'Salesman Office Equipment Capex',
          60: 'Car Purchase for Delivery', 61: 'Cash From Financing', 62: 'Cash In',
-         63: 'New Loan From BOG', 65: 'New Loan From Zuk', 67: 'Cash Out', 71: 'Bank Repayments',
+         63: 'New Loan From BOG', 64: 'New Loan From Shareholder', 65: 'New Loan From Zuk', 67: 'Cash Out',
+         68: 'Dividends', 69: 'Loan to Finhub', 70: 'Shareholder Loan Repayment', 71: 'Bank Repayments',
          72: 'Total Cash Movement', 73: 'Starting Balance of Cash', 74: 'Ending Balance of Cash'}
 # Portfolio: (row, label_en, label_ka)
 PORTFOLIO_ROWS = [
@@ -146,8 +155,9 @@ PL_EN = {78: 'Revenue', 79: 'Revenue W/O VAT', 80: 'Cogs W VAT', 81: 'Cogs', 82:
          94: 'Management Fee', 95: 'Office Expenses', 96: 'Office Rent', 98: 'System Development/Maintenance',
          99: 'Utility Cost', 100: 'Marketing Expenses', 101: 'Marketing Salaries', 102: 'Provision',
          103: 'Corporate Party', 104: 'Unpredictable Expenses', 105: 'EBITDA', 108: 'Non-Operational Expenses',
-         109: 'Depreciation', 111: 'Investors Interest 15%', 112: "Interest of Shareholder's Equity",
-         113: 'Bank Interest', 114: "Securing a Loan with Giorgi's Property", 117: 'Dividends', 118: 'Net Profit'}
+         109: 'Depreciation', 110: 'Gain/Loss on PPE Disposal', 111: 'Investors Interest 15%', 112: "Interest of Shareholder's Equity",
+         113: 'Bank Interest', 114: "Securing a Loan with Giorgi's Property", 115: 'Exchange Rate Expense',
+         116: 'Exchange Rate Income', 117: 'Dividends', 118: 'Net Profit'}
 
 wb = openpyxl.load_workbook(XLSX, read_only=True, data_only=True)
 ws = wb[SHEET]
