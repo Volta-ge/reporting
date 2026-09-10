@@ -79,7 +79,7 @@ main{max-width:1380px;margin:0 auto;padding:22px 28px 60px}
 @media (max-width:900px){.grid2{grid-template-columns:1fr}}
 .card{background:var(--surface);border:1px solid var(--line2);border-radius:8px;box-shadow:var(--shadow);padding:14px 16px 12px}
 .card h3{margin:0 0 2px;font-size:14px;font-weight:600;display:flex;align-items:baseline;justify-content:space-between;gap:10px;flex-wrap:wrap}
-.compact-btn{font-size:11.5px;font-weight:500;color:var(--accent);border:1px solid var(--line);border-radius:6px;padding:4px 10px;background:var(--surface2);white-space:nowrap}
+.compact-btn{font-size:11.5px;font-weight:500;color:var(--accent);border:1px solid var(--line);border-radius:6px;padding:4px 10px;background:var(--surface2);white-space:nowrap;margin-left:auto}
 .compact-btn:hover{background:var(--accent-soft)}
 .card .cap{color:var(--muted);font-size:12px;margin-bottom:8px}
 .legend{display:flex;gap:14px;font-size:12px;color:var(--muted);margin:2px 0 6px}
@@ -89,7 +89,9 @@ main{max-width:1380px;margin:0 auto;padding:22px 28px 60px}
 .tip{position:absolute;pointer-events:none;background:var(--ink);color:var(--bg);font-size:12px;padding:6px 9px;border-radius:5px;white-space:nowrap;transform:translate(-50%,-110%);display:none;z-index:5;box-shadow:var(--shadow)}
 .tip b{font-weight:600}
 
-.tablewrap{overflow:auto;max-height:74vh;background:var(--surface);border:1px solid var(--line2);border-radius:8px;box-shadow:var(--shadow);position:relative}
+.tablewrap{overflow-x:auto;overflow-y:visible;background:var(--surface);border:1px solid var(--line2);border-radius:8px;box-shadow:var(--shadow);position:relative}
+.top-scroll{overflow-x:auto;overflow-y:hidden;height:14px}
+.top-scroll>div{height:1px}
 table.ledger{border-collapse:collapse;width:100%;min-width:640px}
 .ledger th{font-size:11.5px;font-weight:500;color:var(--muted);text-align:left;padding:9px 12px;border-bottom:1px solid var(--line);letter-spacing:.02em;white-space:nowrap;background:var(--surface);position:sticky;top:0;z-index:2}
 .ledger th.n,.ledger td.n{text-align:right}
@@ -258,6 +260,7 @@ ka:{
   revenue:'შემოსავალი', gross:'საერთო მოგება', net:'წმინდა მოგება', cash:'ფულადი სახსრები', ar:'მოთხოვნები (დებიტორები)', liab:'ვალდებულებები (სულ)',
   chRev:'შემოსავალი და წმინდა მოგება თვეების მიხედვით', chCash:'ფულადი სახსრები და მოთხოვნები თვის ბოლოს', cashLeg:'ფული (სალარო + ბანკი)', arLeg:'მოთხოვნები', eomBal:'ნაშთი თვის ბოლოს',
   yearly:'წლიური შეჯამება', yearlyCap:'ყველა წელი, ₾ · მოგება/ზარალი დახურვის გატარებების გარეშე',
+  monthlySum:'თვიური შეჯამება', monthlyCap:'თვეების მიხედვით, ₾ · მოგება/ზარალი დახურვის გატარებების გარეშე', cashME:'ფული თვის ბოლოს',
   margin:'მარჟა', adm:'ადმ. ხარჯები', cashYE:'ფული წლის ბოლოს', arShort:'მოთხოვნები', liabShort:'ვალდებულებები',
   bs:'ბალანსი', account:'ანგარიში', change:'ცვლილება', assets:'აქტივები', totAssets:'სულ აქტივები', liabilities:'ვალდებულებები', totLiab:'სულ ვალდებულებები', equity:'საკუთარი კაპიტალი', totEq:'სულ კაპიტალი', totLE:'სულ ვალდებულებები და კაპიტალი',
   bsCheck:'კონტროლი: აქტივები − (ვალდებულებები + კაპიტალი) =', periodStart:'პერიოდის დასაწყისი',
@@ -315,6 +318,7 @@ en:{
   revenue:'Revenue', gross:'Gross profit', net:'Net profit', cash:'Cash', ar:'Receivables', liab:'Liabilities (total)',
   chRev:'Revenue and net profit by month', chCash:'Cash and receivables at month end', cashLeg:'Cash (till + bank)', arLeg:'Receivables', eomBal:'balance at month end',
   yearly:'Yearly summary', yearlyCap:'All years, ₾ · profit/loss without closing entries',
+  monthlySum:'Monthly summary', monthlyCap:'By month, ₾ · profit/loss without closing entries', cashME:'Cash, month end',
   margin:'Margin', adm:'G&A expenses', cashYE:'Cash at year end', arShort:'Receivables', liabShort:'Liabilities',
   bs:'Balance Sheet', account:'Account', change:'Change', assets:'Assets', totAssets:'Total assets', liabilities:'Liabilities', totLiab:'Total liabilities', equity:'Equity', totEq:'Total equity', totLE:'Total liabilities and equity',
   bsCheck:'Check: assets − (liabilities + equity) =', periodStart:'start of period',
@@ -430,7 +434,7 @@ function fmtK(n){ const a=Math.abs(n); if(a>=1e6) return (n<0?'−':'')+(a/1e6).
 function cell(n,opts={}){ const cls=['n']; if(Math.abs(n)<0.005) cls.push('zero'); else if(n<0) cls.push('neg'); else if(opts.pos) cls.push('pos'); return `<td class="${cls.join(' ')}">${fmt(n)}</td>`; }
 function delta(cur,prev,invert){ if(prev===null||prev===undefined||Math.abs(prev)<0.005) return `<span>${T().prev}: –</span>`; const d=cur-prev; const p=d/Math.abs(prev)*100; const good=invert?d<0:d>0; return `<span class="${Math.abs(p)<0.05?'':(good?'up':'dn')}">${d>=0?'+':'−'}${fmt(Math.abs(d),0)} (${p>=0?'+':'−'}${Math.abs(p).toFixed(1)}%)</span>`; }
 const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-function periodHead(title, sub){ return `<div class="period"><h2>${title}</h2><span class="win">${sub}</span></div>`; }
+function periodHead(title, sub, extra){ return `<div class="period"><h2>${title}</h2><span class="win">${sub}</span>${extra||''}</div>`; }
 function compactBtn(id){ const t=T(); const on=state.compactTabs.has(id); return `<button class="compact-btn" data-compact="${id}" aria-pressed="${on}">${on?t.expandAll:t.compactAll}</button>`; }
 const gel = `<span style="font-size:13px;color:var(--muted)"> ₾</span>`;
 
@@ -522,6 +526,9 @@ function renderOV(){
   <div class="card"><h3>${t.chCash}</h3><div class="cap">${yLbl(state.year)}, ${t.eomBal}, ₾</div><div class="legend"><span><i style="background:${cssVar('--accent')}"></i>${t.cashLeg}</span><span><i style="background:${cssVar('--amber')}"></i>${t.arLeg}</span></div><div class="chart" id="c-cash"></div></div></div>`;
   h+=`<div class="card mt"><h3>${t.yearly}</h3><div class="cap">${t.yearlyCap}</div><div class="tablewrap" style="box-shadow:none;border:0"><table class="ledger"><thead><tr><th>${t.year}</th><th class="n">${t.revenue}</th><th class="n">${t.gross}</th><th class="n">${t.margin}</th><th class="n">${t.adm}</th><th class="n">${t.net}</th><th class="n">${t.cashYE}</th><th class="n">${t.arShort}</th><th class="n">${t.liabShort}</th></tr></thead><tbody>`;
   for(const y of years){ const ym=monthsOf(y); const s1=stats(ym[0],ym[ym.length-1]); const p1=plLines(s1); h+=`<tr><td class="num">${y}${ym.length<12?`<span class="badge">${ym.length} ${t.months}</span>`:''}</td>${cell(p1.rev)}${cell(p1.gross)}<td class="n">${p1.rev?(p1.gross/p1.rev*100).toFixed(1)+'%':'–'}</td>${cell(p1.adm)}${cell(p1.net,{pos:true})}${cell(cashClose(s1))}${cell(close(S(s1,'1 4')))}${cell(-(close(S(s1,'3'))+close(S(s1,'4'))))}</tr>`; }
+  h+=`</tbody></table></div></div>`;
+  h+=`<div class="card mt"><h3>${t.monthlySum}</h3><div class="cap">${t.monthlyCap}</div><div class="tablewrap" style="box-shadow:none;border:0"><table class="ledger"><thead><tr><th>${t.month}</th><th class="n">${t.revenue}</th><th class="n">${t.gross}</th><th class="n">${t.margin}</th><th class="n">${t.adm}</th><th class="n">${t.net}</th><th class="n">${t.cashME}</th><th class="n">${t.arShort}</th><th class="n">${t.liabShort}</th></tr></thead><tbody>`;
+  for(const x of YM){ const s1=stats(x.idx,x.idx); const p1=plLines(s1); h+=`<tr><td class="num" ${!x.real?'style="color:var(--faint)"':''}>${ymLabelF(x)}</td>${cell(p1.rev)}${cell(p1.gross)}<td class="n">${p1.rev?(p1.gross/p1.rev*100).toFixed(1)+'%':'–'}</td>${cell(p1.adm)}${cell(p1.net,{pos:true})}${cell(cashClose(s1))}${cell(close(S(s1,'1 4')))}${cell(-(close(S(s1,'3'))+close(S(s1,'4'))))}</tr>`; }
   h+=`</tbody></table></div></div>`;
   const el=document.getElementById('p-ov'); el.innerHTML=h;
   barChart(el.querySelector('#c-rev'),labels,[{name:t.revenue,color:cssVar('--accent'),vals:revV}],{name:t.net,color:cssVar('--amber'),vals:netV});
@@ -692,9 +699,9 @@ function renderEX(){
   const keep=(k,s)=>Math.abs(val(yst,k))>0.004 || (S(yst,k).d+S(yst,k).c)>0.004;
   const row=(code,lv,has,open,id)=>{ const vals=ms.map(s=>val(s,code)); const mx=Math.max(...vals.map(Math.abs),0.01); const tot=val(yst,code); const l=lv<=1?'lvl1':lv===2?'lvl2':'';
     return `<tr class="${l}">${nameCell(code,lv,has,open,id)}${vals.map(v=>`<td class="n ${lv>=2?'heat':''}" style="--h:${(Math.abs(v)/mx).toFixed(2)}">${Math.abs(v)<0.005?'<span style="color:var(--faint)">·</span>':fmt(v,0)}</td>`).join('')}${cell(tot)}<td class="n">${fmt(tot/realCount,0)}</td></tr>`; };
-  const opts={prefix:'ex',openTo:1,maxLevel:4,keep,row,sortVal:(k,s)=>val(yst,k)};
+  const opts={prefix:'ex',openTo:1,maxLevel:state.compactTabs.has('ex')?1:4,keep,row,sortVal:(k,s)=>val(yst,k)};
   const total=roots.reduce((s,c)=>s+val(yst,c),0); const rev=plLines(yst).rev;
-  let h=periodHead(t.exTitle, `${t.year}: <b>${state.year}</b> · ${t.exSub}${state.month!==null?` · ${t.selMonth}: ${GMF()[+state.month-1]}`:''}`);
+  let h=periodHead(t.exTitle, `${t.year}: <b>${state.year}</b> · ${t.exSub}${state.month!==null?` · ${t.selMonth}: ${GMF()[+state.month-1]}`:''}`, compactBtn('ex'));
   h+=`<div class="kpis">${kpi(t.ga,val(yst,'7 4'),rev?`${(val(yst,'7 4')/rev*100).toFixed(1)}% ${t.ofRev}`:'')}${kpi(t.dist,val(yst,'7 3'))}${kpi(t.nonOpEx,val(yst,'8 2'))}${kpi(t.totEx,total,`${t.avgMonth} ${fmt(total/realCount,0)} ₾`)}</div>`;
   h+=`<div class="tablewrap"><table class="ledger"><thead><tr><th>${t.exItem}</th>${YM.map(x=>`<th class="n" ${(state.month!==null&&x.real&&x.mm===+state.month)?'style="color:var(--accent)"':(!x.real?'style="color:var(--faint)"':'')}>${ymLabel(x)}</th>`).join('')}<th class="n">${t.total} ${state.year}</th><th class="n">${t.avgCol}</th></tr></thead><tbody>`;
   h+=treeRows(roots,yst,opts);
@@ -710,9 +717,9 @@ function renderPB(){
   const t=T(); const el=document.getElementById('p-pb');
   if(!BUDGET){ el.innerHTML=periodHead(t.budgetTitlePL,'')+`<p class="note">${WBL[state.lang].notBuilt}</p>`; return; }
   const mlabels=BUDGET.months.map(m=>GM()[+m.slice(5)-1]);
-  let h=periodHead(t.budgetTitlePL, t.budgetSrc(BUDGET));
+  let h=periodHead(t.budgetTitlePL, t.budgetSrc(BUDGET), compactBtn('pb'));
   h+=`<div class="tablewrap"><table class="ledger"><thead><tr><th>${t.item}</th>${mlabels.map(l=>`<th class="n">${l}</th>`).join('')}<th class="n">${t.total}</th></tr></thead><tbody>`;
-  for(const r of BUDGET.pl) h+=budgetRow(r,[...r.vals,r.vals.reduce((a,b)=>a+b,0)]);
+  for(const r of BUDGET.pl){ if(state.compactTabs.has('pb') && r.level===2) continue; h+=budgetRow(r,[...r.vals,r.vals.reduce((a,b)=>a+b,0)]); }
   h+=`</tbody></table></div>`;
   h+=`<p class="note">${t.budgetNotePL}</p>`;
   el.innerHTML=h;
@@ -721,9 +728,9 @@ function renderBB(){
   const t=T(); const el=document.getElementById('p-bb');
   if(!BUDGET){ el.innerHTML=periodHead(t.budgetTitleBS,'')+`<p class="note">${WBL[state.lang].notBuilt}</p>`; return; }
   const mlabels=BUDGET.months.map(m=>GM()[+m.slice(5)-1]);
-  let h=periodHead(t.budgetTitleBS, t.budgetSrc(BUDGET));
+  let h=periodHead(t.budgetTitleBS, t.budgetSrc(BUDGET), compactBtn('bb'));
   h+=`<div class="tablewrap"><table class="ledger"><thead><tr><th>${t.item}</th>${mlabels.map(l=>`<th class="n">${l}</th>`).join('')}</tr></thead><tbody>`;
-  for(const r of BUDGET.bs) h+=budgetRow(r,r.vals);
+  for(const r of BUDGET.bs){ if(state.compactTabs.has('bb') && r.level===2) continue; h+=budgetRow(r,r.vals); }
   h+=`</tbody></table></div>`;
   const A=BUDGET.bs.find(r=>r.row===135), LE=BUDGET.bs.find(r=>r.row===157);
   if(A && LE){ const diffs=A.vals.map((v,i)=>v-LE.vals[i]); const maxDiff=Math.max(...diffs.map(Math.abs));
@@ -735,9 +742,9 @@ function renderCFB(){
   const t=T(); const el=document.getElementById('p-cfb');
   if(!BUDGET){ el.innerHTML=periodHead(t.budgetTitleCF,'')+`<p class="note">${WBL[state.lang].notBuilt}</p>`; return; }
   const mlabels=BUDGET.months.map(m=>GM()[+m.slice(5)-1]);
-  let h=periodHead(t.budgetTitleCF, t.budgetSrc(BUDGET));
+  let h=periodHead(t.budgetTitleCF, t.budgetSrc(BUDGET), compactBtn('cfb'));
   h+=`<div class="tablewrap"><table class="ledger"><thead><tr><th>${t.item}</th>${mlabels.map(l=>`<th class="n">${l}</th>`).join('')}<th class="n">${t.total}</th></tr></thead><tbody>`;
-  for(const r of BUDGET.cf) h+=budgetRow(r,[...r.vals,r.vals.reduce((a,b)=>a+b,0)]);
+  for(const r of BUDGET.cf){ if(state.compactTabs.has('cfb') && r.level===2) continue; h+=budgetRow(r,[...r.vals,r.vals.reduce((a,b)=>a+b,0)]); }
   h+=`</tbody></table></div>`;
   h+=`<p class="note">${t.budgetNoteCF}</p>`;
   el.innerHTML=h;
@@ -826,9 +833,9 @@ function renderAVPL(){
   const t=T(); const el=document.getElementById('p-avpl');
   if(!BUDGET){ el.innerHTML=periodHead(t.avTitlePL,'')+`<p class="note">${t.budgetMissing}</p>`; return; }
   const n=D.months.length; const mlabels=D.months.slice(0,n).map(m=>GM()[+m.slice(5)-1]);
-  let h=periodHead(t.avTitlePL, t.budgetSrc(BUDGET));
+  let h=periodHead(t.avTitlePL, t.budgetSrc(BUDGET), compactBtn('avpl'));
   h+=`<div class="tablewrap"><table class="ledger">${avHead(t,mlabels,true)}<tbody>`;
-  for(const b of BUDGET.pl) h+=avItemRow(b, PL_ACTUALS[b.row], true, true, n);
+  for(const b of BUDGET.pl){ if(state.compactTabs.has('avpl') && b.level===2) continue; h+=avItemRow(b, PL_ACTUALS[b.row], true, true, n); }
   h+=`</tbody></table></div>`;
   h+=`<p class="note">${t.avNotePL}</p>`;
   el.innerHTML=h; fixAvHead(el);
@@ -860,9 +867,9 @@ function renderAVBS(){
   const t=T(); const el=document.getElementById('p-avbs');
   if(!BUDGET){ el.innerHTML=periodHead(t.avTitleBS,'')+`<p class="note">${t.budgetMissing}</p>`; return; }
   const n=D.months.length; const mlabels=D.months.slice(0,n).map(m=>GM()[+m.slice(5)-1]);
-  let h=periodHead(t.avTitleBS, t.budgetSrc(BUDGET));
+  let h=periodHead(t.avTitleBS, t.budgetSrc(BUDGET), compactBtn('avbs'));
   h+=`<div class="tablewrap"><table class="ledger">${avHead(t,mlabels,false)}<tbody>`;
-  for(const b of BUDGET.bs) h+=avItemRow(b, BS_ACTUALS[b.row], false, false, n);
+  for(const b of BUDGET.bs){ if(state.compactTabs.has('avbs') && b.level===2) continue; h+=avItemRow(b, BS_ACTUALS[b.row], false, false, n); }
   h+=`</tbody></table></div>`;
   h+=`<p class="note">${t.avNoteBS}</p>`;
   el.innerHTML=h; fixAvHead(el);
@@ -890,9 +897,9 @@ function renderAVCF(){
   if(!BUDGET){ el.innerHTML=periodHead(t.avTitleCF,'')+`<p class="note">${t.budgetMissing}</p>`; return; }
   const n=D.months.length; const mlabels=D.months.slice(0,n).map(m=>GM()[+m.slice(5)-1]);
   const BAL_ROWS=new Set([73,74]);
-  let h=periodHead(t.avTitleCF, t.budgetSrc(BUDGET));
+  let h=periodHead(t.avTitleCF, t.budgetSrc(BUDGET), compactBtn('avcf'));
   h+=`<div class="tablewrap"><table class="ledger">${avHead(t,mlabels,true)}<tbody>`;
-  for(const b of BUDGET.cf) h+=avItemRow(b, CF_ACTUALS[b.row], true, !BAL_ROWS.has(b.row), n);
+  for(const b of BUDGET.cf){ if(state.compactTabs.has('avcf') && b.level===2) continue; h+=avItemRow(b, CF_ACTUALS[b.row], true, !BAL_ROWS.has(b.row), n); }
   h+=`</tbody></table></div>`;
   h+=`<p class="note">${t.avNoteCF}</p>`;
   el.innerHTML=h; fixAvHead(el);
@@ -955,7 +962,19 @@ const R={ov:renderOV,bs:renderBS,pl:renderPL,tb:renderTB,cf:renderCF,ar:renderAR
 const BUDGET_TABS=['pb','bb','cfb','pob','asb','avpl','avbs','avcf','avpf','avas'];
 function render(){ document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('on',p.id==='p-'+state.tab)); document.querySelectorAll('#tabs button').forEach(b=>b.setAttribute('aria-selected',b.dataset.p===state.tab));
   const noMonth=BUDGET_TABS.includes(state.tab); document.getElementById('l-month').hidden=noMonth; document.getElementById('month').hidden=noMonth;
-  R[state.tab](); }
+  R[state.tab](); syncTopScroll(); }
+function syncTopScroll(){
+  const panel=document.querySelector('.panel.on'); if(!panel) return;
+  panel.querySelectorAll('.tablewrap').forEach(wrap=>{
+    const w=wrap.querySelector('table')?.scrollWidth||wrap.scrollWidth;
+    if(w<=wrap.clientWidth+1) return;
+    const mirror=document.createElement('div'); mirror.className='top-scroll';
+    const inner=document.createElement('div'); inner.style.width=w+'px'; mirror.appendChild(inner);
+    wrap.parentNode.insertBefore(mirror, wrap);
+    mirror.addEventListener('scroll',()=>{ wrap.scrollLeft=mirror.scrollLeft; });
+    wrap.addEventListener('scroll',()=>{ mirror.scrollLeft=wrap.scrollLeft; });
+  });
+}
 function buildChrome(){
   const t=T(); document.documentElement.lang=state.lang;
   document.getElementById('h-title').textContent=t.title;

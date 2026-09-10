@@ -2,6 +2,7 @@
 <html lang="ka">
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1"><style>:root{color-scheme:light}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found]){display:none!important}</style></head><body>
 <meta charset="utf-8">
 <title>Volta_Analytics_New DB</title>
 <style>
@@ -1043,6 +1044,30 @@ const SALES_JSON = {"salesMonthlyStats":{"all":{"periods":["2026-01","2026-02","
 const fmt = n => (n === null || n === undefined) ? null : Math.round(n).toLocaleString('en-US');
 const pct = n => (n === null || n === undefined) ? null : (n*100).toLocaleString('en-US', { maximumFractionDigits: 1 }) + '%';
 function pctSafe(n, d) { return (n === null || d === null || d === undefined) ? null : (d ? n / d : 0); }
+// ---- staggered tab loading: the active tab renders synchronously (below); every other tab's
+// render work is registered here and only actually runs once the browser has painted the active
+// tab, one tab per macrotask so the page stays responsive instead of blocking on all 14 tabs'
+// worth of table-building in one go. Clicking a nav button renders that tab immediately if the
+// background queue has not reached it yet, so nothing is ever more than one click away. ----
+window.__pageRenderers = new Map();
+const __donePages = new WeakSet();
+function __registerPage(ids, fn) { for (const id of ids) window.__pageRenderers.set(id, fn); }
+window.__ensurePage = function (id) {
+  const fn = window.__pageRenderers.get(id);
+  if (!fn || __donePages.has(fn)) return;
+  __donePages.add(fn);
+  fn();
+};
+window.__deferRest = function () {
+  const fns = [...new Set(window.__pageRenderers.values())];
+  let i = 0;
+  (function step() {
+    if (i >= fns.length) return;
+    const fn = fns[i++];
+    if (!__donePages.has(fn)) { __donePages.add(fn); fn(); }
+    setTimeout(step, 0);
+  })();
+};
 function cellOrDash(v, cls) { return (v === null || v === undefined) ? `<td class="dash ${cls||''}">&ndash;</td>` : `<td class="${cls||''}">${v}</td>`; }
 
 let secCounter = 0;
@@ -1323,22 +1348,22 @@ function dayLabel(ymd) {
 const PIVOT_FOOTER = `Segment A = TV, Phone, or any single product &gt; 2,500 GEL. Segment B = everything else. Deals Closed / Amount Sold are keyed to the day each loan reaches Active status (<code>crm_activity_log</code> Signed&rarr;Active; Order Date from the old DB before the cutover, where that concept does not exist) for active orders only. <b>Hybrid source:</b> before ${CUTOVER}, myvolta.info; from ${CUTOVER} on, VoltaStoreDB — see the Report tab banner for why. Applications, Terms Approved and Underwriting Approved are keyed to Application Date (<code>created_at</code> on the new DB); Downpayment Collected = actual cash collected, keyed to the payment date (a <code>crm_payments</code> row matching the order's recorded downpayment), already included inside Amount Sold. Generated ${generatedAt}.`;
 
 const mtdScrollUpdate = setupTopScrollSync('mtdStatsScrollTop', 'mtdStatsScrollBody');
-renderPivotReport(
+__registerPage(['mtdstats'], () => renderPivotReport(
   'mtdStatsTable', monthlyStats, monthLabel,
   'One column pair per calendar month',
   PIVOT_FOOTER + ' A completed month shows its final total; the current month shows MTD-to-date.',
   null,
   mtdScrollUpdate
-);
+));
 
 const dailyScrollUpdate = setupTopScrollSync('dailyStatsScrollTop', 'dailyStatsScrollBody');
-renderPivotReport(
+__registerPage(['dailystats'], () => renderPivotReport(
   'dailyStatsTable', dailyStats, dayLabel,
   'One column pair per calendar day, from June 1. Click a month header below to collapse its days.',
   PIVOT_FOOTER + ' Today is excluded (not yet finished). Recent days are undercounted and will keep rising on refresh, because activation (or, before the cutover, Order Date) can happen several days after Application Date.',
   { keyFn: ymd => ymd.slice(0, 7), labelFn: ym => monthLabel(ym).replace(' (MTD)', '') },
   dailyScrollUpdate
-);
+));
 
 
 /* ---------- Sales Analyze (ported from Volta_Analytics) ---------- */
@@ -1444,7 +1469,7 @@ function renderSalesMonthlyForDealType() {
     GARBAGE_NOTE);
   salesMonthlyScrollUpdate();
 }
-renderSalesMonthlyForDealType();
+__registerPage(['salesmonthly'], renderSalesMonthlyForDealType);
 wireDealTypeFilter('salesMonthlyDealTypeNav', dt => { salesMonthlyDealType = dt; renderSalesMonthlyForDealType(); });
 
 const brandScrollUpdate = setupTopScrollSync('brandScrollTop', 'brandScrollBody');
@@ -1456,7 +1481,7 @@ function renderBrandForDealType() {
     GARBAGE_NOTE);
   brandScrollUpdate();
 }
-renderBrandForDealType();
+__registerPage(['brandanalyze'], renderBrandForDealType);
 wireDealTypeFilter('brandDealTypeNav', dt => { brandDealType = dt; renderBrandForDealType(); });
 
 const subcategoryScrollUpdate = setupTopScrollSync('subcategoryScrollTop', 'subcategoryScrollBody');
@@ -1468,7 +1493,7 @@ function renderSubcategoryForDealType() {
     GARBAGE_NOTE);
   subcategoryScrollUpdate();
 }
-renderSubcategoryForDealType();
+__registerPage(['subcategoryanalyze'], renderSubcategoryForDealType);
 wireDealTypeFilter('subcategoryDealTypeNav', dt => { subcategoryDealType = dt; renderSubcategoryForDealType(); });
 
 function renderCategoryBrandTable(d) {
@@ -1491,7 +1516,7 @@ function renderCategoryBrandTable(d) {
 }
 let categoryBrandDealType = 'all';
 function renderCategoryBrandForDealType() { renderCategoryBrandTable(categoryBrandBreakdown ? categoryBrandBreakdown[categoryBrandDealType] : null); }
-renderCategoryBrandForDealType();
+__registerPage(['categorybrand'], renderCategoryBrandForDealType);
 wireDealTypeFilter('categoryBrandDealTypeNav', dt => { categoryBrandDealType = dt; renderCategoryBrandForDealType(); });
 
 
@@ -1513,7 +1538,7 @@ wireDealTypeFilter('categoryBrandDealTypeNav', dt => { categoryBrandDealType = d
 
 
 /* ---------- Logistics Daily (ported from Volta_Analytics) ---------- */
-(function () {
+window.__registerPage(['logistics'], function () {
   const L = LOGI_JSON;
   const dayLabelL = d => { const [, m, day] = d.split('-').map(Number); return MONTH_NAMES[m - 1] + ' ' + day; };
   document.getElementById('logiBanner').innerHTML = '<b>წყარო:</b> ახალი CRM-ის ლოგისტიკის მოდული (VoltaStoreDB: <code>crm_order_logistics</code>, <code>crm_shipment_status_history</code>, სტატუსების ლოგი). ისტორია ' + L.cutover + '-დან ლოგებიდან ზუსტადაა აღდგენილი; ძველი ცხრილების (Google Sheet) წინა ისტორია ძველ დაშბორდზე რჩება. ლოგისტიკის მოდული 2 სექტემბრიდან მუშაობს; ითვლება ყველა შეკვეთა, რომელიც მოდულშია, CRM სტატუსით Signed ან Active; ეს ზუსტად CRM-ის ლოჯისტიკის გვერდის პოპულაციაა.';
@@ -1593,9 +1618,9 @@ wireDealTypeFilter('categoryBrandDealTypeNav', dt => { categoryBrandDealType = d
     setupTopScrollSync('logisticsCityNdScrollTop', 'logisticsCityNdScrollBody'), setupTopScrollSync('logisticsCityAllScrollTop', 'logisticsCityAllScrollBody'),
     setupTopScrollSync('logisticsGoodsNdScrollTop', 'logisticsGoodsNdScrollBody'), setupTopScrollSync('logisticsGoodsAllScrollTop', 'logisticsGoodsAllScrollBody'),
     setupTopScrollSync('logisticsStatusOrdersScrollTop', 'logisticsStatusOrdersScrollBody'), setupTopScrollSync('logisticsStatusLinesScrollTop', 'logisticsStatusLinesScrollBody'), setupTopScrollSync('logisticsStatusCollScrollTop', 'logisticsStatusCollScrollBody')];
-})();
+});
 /* ---------- mkt ---------- */
-(function () {
+window.__registerPage(['leads'], function () {
   const M = MKT_JSON;
   const dayLabelM = d => { const [, m, day] = d.split('-').map(Number); return MONTH_NAMES[m - 1] + ' ' + day; };
   const monthLabelM = m => MONTH_NAMES[Number(m.slice(5, 7)) - 1] + ' ' + m.slice(0, 4);
@@ -1621,10 +1646,10 @@ wireDealTypeFilter('categoryBrandDealTypeNav', dt => { categoryBrandDealType = d
   const ids = [['mktStatus', M.status], ['mktStep', M.step], ['mktCity', M.city], ['mktConv', M.conv]];
   ids.forEach(([id, sec]) => { render(id + 'Day', sec, true); render(id + 'Month', sec, false); });
   window.mktScrollUpdaters = ids.flatMap(([id]) => [setupTopScrollSync(id + 'DayScrollTop', id + 'DayScrollBody'), setupTopScrollSync(id + 'MonthScrollTop', id + 'MonthScrollBody')]);
-})();
+});
 /* ---------- /mkt ---------- */
 /* ---------- ops ---------- */
-(function () {
+window.__registerPage(['opsapplications', 'opscommittee'], function () {
   const O = OPS_JSON, ARROW = String.fromCharCode(8594);
   const dayLabel = d => { const p = d.split('-').map(Number); return MONTH_NAMES[p[1] - 1] + ' ' + p[2]; };
   const monthLabel = m => MONTH_NAMES[Number(m.slice(5, 7)) - 1] + ' ' + m.slice(0, 4);
@@ -1686,10 +1711,10 @@ wireDealTypeFilter('categoryBrandDealTypeNav', dt => { categoryBrandDealType = d
   const ids = ['opsAppsStatus', 'opsFlow', 'opsFunnel', 'opsDecisions', 'opsUwOutcome', 'opsPerUw', 'opsReasons', 'opsStages'];
   window.opsScrollUpdaters = [];
   ids.forEach(id => ['Day', 'Month'].forEach(s => window.opsScrollUpdaters.push(setupTopScrollSync(id + s + 'Top', id + s + 'Body'))));
-})();
+});
 /* ---------- /ops ---------- */
 /* ---------- cust ---------- */
-(function () {
+window.__registerPage(['customers'], function () {
   const C = CUST_JSON, S = C.summary;
   const monthLabel = m => MONTH_NAMES[Number(m.slice(5, 7)) - 1] + ' ' + m.slice(0, 4);
   const dayLabel = d => { const [, m, day] = d.split('-').map(Number); return MONTH_NAMES[m - 1] + ' ' + day; };
@@ -1771,10 +1796,10 @@ wireDealTypeFilter('categoryBrandDealTypeNav', dt => { categoryBrandDealType = d
 
   window.custScrollUpdaters = [setupTopScrollSync('custNrMonthTop', 'custNrMonthBody'), setupTopScrollSync('custNrDayTop', 'custNrDayBody')]
     .concat(C.dims.filter(d => d.monthly).map(d => setupTopScrollSync('custMonth_' + d.key + '_Top', 'custMonth_' + d.key + '_Body')));
-})();
+});
 /* ---------- /cust ---------- */
 /* ---------- coll ---------- */
-(function () {
+window.__registerPage(['collections'], function () {
   const C = COLL_JSON, n = C.days.length, DASH = '&ndash;';
   const dayLabel = d => { const [, m, day] = d.split('-').map(Number); return MONTH_NAMES[m - 1] + ' ' + day; };
   const monthLabel = m => MONTH_NAMES[Number(m.slice(5, 7)) - 1] + ' ' + m.slice(0, 4);
@@ -1998,11 +2023,11 @@ wireDealTypeFilter('categoryBrandDealTypeNav', dt => { categoryBrandDealType = d
 
   const ids = ['collPayDay', 'collPayMonth', 'collOdDay', 'collOdMonth', 'collPmDay', 'collDueDay', 'collDueMonth', 'collActDay', 'collActMonth'];
   window.collScrollUpdaters = ids.map(id => setupTopScrollSync(id + 'ScrollTop', id + 'ScrollBody'));
-})();
+});
 /* ---------- /coll ---------- */
 
 /* ---------- pf ---------- */
-(function () {
+window.__registerPage(['portfolio'], function () {
   const P = PF_JSON;
   const dayLabel = d => { const [, m, day] = d.split('-').map(Number); return MONTH_NAMES[m - 1] + ' ' + day; };
   const monthLabel = m => MONTH_NAMES[Number(m.slice(5, 7)) - 1] + ' ' + m.slice(0, 4);
@@ -2106,12 +2131,13 @@ wireDealTypeFilter('categoryBrandDealTypeNav', dt => { categoryBrandDealType = d
   renderBook('pfBookAmt', P.book.amt); renderBook('pfBookSeg', P.book.seg); renderBook('pfBookCity', P.book.city); renderBook('pfBookGoods', P.book.goods);
   renderQuality();
   window.pfScrollUpdaters = ['pfStockDay', 'pfStockMonth', 'pfFlowDay', 'pfFlowMonth', 'pfStructTerm', 'pfStructAmt', 'pfStructSeg', 'pfStructGoods', 'pfStructCity', 'pfStructRisk', 'pfVintage'].map(id => setupTopScrollSync(id + 'ScrollTop', id + 'ScrollBody'));
-})();
+});
 /* ---------- /pf ---------- */
 // ---- top-level page nav (grows as more reports get added) ----
 document.getElementById('pageNav').addEventListener('click', (e) => {
   const btn = e.target.closest('button[data-page]');
   if (!btn || btn.classList.contains('soon')) return;
+  window.__ensurePage(btn.dataset.page);
   document.querySelectorAll('#pageNav button[data-page]').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
@@ -2132,7 +2158,9 @@ document.getElementById('pageNav').addEventListener('click', (e) => {
   if (btn.dataset.page === 'leads' && window.mktScrollUpdaters) window.mktScrollUpdaters.forEach(f => f());
   if (btn.dataset.page === 'logistics' && window.logisticsScrollUpdaters) window.logisticsScrollUpdaters.forEach(f => f());
 });
+setTimeout(window.__deferRest, 50);
 </script>
 
+</body></html>
 </body>
 </html>
