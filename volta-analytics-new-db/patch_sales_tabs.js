@@ -46,7 +46,7 @@ if (!html.includes('data-page="salesmonthly"')) {
         <button data-page="brandanalyze">Brand Analyze</button>
         <button data-page="subcategoryanalyze">Subcategory Analyze</button>
         <button data-page="categorybrand">Category / Brand</button>
-        <button class="soon">Income/Delinq: Category, Subcategory, Brand, Product (მალე)</button>
+        <button class="soon">Income/Delinq: Category, Subcategory, Brand, Product (soon)</button>
       </div>
     </div>`);
 }
@@ -54,9 +54,9 @@ if (!html.includes('data-page="salesmonthly"')) {
 // ---------- 3. Pages (once) ----------
 if (!html.includes('id="page-salesmonthly"')) {
   const dealNav = id => `    <div class="page-nav" id="${id}" style="margin-bottom:-8px;">
-      <button data-deal="all" class="active">ყველა</button>
-      <button data-deal="installment">განვადება</button>
-      <button data-deal="single">ერთიანი გადახდა</button>
+      <button data-deal="all" class="active">All</button>
+      <button data-deal="installment">Installment</button>
+      <button data-deal="single">Single Payment</button>
     </div>`;
   const pages = `
 <div class="page" data-page="salesmonthly" id="page-salesmonthly">
@@ -160,7 +160,7 @@ if (!html.includes(JS_MARK)) {
 ${JS_MARK}
 const salesMonthlyStats = SALES_JSON.salesMonthlyStats, brandStats = SALES_JSON.brandStats, subcategoryStats = SALES_JSON.subcategoryStats, categoryBrandBreakdown = SALES_JSON.categoryBrandBreakdown;
 const SALES_CUTOVER = SALES_JSON.cutover;
-document.getElementById('salesHybridBanner').innerHTML = '<b>წყარო:</b> ' + SALES_CUTOVER + '-მდე ძველი ბაზა (myvolta.info: <code>instalment_products</code>), ' + SALES_CUTOVER + '-დან ახალი ბაზა (VoltaStoreDB: <code>order_items</code>, კატეგორია ახალი კატალოგის კატეგორიების ხიდან, იმავე mapping-ცხრილით). <b>Cogs ახალ ბაზაში არ არსებობს</b> (თვითღირებულების ველი ყველა პროდუქტზე ცარიელია) — ამიტომ ' + SALES_CUTOVER + '-დან Cogs/Mrg ვერ ითვლება: სექტემბერი &ldquo;&ndash;&rdquo;-ს აჩვენებს, აგვისტოს Mrg კი მხოლოდ იმ გაყიდვებზეა დათვლილი, რომლებსაც Cogs აქვს. ბრენდის ატრიბუტიც ახალ კატალოგში ნაწილობრივაა შევსებული &mdash; &ldquo;No Brand&rdquo; ' + SALES_CUTOVER + '-დან იზრდება.';
+document.getElementById('salesHybridBanner').innerHTML = '<b>Source:</b> before ' + SALES_CUTOVER + ', the old database (myvolta.info: <code>instalment_products</code>); from ' + SALES_CUTOVER + ' on, the new database (VoltaStoreDB: <code>order_items</code>, category via the new catalog\'s category tree, same mapping sheet). <b>Cogs does not exist in the new database</b> (the cost field is empty for every product) &mdash; so Cogs/Mrg cannot be computed from ' + SALES_CUTOVER + ' on: September shows &ldquo;&ndash;&rdquo;, and August\'s Mrg is only computed for the sales that do have Cogs. The brand attribute is also only partially filled in the new catalog &mdash; &ldquo;No Brand&rdquo; grows from ' + SALES_CUTOVER + ' on.';
 
 function bucketedColHead(rowLabel, periods, q1Periods, q2Periods) {
   const cells = [];

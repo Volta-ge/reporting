@@ -91,7 +91,7 @@ function seriesFor(keyOf, labels, title, headLabel, sortByToday) {
 const byCity = seriesFor(o => o.city, cityOrder, 'Orders by City', 'City', false);
 const byGoods = seriesFor(o => o.goods, null, 'Orders by Goods Type', 'Goods Type', true);
 
-const STATUS_LABEL = { 20: 'დაწყებული / Started', 25: 'მოძიება / Procuring', 30: 'მზადაა მომწოდებელთან / Ready at vendor', 35: 'აღებულია მომწოდებლისგან / Collected', 40: 'საწყობისკენ / To warehouse', 45: 'საწყობშია / Warehouse', 48: 'ნაწილობრივ მზადაა / Partially ready', 50: 'გასაგზავნად მზადაა / Ready to ship', 60: 'გზაშია / Out for delivery', 80: 'მიტანილი / Delivered', 81: 'გატანილი / Picked up' };
+const STATUS_LABEL = { 20: 'Started', 25: 'Procuring', 30: 'Ready at vendor', 35: 'Collected', 40: 'To warehouse', 45: 'Warehouse', 48: 'Partially ready', 50: 'Ready to ship', 60: 'Out for delivery', 80: 'Delivered', 81: 'Picked up' };
 // CRM status-by-day tables (labels = the names the CRM's Logistics page uses); status of an entity on day D = last history event up to end of D
 const STATUS_SECTIONS = {
   orders: { entity: '4', title: 'Orders by logistics status', codes: [[20, 'Started'], [25, 'Procuring'], [30, 'Ready at vendor'], [35, 'Collecting'], [40, 'Collected'], [45, 'At warehouse'], [48, 'Partially ready (mixed lines)'], [50, 'Ready to ship'], [60, 'Out for delivery'], [80, 'Delivered'], [81, 'Picked up']] },
@@ -115,7 +115,7 @@ for (const [key, sec] of Object.entries(STATUS_SECTIONS)) {
 { const m = {}; for (const r of parseTsv('logi_not_activated.tsv')) m[r.d] = +r.n; statusByDay.notActivated = statusDates.map(d => m[d] || 0); }
 const openCases = parseTsv('logi_open.tsv').map(r => ({
   customer: r.customer, waitingFrom: r.waiting_from,
-  status: (r.logistics_status === '' || r.logistics_status === 'NULL') ? 'ლოგისტიკა არ დაწყებულა / Not started' : (STATUS_LABEL[r.logistics_status] || ('სტატუსი ' + r.logistics_status)),
+  status: (r.logistics_status === '' || r.logistics_status === 'NULL') ? 'Not started' : (STATUS_LABEL[r.logistics_status] || ('Status ' + r.logistics_status)),
   city: r.city || '–', orderNum: +r.order_id,
 }));
 
@@ -187,7 +187,7 @@ ${CSS_END}`;
 }
 
 if (!html.includes('data-page="logistics"')) {
-  const navAnchor = `        <button class="soon">Income/Delinq: Category, Subcategory, Brand, Product (მალე)</button>
+  const navAnchor = `        <button class="soon">Income/Delinq: Category, Subcategory, Brand, Product (soon)</button>
       </div>
     </div>`;
   must(navAnchor, 'nav anchor');
@@ -321,7 +321,7 @@ ${JS_MARK}
 window.__registerPage(['logistics'], function () {
   const L = LOGI_JSON;
   const dayLabelL = d => { const [, m, day] = d.split('-').map(Number); return MONTH_NAMES[m - 1] + ' ' + day; };
-  document.getElementById('logiBanner').innerHTML = '<b>წყარო:</b> ახალი CRM-ის ლოგისტიკის მოდული (VoltaStoreDB: <code>crm_order_logistics</code>, <code>crm_shipment_status_history</code>, სტატუსების ლოგი). ისტორია ' + L.cutover + '-დან ლოგებიდან ზუსტადაა აღდგენილი; ძველი ცხრილების (Google Sheet) წინა ისტორია ძველ დაშბორდზე რჩება. ლოგისტიკის მოდული 2 სექტემბრიდან მუშაობს; ითვლება ყველა შეკვეთა, რომელიც მოდულშია, CRM სტატუსით Signed ან Active; ეს ზუსტად CRM-ის ლოჯისტიკის გვერდის პოპულაციაა.';
+  document.getElementById('logiBanner').innerHTML = '<b>Source:</b> the new CRM\\'s logistics module (VoltaStoreDB: <code>crm_order_logistics</code>, <code>crm_shipment_status_history</code>, the status log). History from ' + L.cutover + ' on is reconstructed exactly from the logs; the old tables\\' (Google Sheet) earlier history stays on the old dashboard. The logistics module has been running since September 2; every order in the module with a CRM status of Signed or Active is counted &mdash; this is exactly the CRM\\'s own Logistics page population.';
 
   function renderPending() {
     const h = L.pending, n = h.dates.length;
@@ -609,7 +609,7 @@ window.__registerPage(['leads'], function () {
   const M = MKT_JSON;
   const dayLabelM = d => { const [, m, day] = d.split('-').map(Number); return MONTH_NAMES[m - 1] + ' ' + day; };
   const monthLabelM = m => MONTH_NAMES[Number(m.slice(5, 7)) - 1] + ' ' + m.slice(0, 4);
-  document.getElementById('mktBanner').innerHTML = '<b>წყარო:</b> ახალი CRM-ის ლიდების ცხრილი (VoltaStoreDB: <code>volta_leads</code> &mdash; საიტის წინასწარი განაცხადის ფორმა), კონვერსიისთვის <code>orders</code>, <code>addresses</code>, <code>customers</code>. ლიდები ' + M.leadsStart + '-დან არსებობს (ფორმის ამოქმედების დღე), ისტორია რეალურია პირველივე დღიდან; სტატუსი ლიდის <b>ამჟამინდელი</b> სტატუსია (სტატუსის ცვლილების ისტორია ბაზაში არ ინახება), ლიდებზე მუშაობა CRM-ში ' + M.cutover + '-დან დაიწყო. დღეების ცხრილები ' + M.dayStart + '-დან დღემდე, თვეების &mdash; ' + monthLabelM(M.months[0]) + '-დან მიმდინარე თვემდე (MTD). <b>Source:</b> the new CRM lead table (<code>volta_leads</code>); statuses are the lead\\'s current status, keyed to the day the lead was created; leads exist from ' + M.leadsStart + ', the CRM started working them on ' + M.cutover + '. Single lead source so far (<code>application_form</code>), so there is no by-source table.';
+  document.getElementById('mktBanner').innerHTML = '<b>Source:</b> the new CRM\\'s lead table (VoltaStoreDB: <code>volta_leads</code> &mdash; the site\\'s pre-application form), joined to <code>orders</code>, <code>addresses</code>, <code>customers</code> for conversion. Leads exist from ' + M.leadsStart + ' on (the day the form went live), history is real from day one; status is the lead\\'s <b>current</b> status (status-change history is not stored), the CRM started working leads on ' + M.cutover + '. Day tables run from ' + M.dayStart + ' to today, month tables from ' + monthLabelM(M.months[0]) + ' through the current month (MTD). Single lead source so far (<code>application_form</code>), so there is no by-source table.';
 
   const cellN = v => '<td>' + (v ? fmt(v) : '&ndash;') + '</td>';
   const cellP = v => '<td>' + (v ? pct(v) : '&ndash;') + '</td>';
@@ -976,9 +976,9 @@ window.__registerPage(['opsapplications', 'opscommittee'], function () {
   const pairRender = (id, title, headLabel, data, optsOf) => { renderSeries(id + 'Day', title + ' ' + String.fromCharCode(8212) + ' by day', headLabel, data.day.keys, data.day.rows, optsOf(data.day)); renderSeries(id + 'Month', title + ' ' + String.fromCharCode(8212) + ' by month', headLabel, data.month.keys, data.month.rows, optsOf(data.month)); };
 
   // banners (Georgian + English, like Logistics)
-  const histTxt = 'სტატუსების ისტორია (აუდიტის ლოგი) ' + O.historyStart + '-დან არსებობს; განაცხადების სტრიქონები 2026 წლის იანვრიდან. / Status history exists from ' + O.historyStart + '; application rows from January 2026. Days are UTC calendar days, as on every other tab.';
-  banner('opsAppsBanner', '<b>წყარო:</b> ახალი CRM (VoltaStoreDB): <code>orders</code> = განაცხადები (<code>created_at</code> = განაცხადის თარიღი, <code>crm_order_status</code> = მიმდინარე სტატუსი), სტატუსების ცვლილებები <code>crm_activity_log</code>-იდან. ' + histTxt);
-  banner('opsCommBanner', '<b>წყარო:</b> საკრედიტო კომიტეტის (ანდერრაითინგის) გადაწყვეტილებები ახალი CRM-ის აუდიტის ლოგიდან (<code>crm_activity_log</code>: სტატუსი 8 &rarr; 16 დამტკიცება, &rarr; 15 დასაზუსტებელი, &rarr; 6 უარი) და <code>orders.crm_underwriter_status_id</code>. ' + histTxt);
+  const histTxt = 'Status history exists from ' + O.historyStart + '; application rows from January 2026. Days are UTC calendar days, as on every other tab.';
+  banner('opsAppsBanner', '<b>Source:</b> the new CRM (VoltaStoreDB): <code>orders</code> = applications (<code>created_at</code> = application date, <code>crm_order_status</code> = current status), status changes from <code>crm_activity_log</code>. ' + histTxt);
+  banner('opsCommBanner', '<b>Source:</b> credit committee (underwriting) decisions from the new CRM\\'s audit log (<code>crm_activity_log</code>: status 8 &rarr; 16 approved, &rarr; 15 needs clarification, &rarr; 6 rejected) and <code>orders.crm_underwriter_status_id</code>. ' + histTxt);
 
   // Applications page
   pairRender('opsAppsStatus', 'Applications by current status', 'Current status', O.appsByStatus, s => ({ total: s.total, denom: s.total }));
@@ -1282,7 +1282,7 @@ window.__registerPage(['customers'], function () {
   const n = v => (v === null || v === undefined) ? '&ndash;' : (v ? fmt(v) : '&ndash;');
   const p = (a, b) => b ? pct(a / b) : '&ndash;';
   const curLabel = monthLabel(C.curMonth);
-  document.getElementById('custBanner').innerHTML = '<b>წყარო:</b> ახალი ბაზა (VoltaStoreDB): განაცხადები <code>orders</code>-დან განაცხადის თარიღით, დემოგრაფია განაცხადის ფორმიდან (<code>volta_application_data</code>: სქესი, დაბადების თარიღი, დასაქმება, ხელფასი, სოციალური სტატუსი, წყარო), ქალაქი მიწოდების მისამართიდან, რისკი და რეიტინგი CRM-იდან, გადახდის ქცევა <code>crm_customer_payment_stats</code>-იდან. მომხმარებელი = ერთი პირი (განაცხადში ჩაწერილი პირადი ნომრით); არცერთი ცხრილი არ შეიცავს სახელებს, ტელეფონებს ან პირად ნომრებს. თვეების სერია 2024 იანვრიდან, დღეების სერია ' + dayLabel(C.dayStart) + '-დან; განაცხადის დრო ' + C.cutover + '-ის შემდეგ ზუსტია (ახალი CRM), მანამდე ძველი CRM-იდან გადმოტანილი თარიღებია (დღის დონეზე &plusmn;1 დღე შესაძლებელია). ვებ-ფორმის ველები (დასაქმება, ხელფასი, სოციალური სტატუსი, წყარო) მხოლოდ 2026 წლიდან არსებობს, ამიტომ ძველ განაცხადებზე &laquo;Not on the form&raquo; წერია; 31 აგვისტოდან ახალი ფორმა ამ ველებს განაცხადების მხოლოდ მცირე ნაწილზე (~15%) აფიქსირებს, ამიტომ ბოლო თვე ამ ცხრილებში თხელია. <b>Source:</b> new DB only; identity = the ID number typed on the application; monthly series from Jan 2024, daily from ' + dayLabel(C.dayStart) + '; timestamps exact from the ' + C.cutover + ' cutover, migrated (&plusmn;1 day) before it. Generated ' + C.generatedAt + '.';
+  document.getElementById('custBanner').innerHTML = '<b>Source:</b> the new database only (VoltaStoreDB): applications from <code>orders</code> keyed to the application date; demographics from the application form (<code>volta_application_data</code>: gender, date of birth, employment, salary, social status, source); city from the delivery address; risk and rating from the CRM; payment behavior from <code>crm_customer_payment_stats</code>. A customer = one person (identified by the ID number entered on the application); no table stores names, phone numbers or ID numbers. Monthly series from January 2024, daily series from ' + dayLabel(C.dayStart) + ' on; application timestamps are exact after the ' + C.cutover + ' cutover (new CRM), migrated dates from the old CRM before it (&plusmn;1 day possible at the day level). Web-form fields (employment, salary, social status, source) only exist from 2026 on, so older applications show &laquo;Not on the form&raquo;; from August 31 the new form only records these fields for a small share of applications (~15%), so the most recent month is thin in these tables. Identity = the ID number typed on the application; timestamps exact from the ' + C.cutover + ' cutover, migrated (&plusmn;1 day) before it. Generated ' + C.generatedAt + '.';
   document.getElementById('custPidCov').textContent = pct((S.applications - S.appsWithoutPid) / S.applications);
   document.getElementById('custKpis').innerHTML = [[S.customers, 'Customers (all time)'], [S.activeCustomers, 'With an active loan'], [S.loanCustomers, 'Ever had a loan'], [S.applications, 'Applications (all time)'], [S.loans, 'Loans (all time)'], [S.activeLoans, 'Active loans']]
     .map(([v, l]) => '<div class="cust-kpi"><div class="cust-kpi-v">' + fmt(v) + '</div><div class="cust-kpi-l">' + l + '</div></div>').join('');
@@ -1628,8 +1628,8 @@ window.__registerPage(['collections'], function () {
   const alt = i => i % 2 ? 'logi-light' : 'logi-white';
   const ratio = (a, b) => a.map((v, i) => b[i] ? v / b[i] : null);
 
-  document.getElementById('collBanner').innerHTML = '<b>წყარო:</b> ახალი CRM-ის სესხების მოდული (VoltaStoreDB: <code>crm_payments</code> გადახდები, <code>crm_installment_schedules</code> გადახდის გრაფიკი, <code>crm_payment_events</code> გადახდა/დაფარვის ლოგი, <code>crm_case_calls</code> / <code>crm_sms_history</code> / <code>crm_promises</code> / <code>crm_activity_log</code> კოლექშენის აქტივობა). '
-    + '<b>რა პერიოდია რეალური:</b> გადახდები და გრაფიკის ვადები 2023 იანვრიდან სრულადაა მიგრირებული (თვეების ცხრილები აქედან იწყება); ვადაგადაცილების დღიური ისტორია, ვადის დაცვა და კოლექშენის აქტივობა მხოლოდ ' + C.cutover + '-დან არსებობს (CRM-ის ლოგები აქ იწყება), ამიტომ დღეების ცხრილები ' + C.cutover + '-დან დღემდე მიდის. '
+  document.getElementById('collBanner').innerHTML = '<b>Source:</b> the new CRM\\'s loan module (VoltaStoreDB: <code>crm_payments</code> payments, <code>crm_installment_schedules</code> payment schedule, <code>crm_payment_events</code> payment/settlement log, <code>crm_case_calls</code> / <code>crm_sms_history</code> / <code>crm_promises</code> / <code>crm_activity_log</code> collection activity). '
+    + '<b>What period is real:</b> payments and schedule due dates are fully migrated from January 2023 on (the month tables start there); daily overdue history, on-time tracking and collection activity only exist from ' + C.cutover + ' on (the CRM\\'s logs start there), so the day tables run from ' + C.cutover + ' to today. '
     + 'Amounts in GEL. Day = <code>payment_date</code> / <code>schedule_date</code> (calendar dates); activity timestamps are grouped by their UTC date. Last refresh: ' + C.generatedAt + '.';
 
   // KPI strip (today)
@@ -1884,8 +1884,8 @@ function rawCategory(pid) {
 const goodsType = pid => { const m = lookup(rawCategory(pid)); const s = m && String(m.categoryEn || '').trim(); return (s && s.toLowerCase() !== 'none') ? s : 'Uncategorized'; };
 
 // ---- label rules shared by the structure tables and the current-book tables
-const RISK = raw => { const s = String(raw || '').trim().toLowerCase(); if (s === 'დაბალი' || s === 'low') return 'Low (დაბალი)'; if (s === 'საშუალო' || s === 'medium') return 'Medium (საშუალო)'; if (s === 'მაღალი' || s === 'high') return 'High (მაღალი)'; return 'Not scored'; };
-const RISK_ORDER = ['Low (დაბალი)', 'Medium (საშუალო)', 'High (მაღალი)', 'Not scored'];
+const RISK = raw => { const s = String(raw || '').trim().toLowerCase(); if (s === 'დაბალი' || s === 'low') return 'Low'; if (s === 'საშუალო' || s === 'medium') return 'Medium'; if (s === 'მაღალი' || s === 'high') return 'High'; return 'Not scored'; };
+const RISK_ORDER = ['Low', 'Medium', 'High', 'Not scored'];
 const TERM_BANDS = ['1–3 months', '4–6 months', '7–9 months', '10 months', '11–12 months', '13+ months', 'No schedule'];
 const termBand = t => { t = +t; if (!t) return 'No schedule'; if (t <= 3) return '1–3 months'; if (t <= 6) return '4–6 months'; if (t <= 9) return '7–9 months'; if (t === 10) return '10 months'; if (t <= 12) return '11–12 months'; return '13+ months'; };
 const AMT_BANDS = { 1: '< 500 GEL', 2: '500 – 999 GEL', 3: '1,000 – 1,999 GEL', 4: '2,000 – 2,999 GEL', 5: '3,000 – 4,999 GEL', 6: '5,000+ GEL' };
@@ -2135,7 +2135,7 @@ window.__registerPage(['portfolio'], function () {
   const n1 = v => (v === null || v === undefined) ? DASH : Number(v).toLocaleString('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
   const p1 = v => (v === null || v === undefined) ? DASH : pct(v);
   const div = (a, b) => b ? a / b : null;
-  document.getElementById('pfBanner').innerHTML = '<b>წყარო:</b> ახალი CRM-ის სესხების წიგნი (VoltaStoreDB: <code>orders</code> სტატუსით 5 = განვადება, <code>crm_installment_schedules</code>, <code>crm_payments</code>). დღეების ჭრილში ისტორია ' + P.cutover + '-დან ზუსტია (CRM-ის გადართვის დღე); თვეების ჭრილი ' + monthLabel(P.mstart) + '-დან ' + P.cutover + '-მდე ძველი CRM-იდან გადმოტანილი ჩანაწერებით არის აღდგენილი &mdash; გაცემის თარიღები რამდენიმე დღით ცდება, დახურვის თარიღი, სადაც არ ჩაწერილა (2026 წლის ივნისიდან), ბოლო გადახდის დღეა. ნაშთი დღეს ზუსტია (გრაფიკის დარჩენილი ჯამი), წინა დღეებზე გადახდების ლოგიდანაა აღდგენილი. &mdash; <b>Source:</b> the new CRM loan book (VoltaStoreDB). Day series exact from the cutover ' + P.cutover + '; month series from ' + monthLabel(P.mstart) + ' reconstructed from migrated rows before the cutover (disbursement dates drift by days; closes without a record are dated to the last payment). Balance is exact today, reconstructed from the payment ledger for earlier dates. Refreshed ' + P.generatedAt + '.';
+  document.getElementById('pfBanner').innerHTML = '<b>Source:</b> the new CRM loan book (VoltaStoreDB: <code>orders</code> status 5 = installment, <code>crm_installment_schedules</code>, <code>crm_payments</code>). Day series exact from the cutover ' + P.cutover + '; month series from ' + monthLabel(P.mstart) + ' reconstructed from migrated rows before the cutover (disbursement dates drift by days; closes without a record are dated to the last payment). Balance is exact today, reconstructed from the payment ledger for earlier dates. Refreshed ' + P.generatedAt + '.';
 
   const cell = (v, cls) => '<td' + (cls ? ' class="' + cls + '"' : '') + '>' + v + '</td>';
   const exCell = (v, i) => cell(v, 'logi-extra' + (i === 0 ? ' logi-extra-first' : ''));
