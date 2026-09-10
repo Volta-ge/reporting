@@ -203,14 +203,21 @@ if (!html.includes('data-page="logistics"')) {
 // idempotent: a previously injected page block / JS block is removed first, so re-running the build refreshes the
 // markup and render code too (not only the LOGI_JSON data line)
 const JS_MARK = '/* ---------- Logistics Daily (ported from Volta_Analytics) ---------- */';
+// own explicit end marker (like every other group's JS_MARK/JS_END pair) — this used to be found by
+// matching the literal text '})();', back when the render function was an immediately-invoked function
+// expression; since it became `window.__registerPage([...], function () {...});` (staggered tab
+// loading, 2026-09-10) it no longer ends that way, and the generic '})();' pattern started matching
+// the next unrelated IIFE in the file instead (the theme toggle's), silently deleting everything
+// between them on every rebuild. An explicit marker can't drift out of sync with the render code again.
+const JS_MARK_END = '/* ---------- /Logistics Daily (ported from Volta_Analytics) ---------- */';
 {
   const NL = String.fromCharCode(10);
   const PAGE_START = NL + '<div class="page" data-page="logistics" id="page-logistics">', PAGE_END = NL + '</div>' + NL + '</div>' + NL;
   const ps = html.indexOf(PAGE_START);
   if (ps >= 0) { const pe = html.indexOf(PAGE_END, ps); if (pe < 0) throw new Error('page-logistics end not found'); html = html.slice(0, ps) + html.slice(pe + PAGE_END.length); }
-  const JS_END = NL + '})();' + NL;
+  const JS_END = NL + JS_MARK_END + NL;
   const js0 = html.indexOf(NL + JS_MARK);
-  if (js0 >= 0) { const je = html.indexOf(JS_END, js0); if (je < 0) throw new Error('logistics JS end not found'); html = html.slice(0, js0) + html.slice(je + JS_END.length); }
+  if (js0 >= 0) { const je = html.indexOf(JS_END, js0); if (je < 0) throw new Error('logistics JS end not found — deals_amount_migration.html needs the one-time JS_MARK_END insert (see 2026-09-10 notes)'); html = html.slice(0, js0) + html.slice(je + JS_END.length); }
 }
 if (!html.includes('id="page-logistics"')) {
   const page = `
@@ -392,6 +399,7 @@ window.__registerPage(['logistics'], function () {
     setupTopScrollSync('logisticsGoodsNdScrollTop', 'logisticsGoodsNdScrollBody'), setupTopScrollSync('logisticsGoodsAllScrollTop', 'logisticsGoodsAllScrollBody'),
     setupTopScrollSync('logisticsStatusOrdersScrollTop', 'logisticsStatusOrdersScrollBody'), setupTopScrollSync('logisticsStatusLinesScrollTop', 'logisticsStatusLinesScrollBody'), setupTopScrollSync('logisticsStatusCollScrollTop', 'logisticsStatusCollScrollBody')];
 });
+${JS_MARK_END}
 `;
   must('// ---- top-level page nav (grows as more reports get added) ----', 'nav handler');
   html = html.replace('// ---- top-level page nav (grows as more reports get added) ----', js + '// ---- top-level page nav (grows as more reports get added) ----');
@@ -585,8 +593,8 @@ ${group('Lead &rarr; application conversion', 'mktConv')}
 }
 
 // data line
-const dataLine = 'const MKT_JSON = ' + JSON.stringify(payload) + ';';
-if (/^const MKT_JSON = .*;$/m.test(html)) html = html.replace(/^const MKT_JSON = .*;$/m, () => dataLine);
+const dataLine = 'var MKT_JSON = ' + JSON.stringify(payload) + ';';
+if (/^(?:const|var) MKT_JSON = .*;$/m.test(html)) html = html.replace(/^(?:const|var) MKT_JSON = .*;$/m, () => dataLine);
 else {
   must('const generatedAt = REPORT_JSON.generatedAt;', 'report consts');
   html = html.replace('const generatedAt = REPORT_JSON.generatedAt;', 'const generatedAt = REPORT_JSON.generatedAt;' + NL + dataLine);
@@ -930,8 +938,8 @@ must('id="page-logistics"', 'logistics page');
 }
 
 // data line
-const dataLine = 'const OPS_JSON = ' + JSON.stringify(payload) + ';';
-if (/^const OPS_JSON = .*;$/m.test(html)) html = html.replace(/^const OPS_JSON = .*;$/m, () => dataLine);
+const dataLine = 'var OPS_JSON = ' + JSON.stringify(payload) + ';';
+if (/^(?:const|var) OPS_JSON = .*;$/m.test(html)) html = html.replace(/^(?:const|var) OPS_JSON = .*;$/m, () => dataLine);
 else { must('const generatedAt = REPORT_JSON.generatedAt;', 'report consts'); html = html.replace('const generatedAt = REPORT_JSON.generatedAt;', 'const generatedAt = REPORT_JSON.generatedAt;' + NL + dataLine); }
 
 // render IIFE (no backticks / ${ inside: it lives in a template literal)
@@ -1258,8 +1266,8 @@ ${PAGE_END}`;
 }
 
 // data line
-const dataLine = 'const CUST_JSON = ' + JSON.stringify(payload) + ';';
-if (/^const CUST_JSON = .*;$/m.test(html)) html = html.replace(/^const CUST_JSON = .*;$/m, () => dataLine);
+const dataLine = 'var CUST_JSON = ' + JSON.stringify(payload) + ';';
+if (/^(?:const|var) CUST_JSON = .*;$/m.test(html)) html = html.replace(/^(?:const|var) CUST_JSON = .*;$/m, () => dataLine);
 else { must('const generatedAt = REPORT_JSON.generatedAt;', 'report consts'); html = html.replace('const generatedAt = REPORT_JSON.generatedAt;', 'const generatedAt = REPORT_JSON.generatedAt;' + NL + dataLine); }
 
 // render code (replaced on every run)
@@ -1584,8 +1592,8 @@ ${PAGE_END}
 }
 
 // data line
-const dataLine = 'const COLL_JSON = ' + JSON.stringify(payload) + ';';
-if (/^const COLL_JSON = .*;$/m.test(html)) html = html.replace(/^const COLL_JSON = .*;$/m, () => dataLine);
+const dataLine = 'var COLL_JSON = ' + JSON.stringify(payload) + ';';
+if (/^(?:const|var) COLL_JSON = .*;$/m.test(html)) html = html.replace(/^(?:const|var) COLL_JSON = .*;$/m, () => dataLine);
 else { must('const generatedAt = REPORT_JSON.generatedAt;', 'report consts'); html = html.replace('const generatedAt = REPORT_JSON.generatedAt;', () => 'const generatedAt = REPORT_JSON.generatedAt;' + NL + dataLine); }
 
 // render IIFE
@@ -2108,8 +2116,8 @@ ${PAGE_END}
 }
 
 // data line
-const dataLine = 'const PF_JSON = ' + JSON.stringify(payload) + ';';
-if (/^const PF_JSON = .*;$/m.test(html)) html = html.replace(/^const PF_JSON = .*;$/m, () => dataLine);
+const dataLine = 'var PF_JSON = ' + JSON.stringify(payload) + ';';
+if (/^(?:const|var) PF_JSON = .*;$/m.test(html)) html = html.replace(/^(?:const|var) PF_JSON = .*;$/m, () => dataLine);
 else { must('const generatedAt = REPORT_JSON.generatedAt;', 'report consts'); html = html.replace('const generatedAt = REPORT_JSON.generatedAt;', 'const generatedAt = REPORT_JSON.generatedAt;' + NL + dataLine); }
 
 // render code

@@ -81,6 +81,56 @@ final class NewDbReport
     /** JSON key in the build() result => class name (also the `const <KEY>_JSON` line the HTML carries, upper-cased) */
     public const GROUPS = ['mkt' => 'NewDbMkt', 'ops' => 'NewDbOps', 'cust' => 'NewDbCust', 'coll' => 'NewDbColl', 'pf' => 'NewDbPf'];
 
+    /**
+     * Same result as build(), but calls $onSection(key, payload, errorMessage) as soon as each
+     * piece is ready instead of only once everything is — lets index.php stream each report to
+     * the browser as its query returns, instead of the reader waiting on the slowest one (cust,
+     * ~6-7s) before seeing anything. 'core' fires first (report/sales/logistics together — they
+     * share no query with the 5 groups below and are cheap, ~5s combined); one call per $order
+     * entry follows, cheapest first by default so early streamed chunks land sooner. A group that
+     * throws still fires $onSection with a null payload and the error message, exactly like
+     * build()'s $out['errors'] — that tab keeps the committed static numbers, the rest are
+     * unaffected.
+     */
+    public function buildStreaming(string $end, callable $onSection, array $order = ['mkt', 'ops', 'coll', 'pf', 'cust']): array
+    {
+        $generatedAt = gmdate('Y-m-d H:i') . ' UTC';
+        $today = (new \DateTimeImmutable('today'))->format('Y-m-d');
+        $report = $this->dailyMail($end);
+        $report['cutover'] = self::CUTOVER;
+        $report['generatedAt'] = $generatedAt;
+        $sales = $this->salesAnalyze($end);
+        $sales['cutover'] = self::CUTOVER;
+        $sales['generatedAt'] = $generatedAt;
+        $logistics = $this->logistics();
+        $logistics['cutover'] = self::CUTOVER;
+        $logistics['generatedAt'] = $generatedAt;
+        $out = ['report' => $report, 'sales' => $sales, 'logistics' => $logistics];
+        $onSection('core', $out, null);
+
+        $groups = [
+            'mkt' => fn () => new NewDbMkt($this->pdo, $this->dir, $this->mappingPath),
+            'ops' => fn () => new NewDbOps($this->pdo, $this->dir, $this->mappingPath),
+            'cust' => fn () => new NewDbCust($this->pdo, $this->dir, $this->mappingPath),
+            'coll' => fn () => new NewDbColl($this->pdo, $this->dir, $this->mappingPath),
+            'pf' => fn () => new NewDbPf($this->pdo, $this->dir, $this->mappingPath),
+        ];
+        foreach ($order as $key) {
+            if (!isset($groups[$key])) {
+                continue;
+            }
+            try {
+                $payload = $groups[$key]()->build($today);
+                $out[$key] = $payload;
+                $onSection($key, $payload, null);
+            } catch (Throwable $e) {
+                $out['errors'][$key] = $e->getMessage();
+                $onSection($key, null, $e->getMessage());
+            }
+        }
+        return $out;
+    }
+
     // ------------------------------------------------------------------ Logistics Daily
 
     private const LOGI_STATUS_LABEL = [
