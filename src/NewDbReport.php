@@ -439,8 +439,20 @@ final class NewDbReport
 
         // Deals Closed / Amount Sold — keyed to the day the loan reaches Active status (the Signed-to-Active
         // transition in crm_activity_log, metadata.to=1) -- the date key the CRM's own Sales performance page
-        // uses (replaces the earlier crm_creator_date key, only possible from the cutover on). amount = full
-        // installment amount (schedule total, plus the advance where the schedule was built net of it).
+        // uses (replaces the earlier crm_creator_date key, only possible from the cutover on).
+        // amount, from 2026-09-01 on = the developer-confirmed markup formula (2026-09-14): site price
+        // (base_grand_total -- already net of any on-site special_price discount, verified: order_items.base_price
+        // matches product_flat's special_price exactly whenever one was active at order time, and
+        // SUM(base_price*qty) always equals base_grand_total, so no separate discount lookup is needed) times
+        // 1.05*1.20 (Standard product), or 1.15*1.05*1.20 for a Karcher-brand deal (attribute_id=25,
+        // attribute_options.admin_name='KARCHER GEORGIA' on any line item) -- verified against 8 real closed
+        // Karcher deals, actual (schedule+advance)/price ratio clustered at 1.45-1.48, matching 1.449 closely --
+        // then rounded UP to the nearest value ending in 9 (user's correction 2026-09-14: e.g. 1223.45 ->
+        // 1229.00), i.e. CEIL((x-9)/10)*10+9. Single-payment sales get no markup (paid in full, no financing).
+        // Before 2026-09-01, the old schedule-based heuristic is unchanged: schedule total, plus the advance
+        // only when the schedule was built net of it (schedule + advance <= price, since in the other
+        // convention the advance is already posted against the first schedule row), or price itself if no
+        // schedule exists at all.
         // Single-payment sales (crm_order_status=99) never go through that log (retail.create'd already-complete,
         // no schedule) -- unioned in keyed to their own created_at, same as the CRM's own Sales performance page
         // (user's decision 2026-09-10).
@@ -448,7 +460,14 @@ final class NewDbReport
         $stmt = $this->pdo->prepare("WITH act AS (SELECT entity_id, MIN(created_at) t FROM crm_activity_log WHERE action='installment.status_change' AND JSON_EXTRACT(metadata,'\$.to')=1 GROUP BY entity_id
                     UNION ALL SELECT id, created_at FROM orders WHERE crm_order_status=99)
               SELECT DATE(act.t) d, $seg seg, COUNT(*) deals,
-                SUM(CASE WHEN s.tot IS NULL THEN o.base_grand_total
+                SUM(CASE WHEN o.crm_order_status=99 THEN o.base_grand_total
+                         WHEN DATE(act.t) >= '2026-09-01' THEN CEIL((o.base_grand_total * (CASE WHEN EXISTS (
+                                SELECT 1 FROM order_items oi
+                                JOIN product_attribute_values pb ON pb.product_id=oi.product_id AND pb.attribute_id=25
+                                JOIN attribute_options ao ON ao.id=pb.integer_value AND ao.admin_name='KARCHER GEORGIA'
+                                WHERE oi.order_id=o.id
+                              ) THEN (1.15*1.05*1.20) ELSE (1.05*1.20) END) - 9) / 10) * 10 + 9
+                         WHEN s.tot IS NULL THEN o.base_grand_total
                          WHEN s.tot + COALESCE(o.crm_advance_amount,0) <= o.base_grand_total + 0.01 THEN s.tot + COALESCE(o.crm_advance_amount,0)
                          ELSE s.tot END) amount
               FROM act JOIN orders o ON o.id=act.entity_id AND o.crm_active=1
