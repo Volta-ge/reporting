@@ -440,19 +440,28 @@ final class NewDbReport
         // Deals Closed / Amount Sold — keyed to the day the loan reaches Active status (the Signed-to-Active
         // transition in crm_activity_log, metadata.to=1) -- the date key the CRM's own Sales performance page
         // uses (replaces the earlier crm_creator_date key, only possible from the cutover on).
-        // amount, from 2026-09-01 on = the developer-confirmed markup formula (2026-09-14): site price
-        // (base_grand_total -- already net of any on-site special_price discount, verified: order_items.base_price
-        // matches product_flat's special_price exactly whenever one was active at order time, and
-        // SUM(base_price*qty) always equals base_grand_total, so no separate discount lookup is needed) times
-        // 1.05*1.20 (Standard product), or 1.15*1.05*1.20 for a Karcher-brand deal (attribute_id=25,
-        // attribute_options.admin_name='KARCHER GEORGIA' on any line item) -- verified against 8 real closed
-        // Karcher deals, actual (schedule+advance)/price ratio clustered at 1.45-1.48, matching 1.449 closely --
-        // then rounded UP to the nearest value ending in 9 (user's correction 2026-09-14: e.g. 1223.45 ->
-        // 1229.00), i.e. CEIL((x-9)/10)*10+9. Single-payment sales get no markup (paid in full, no financing).
-        // Before 2026-09-01, the old schedule-based heuristic is unchanged: schedule total, plus the advance
-        // only when the schedule was built net of it (schedule + advance <= price, since in the other
-        // convention the advance is already posted against the first schedule row), or price itself if no
-        // schedule exists at all.
+        // amount (revised 2026-09-15, reconciled exact against a real per-manager CRM export, 36/36 loans
+        // matching to the GEL): prefer the loan's REAL installment schedule (crm_installment_schedules)
+        // whenever it actually carries the financing markup (schedule total != site price) -- schedule total +
+        // advance, no further adjustment; this is what the customer is actually contracted to pay and is
+        // ground truth whenever available. Only fall back to a computed estimate when the schedule is "broken"
+        // -- equal to the site price, i.e. generated without the markup baked in even though the order was
+        // created after the 2026-09-01 pricing change (a known CRM schedule-generator gap, not a real 0% deal)
+        // -- in which case the estimate is site price (base_grand_total, already net of any on-site
+        // special_price discount: order_items.base_price matches product_flat's special_price exactly whenever
+        // one was active at order time, and SUM(base_price*qty) always equals base_grand_total, so no separate
+        // discount lookup is needed) times 1.05*1.20 (Standard product) or 1.15*1.05*1.20 for a Karcher-brand
+        // deal (attribute_id=25, attribute_options.admin_name='KARCHER GEORGIA' on any line item), rounded UP
+        // to the nearest 10 (CEIL(x/10)*10 -- verified against the CRM's own reported figure, e.g.
+        // 328*1.26=413.28 -> 420; supersedes an earlier "round up to the nearest ...9" version, which was an
+        // unverified guess that missed by 1 GEL on every schedule-based row once checked against a real
+        // export). The pre-cutover-price/broken-schedule gate uses the application's own crm_creator_date, NOT
+        // the Signed->Active activation date used elsewhere in this query -- an order can be created before
+        // Sep 1 (0% deal) but only reach Active after Sep 1; gating on the activation date wrongly applied the
+        // post-cutover markup to those pre-cutover 0% deals, by up to several hundred GEL on a single loan (the
+        // real bug this revision fixes; the ...9-vs-10 rounding was a much smaller, cosmetic one). Genuinely no
+        // schedule at all yet: falls back to site price, unchanged. Single-payment sales get no markup (paid in
+        // full, no financing).
         // Single-payment sales (crm_order_status=99) never go through that log (retail.create'd already-complete,
         // no schedule) -- unioned in keyed to their own created_at, same as the CRM's own Sales performance page
         // (user's decision 2026-09-10).
@@ -461,13 +470,14 @@ final class NewDbReport
                     UNION ALL SELECT id, created_at FROM orders WHERE crm_order_status=99)
               SELECT DATE(act.t) d, $seg seg, COUNT(*) deals,
                 SUM(CASE WHEN o.crm_order_status=99 THEN o.base_grand_total
-                         WHEN DATE(act.t) >= '2026-09-01' THEN CEIL((o.base_grand_total * (CASE WHEN EXISTS (
+                         WHEN s.tot IS NULL THEN o.base_grand_total
+                         WHEN ABS(s.tot - o.base_grand_total) >= 0.01 THEN s.tot + COALESCE(o.crm_advance_amount,0)
+                         WHEN o.crm_creator_date >= '2026-09-01' THEN CEIL((o.base_grand_total * (CASE WHEN EXISTS (
                                 SELECT 1 FROM order_items oi
                                 JOIN product_attribute_values pb ON pb.product_id=oi.product_id AND pb.attribute_id=25
                                 JOIN attribute_options ao ON ao.id=pb.integer_value AND ao.admin_name='KARCHER GEORGIA'
                                 WHERE oi.order_id=o.id
-                              ) THEN (1.15*1.05*1.20) ELSE (1.05*1.20) END) - 9) / 10) * 10 + 9
-                         WHEN s.tot IS NULL THEN o.base_grand_total
+                              ) THEN (1.15*1.05*1.20) ELSE (1.05*1.20) END)) / 10) * 10
                          WHEN s.tot + COALESCE(o.crm_advance_amount,0) <= o.base_grand_total + 0.01 THEN s.tot + COALESCE(o.crm_advance_amount,0)
                          ELSE s.tot END) amount
               FROM act JOIN orders o ON o.id=act.entity_id AND o.crm_active=1
@@ -487,12 +497,16 @@ final class NewDbReport
             $add($r['d'], $r['seg'], ['applications' => (int) $r['applications'], 'terms' => (int) $r['terms'], 'uw' => (int) $r['uw']]);
         }
 
-        // Downpayment Collected — REAL cash collected, keyed to the payment date: a crm_payments row whose
-        // amount equals the order's crm_advance_amount (crm_payments' own `advance` column is a different,
-        // much rarer flag, verified not to be the downpayment).
+        // Downpayment Collected — REAL cash collected, keyed to the payment date: a crm_payments row with its
+        // own `advance` column > 0 (revised 2026-09-15: reconciled exact, 156/156 rows to the GEL, against a
+        // real CRM payments export). Supersedes the earlier "amount equals crm_advance_amount" rule, which
+        // overcounted ~65% by also catching ordinary payments that merely happen to equal the recorded advance
+        // amount — cross-checked against the independent `crm_payment_events.advance_part` log, which agreed
+        // those were genuinely ordinary payments (`event_type='schedule_partial'`, `advance_part=0.00`), not a
+        // tagging gap on `advance`.
         $stmt = $this->pdo->prepare("SELECT DATE(p.payment_date) d, $seg seg, ROUND(SUM(p.amount),2) dp
               FROM crm_payments p JOIN orders o ON o.id=p.installment_id
-              WHERE p.reversed_at IS NULL AND o.crm_advance_amount > 0 AND p.amount = o.crm_advance_amount
+              WHERE p.reversed_at IS NULL AND p.advance IS NOT NULL AND p.advance > 0
                 AND DATE(p.payment_date) BETWEEN :cutover AND :end
               GROUP BY d, seg ORDER BY d, seg");
         $stmt->execute(['cutover' => self::CUTOVER, 'end' => $end]);

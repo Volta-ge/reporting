@@ -1,2 +1,2 @@
 customers	active_customers	loan_customers	applications	loans	customers_before_series	apps_before_series	first_app	last_app	apps_without_pid	active_loans	apps_since_cutover
-35234	5792	9315	57556	15426	2456	3273	2019-10-30 00:00:00	2026-09-14 17:06:37	203	7230	2299
+35297	5791	9321	57674	15439	2456	3273	2019-10-30 00:00:00	2026-09-15 13:51:07	203	7223	2417

@@ -89,28 +89,28 @@ d	type	n	active_n	loan_n
 2026-08-30	1:New	55	9	9
 2026-08-30	2:Returning (earlier application only)	19	1	1
 2026-08-30	3:Returning (previous loan)	14	9	9
-2026-08-31	1:New	50	8	8
+2026-08-31	1:New	50	7	8
 2026-08-31	2:Returning (earlier application only)	22	3	3
 2026-08-31	3:Returning (previous loan)	19	8	9
 2026-09-01	1:New	58	9	10
 2026-09-01	2:Returning (earlier application only)	45	5	5
-2026-09-01	3:Returning (previous loan)	42	9	9
+2026-09-01	3:Returning (previous loan)	42	8	9
 2026-09-02	1:New	79	8	8
 2026-09-02	2:Returning (earlier application only)	50	1	1
 2026-09-02	3:Returning (previous loan)	23	6	6
 2026-09-03	1:New	63	9	10
 2026-09-03	2:Returning (earlier application only)	40	5	6
-2026-09-03	3:Returning (previous loan)	21	6	7
-2026-09-04	1:New	74	11	12
+2026-09-03	3:Returning (previous loan)	21	5	7
+2026-09-04	1:New	74	10	12
 2026-09-04	2:Returning (earlier application only)	50	4	4
 2026-09-04	3:Returning (previous loan)	24	8	8
 2026-09-05	1:New	62	6	6
 2026-09-05	2:Returning (earlier application only)	24	4	4
-2026-09-05	3:Returning (previous loan)	33	10	10
+2026-09-05	3:Returning (previous loan)	33	9	10
 2026-09-06	1:New	70	9	9
 2026-09-06	2:Returning (earlier application only)	44	5	5
 2026-09-06	3:Returning (previous loan)	19	6	6
-2026-09-07	1:New	88	11	11
+2026-09-07	1:New	88	10	11
 2026-09-07	2:Returning (earlier application only)	45	5	5
 2026-09-07	3:Returning (previous loan)	33	6	6
 2026-09-08	1:New	71	10	10
@@ -121,16 +121,19 @@ d	type	n	active_n	loan_n
 2026-09-09	3:Returning (previous loan)	54	10	11
 2026-09-10	1:New	98	13	13
 2026-09-10	2:Returning (earlier application only)	62	2	2
-2026-09-10	3:Returning (previous loan)	44	17	17
+2026-09-10	3:Returning (previous loan)	44	16	17
 2026-09-11	1:New	86	9	9
 2026-09-11	2:Returning (earlier application only)	51	2	2
 2026-09-11	3:Returning (previous loan)	28	9	9
 2026-09-12	1:New	100	17	18
-2026-09-12	2:Returning (earlier application only)	49	4	4
+2026-09-12	2:Returning (earlier application only)	49	5	5
 2026-09-12	3:Returning (previous loan)	23	12	12
-2026-09-13	1:New	127	12	12
+2026-09-13	1:New	127	12	13
 2026-09-13	2:Returning (earlier application only)	58	0	0
-2026-09-13	3:Returning (previous loan)	27	8	8
-2026-09-14	1:New	77	2	2
-2026-09-14	2:Returning (earlier application only)	36	3	3
-2026-09-14	3:Returning (previous loan)	18	5	5
+2026-09-13	3:Returning (previous loan)	27	7	8
+2026-09-14	1:New	104	5	5
+2026-09-14	2:Returning (earlier application only)	47	4	4
+2026-09-14	3:Returning (previous loan)	31	10	10
+2026-09-15	1:New	36	0	0
+2026-09-15	2:Returning (earlier application only)	17	0	0
+2026-09-15	3:Returning (previous loan)	14	2	2

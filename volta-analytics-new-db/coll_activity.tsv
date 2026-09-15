@@ -288,21 +288,21 @@ d	metric	n	amt
 2026-09-13	sms_ვერ ვუკავშირდები	20	0.00
 2026-09-13	sms_მოვალეთა რეესტრი	26	0.00
 2026-09-13	sms_შეუსაბამო მონაცემები	32	0.00
-2026-09-14	call_loans	149	0.00
-2026-09-14	call_reached	174	0.00
-2026-09-14	chan_call	160	0.00
+2026-09-14	call_loans	160	0.00
+2026-09-14	call_reached	188	0.00
+2026-09-14	chan_call	174	0.00
 2026-09-14	chan_sms	14	0.00
-2026-09-14	crm_case_settled	13	0.00
+2026-09-14	crm_case_settled	17	0.00
 2026-09-14	crm_overdue_bucket_up	220	0.00
 2026-09-14	crm_overdue_entered	35	0.00
-2026-09-14	pm_assigned_pm	22	0.00
+2026-09-14	pm_assigned_pm	31	0.00
 2026-09-14	promise_broken	3	0.00
 2026-09-14	promise_kept	3	0.00
-2026-09-14	reminder_created	137	0.00
-2026-09-14	reminder_due	126	0.00
+2026-09-14	reminder_created	150	0.00
+2026-09-14	reminder_due	127	0.00
 2026-09-14	restructure_approved	9	0.00
 2026-09-14	restructure_requested	11	9776.60
-2026-09-14	sms_Activated	22	0.00
+2026-09-14	sms_Activated	31	0.00
 2026-09-14	sms_Collections	14	0.00
 2026-09-14	sms_Day0	77	0.00
 2026-09-14	sms_Day1	415	0.00
@@ -310,10 +310,39 @@ d	metric	n	amt
 2026-09-14	sms_Day5	6	0.00
 2026-09-14	sms_REJECTED	11	0.00
 2026-09-14	sms_გადახდისუუნარო	7	0.00
-2026-09-14	sms_დასაფარია მიმდინარე	5	0.00
+2026-09-14	sms_დასაფარია მიმდინარე	6	0.00
 2026-09-14	sms_ვერ ვუკავშირდები	16	0.00
 2026-09-14	sms_მოვალეთა რეესტრი	29	0.00
-2026-09-14	sms_შეუსაბამო მონაცემები	27	0.00
-2026-09-14	sms_ხიშნიკი	5	0.00
+2026-09-14	sms_შეუსაბამო მონაცემები	29	0.00
+2026-09-14	sms_ხიშნიკი	6	0.00
 2026-09-14	status_Negotiating	1	0.00
 2026-09-14	status_New schedule	1	0.00
+2026-09-15	call_loans	61	0.00
+2026-09-15	call_no_answer	1	0.00
+2026-09-15	call_reached	63	0.00
+2026-09-15	chan_call	62	0.00
+2026-09-15	chan_sms	2	0.00
+2026-09-15	crm_case_settled	7	0.00
+2026-09-15	crm_overdue_bucket_up	40	0.00
+2026-09-15	crm_overdue_cured	205	0.00
+2026-09-15	crm_overdue_entered	34	0.00
+2026-09-15	pm_assigned_pm	4	0.00
+2026-09-15	promise_made	2	201.00
+2026-09-15	reminder_created	48	0.00
+2026-09-15	reminder_due	151	0.00
+2026-09-15	restructure_approved	6	0.00
+2026-09-15	restructure_requested	6	5863.16
+2026-09-15	sms_Activated	4	0.00
+2026-09-15	sms_Collections	2	0.00
+2026-09-15	sms_Day0	315	0.00
+2026-09-15	sms_Day1	79	0.00
+2026-09-15	sms_Day3	12	0.00
+2026-09-15	sms_Day5	110	0.00
+2026-09-15	sms_გადახდისუუნარო	1	0.00
+2026-09-15	sms_დასაფარია მიმდინარე	1	0.00
+2026-09-15	sms_ვერ ვუკავშირდები	3	0.00
+2026-09-15	sms_მოვალეთა რეესტრი	14	0.00
+2026-09-15	sms_შეუსაბამო მონაცემები	7	0.00
+2026-09-15	status_Negotiating	2	0.00
+2026-09-15	status_New schedule	1	0.00
+2026-09-15	status_Promised	2	0.00

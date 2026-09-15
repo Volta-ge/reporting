@@ -73,7 +73,6 @@ period	d	order_id	product_id	qty	sales	deal_type	brand	sku	product_name
 2026-09	2026-09-03	55598	36614	1	139.0000	installment		215957	ტექნიკური ფენი Ingco HG200058 2000W
 2026-09	2026-09-03	55599	39707	1	679.0000	installment	SAMSUNG	169672	Mobile and Smartphones/ Samsung/ Samsung A175F Galaxy A17 6GB/128GB LTE Duos Light Blue
 2026-09	2026-09-03	55712	799	1	179.0000	installment	FRANKO	FRANKO-FHB-90-20	ბლენდერი FRANKO FHB-9020
-2026-09	2026-09-04	15738	1471	1	919.0000	installment	HISENSE	HISENSE-WF3S8043BB3	სარეცხი მანქანა HISENSE WF3S8043BB3
 2026-09	2026-09-04	55386	847	1	869.0000	installment	CHIGO	CHIGO-CWF804	სარეცხი მანქანა CHIGO CWF804
 2026-09	2026-09-04	55415	242	1	859.0000	installment	HISENSE	HISENSE-DB35DCUR-INOX	მაცივარი HISENSE DB35DCUR-INOX
 2026-09	2026-09-04	55434	242	1	859.0000	installment	HISENSE	HISENSE-DB35DCUR-INOX	მაცივარი HISENSE DB35DCUR-INOX
@@ -92,7 +91,6 @@ period	d	order_id	product_id	qty	sales	deal_type	brand	sku	product_name
 2026-09	2026-09-04	55684	142301	1	949.0000	installment	SAMSUNG	176265	Mobile and Smartphones/ Samsung/ Samsung A276B Galaxy A27 6GB/128GB 5G Duos Blue
 2026-09	2026-09-04	55694	259	1	1479.0000	installment	SIMFER	SIMFER-ZE9060-IXC	გაზქურა SIMFER ZE9060 IXC
 2026-09	2026-09-04	55695	142262	1	679.0000	installment	HONOR	177277	Mobile and Smartphones/ Honor/ Honor X7e 6GB/128GB Light Blue
-2026-09	2026-09-04	55701	2013	1	1229.0000	installment	HISENSE	HISENSE-R-D-39-W-C-B-G	მაცივარი HISENSE RD-39WC BG
 2026-09	2026-09-04	55728	238	1	149.0000	installment	FRANKO	FRANKO-FSI-1188	უთო FRANKO FSI-1188
 2026-09	2026-09-04	55728	38646	1	209.0000	installment	SENCOR	125130	Blender/ Sencor SBL 7570SS
 2026-09	2026-09-04	55730	2127	1	529.0000	installment	HONOR	167871	ტელეფონი HONOR X6c 6GB/128GB Ocean Cyan
@@ -139,9 +137,6 @@ period	d	order_id	product_id	qty	sales	deal_type	brand	sku	product_name
 2026-09	2026-09-05	55981	848	1	919.0000	installment	CHIGO	CHIGO-CWF804G	სარეცხი მანქანა CHIGO CWF804G
 2026-09	2026-09-05	55991	1086	1	709.0000	installment	MIDEA	MIDEA-MF01610US40-W	სარეცხი მანქანა MIDEA MF01610US40/W
 2026-09	2026-09-05	56004	932	1	389.0000	installment	FRANKO	FRANKO-FCO-9037	ელექტრო ღუმელი FRANKO FCO-9037
-2026-09	2026-09-07	55430	72870	1	479.0000	installment		B2-BLACK	ბავშვის სასადილო სკამი B2-BLACK
-2026-09	2026-09-07	55430	72389	1	419.0000	installment		6189V-BLACK	საბავშვო სამთვალა სასეირნო ველო-ეტლი 6189V-BLACK
-2026-09	2026-09-07	55430	73079	1	189.0000	installment		105CER	ჭოჭინა 360 გრადუსიანი მბრუნავი სავარძლით 105CER
 2026-09	2026-09-07	55467	2514	1	1369.0000	installment		T10FT	ლურჯი ბატუტი კიბით AJ-T10FT 10FT (306სმ;250კგ)
 2026-09	2026-09-07	55669	249	1	749.0000	installment	MIDEA	MIDEA-MF100W70	სარეცხის მანქანა MIDEA MF100W70
 2026-09	2026-09-07	55775	900	1	759.0000	installment	MARAZZI	MARAZZI-ML43UG74C	ტელევიზორი MARAZZI ML43UG74C
@@ -152,7 +147,6 @@ period	d	order_id	product_id	qty	sales	deal_type	brand	sku	product_name
 2026-09	2026-09-07	55909	269	1	119.0000	installment	FRANKO	FRANKO-FHS-1199	უთო FRANKO FHS-1199
 2026-09	2026-09-07	55909	1184	1	89.0000	installment	FRANKO	FRANKO-F-G-T-1207	ტოსტერი FRANKO FGT-1207
 2026-09	2026-09-07	55921	1374	1	449.0000	installment	CHIGO	CHIGO-CRG120	მაცივარი CHIGO CRG120
-2026-09	2026-09-07	55940	1471	1	919.0000	installment	HISENSE	HISENSE-WF3S8043BB3	სარეცხი მანქანა HISENSE WF3S8043BB3
 2026-09	2026-09-07	55984	142276	1	1419.0000	installment	OnePlus	176664	Mobile and Smartphones/ OnePlus/ OnePlus Nord CE 6 8GB/256GB Pitch Black
 2026-09	2026-09-07	55988	71606	1	179.0000	installment		338SKY	საბავშვო სკუტერი ხელის მოსაკიდით 338SKY
 2026-09	2026-09-07	56007	2160	1	429.0000	installment	MIDEA	MIDEA-VSS-P9-LITE	მტვერსასრუტი MIDEA VSS-P9-LITE
@@ -203,7 +197,6 @@ period	d	order_id	product_id	qty	sales	deal_type	brand	sku	product_name
 2026-09	2026-09-08	56284	3745	1	999.0000	installment	DREAME	AMF18A	თმის სტაილერი Styler Dreame AirStyle Pro Gold Titanium (AMF18A)
 2026-09	2026-09-08	56288	142259	1	1269.0000	installment	HONOR	174307	Mobile and Smartphones/ Honor/ Honor 600 Lite 8GB/256GB Dual Sim Velvet Black
 2026-09	2026-09-08	56290	649	1	1299.0000	installment	MIDEA	MIDEA-S8	რობოტი მტვერსასრუტი MIDEA S8+
-2026-09	2026-09-08	56306	38533	1	519.0000	installment	Canon	147712	პრინტერი Printer/ Ink/ Canon MFP PIXMA G3430, A4 11/6 ipm (Mono/Color), 4800х1200 dpi, Wi-Fi
 2026-09	2026-09-08	56334	41202	1	329.0000	installment	CASIO	AQ-230GA-9DHDF	Casio General Quartz Wristwatch Unisex/AQ-230GA-9DHDF
 2026-09	2026-09-08	56334	2558	1	229.0000	installment	CASIO	230A-7DHDF	საათი Casio General Quartz Wristwatch Unisex/AQ-230A-7DHDF
 2026-09	2026-09-08	56343	1086	1	709.0000	installment	MIDEA	MIDEA-MF01610US40-W	სარეცხი მანქანა MIDEA MF01610US40/W
@@ -223,7 +216,6 @@ period	d	order_id	product_id	qty	sales	deal_type	brand	sku	product_name
 2026-09	2026-09-08	56449	73036	1	189.0000	installment		624-SKY	ჭოჭინა Baby მუსიკალური 624-SKY
 2026-09	2026-09-08	56455	142303	1	1199.0000	installment	SAMSUNG	176264	Mobile and Smartphones/ Samsung/ Samsung A276B Galaxy A27 8GB/256GB 5G Duos Black
 2026-09	2026-09-08	56461	1102	1	729.0000	single	MIDEA	MIDEA-MP08GEBK-DS	მტვერსასრუტი MIDEA MP08GEBK-DS
-2026-09	2026-09-09	55922	1662	1	1349.0000	installment	HISENSE	HISENSE-55A7Q	ტელევიზორი HISENSE 55A7Q
 2026-09	2026-09-09	55945	942	1	879.0000	installment	MILLEN	MILLEN-FT6313MBZ-B	გაზქურა MILLEN FT6313MBZB
 2026-09	2026-09-09	55945	685	1	1059.0000	installment		Sofa-with-pouf	დივანი პუფით
 2026-09	2026-09-09	56063	427	1	759.0000	installment	MIDEA	MIDEA-JSG22-11VLS	გაზის წყლის გამაცხელებელი MIDEA JSG22-11VLS
@@ -305,7 +297,6 @@ period	d	order_id	product_id	qty	sales	deal_type	brand	sku	product_name
 2026-09	2026-09-11	56824	509	1	119.0000	installment	FRANKO	FRANKO-FTS-1223	ტოსტერი FRANKO FTS-1223
 2026-09	2026-09-11	56853	2517	1	219.0000	installment	CASIO	V007SG-9EUDF	საათი Casio Quartz Wristwatch /LTP-V007SG-9EUDF
 2026-09	2026-09-11	56853	2559	1	249.0000	installment	CASIO	VD01D-2BVUDF	საათი Casio Quartz Wristwatch / MTP-VD01D-2BVUDF
-2026-09	2026-09-11	56860	71308	1	209.0000	installment		8805-CER	ბავშვის ეტლი-ველოსიპედი 2-1 8805-CER
 2026-09	2026-09-11	56862	41544	1	260.0000	installment	KARCHER GEORGIA	KWD-1-W-V	მრავალფუნქციური მტვერსასრუტი Karcher KWD 1 W V-12/2/18
 2026-09	2026-09-11	56862	222	1	109.0000	installment	PHILIPS	PHILIPS-HC3505-15	თმის საკრეჭი PHILIPS HC3505/15
 2026-09	2026-09-11	56864	249	1	749.0000	installment	MIDEA	MIDEA-MF100W70	სარეცხის მანქანა MIDEA MF100W70
@@ -364,6 +355,7 @@ period	d	order_id	product_id	qty	sales	deal_type	brand	sku	product_name
 2026-09	2026-09-13	57079	68901	1	1669.0000	installment		ZOOM-039070	ელექტრო სკუტერი Segway Ninebot Kickscooter E3
 2026-09	2026-09-13	57162	3748	1	999.0000	installment	DREAME	PurpleAMF18A	თმის სტაილერი Styler Dreame AirStyle Pro Purple (AMF18A)
 2026-09	2026-09-13	57174	142298	1	779.0000	installment	SAMSUNG	169673	Mobile and Smartphones/ Samsung/ Samsung A175F Galaxy A17 8GB/256GB LTE Duos Black
+2026-09	2026-09-13	57180	826	1	919.0000	installment	NINJA	NINJA-AF500EU	აეროგრილი NINJA AF500EU
 2026-09	2026-09-13	57182	1185	1	1429.0000	installment	SAMSUNG	SAMSUNG-RB29FERNDSA-W-R	მაცივარი SAMSUNG RB29FERNDSA/WR
 2026-09	2026-09-13	57183	842	1	819.0000	installment	CHIGO	CHIGO-CWF704-G	სარეცხი მანქანა CHIGO CWF704G
 2026-09	2026-09-13	57201	20597	1	309.0000	installment		228774	აბაზანის ავეჯის კომპლექტი Layla 80 სმ
@@ -375,7 +367,6 @@ period	d	order_id	product_id	qty	sales	deal_type	brand	sku	product_name
 2026-09	2026-09-13	57232	434	1	1609.0000	installment	MIDEA	MIDEA-L1PB24-C28WM	ცენტრალური გათბობის ქვაბი MIDEA L1PB24-C28WM
 2026-09	2026-09-13	57245	1184	1	89.0000	installment	FRANKO	FRANKO-F-G-T-1207	ტოსტერი FRANKO FGT-1207
 2026-09	2026-09-13	57245	381	1	99.0000	installment	BRAUN	BRAUN-WK1100BK	ჩაიდანი BRAUN WK1100BK
-2026-09	2026-09-13	57246	39590	1	219.0000	installment	REMINGTON	161334	Hair Straighter/ Remington S6077 E51 ONE Straight & Curl Styler
 2026-09	2026-09-13	57259	142300	1	949.0000	installment	SAMSUNG	176263	Mobile and Smartphones/ Samsung/ Samsung A276B Galaxy A27 6GB/128GB 5G Duos Black
 2026-09	2026-09-13	57260	1086	1	709.0000	installment	MIDEA	MIDEA-MF01610US40-W	სარეცხი მანქანა MIDEA MF01610US40/W
 2026-09	2026-09-13	57264	39665	1	1299.0000	installment	HONOR	170318	Mobile and Smartphones/ Honor/ Honor X9d 12GB/256GB Midnight Black
@@ -388,5 +379,33 @@ period	d	order_id	product_id	qty	sales	deal_type	brand	sku	product_name
 2026-09	2026-09-13	57328	2271	1	699.0000	installment	DREAME	Dream-001	რობოტი მტვერსასრუტი Dreame Robot Vacuum F10 Black (RLF11SA)
 2026-09	2026-09-13	57329	2007	1	1019.0000	installment	MIDEA	MIDEA-MFA01W80B-W	სარეცხი მანქანა MIDEA MFA01W80B/W
 2026-09	2026-09-13	57339	1473	1	589.0000	installment	HISENSE	HISENSE-40A4Q	ტელევიზორი HISENSE 40A4Q
-2026-09	2026-09-13	57345	10683	1	709.0000	installment		36570	კომპლექტი ბაღის ავეჯის ნატურალური როტანგისგან BAHAMA მაგიდა დავანი 2 სავარძელი
 2026-09	2026-09-13	57382	1970	1	209.0000	installment	FRANKO	FRANKO-FDH-1065	ჩირის აპარატი FRANKO FDH-1065
+2026-09	2026-09-14	56607	45907	1	1669.0000	installment		Corner-sofa-3	კუთხის დივანი #3
+2026-09	2026-09-14	56972	921	1	869.0000	installment	NINJA	NINJA-SL400EU	აეროგრილი NINJA SL400EU
+2026-09	2026-09-14	57020	242	1	859.0000	installment	HISENSE	HISENSE-DB35DCUR-INOX	მაცივარი HISENSE DB35DCUR-INOX
+2026-09	2026-09-14	57179	19573	1	379.0000	installment		202187	საშხაპე კაბინა WAY 824S-90X90X195 სმ (4მმ)
+2026-09	2026-09-14	57187	42090	1	249.0000	installment	ARSHIA	EC278-3420	ჩოფერი ტიტანის ელექტრო ARSHIA EC278-3420 27232
+2026-09	2026-09-14	57187	137	1	229.0000	installment	FRANKO	FRANKO-FMX-1149	მიქსერი FRANKO FMX-1149
+2026-09	2026-09-14	57192	1597	1	1119.0000	installment	MIDEA	MIDEA-MFD60S160Si	ჭურჭლის სარეცხი მანქანა MIDEA MFD60S160Si
+2026-09	2026-09-14	57387	60114	1	369.0000	installment		INGAR-4	5 უჯრიანი კომოდი INGAR, მუხისფერი
+2026-09	2026-09-14	57387	1164	1	169.0000	installment	BEKO	BEKO-T-B-N-81808-B-X	ბლენდერი BEKO TBN 81808 BX
+2026-09	2026-09-14	57395	2554	1	219.0000	installment	CASIO	9BUDF	საათი Casio Quartz Wristwatch / LTP-V007SG-9BUDF
+2026-09	2026-09-14	57456	39665	1	1299.0000	installment	HONOR	170318	Mobile and Smartphones/ Honor/ Honor X9d 12GB/256GB Midnight Black
+2026-09	2026-09-14	57472	163554	1	1889.0000	installment	Lenovo	177071	Notebook/ Lenovo/ SMB/ Lenovo V15 G4 15.6'' FHD Ryzen 3 7320U 8GB 256GB SSD Radeon Graphics Black
+2026-09	2026-09-14	57489	142258	1	1269.0000	installment	HONOR	174309	Mobile and Smartphones/ Honor/ Honor 600 Lite 8GB/256GB Dual Sim Desert Gold
+2026-09	2026-09-14	57495	1473	1	749.0000	installment	HISENSE	HISENSE-40A4Q	ტელევიზორი HISENSE 40A4Q
+2026-09	2026-09-14	57500	243	1	1089.0000	installment	HISENSE	HISENSE-RS23WC-WHITE	საყინულე HISENSE RS23WC-WHITE
+2026-09	2026-09-14	57507	1059	1	609.0000	installment	MARAZZI	MARAZZI-C-F-218FS-S-W	საყინულე MARAZZI CF-218FS(SW)
+2026-09	2026-09-14	57508	164397	1	560.0000	installment	SAMSUNG	NA64H3010BK	ჩასაშენებელი ზედაპირი Samsung NA64H3010BK/WT
+2026-09	2026-09-14	57509	142260	1	1269.0000	installment	HONOR	174308	Mobile and Smartphones/ Honor/ Honor 600 Lite 8GB/256GB Dual Sim Velvet Grey
+2026-09	2026-09-14	57516	1108	1	279.0000	installment	BABYLISS	BABYLISS-AS136-E	ელექტრო სავარცხელი BABYLISS AS136E
+2026-09	2026-09-14	57517	19088	1	439.0000	installment		MAT011	მატრასი ღია ზამბარა ორქეჩიანი 160/200
+2026-09	2026-09-14	57525	3745	1	999.0000	installment	DREAME	AMF18A	თმის სტაილერი Styler Dreame AirStyle Pro Gold Titanium (AMF18A)
+2026-09	2026-09-14	57537	1974	1	1219.0000	installment	HISENSE	HISENSE-RS23WC-INOX	საყინულე HISENSE RS23WC-INOX
+2026-09	2026-09-14	57567	39665	1	1299.0000	installment	HONOR	170318	Mobile and Smartphones/ Honor/ Honor X9d 12GB/256GB Midnight Black
+2026-09	2026-09-14	57568	1151	1	319.0000	installment	BEKO	BEKO-MGC-20130-BB	მიკროტალღური ღუმელი BEKO MGC 20130 BB
+2026-09	2026-09-14	57571	1514	1	1399.0000	installment	BEKO	BEKO-B-L-55-U-H-D-9823-C	ტელევიზორი BEKO BL55 UHD 9823 C
+2026-09	2026-09-14	57572	1063	1	979.0000	installment	SHARK	SHARK-HD446E-U	თმის სტაილერი SHARK HD446EU
+2026-09	2026-09-14	57574	70302	1	565.0000	installment		FT-7188-C	 საბავშვო ელექტრო მანქანა G-Class FT-7188-C
+2026-09	2026-09-14	57579	1514	1	1399.0000	installment	BEKO	BEKO-B-L-55-U-H-D-9823-C	ტელევიზორი BEKO BL55 UHD 9823 C
+2026-09	2026-09-14	57581	39935	1	1669.0000	installment	DELONGHI	151033	Automatic Coffee Maker/ Delonghi  ECAM320.60.B Magnifica Plus
