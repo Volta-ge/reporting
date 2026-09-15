@@ -95,13 +95,16 @@ body{background:var(--page);color:var(--text-primary);font:14px/1.5 -apple-syste
 @media (max-width:700px){.live-load-banner{position:static;margin:8px 20px 0;width:fit-content}}
 .app-title{font-size:19px;font-weight:700;margin:0 0 2px}
 .app-sub{color:var(--text-muted);font-size:12.5px;margin:0 0 18px}
-.nav-groups{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:6px}
-.nav-group{background:var(--surface-1);border:1px solid var(--border);border-radius:10px;padding:10px 12px;min-width:200px}
+.nav-groups{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:6px}
+@media (max-width: 980px) { .nav-groups{grid-template-columns:repeat(3,1fr)} }
+@media (max-width: 700px) { .nav-groups{grid-template-columns:repeat(2,1fr)} }
+@media (max-width: 420px) { .nav-groups{grid-template-columns:1fr} }
+.nav-group{background:var(--surface-1);border:1px solid var(--border);border-radius:10px;padding:10px 12px;min-width:0}
 .nav-group.active-group{border-color:var(--series-a)}
 .nav-group-title{font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--text-muted);font-weight:700;margin-bottom:6px;display:flex;align-items:center;justify-content:space-between;gap:6px}
 .nav-group-items{display:flex;flex-direction:column;gap:2px}
-.nav-group-items button{text-align:left;background:none;border:none;font:inherit;font-size:12.5px;color:var(--text-secondary);padding:6px 8px;border-radius:6px;cursor:pointer}
-.nav-group-items button:hover{background:var(--surface-1)}
+.nav-group-items button,.nav-group-items a{text-align:left;background:none;border:none;font:inherit;font-size:12.5px;color:var(--text-secondary);padding:6px 8px;border-radius:6px;cursor:pointer;text-decoration:none;display:block}
+.nav-group-items button:hover,.nav-group-items a:hover{background:var(--surface-1)}
 .nav-group-items button.active{background:var(--series-a-soft);color:var(--series-a);font-weight:600}
 .nav-group-items button.soon{color:var(--text-muted);cursor:default;font-style:italic}
 .nav-group-items button.soon:hover{background:none}
@@ -284,7 +287,6 @@ table.sm-table tr.rpt-colhead td.sm-total-col { border-left: 2px solid var(--rpt
         <button data-page="brandanalyze">Brand Analyze</button>
         <button data-page="subcategoryanalyze">Subcategory Analyze</button>
         <button data-page="categorybrand">Category / Brand</button>
-        <button class="soon">Income/Delinq: Category, Subcategory, Brand, Product (soon)</button>
       </div>
     </div>
     <div class="nav-group">
@@ -326,6 +328,18 @@ table.sm-table tr.rpt-colhead td.sm-total-col { border-left: 2px solid var(--rpt
       <div class="nav-group-title">Portfolio</div>
       <div class="nav-group-items">
         <button data-page="portfolio">Portfolio Analyze</button>
+      </div>
+    </div>
+    <div class="nav-group">
+      <div class="nav-group-title">Finance</div>
+      <div class="nav-group-items">
+        <a href="https://volta-ge.github.io/reporting/finance.html" target="_blank" rel="noopener">Financial Statements</a>
+      </div>
+    </div>
+    <div class="nav-group">
+      <div class="nav-group-title">Accounting</div>
+      <div class="nav-group-items">
+        <a href="https://volta-ge.github.io/reporting/waybills-new.html" target="_blank" rel="noopener">RS.ge Reconciliation</a>
       </div>
     </div>
   </div>
@@ -1310,6 +1324,7 @@ window.__streamComplete = function () {
   document.querySelectorAll('.nav-group').forEach(function (navGroup) {
     var titleEl = navGroup.querySelector('.nav-group-title');
     if (!titleEl || titleEl.querySelector('.xlsx-download-btn')) return;
+    if (navButtonsOf(navGroup).length === 0) return;
     var btn = document.createElement('button');
     btn.type = 'button';
     btn.className = 'xlsx-download-btn';
