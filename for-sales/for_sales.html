@@ -1,0 +1,366 @@
+<meta charset="utf-8">
+<title>For Sales</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Georgian:wght@400;500;600;700;800&family=Noto+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#f4f4ef;
+    --surface:#ffffff;
+    --ink:#171724;
+    --muted:#68687a;
+    --line:#e0e0d9;
+    --navy:#1a1a34;
+    --navy-ink:#f2f2ee;
+    --lime:#a8d600;
+    --lime-ink:#1a1a34;
+    --good:#1f8a4c;
+    --good-soft:#e4f4e9;
+    --bad:#c9432f;
+    --bad-soft:#fbe8e5;
+    --warn:#b8790f;
+    --warn-soft:#f8ecd8;
+    --bar-track: #e7e7e0;
+    --shadow: 0 1px 2px rgba(23,23,36,.06), 0 8px 24px -12px rgba(23,23,36,.18);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --paper:#131320;
+      --surface:#1b1b2c;
+      --ink:#ededf2;
+      --muted:#9494a8;
+      --line:#31314a;
+      --navy:#0d0d1a;
+      --navy-ink:#f2f2ee;
+      --lime:#c2ff00;
+      --lime-ink:#12120c;
+      --good:#4cc785;
+      --good-soft:#173226;
+      --bad:#ff7a63;
+      --bad-soft:#3a1c17;
+      --warn:#e3ac4b;
+      --warn-soft:#392c14;
+      --bar-track:#282840;
+      --shadow: 0 1px 2px rgba(0,0,0,.4), 0 12px 28px -14px rgba(0,0,0,.6);
+    }
+  }
+  :root[data-theme="dark"]{
+    --paper:#131320;
+    --surface:#1b1b2c;
+    --ink:#ededf2;
+    --muted:#9494a8;
+    --line:#31314a;
+    --navy:#0d0d1a;
+    --navy-ink:#f2f2ee;
+    --lime:#c2ff00;
+    --lime-ink:#12120c;
+    --good:#4cc785;
+    --good-soft:#173226;
+    --bad:#ff7a63;
+    --bad-soft:#3a1c17;
+    --warn:#e3ac4b;
+    --warn-soft:#392c14;
+    --bar-track:#282840;
+    --shadow: 0 1px 2px rgba(0,0,0,.4), 0 12px 28px -14px rgba(0,0,0,.6);
+  }
+
+  *{box-sizing:border-box;}
+  body{
+    margin:0; background:var(--paper); color:var(--ink);
+    font-family:"Noto Sans Georgian","Noto Sans",system-ui,sans-serif;
+    padding: 0 20px 56px;
+  }
+  .wrap{ max-width: 980px; margin: 0 auto; }
+
+  header.top{
+    background:var(--navy); color:var(--navy-ink);
+    margin: 0 -20px 28px; padding: 28px 20px 22px;
+    border-bottom: 4px solid var(--lime);
+  }
+  header.top .inner{ max-width:980px; margin:0 auto; }
+  .eyebrow{
+    font-family:"IBM Plex Mono",monospace; font-size:11.5px; letter-spacing:.14em; text-transform:uppercase;
+    color:var(--lime); font-weight:600; margin:0 0 10px;
+  }
+  h1{
+    font-size: clamp(26px,4vw,34px); line-height:1.15; margin:0 0 8px; font-weight:800; text-wrap:balance;
+  }
+  .sub{ margin:0; color:#c8c8d4; font-size:14.5px; max-width:62ch; line-height:1.5; }
+  .stamp{
+    margin-top:16px; font-family:"IBM Plex Mono",monospace; font-size:11.5px; color:#9d9db0;
+    display:flex; gap:14px; flex-wrap:wrap;
+  }
+  .stamp b{ color:var(--navy-ink); font-weight:600; }
+
+  nav.tabs{
+    display:flex; gap:6px; background:var(--surface); border:1px solid var(--line);
+    border-radius:12px; padding:5px; margin-bottom:22px; box-shadow:var(--shadow);
+    overflow-x:auto;
+  }
+  nav.tabs button{
+    flex:1 1 0; min-width:max-content;
+    font-family:inherit; font-size:14px; font-weight:600; color:var(--muted);
+    background:transparent; border:none; border-radius:8px; padding:11px 14px; cursor:pointer;
+    display:flex; align-items:center; gap:8px; justify-content:center;
+    transition: background .15s ease, color .15s ease;
+  }
+  nav.tabs button .n{
+    font-family:"IBM Plex Mono",monospace; font-size:11px; font-weight:700;
+    background:var(--bar-track); color:var(--muted); border-radius:5px; padding:1px 6px;
+  }
+  nav.tabs button:hover{ background:var(--bar-track); color:var(--ink); }
+  nav.tabs button.active{ background:var(--navy); color:var(--navy-ink); }
+  nav.tabs button.active .n{ background:var(--lime); color:var(--lime-ink); }
+
+  section.page{ display:none; }
+  section.page.active{ display:block; animation: fade .25s ease; }
+  @keyframes fade{ from{opacity:0; transform:translateY(3px);} to{opacity:1; transform:none;} }
+
+  .page h2{ font-size:19px; margin:0 0 4px; font-weight:700; }
+  .page .desc{ margin:0 0 20px; color:var(--muted); font-size:13.5px; line-height:1.55; max-width:64ch; }
+
+  .kpis{ display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-bottom:10px; }
+  .kpi{
+    background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:16px 16px 14px;
+    box-shadow:var(--shadow);
+  }
+  .kpi .label{ font-size:11.5px; text-transform:uppercase; letter-spacing:.08em; color:var(--muted); font-weight:600; margin-bottom:8px; }
+  .kpi .value{ font-family:"IBM Plex Mono",monospace; font-size:30px; font-weight:600; font-variant-numeric:tabular-nums; line-height:1; }
+  .kpi .delta{ margin-top:8px; font-size:12.5px; color:var(--muted); font-family:"IBM Plex Mono",monospace; }
+  .kpi.partial .value::after{
+    content:"●"; font-size:9px; color:var(--warn); vertical-align:top; margin-left:6px; position:relative; top:5px;
+  }
+
+  .peak{
+    font-size:12.5px; color:var(--muted); margin:14px 0 22px; padding:10px 14px;
+    background:var(--surface); border:1px solid var(--line); border-radius:10px;
+    display:flex; gap:18px; flex-wrap:wrap;
+  }
+  .peak b{ color:var(--ink); font-family:"IBM Plex Mono",monospace; font-weight:600; }
+
+  .tablewrap{
+    background:var(--surface); border:1px solid var(--line); border-radius:12px; overflow:hidden; box-shadow:var(--shadow);
+  }
+  table{ width:100%; border-collapse:collapse; font-size:13.5px; }
+  thead th{
+    text-align:left; font-size:11px; text-transform:uppercase; letter-spacing:.06em; font-weight:700;
+    color:var(--muted); background:var(--paper); padding:10px 14px; border-bottom:1px solid var(--line);
+    position:sticky; top:0;
+  }
+  thead th.num, td.num{ text-align:right; }
+  tbody td{ padding:8px 14px; border-bottom:1px solid var(--line); color:var(--ink); background:var(--surface); vertical-align:middle; }
+  tbody tr:last-child td{ border-bottom:none; }
+  tbody tr.today td{ background:var(--good-soft); }
+  tbody tr.zero td.num{ color:var(--muted); }
+  td.num{ font-family:"IBM Plex Mono",monospace; font-variant-numeric:tabular-nums; font-weight:500; }
+  td.date{ white-space:nowrap; }
+  td.date .dow{ color:var(--muted); font-size:11.5px; margin-left:6px; }
+  .todaytag{
+    display:inline-block; margin-left:8px; font-family:"IBM Plex Mono",monospace; font-size:9.5px; font-weight:700;
+    letter-spacing:.05em; text-transform:uppercase; background:var(--warn-soft); color:var(--warn);
+    border-radius:4px; padding:1px 5px; position:relative; top:-1px;
+  }
+
+  .bar-cell{ width:150px; }
+  .bar-track{ height:8px; border-radius:4px; background:var(--bar-track); overflow:hidden; display:flex; }
+  .bar-fill{ height:100%; background:var(--lime); border-radius:4px; }
+  .bar-fill.seg-good{ background:var(--good); border-radius:0; }
+  .bar-fill.seg-bad{ background:var(--bad); border-radius:0; }
+  .bar-fill.seg-warn{ background:var(--warn); border-radius:0; }
+  .bar-track .seg-good:first-child{ border-radius:4px 0 0 4px; }
+  .bar-track .seg-good:only-child, .bar-track .seg-bad:only-child, .bar-track .seg-warn:only-child{ border-radius:4px; }
+
+  .legend{ display:flex; gap:16px; margin:14px 2px 0; font-size:12px; color:var(--muted); flex-wrap:wrap; }
+  .legend span{ display:inline-flex; align-items:center; gap:6px; }
+  .legend i{ width:9px; height:9px; border-radius:2px; display:inline-block; }
+  .legend i.good{ background:var(--good); } .legend i.bad{ background:var(--bad); } .legend i.warn{ background:var(--warn); }
+
+  footer.note{
+    margin-top:20px; font-size:12px; line-height:1.6; color:var(--muted);
+    background:var(--surface); border:1px solid var(--line); border-radius:10px; padding:12px 14px;
+  }
+  footer.note b{ color:var(--ink); }
+
+  @media (max-width:640px){
+    .kpis{ grid-template-columns:1fr; }
+    .bar-cell{ width:96px; }
+    thead th, tbody td{ padding:8px 9px; }
+  }
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div class="inner">
+      <p class="eyebrow">Volta &middot; CRM Application Pipeline</p>
+      <h1>განაცხადების ნაკადი დღეების მიხედვით</h1>
+      <p class="sub">სამი გვერდი, სამი კითხვა: რამდენი განაცხადი შემოვიდა, რამდენი გავიდა კომიტეტზე და რამდენმა დატოვა „ხელმოწერილია" სტატუსი — დღიური ჭრილით, 2026 წლის 1 სექტემბრიდან.</p>
+      <div class="stamp">
+        <span>წყარო: <b>VoltaStoreDB</b> (crm_activity_log)</span>
+        <span>მდგომარეობა: <b id="stampDate">&nbsp;</b></span>
+        <span>ტიპი: <b>ყოველდღე ავტომატურად განახლდება</b></span>
+      </div>
+    </div>
+  </header>
+
+  <nav class="tabs" id="tabs">
+    <button class="active" data-page="apps">განაცხადები <span class="n">1</span></button>
+    <button data-page="committee">კომიტეტზე გადასვლა <span class="n">2</span></button>
+    <button data-page="signed">ხელმოწერიდან გადასვლა <span class="n">3</span></button>
+  </nav>
+
+  <section class="page active" id="page-apps">
+    <h2>უნიკალური განაცხადები დღეების მიხედვით</h2>
+    <p class="desc">ყოველი ახალი შეკვეთა (<code>orders</code>) ითვლება ერთხელ, შექმნის დღის (<code>created_at</code>) მიხედვით — თითო განაცხადს თითო მწკრივი შეესაბამება.</p>
+    <div class="kpis" id="apps-kpis"></div>
+    <p class="peak" id="apps-peak"></p>
+    <div class="tablewrap"><table id="apps-table">
+      <thead><tr><th>თარიღი</th><th class="num">განაცხადი</th><th class="bar-cell"></th></tr></thead>
+      <tbody></tbody>
+    </table></div>
+  </section>
+
+  <section class="page" id="page-committee">
+    <h2>განაცხადები, რომლებიც კომიტეტზე გავიდა</h2>
+    <p class="desc">სტატუსის ცვლილება „კომიტეტზე გაგზავნა" (სტატუსი 8) სტატუსების ჟურნალიდან (<code>crm_activity_log</code>). ერთი განაცხადი დღეში ერთხელ ითვლება „განაცხადის" სვეტში, თუნდაც რამდენჯერმე დაუბრუნდეს კომიტეტს — მოვლენების საერთო რაოდენობა ცალკე სვეტშია.</p>
+    <div class="kpis" id="committee-kpis"></div>
+    <p class="peak" id="committee-peak"></p>
+    <div class="tablewrap"><table id="committee-table">
+      <thead><tr><th>თარიღი</th><th class="num">განაცხადი</th><th class="num">მოვლენა</th><th class="bar-cell"></th></tr></thead>
+      <tbody></tbody>
+    </table></div>
+  </section>
+
+  <section class="page" id="page-signed">
+    <h2>„ხელმოწერილია"-დან სხვა სტატუსში გადასული განაცხადები</h2>
+    <p class="desc">განაცხადები, რომლებმაც სტატუსი 11 („ხელმოწერილია") დატოვეს სხვა სტატუსისკენ, დანიშნულების მიხედვით: <b style="color:var(--good)">აქტიური</b> (ნორმალური აქტივაცია), <b style="color:var(--bad)">უარყოფილი</b>, <b style="color:var(--warn)">კლიენტმა თქვა უარი</b>.</p>
+    <div class="kpis" id="signed-kpis"></div>
+    <p class="peak" id="signed-peak"></p>
+    <div class="tablewrap"><table id="signed-table">
+      <thead><tr><th>თარიღი</th><th class="num">აქტიური</th><th class="num">უარყოფილი</th><th class="num">კლიენტის უარი</th><th class="num">სხვა</th><th class="num">სულ</th><th class="bar-cell"></th></tr></thead>
+      <tbody></tbody>
+    </table></div>
+    <div class="legend"><span><i class="good"></i>აქტიური</span><span><i class="bad"></i>უარყოფილი</span><span><i class="warn"></i>კლიენტის უარი</span></div>
+  </section>
+
+  <footer class="note">
+    <b>მონაცემთა შენიშვნა.</b> სტატუსის ცვლილებების რეალური ისტორია <code>crm_activity_log</code>-ში 2026 წლის 1 სექტემბრიდან იწყება (CRM-ის აქტივობის ჟურნალის ჩართვის თარიღი) — ამიტომ სამივე ცხრილი ამ დღიდან იწყება, შედარებადობისთვის. მწკრივი, რომელიც <span class="todaytag" style="top:0">დღეს</span>-ითაა მონიშნული, მიმდინარე დღის რიცხვია და გაიზრდება დღის ბოლომდე. თვითგადასვლები (ხელმოწერილიდან ისევ ხელმოწერილში) ცხრილი 3-დან გამორიცხულია, რადგან რეალურ სტატუსის ცვლილებას არ წარმოადგენს.
+  </footer>
+</div>
+
+<script>
+const APPS = [["2026-09-01",145],["2026-09-02",152],["2026-09-03",124],["2026-09-04",148],["2026-09-05",119],["2026-09-06",133],["2026-09-07",166],["2026-09-08",143],["2026-09-09",194],["2026-09-10",204],["2026-09-11",165],["2026-09-12",172],["2026-09-13",212],["2026-09-14",182],["2026-09-15",112]];
+const COMMITTEE = [["2026-09-01",28,31],["2026-09-02",78,83],["2026-09-03",57,59],["2026-09-04",62,68],["2026-09-05",58,66],["2026-09-06",0,0],["2026-09-07",91,96],["2026-09-08",83,90],["2026-09-09",99,106],["2026-09-10",85,90],["2026-09-11",85,89],["2026-09-12",56,61],["2026-09-13",77,90],["2026-09-14",93,97],["2026-09-15",29,35]];
+// [date, active(1), rejected(6), declined(12), other]
+const SIGNED = [["2026-09-01",0,0,0,0],["2026-09-02",3,0,0,0],["2026-09-03",22,0,0,0],["2026-09-04",29,0,0,0],["2026-09-05",32,0,0,0],["2026-09-06",0,0,0,0],["2026-09-07",29,0,0,0],["2026-09-08",40,0,0,0],["2026-09-09",33,1,0,0],["2026-09-10",28,0,0,0],["2026-09-11",24,0,1,0],["2026-09-12",26,0,0,0],["2026-09-13",34,0,0,0],["2026-09-14",31,0,3,0],["2026-09-15",11,0,0,0]];
+const TODAY = APPS[APPS.length-1][0];
+const DOW = ["კვ","ორშ","სამ","ოთხ","ხუთ","პარ","შაბ"];
+
+function fmtDate(iso){
+  const d = new Date(iso+"T00:00:00");
+  const months = ["იან","თებ","მარ","აპრ","მაი","ივნ","ივლ","აგვ","სექ","ოქტ","ნოე","დეკ"];
+  return `${d.getDate()} ${months[d.getMonth()]}`;
+}
+function dow(iso){ return DOW[new Date(iso+"T00:00:00").getDay()]; }
+function fmt(n){ return n.toLocaleString("en-US"); }
+
+function kpiBlock(container, arr, last7Label, partial){
+  const n = arr.length;
+  const todayVal = arr[n-1], yestVal = n>1 ? arr[n-2] : 0;
+  const last7 = arr.slice(-7).reduce((s,v)=>s+v,0);
+  const delta = yestVal === 0 ? null : Math.round((todayVal-yestVal)/yestVal*100);
+  container.innerHTML = `
+    <div class="kpi ${partial?'partial':''}">
+      <div class="label">დღეს (${fmtDate(TODAY)})</div>
+      <div class="value">${fmt(todayVal)}</div>
+      <div class="delta">${partial?'მიმდინარე დღე &mdash; არასრული':'&nbsp;'}</div>
+    </div>
+    <div class="kpi">
+      <div class="label">გუშინ</div>
+      <div class="value">${fmt(yestVal)}</div>
+      <div class="delta">${delta===null?'&nbsp;':(delta>=0?'&#9650; +':'&#9660; ')+delta+'% დღეს-გუშინ'}</div>
+    </div>
+    <div class="kpi">
+      <div class="label">${last7Label}</div>
+      <div class="value">${fmt(last7)}</div>
+      <div class="delta">საშუალო &asymp; ${fmt(Math.round(last7/Math.min(7,n)))} / დღეში</div>
+    </div>`;
+}
+document.getElementById("stampDate").textContent = fmtDate(TODAY) + ", " + TODAY.slice(0,4);
+
+function renderApps(){
+  const vals = APPS.map(r=>r[1]);
+  const max = Math.max(...vals);
+  const completed = APPS.slice(0,-1).length ? APPS.slice(0,-1) : APPS;
+  const peakDay = completed.reduce((a,b)=>b[1]>a[1]?b:a);
+  const lowDay = completed.reduce((a,b)=>b[1]<a[1]?b:a);
+  kpiBlock(document.getElementById("apps-kpis"), vals, "ბოლო 7 დღე (სულ)", true);
+  document.getElementById("apps-peak").innerHTML =
+    `პიკური დღე: <b>${fmt(peakDay[1])}</b> (${fmtDate(peakDay[0])}) &nbsp;&middot;&nbsp; ყველაზე მშვიდი დღე: <b>${fmt(lowDay[1])}</b> (${fmtDate(lowDay[0])})`;
+  const tb = document.querySelector("#apps-table tbody");
+  tb.innerHTML = APPS.map(([d,n])=>`
+    <tr class="${d===TODAY?'today':''} ${n===0?'zero':''}">
+      <td class="date">${fmtDate(d)}<span class="dow">${dow(d)}</span>${d===TODAY?'<span class="todaytag">დღეს</span>':''}</td>
+      <td class="num">${fmt(n)}</td>
+      <td class="bar-cell"><div class="bar-track"><div class="bar-fill" style="width:${max?Math.max(n/max*100,n>0?4:0):0}%"></div></div></td>
+    </tr>`).join("");
+}
+
+function renderCommittee(){
+  const vals = COMMITTEE.map(r=>r[1]);
+  const max = Math.max(...vals);
+  const completed = COMMITTEE.slice(0,-1).length ? COMMITTEE.slice(0,-1) : COMMITTEE;
+  const peakDay = completed.reduce((a,b)=>b[1]>a[1]?b:a);
+  const lowDay = completed.reduce((a,b)=>b[1]<a[1]?b:a);
+  kpiBlock(document.getElementById("committee-kpis"), vals, "ბოლო 7 დღე (სულ)", true);
+  document.getElementById("committee-peak").innerHTML =
+    `პიკური დღე: <b>${fmt(peakDay[1])}</b> (${fmtDate(peakDay[0])}) &nbsp;&middot;&nbsp; მინიმალური: <b>${fmt(lowDay[1])}</b> (${fmtDate(lowDay[0])}${lowDay[1]===0?', შაბათი':''})`;
+  const tb = document.querySelector("#committee-table tbody");
+  tb.innerHTML = COMMITTEE.map(([d,apps,ev])=>`
+    <tr class="${d===TODAY?'today':''} ${apps===0?'zero':''}">
+      <td class="date">${fmtDate(d)}<span class="dow">${dow(d)}</span>${d===TODAY?'<span class="todaytag">დღეს</span>':''}</td>
+      <td class="num">${fmt(apps)}</td>
+      <td class="num" style="color:var(--muted)">${fmt(ev)}</td>
+      <td class="bar-cell"><div class="bar-track"><div class="bar-fill" style="width:${max?Math.max(apps/max*100,apps>0?4:0):0}%"></div></div></td>
+    </tr>`).join("");
+}
+
+function renderSigned(){
+  const totals = SIGNED.map(r=>r[1]+r[2]+r[3]+r[4]);
+  const max = Math.max(...totals);
+  const completedTotals = totals.slice(0,-1).length ? totals.slice(0,-1) : totals;
+  const completedDays = totals.slice(0,-1).length ? SIGNED.slice(0,-1) : SIGNED;
+  let peakIdx=0; completedTotals.forEach((v,i)=>{ if(v>completedTotals[peakIdx]) peakIdx=i; });
+  kpiBlock(document.getElementById("signed-kpis"), totals, "ბოლო 7 დღე (სულ)", true);
+  document.getElementById("signed-peak").innerHTML =
+    `პიკური დღე: <b>${fmt(completedTotals[peakIdx])}</b> (${fmtDate(completedDays[peakIdx][0])}) &nbsp;&middot;&nbsp; აქედან <b>${fmt(SIGNED.reduce((s,r)=>s+r[1],0))}</b> გახდა აქტიური მთლიან პერიოდში`;
+  const tb = document.querySelector("#signed-table tbody");
+  tb.innerHTML = SIGNED.map(([d,a,r,c,o])=>{
+    const t = a+r+c+o;
+    const segs = [];
+    if(a) segs.push(`<div class="bar-fill seg-good" style="width:${t?a/t*100:0}%"></div>`);
+    if(r) segs.push(`<div class="bar-fill seg-bad" style="width:${t?r/t*100:0}%"></div>`);
+    if(c) segs.push(`<div class="bar-fill seg-warn" style="width:${t?c/t*100:0}%"></div>`);
+    if(o) segs.push(`<div class="bar-fill" style="width:${t?o/t*100:0}%;border-radius:0;background:var(--muted)"></div>`);
+    const barWidth = max?Math.max(t/max*100, t>0?4:0):0;
+    return `
+    <tr class="${d===TODAY?'today':''} ${t===0?'zero':''}">
+      <td class="date">${fmtDate(d)}<span class="dow">${dow(d)}</span>${d===TODAY?'<span class="todaytag">დღეს</span>':''}</td>
+      <td class="num" style="color:var(--good)">${a?fmt(a):'&ndash;'}</td>
+      <td class="num" style="color:var(--bad)">${r?fmt(r):'&ndash;'}</td>
+      <td class="num" style="color:var(--warn)">${c?fmt(c):'&ndash;'}</td>
+      <td class="num" style="color:var(--muted)">${o?fmt(o):'&ndash;'}</td>
+      <td class="num" style="font-weight:700">${fmt(t)}</td>
+      <td class="bar-cell"><div class="bar-track" style="width:${barWidth}%">${segs.join("")}</div></td>
+    </tr>`;
+  }).join("");
+}
+
+renderApps(); renderCommittee(); renderSigned();
+
+document.getElementById("tabs").addEventListener("click", e=>{
+  const btn = e.target.closest("button[data-page]");
+  if(!btn) return;
+  document.querySelectorAll("nav.tabs button").forEach(b=>b.classList.toggle("active", b===btn));
+  document.querySelectorAll("section.page").forEach(s=>s.classList.toggle("active", s.id==="page-"+btn.dataset.page));
+});
+</script>
