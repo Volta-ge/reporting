@@ -1,0 +1,291 @@
+// Builds a STANDALONE Ad Channels page (Meta Ads / Google Ads / GA4 website traffic), separate from the main
+// Volta_Analytics_New DB dashboard artifact. The user wants this as its own artifact for now; a link gets added
+// to the Marketing nav group of the main dashboard later, on request (see README's Marketing > Ad Channels section
+// for the credentials/refresh notes -- unchanged, same channels_*.tsv inputs from `python pull_channels.py`).
+// Reuses the exact same CSS classes/colors/render logic as the main dashboard's logi-table/logi-mini tables so it
+// looks identical once it does become a tab there.
+const fs = require('fs');
+const path = require('path');
+const GA4_PROPERTY_ID = '369140604';
+
+function parseTsv(file) {
+  let c = fs.readFileSync(path.join(__dirname, file), 'utf8');
+  if (c.charCodeAt(0) === 0xFEFF) c = c.slice(1);
+  const lines = c.split(/\r?\n/).filter(l => l.length);
+  if (!lines.length) return [];
+  const header = lines[0].split('\t');
+  return lines.slice(1).map(line => { const cols = line.split('\t'); const o = {}; header.forEach((h, i) => o[h] = cols[i]); return o; });
+}
+const num = v => (v === '' || v === 'NULL' || v === undefined) ? 0 : +v;
+const info = JSON.parse(fs.readFileSync(path.join(__dirname, 'channels_info.json'), 'utf8'));
+const END = info.end;
+
+const DAY_WINDOW = 30;
+function addDays(d, n) { const dt = new Date(d + 'T00:00:00Z'); dt.setUTCDate(dt.getUTCDate() + n); return dt.toISOString().slice(0, 10); }
+const days = Array.from({ length: DAY_WINDOW }, (_, i) => addDays(END, i - (DAY_WINDOW - 1)));
+const firstMonth = '2026-01';
+function monthsBetween(a, b) {
+  const out = []; let y = +a.slice(0, 4), m = +a.slice(5, 7); const endY = +b.slice(0, 4), endM = +b.slice(5, 7);
+  while (y < endY || (y === endY && m <= endM)) { out.push(String(y) + '-' + String(m).padStart(2, '0')); m++; if (m > 12) { m = 1; y++; } }
+  return out;
+}
+const months = monthsBetween(firstMonth, END);
+const last7 = vals => vals.slice(-7).reduce((a, b) => a + b, 0);
+const total = vals => vals.reduce((a, b) => a + b, 0);
+
+function toMap(rows, valueCols) {
+  const m = {};
+  for (const r of rows) { const o = {}; valueCols.forEach(c => o[c] = num(r[c])); m[r.d] = o; }
+  return m;
+}
+function seriesFromMap(map, col, cols) { return cols.map(d => (map[d] ? map[d][col] : 0)); }
+function monthSums(map, col, allDays) {
+  return months.map(mo => allDays.filter(d => d.slice(0, 7) === mo).reduce((t, d) => t + ((map[d] ? map[d][col] : 0)), 0));
+}
+function fullDaySpan(start, end) { const out = []; let d = start; while (d <= end) { out.push(d); d = addDays(d, 1); } return out; }
+const fullDays = fullDaySpan('2026-01-01', END);
+
+function pack(baseDefs, deriveDefs, map) {
+  function build(colsFn) {
+    const baseVals = {}; baseDefs.forEach(b => baseVals[b.key] = colsFn(b.col));
+    const rows = baseDefs.map(b => ({ label: b.label, fmt: b.fmt, vals: baseVals[b.key] }));
+    const n = baseVals[baseDefs[0].key].length;
+    deriveDefs.forEach(d => {
+      const vals = Array.from({ length: n }, (_, i) => { const o = {}; baseDefs.forEach(b => o[b.key] = baseVals[b.key][i]); return d.fn(o); });
+      rows.push({ label: d.label, fmt: d.fmt, vals });
+    });
+    return rows;
+  }
+  const dayRows = build(col => seriesFromMap(map, col, days));
+  const monthRows = build(col => monthSums(map, col, fullDays));
+  const withEx = (rows, isDay) => rows.map(r => ({ ...r, ex: isDay ? { label: 'Last 7 days', v: last7(r.vals) } : { label: 'Total', v: total(r.vals) } }));
+  return { day: withEx(dayRows, true), month: withEx(monthRows, false) };
+}
+
+const metaMap = toMap(parseTsv('channels_meta_daily.tsv'), ['spend', 'impressions', 'clicks']);
+const meta = pack(
+  [{ key: 'spend', col: 'spend', label: 'Spend', fmt: 'money' }, { key: 'impressions', col: 'impressions', label: 'Impressions', fmt: 'int' }, { key: 'clicks', col: 'clicks', label: 'Clicks', fmt: 'int' }],
+  [{ key: 'ctr', label: 'CTR', fmt: 'pct', fn: o => o.impressions ? o.clicks / o.impressions : 0 },
+   { key: 'cpc', label: 'CPC', fmt: 'money', fn: o => o.clicks ? o.spend / o.clicks : 0 }],
+  metaMap
+);
+const metaCampaigns = parseTsv('channels_meta_campaigns.tsv').map(r => ({ name: r.name, status: r.status, spend: num(r.spend), impressions: num(r.impressions), clicks: num(r.clicks) }));
+
+const gadsMap = toMap(parseTsv('channels_gads_daily.tsv'), ['cost', 'impressions', 'clicks', 'conversions']);
+const gads = pack(
+  [{ key: 'cost', col: 'cost', label: 'Cost', fmt: 'money' }, { key: 'impressions', col: 'impressions', label: 'Impressions', fmt: 'int' }, { key: 'clicks', col: 'clicks', label: 'Clicks', fmt: 'int' }, { key: 'conversions', col: 'conversions', label: 'Conversions', fmt: 'dec1' }],
+  [{ key: 'ctr', label: 'CTR', fmt: 'pct', fn: o => o.impressions ? o.clicks / o.impressions : 0 },
+   { key: 'cpc', label: 'CPC', fmt: 'money', fn: o => o.clicks ? o.cost / o.clicks : 0 },
+   { key: 'cpa', label: 'Cost / Conversion', fmt: 'money', fn: o => o.conversions ? o.cost / o.conversions : 0 }],
+  gadsMap
+);
+const gadsCampaigns = parseTsv('channels_gads_campaigns.tsv').map(r => ({ name: r.name, status: r.status, spend: num(r.cost), impressions: num(r.impressions), clicks: num(r.clicks) }));
+
+const ga4Map = toMap(parseTsv('channels_ga4_daily.tsv'), ['sessions', 'users', 'conversions']);
+const ga4 = pack(
+  [{ key: 'sessions', col: 'sessions', label: 'Sessions', fmt: 'int' }, { key: 'users', col: 'users', label: 'Users', fmt: 'int' }, { key: 'conversions', col: 'conversions', label: 'Conversions', fmt: 'int' }],
+  [{ key: 'convrate', label: 'Conversion rate', fmt: 'pct', fn: o => o.sessions ? o.conversions / o.sessions : 0 }],
+  ga4Map
+);
+
+const payload = { info, dayStart: days[0], days, months, end: END, meta, metaCampaigns, gads, gadsCampaigns, ga4, generatedAt: new Date().toISOString().slice(0, 16).replace('T', ' ') + ' UTC' };
+fs.writeFileSync(path.join(__dirname, 'channels_data.json'), JSON.stringify(payload));
+console.log('meta MTD spend:', meta.month.find(r => r.label === 'Spend').vals.at(-1), '| gads MTD cost:', gads.month.find(r => r.label === 'Cost').vals.at(-1), '| ga4 MTD sessions:', ga4.month.find(r => r.label === 'Sessions').vals.at(-1));
+
+// ---------------- standalone HTML ----------------
+const html = `<meta charset="utf-8">
+<title>Volta &mdash; Marketing: Ad Channels</title>
+<style>
+:root{
+  color-scheme: light;
+  --surface-1:      #fcfcfb;
+  --page:           #f9f9f7;
+  --text-primary:   #0b0b0b;
+  --text-secondary: #52514e;
+  --text-muted:     #898781;
+  --border:         rgba(11,11,11,0.10);
+  --series-a:       #2a78d6;
+  --warning:        #fab219;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --surface-1:      #1a1a19;
+    --page:           #0d0d0d;
+    --text-primary:   #ffffff;
+    --text-secondary: #c3c2b7;
+    --text-muted:     #898781;
+    --border:         rgba(255,255,255,0.10);
+    --series-a:       #3987e5;
+    --warning:        #fab219;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --surface-1:      #1a1a19;
+  --page:           #0d0d0d;
+  --text-primary:   #ffffff;
+  --text-secondary: #c3c2b7;
+  --text-muted:     #898781;
+  --border:         rgba(255,255,255,0.10);
+  --series-a:       #3987e5;
+  --warning:        #fab219;
+}
+*{box-sizing:border-box}
+body{background:var(--page);color:var(--text-primary);font:14px/1.5 -apple-system,BlinkMacSystemFont,"Noto Sans Georgian",sans-serif;margin:0;padding:0}
+.wrap{max-width:1180px;margin:0 auto;padding:24px 20px 60px}
+.app-title{font-size:19px;font-weight:700;margin:0 0 2px}
+.app-sub{color:var(--text-muted);font-size:12.5px;margin:0 0 18px}
+.section-title{font-size:15px;font-weight:700;margin:0 0 4px}
+.note{color:var(--text-muted);font-size:12px;margin:0 0 14px}
+.banner{background:var(--surface-1);border:1px solid var(--border);border-left:3px solid var(--warning);border-radius:8px;padding:12px 16px;font-size:12.5px;color:var(--text-secondary);margin-bottom:18px;line-height:1.6}
+.banner b{color:var(--text-primary)}
+.report-card{background:var(--surface-1);border:1px solid var(--border);border-radius:12px;overflow:hidden}
+.report-scroll{overflow-x:auto}
+.report-scroll-top{overflow-x:auto;overflow-y:hidden;height:14px;margin-bottom:-1px}
+.report-scroll-top>div{height:1px}
+.table-card{background:var(--surface-1);border:1px solid var(--border);border-radius:12px;overflow:hidden}
+.logi-group{border:2px solid #1a1a34;border-radius:12px;padding:10px;display:flex;flex-direction:column;gap:12px;background:var(--surface-1);margin:6px 0 14px}
+.logi-group-title{background:#1a1a34;color:#c2ff00;font-weight:700;font-size:13px;padding:7px 12px;border-radius:8px}
+.logi-open-title{color:var(--text-primary);font-weight:700;font-size:13px;margin:4px 0 -6px}
+table.logi-table{border-collapse:collapse;font-size:11.5px;table-layout:auto;width:100%}
+table.logi-table td{padding:5px 8px;border:1px solid #d4d4de;text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap;color:#1a1a34;background:#fff}
+table.logi-table td:first-child{text-align:left;font-variant-numeric:normal;position:sticky;left:0;z-index:2;box-shadow:1px 0 0 #d4d4de}
+table.logi-table tr.logi-head td{background:#2b2b4f;color:#fff;font-weight:700;border-color:#2b2b4f}
+table.logi-table tr.logi-light td{background:#f5ffd6;color:#1a1a34}
+table.logi-table tr.logi-white td{background:#fff;color:#1a1a34}
+table.logi-mini{border-collapse:collapse;font-size:12px;width:100%}
+table.logi-mini td{padding:7px 10px;border:none;border-bottom:1px solid #e3e3ea;text-align:right;font-variant-numeric:tabular-nums}
+table.logi-mini td:first-child{text-align:left;font-variant-numeric:normal}
+table.logi-mini tr.logi-mini-title td{background:#1a1a34;color:#c2ff00;font-weight:700;text-align:left}
+table.logi-mini tr.logi-mini-head td{background:#2b2b4f;color:#fff;font-weight:700}
+table.logi-mini tr.logi-mini-data td{color:#3a3a55;background:#fff}
+table.logi-mini tr.logi-mini-data td:first-child{color:#1a1a34}
+table.logi-mini tr.logi-mini-data.logi-mini-alt td{background:#f5ffd6}
+table.logi-extra{font-style:italic}
+table.logi-table td.logi-extra-first{border-left:3px solid #1a1a34}
+.page-nav{display:inline-flex;background:var(--surface-1);border:1px solid var(--border);border-radius:8px;padding:3px;gap:2px;margin-bottom:14px}
+.page-nav button{border:none;background:transparent;color:var(--text-secondary);font:inherit;font-size:13px;font-weight:600;padding:7px 16px;border-radius:6px;cursor:pointer}
+.page-nav button.active{background:var(--text-primary);color:var(--surface-1)}
+.chan-tab{display:none}
+.chan-tab.active{display:block}
+</style>
+
+<div class="wrap">
+  <div class="app-title">Volta &mdash; Marketing: Ad Channels</div>
+  <p class="app-sub">Meta Ads, Google Ads and website traffic (GA4), pulled directly from each platform's API.</p>
+  <div class="banner" id="chanBanner"></div>
+
+  <div class="page-nav" id="chanTabNav">
+    <button data-tab="meta" class="active">Meta Ads</button>
+    <button data-tab="gads">Google Ads</button>
+    <button data-tab="ga4">Website Traffic</button>
+  </div>
+
+  <div class="chan-tab active" data-tab="meta">
+    <div class="logi-group">
+      <div class="logi-group-title">Meta Ads (Facebook / Instagram)</div>
+      <div class="report-card"><div class="report-scroll-top" id="chanMetaDayScrollTop"><div></div></div><div class="report-scroll" id="chanMetaDayScrollBody"><table class="logi-table" id="chanMetaDayTable"><tbody></tbody></table></div></div>
+      <div class="report-card"><div class="report-scroll-top" id="chanMetaMonthScrollTop"><div></div></div><div class="report-scroll" id="chanMetaMonthScrollBody"><table class="logi-table" id="chanMetaMonthTable"><tbody></tbody></table></div></div>
+    </div>
+    <div class="table-card"><table class="logi-mini" id="chanMetaCampTable"><colgroup><col style="width:40%"></colgroup><tbody></tbody></table></div>
+  </div>
+
+  <div class="chan-tab" data-tab="gads">
+    <div class="logi-group">
+      <div class="logi-group-title">Google Ads</div>
+      <div class="report-card"><div class="report-scroll-top" id="chanGadsDayScrollTop"><div></div></div><div class="report-scroll" id="chanGadsDayScrollBody"><table class="logi-table" id="chanGadsDayTable"><tbody></tbody></table></div></div>
+      <div class="report-card"><div class="report-scroll-top" id="chanGadsMonthScrollTop"><div></div></div><div class="report-scroll" id="chanGadsMonthScrollBody"><table class="logi-table" id="chanGadsMonthTable"><tbody></tbody></table></div></div>
+    </div>
+    <div class="table-card"><table class="logi-mini" id="chanGadsCampTable"><colgroup><col style="width:40%"></colgroup><tbody></tbody></table></div>
+  </div>
+
+  <div class="chan-tab" data-tab="ga4">
+    <div class="logi-group">
+      <div class="logi-group-title">Website Traffic (Google Analytics 4)</div>
+      <div class="report-card"><div class="report-scroll-top" id="chanGa4DayScrollTop"><div></div></div><div class="report-scroll" id="chanGa4DayScrollBody"><table class="logi-table" id="chanGa4DayTable"><tbody></tbody></table></div></div>
+      <div class="report-card"><div class="report-scroll-top" id="chanGa4MonthScrollTop"><div></div></div><div class="report-scroll" id="chanGa4MonthScrollBody"><table class="logi-table" id="chanGa4MonthTable"><tbody></tbody></table></div></div>
+    </div>
+    <p class="note">Sessions/Users/Conversions cover all traffic to the site (every channel, not only paid), from GA4 property ${GA4_PROPERTY_ID}. Conversions = GA4 key events.</p>
+  </div>
+</div>
+
+<script>
+var CHANNELS_JSON = ${JSON.stringify(payload)};
+(function () {
+  var DASH = '\\u2013';
+  var MONTH_NAMES = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  function fmt(n) { return (n === null || n === undefined) ? DASH : Math.round(n).toLocaleString('en-US'); }
+  function pct(n) { return (n === null || n === undefined) ? DASH : (n*100).toLocaleString('en-US', { maximumFractionDigits: 1 }) + '%'; }
+  function setupTopScrollSync(topId, bodyId) {
+    var top = document.getElementById(topId), body = document.getElementById(bodyId);
+    if (!top || !body) return function(){};
+    function sync() {
+      var table = body.querySelector('table');
+      top.firstElementChild.style.width = (table ? table.scrollWidth : 0) + 'px';
+    }
+    top.addEventListener('scroll', function () { body.scrollLeft = top.scrollLeft; });
+    body.addEventListener('scroll', function () { top.scrollLeft = body.scrollLeft; });
+    sync();
+    return sync;
+  }
+
+  var C = CHANNELS_JSON;
+  var dayLabelC = function (d) { var p = d.split('-').map(Number); return MONTH_NAMES[p[1] - 1] + ' ' + p[2]; };
+  var monthLabelC = function (m) { return MONTH_NAMES[Number(m.slice(5, 7)) - 1] + ' ' + m.slice(0, 4); };
+  document.getElementById('chanBanner').innerHTML = '<b>Source:</b> Meta Marketing API (' + C.info.meta.account + ', ' + C.info.meta.currency + '), Google Ads API (' + C.info.gads.account + ', ' + C.info.gads.currency + ') and GA4 Data API (property ${GA4_PROPERTY_ID}). Day tables: last 30 days through ' + C.end + '; month tables: ' + monthLabelC(C.months[0]) + ' through the current month (MTD). Updated ' + C.generatedAt + '.';
+
+  function fmtRow(v, kind) {
+    if (v === null || v === undefined) return DASH;
+    if (kind === 'money') return '$' + v.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    if (kind === 'pct') return pct(v);
+    if (kind === 'dec1') return v.toLocaleString('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+    return fmt(v);
+  }
+  function rowHtml(cls, r) {
+    var exCell = r.fmt === 'pct' ? DASH : fmtRow(r.ex.v, r.fmt);
+    return '<tr class="' + cls + '"><td>' + r.label + '</td>' + r.vals.map(function (v) { return '<td>' + fmtRow(v, r.fmt) + '</td>'; }).join('')
+      + '<td class="logi-extra logi-extra-first">' + exCell + '</td></tr>';
+  }
+  function render(id, rows, isDay) {
+    var cols = isDay ? C.days : C.months, n = cols.length;
+    var heads = cols.map(function (c, i) { return '<td>' + (isDay ? dayLabelC(c) + (i === n - 1 ? ' (today)' : '') : monthLabelC(c) + (i === n - 1 ? ' (MTD)' : '')) + '</td>'; }).join('');
+    var exHead = isDay ? 'Last 7 days' : 'Total';
+    var h = '<tr class="logi-head"><td>Metric</td>' + heads + '<td class="logi-extra logi-extra-first">' + exHead + '</td></tr>';
+    rows.forEach(function (r, i) { h += rowHtml((i % 2) ? 'logi-light' : 'logi-white', r); });
+    document.getElementById(id + 'Table').querySelector('tbody').innerHTML = h;
+  }
+  render('chanMetaDay', C.meta.day, true); render('chanMetaMonth', C.meta.month, false);
+  render('chanGadsDay', C.gads.day, true); render('chanGadsMonth', C.gads.month, false);
+  render('chanGa4Day', C.ga4.day, true); render('chanGa4Month', C.ga4.month, false);
+  var syncFns = {
+    meta: ['chanMetaDay', 'chanMetaMonth'].map(function (id) { return setupTopScrollSync(id + 'ScrollTop', id + 'ScrollBody'); }),
+    gads: ['chanGadsDay', 'chanGadsMonth'].map(function (id) { return setupTopScrollSync(id + 'ScrollTop', id + 'ScrollBody'); }),
+    ga4: ['chanGa4Day', 'chanGa4Month'].map(function (id) { return setupTopScrollSync(id + 'ScrollTop', id + 'ScrollBody'); })
+  };
+  document.getElementById('chanTabNav').addEventListener('click', function (e) {
+    var btn = e.target.closest('button[data-tab]');
+    if (!btn) return;
+    document.querySelectorAll('#chanTabNav button').forEach(function (b) { b.classList.remove('active'); });
+    btn.classList.add('active');
+    document.querySelectorAll('.chan-tab').forEach(function (t) { t.classList.remove('active'); });
+    document.querySelector('.chan-tab[data-tab="' + btn.dataset.tab + '"]').classList.add('active');
+    // tables inside an inactive tab are display:none, so their scrollWidth was 0 at the initial sync() call
+    (syncFns[btn.dataset.tab] || []).forEach(function (fn) { fn(); });
+  });
+
+  function renderCamp(id, rows) {
+    var h = '<tr class="logi-mini-title"><td colspan="5">Top campaigns &mdash; last 30 days</td></tr>';
+    h += '<tr class="logi-mini-head"><td>Campaign</td><td>Status</td><td>Spend</td><td>Impressions</td><td>Clicks</td></tr>';
+    rows.forEach(function (r, i) {
+      h += '<tr class="logi-mini-data' + (i % 2 ? ' logi-mini-alt' : '') + '"><td>' + r.name + '</td><td>' + r.status + '</td><td>$' + r.spend.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + '</td><td>' + fmt(r.impressions) + '</td><td>' + fmt(r.clicks) + '</td></tr>';
+    });
+    document.getElementById(id + 'Table').querySelector('tbody').innerHTML = h;
+  }
+  renderCamp('chanMetaCamp', C.metaCampaigns);
+  renderCamp('chanGadsCamp', C.gadsCampaigns);
+})();
+</script>
+`;
+fs.writeFileSync(path.join(__dirname, 'ad_channels_standalone.html'), html);
+console.log('wrote ad_channels_standalone.html,', html.length, 'chars');

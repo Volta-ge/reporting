@@ -21,3 +21,10 @@ php_ops_data.json
 php_coll_data.json
 php_pf_data.json
 php_cust_data.json
+channels_data.json
+channels_info.json
+channels_meta_daily.tsv
+channels_meta_campaigns.tsv
+channels_gads_daily.tsv
+channels_gads_campaigns.tsv
+channels_ga4_daily.tsv

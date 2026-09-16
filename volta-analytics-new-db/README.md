@@ -89,6 +89,7 @@ Excel export of Logistics Daily: `node build_logistics_xlsx.js`, then the same w
 | `build_sales.js`, `patch_sales_tabs.js` | Sales Analyze reports (JS port of `FunnelRepository`'s bucketed reports + `ProductClassifier`) and injection |
 | `build_daily_mail_xlsx.js`, `build_logistics_xlsx.js`, `write_daily_mail_xlsx.ps1` | Excel exports (Daily Mail / Logistics Daily); the .ps1 is the shared Excel-COM writer |
 | `old_*.tsv`, `new_*.tsv`, `logi_*.tsv`, `mkt_*.tsv`, `ops_*.tsv`, `cust_*.tsv`, `coll_*.tsv`, `pf_*.tsv` | inputs, all written by `pull_new.sh` |
+| `pull_channels.py`, `build_channels.js` | Marketing → Ad Channels (Meta/Google Ads/GA4 external APIs, not VoltaStoreDB) — separate pipeline, own `channels_*.tsv` inputs |
 | `src/NewDbReport.php` | six PHP classes in one file (`NewDbReport` + `NewDbMkt`/`NewDbOps`/`NewDbCust`/`NewDbColl`/`NewDbPf`), the live twin of the Node build above |
 
 ## Operations — Applications / Committee
@@ -148,6 +149,31 @@ total and its share). All counts are flows keyed to the lead's creation day (`DA
 
 Refresh: `bash pull_new.sh` then `node build_logistics.js` (both run every group; the Marketing section takes
 ≈40 s and writes daily aggregates only, no PII in the TSVs). Idempotent — re-injects the page, CSS and render code each run.
+
+## Marketing → Ad Channels
+
+External marketing-channel performance (not VoltaStoreDB): Meta Marketing API, Google Ads API, GA4 Data API.
+Sub-tab `Ad Channels` (`data-page="adchannels"`, data `CHANNELS_JSON`), right after Leads in the Marketing nav
+group. Credentials come from the marketing team's handoff and live OUTSIDE this repo, at
+`D:\all\volta\Marketing\Meta_Google Ads\` (Meta system-user token, a Google service-account JSON key used for
+both Google Ads and GA4 — Google Ads no longer needs a separate developer token, see the note below) — never
+copy them into the repo.
+
+- **Meta Ads** — Spend/Impressions/Clicks (+derived CTR/CPC), account `act_1466725951457412`.
+- **Google Ads** — Cost/Impressions/Clicks/Conversions (+derived CTR/CPC/Cost per Conversion), customer
+  `4580124546`. As of the Sep 9 2026 API-wide sunset of developer tokens, access is granted to the Google Cloud
+  project itself (`volta-508613`, currently at the "Explorer" access level — 2,880 ops/day on production
+  accounts, plenty for a daily pull); the `developer-token` request header is sent empty and ignored server-side.
+- **Website Traffic (GA4)** — Sessions/Users/Conversions (+derived conversion rate), property `369140604`.
+- Each also has a **Top campaigns — last 30 days** mini table (Meta and Google Ads only; GA4 has no campaign concept).
+
+Day tables: last 30 days through yesterday. Month tables: Jan 2026 → current month (MTD) — Meta/Google Ads show
+0 for months before their first real campaign spend (Feb / May 2026 respectively); GA4 has full-year data.
+
+Refresh: `python pull_channels.py` (writes `channels_*.tsv` + `channels_info.json`, gitignored) then
+`node build_channels.js` (writes gitignored `channels_data.json`, injects `CHANNELS_JSON` + re-injects the page
+and render code — idempotent, same pattern as `build_logistics.js`). TikTok Ads was requested by the user but no
+credentials have been provided yet — add a fourth `logi-group` the same way once they arrive.
 
 ## Portfolio → Portfolio Analyze
 
