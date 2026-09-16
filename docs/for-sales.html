@@ -190,9 +190,23 @@
     .bar-cell{ width:96px; }
     thead th, tbody td{ padding:8px 9px; }
   }
+  .theme-toggle-btn{position:fixed;top:16px;right:16px;z-index:1000;width:34px;height:34px;border-radius:50%;border:1px solid var(--line);background:var(--surface);color:var(--muted);display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;box-shadow:var(--shadow)}
+  .theme-toggle-btn:hover{color:var(--ink);border-color:var(--muted)}
+  .theme-toggle-btn svg{width:18px;height:18px}
+  @media (max-width:700px){.theme-toggle-btn{top:10px;right:10px;width:30px;height:30px}.theme-toggle-btn svg{width:16px;height:16px}}
 </style>
 </head>
 <body>
+
+<script>
+(function () {
+  try {
+    var t = localStorage.getItem('voltaTheme');
+    if (t === 'dark' || t === 'light') document.documentElement.setAttribute('data-theme', t);
+  } catch (e) {}
+})();
+</script>
+<button id="themeToggle" class="theme-toggle-btn" type="button" aria-label="Toggle dark/light mode" title="Dark/light mode"><svg id="themeToggleIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></svg></button>
 
 <div class="wrap">
   <header class="top">
@@ -369,6 +383,28 @@ document.getElementById("tabs").addEventListener("click", e=>{
   document.querySelectorAll("nav.tabs button").forEach(b=>b.classList.toggle("active", b===btn));
   document.querySelectorAll("section.page").forEach(s=>s.classList.toggle("active", s.id==="page-"+btn.dataset.page));
 });
+
+(function () {
+  var SUN = '<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>';
+  var MOON = '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>';
+  var btn = document.getElementById('themeToggle');
+  var icon = document.getElementById('themeToggleIcon');
+  if (!btn || !icon) return;
+  function isDark() {
+    var t = document.documentElement.getAttribute('data-theme');
+    if (t === 'dark') return true;
+    if (t === 'light') return false;
+    return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  }
+  function paint() { icon.innerHTML = isDark() ? SUN : MOON; }
+  paint();
+  btn.addEventListener('click', function () {
+    var next = isDark() ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', next);
+    try { localStorage.setItem('voltaTheme', next); } catch (e) {}
+    paint();
+  });
+})();
 </script>
 
 </body>
