@@ -32,4 +32,16 @@ Q "SELECT ip.Product_ID product_id, ip.Start_Price start_price, ip.Final_Price f
    FROM instalment_products ip JOIN instalments i ON i.Instalment_ID=ip.Instalment_ID
    WHERE (i.Order_Status=5 OR (i.Order_Status IN (1,3) AND i.Type_Of_Sales=99)) AND DATE(COALESCE(i.Order_Date,i.Aplication_Date)) BETWEEN '$FROM' AND '$TO';" > "$S/old_sales_lines.tsv"
 
+# Finance / Profit Margins (added 2026-09-16): August-only installment total vs site price, per product line.
+# installment total = the loan's Full_Cost, allocated to each product line by its share of the loan's site price
+# (Final_Price). Installment loans only (Order_Status=5); single-payment sales have no installment total.
+# Empirically ~0 markup in August (660 loans, Full_Cost/site = 1.0000, 2 loans differ) -- pre-Sep-1 financing was 0%.
+Q "SELECT ip.Product_ID product_id, COALESCE(pc.Category_Name,'') category,
+   SUM(ip.Final_Price) site, SUM(ip.Final_Price * i.Full_Cost / t.site_total) installment_total, COUNT(*) qty
+   FROM instalment_products ip JOIN instalments i ON i.Instalment_ID=ip.Instalment_ID
+   JOIN (SELECT Instalment_ID, SUM(Final_Price) site_total FROM instalment_products GROUP BY Instalment_ID) t ON t.Instalment_ID=i.Instalment_ID
+   JOIN products p ON p.Product_ID=ip.Product_ID LEFT JOIN product_category pc ON pc.Category_ID=p.Category_ID
+   WHERE i.Order_Status=5 AND t.site_total>0 AND DATE(COALESCE(i.Order_Date,i.Aplication_Date)) BETWEEN '2026-08-01' AND '2026-08-30'
+   GROUP BY ip.Product_ID, category;" > "$S/old_aug_markup.tsv"
+
 wc -l "$S"/old_*.tsv | sed "s#$S/##"

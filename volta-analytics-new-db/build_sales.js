@@ -208,7 +208,21 @@ function buildCategoryBrandReport(rows) {
 const categoryBrandBreakdown = {};
 for (const dt of ['all', 'installment', 'single']) categoryBrandBreakdown[dt] = buildCategoryBrandReport(dt === 'all' ? rawRows : rawRows.filter(r => r.deal_type === dt));
 
-const payload = { salesMonthlyStats, brandStats, subcategoryStats, categoryBrandBreakdown, cutover: CUTOVER, generatedAt: new Date().toISOString().slice(0, 16).replace('T', ' ') + ' UTC' };
+// ---------- Finance / Profit Margins: August-only installment total vs site price, per product category ----------
+// old_aug_markup.tsv (pull_old.sh): per product line, Aug 1-30 installment loans, site = SUM(Final_Price),
+// installment_total = the loan's Full_Cost allocated to the line by its site-price share. Classified with the
+// same product classifier as Sales Monthly so the categories line up row for row with the retail margin.
+const augMarginsByBucket = {};
+if (fs.existsSync(path.join(__dirname, 'old_aug_markup.tsv'))) {
+  for (const r of parseTsv('old_aug_markup.tsv')) {
+    const bucket = classifyProduct(r.category) || 'Uncategorized';
+    const e = (augMarginsByBucket[bucket] ||= { bucket, site: 0, installmentTotal: 0, qty: 0 });
+    e.site += +r.site; e.installmentTotal += +r.installment_total; e.qty += +r.qty;
+  }
+}
+const augMargins = Object.values(augMarginsByBucket).map(e => ({ bucket: e.bucket, site: r2(e.site), installmentTotal: r2(e.installmentTotal), qty: e.qty }));
+
+const payload = { salesMonthlyStats, brandStats, subcategoryStats, categoryBrandBreakdown, augMargins, cutover: CUTOVER, generatedAt: new Date().toISOString().slice(0, 16).replace('T', ' ') + ' UTC' };
 fs.writeFileSync(path.join(__dirname, 'sales_data.json'), JSON.stringify(payload));
 
 // ---------- checks ----------
