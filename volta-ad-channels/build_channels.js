@@ -102,7 +102,7 @@ console.log('days:', days.length, days[0], '..', END, '| months:', months.length
   '| ga4 MTD sessions:', ga4.month.find(r => r.label === 'Sessions').vals.at(-1));
 
 // ---------------- inject into the HTML ----------------
-const htmlPath = process.env.DASH_HTML ? path.resolve(process.env.DASH_HTML) : path.join(__dirname, 'deals_amount_migration.html');
+const htmlPath = process.env.DASH_HTML ? path.resolve(process.env.DASH_HTML) : path.join(__dirname, '..', 'volta-analytics-new-db', 'deals_amount_migration.html');
 let html = fs.readFileSync(htmlPath, 'utf8');
 const __hadCRLF = html.includes('\r\n'); if (__hadCRLF) html = html.replace(/\r\n/g, '\n');
 const NL = String.fromCharCode(10);
