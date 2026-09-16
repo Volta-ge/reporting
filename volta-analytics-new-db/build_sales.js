@@ -7,6 +7,15 @@
 const fs = require('fs');
 const path = require('path');
 const CUTOVER = '2026-08-31';
+// Financing-markup rule for Finance/Profit Margins (added 2026-09-16) -- same as the Daily Mail Amount Sold
+// formula's estimate branch: site price * 1.05*1.20 (standard) or *1.15*1.05*1.20 (Karcher), for installment
+// sales whose order was created on/after this date. Deliberately the flat-rate estimate, not the real
+// per-order schedule total Amount Sold prefers when available -- attributing a whole order's real schedule
+// total down to one of its line items would need a proration assumption of its own with no more real
+// evidence to back it than the flat rate, so this stays simple and states its own rate plainly instead.
+const MARKUP_CUTOVER = '2026-09-01';
+const MARKUP_RATE_STD = 1.05 * 1.20;
+const MARKUP_RATE_KAR = 1.15 * 1.05 * 1.20;
 
 function parseTsv(file) {
   let content = fs.readFileSync(path.join(__dirname, file), 'utf8');
@@ -61,17 +70,25 @@ function newProductRawCategory(productId) {
 // ---------- Raw rows in one common shape: {period, category, brand, deal_type, sales, cogs, qty, cogsUnknownSales} ----------
 const oldGrouped = parseTsv('old_sales_grouped.tsv').map(r => ({
   period: r.period, category: r.category, brand: r.brand, deal_type: r.deal_type,
-  sales: +r.sales, cogs: +r.cogs, qty: +r.qty, cogsUnknownSales: 0, source: 'old',
+  sales: +r.sales, cogs: +r.cogs, qty: +r.qty, cogsUnknownSales: 0, markupGel: 0, markupEligibleSales: 0, source: 'old',
 }));
 if (oldGrouped.some(r => r.period >= CUTOVER.slice(0, 7) && r.period > '2026-08')) throw new Error('old rows past cutover month');
 for (const r of oldGrouped) { const b = String(r.brand || '').trim(); if (b && !NO_BRAND.has(b.toLowerCase())) oldBrandBySlug[b.toLowerCase()] ||= b; }
 
 const newLinesRaw = parseTsv('new_sales_lines.tsv');
 if (newLinesRaw.some(r => r.d < CUTOVER)) throw new Error('new-DB line before cutover');
-const newGrouped = newLinesRaw.map(r => ({
-  period: r.period, category: newProductRawCategory(r.product_id), brand: r.brand, deal_type: r.deal_type,
-  sales: +r.sales, cogs: 0, qty: +r.qty, cogsUnknownSales: +r.sales, source: 'new',
-}));
+const newGrouped = newLinesRaw.map(r => {
+  const sales = +r.sales;
+  const markupEligible = r.deal_type === 'installment' && r.creator_date && r.creator_date >= MARKUP_CUTOVER;
+  const rate = r.is_karcher === '1' ? MARKUP_RATE_KAR : MARKUP_RATE_STD;
+  return {
+    period: r.period, category: newProductRawCategory(r.product_id), brand: r.brand, deal_type: r.deal_type,
+    sales, cogs: 0, qty: +r.qty, cogsUnknownSales: sales,
+    markupGel: markupEligible ? sales * (rate - 1) : 0,
+    markupEligibleSales: markupEligible ? sales : 0,
+    source: 'new',
+  };
+});
 const rawRows = oldGrouped.concat(newGrouped);
 
 // coverage diagnostics for the new-DB classification
@@ -85,10 +102,10 @@ const rawRows = oldGrouped.concat(newGrouped);
 }
 
 // ---------- buildBucketedReport (port of FunnelRepository::buildBucketedReport) ----------
-const emptyCell = () => ({ sales: 0, cogs: 0, qty: 0, cogsUnknownSales: 0 });
-const addCell = (a, b) => { a.sales += b.sales; a.cogs += b.cogs; a.qty += b.qty; a.cogsUnknownSales += b.cogsUnknownSales; return a; };
+const emptyCell = () => ({ sales: 0, cogs: 0, qty: 0, cogsUnknownSales: 0, markupGel: 0, markupEligibleSales: 0 });
+const addCell = (a, b) => { a.sales += b.sales; a.cogs += b.cogs; a.qty += b.qty; a.cogsUnknownSales += b.cogsUnknownSales; a.markupGel += b.markupGel; a.markupEligibleSales += b.markupEligibleSales; return a; };
 const r2 = n => Math.round(n * 100) / 100;
-const finish = c => ({ sales: r2(c.sales), cogs: r2(c.cogs), qty: c.qty, cogsUnknownSales: r2(c.cogsUnknownSales) });
+const finish = c => ({ sales: r2(c.sales), cogs: r2(c.cogs), qty: c.qty, cogsUnknownSales: r2(c.cogsUnknownSales), markupGel: r2(c.markupGel), markupEligibleSales: r2(c.markupEligibleSales) });
 
 function buildBucketedReport(rows, classify, fallbackBucket) {
   const periodsSeen = new Set(); const byBucket = {}; let fallbackCount = 0, fallbackSales = 0;
@@ -161,7 +178,7 @@ const brandStats = threeWay(r => classifyBrand(r.brand), 'No Brand');
 // ---------- Category / Brand (port of buildCategoryBrandReport) ----------
 function buildCategoryBrandReport(rows) {
   const byCategory = {};
-  const empty = () => ({ sales: 0, cogs: 0, qty: 0, cogsUnknownSales: 0 });
+  const empty = emptyCell;
   for (const row of rows) {
     const category = classifyProduct(row.category) || 'Uncategorized';
     const brand = classifyBrand(row.brand) || 'No Brand';

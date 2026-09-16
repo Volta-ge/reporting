@@ -1,39 +1,39 @@
 dim	val	all_c	active_c	loan_c
-age	NULL	1772	219	548
+age	NULL	1781	221	551
 age	1:< 18	6	2	2
-age	2:18 - 24	2787	298	401
-age	3:25 - 34	12780	1923	2730
-age	4:35 - 44	10287	1945	2973
-age	5:45 - 59	5892	1171	2138
-age	6:60+	1773	233	529
-city	NULL	507	14	350
-city	Other cities	5329	785	951
-city	ბათუმი	2413	360	427
+age	2:18 - 24	2794	299	401
+age	3:25 - 34	12799	1925	2733
+age	4:35 - 44	10310	1945	2971
+age	5:45 - 59	5901	1172	2141
+age	6:60+	1772	232	528
+city	NULL	514	16	352
+city	Other cities	5336	785	952
+city	ბათუმი	2419	360	427
 city	გარდაბანი	326	47	76
-city	გორი	853	117	136
-city	გურჯაანი	279	37	55
-city	ზუგდიდი	899	121	149
-city	თბილისი	19386	3511	6119
+city	გორი	854	117	136
+city	გურჯაანი	280	37	55
+city	ზუგდიდი	902	121	149
+city	თბილისი	19427	3515	6123
 city	მცხეთა	511	79	162
 city	ოზურგეთი	376	50	59
-city	რუსთავი	1395	241	316
+city	რუსთავი	1394	240	315
 city	სამტრედია	289	37	49
 city	სენაკი	267	42	49
 city	ფოთი	488	77	88
-city	ქობულეთი	397	53	64
+city	ქობულეთი	398	53	64
 city	ქუთაისი	1248	169	203
 city	ხაშური	334	51	68
-emp	NULL	22392	2630	5973
+emp	NULL	22457	2636	5977
 emp	Not specified	4	0	0
-emp	Private sector	5666	1533	1631
-emp	Public sector	2384	732	777
+emp	Private sector	5666	1532	1632
+emp	Public sector	2385	732	778
 emp	Self-employed	4249	752	790
 emp	Unemployed	602	144	150
-gender	NULL	620	38	160
-gender	Female	19898	4024	6627
-gender	Male	14779	1729	2534
-pos	NULL	9779	1045	3150
-pos	Other	18531	3536	4620
+gender	NULL	625	39	161
+gender	Female	19925	4026	6630
+gender	Male	14813	1731	2536
+pos	NULL	9845	1051	3155
+pos	Other	18531	3535	4621
 pos	ადმინისტრატორი	294	79	95
 pos	გამყიდველი	252	38	46
 pos	დამლაგებელი	252	38	45
@@ -49,36 +49,36 @@ pos	მძღოლი	635	70	95
 pos	ოპერატორი	413	77	95
 pos	ძიძა	592	97	132
 pos	ხელოსანი	837	70	84
-rating	NULL	31316	4667	5424
+rating	NULL	31382	4672	5430
 rating	1	258	3	248
 rating	2	130	13	130
 rating	3	198	29	168
 rating	4	1283	421	1263
 rating	5	2112	658	2088
-risk	NULL	27769	23	1917
+risk	NULL	27830	24	1918
 risk	High	658	245	653
-risk	Low	459	158	457
-risk	Medium	6411	5365	6294
-sal	NULL	22400	2638	5981
+risk	Low	467	165	465
+risk	Medium	6408	5362	6291
+sal	NULL	22465	2644	5985
 sal	0:0 (no salary)	17	4	4
 sal	1:< 500	124	14	17
 sal	2:500 - 999	1061	260	282
-sal	3:1,000 - 1,999	5099	1324	1404
-sal	4:2,000 - 2,999	3445	797	833
+sal	3:1,000 - 1,999	5099	1323	1405
+sal	4:2,000 - 2,999	3446	797	834
 sal	5:3,000 - 4,999	2302	514	550
 sal	6:5,000+	842	239	249
 sal	7:Not specified	7	1	1
-soc	NULL	23875	3007	6376
-soc	Housewife	4128	1126	1189
+soc	NULL	23941	3013	6381
+soc	Housewife	4128	1125	1190
 soc	None of these	5370	1329	1403
 soc	Pensioner	457	86	95
 soc	Student	1467	243	258
-src	NULL	22265	2585	5927
-src	Facebook	7484	1432	1474
-src	Friend / family recommendation	2523	565	584
+src	NULL	22323	2590	5930
+src	Facebook	7489	1432	1474
+src	Friend / family recommendation	2524	565	585
 src	Google	109	23	24
 src	Instagram	995	167	172
 src	Other	374	83	89
 src	Outdoor banner	12	1	1
 src	TikTok	522	121	125
-src	Used Volta before	1013	814	925
+src	Used Volta before	1015	814	927
