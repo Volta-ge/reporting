@@ -169,7 +169,21 @@ table.logi-table td.logi-extra-first{border-left:3px solid #1a1a34}
 .page-nav button.active{background:var(--text-primary);color:var(--surface-1)}
 .chan-tab{display:none}
 .chan-tab.active{display:block}
+.theme-toggle-btn{position:fixed;top:16px;right:16px;z-index:1000;width:34px;height:34px;border-radius:50%;border:1px solid var(--border);background:var(--surface-1);color:var(--text-secondary);display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.theme-toggle-btn:hover{color:var(--text-primary);border-color:var(--text-muted)}
+.theme-toggle-btn svg{width:18px;height:18px}
+@media (max-width:700px){.theme-toggle-btn{top:10px;right:10px;width:30px;height:30px}.theme-toggle-btn svg{width:16px;height:16px}}
 </style>
+
+<script>
+(function () {
+  try {
+    var t = localStorage.getItem('voltaTheme');
+    if (t === 'dark' || t === 'light') document.documentElement.setAttribute('data-theme', t);
+  } catch (e) {}
+})();
+</script>
+<button id="themeToggle" class="theme-toggle-btn" type="button" aria-label="Toggle dark/light mode" title="Dark/light mode"><svg id="themeToggleIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></svg></button>
 
 <div class="wrap">
   <div class="app-title">Volta &mdash; Marketing: Ad Channels</div>
@@ -284,6 +298,27 @@ var CHANNELS_JSON = ${JSON.stringify(payload)};
   }
   renderCamp('chanMetaCamp', C.metaCampaigns);
   renderCamp('chanGadsCamp', C.gadsCampaigns);
+})();
+(function () {
+  var SUN = '<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>';
+  var MOON = '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>';
+  var btn = document.getElementById('themeToggle');
+  var icon = document.getElementById('themeToggleIcon');
+  if (!btn || !icon) return;
+  function isDark() {
+    var t = document.documentElement.getAttribute('data-theme');
+    if (t === 'dark') return true;
+    if (t === 'light') return false;
+    return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  }
+  function paint() { icon.innerHTML = isDark() ? SUN : MOON; }
+  paint();
+  btn.addEventListener('click', function () {
+    var next = isDark() ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', next);
+    try { localStorage.setItem('voltaTheme', next); } catch (e) {}
+    paint();
+  });
 })();
 </script>
 `;
