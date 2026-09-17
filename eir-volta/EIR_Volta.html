@@ -19,6 +19,8 @@
     --pass-bg:#e3f5e9;
     --fail:#b7331f;
     --fail-bg:#fbe9e6;
+    --interest:#a8671a;
+    --principal:#1a1a34;
     --focus:#5b6cff;
     --shadow:0 1px 2px rgba(25,27,35,.04), 0 8px 24px -12px rgba(25,27,35,.18);
     color-scheme:light;
@@ -40,6 +42,8 @@
       --pass-bg:rgba(95,216,138,.14);
       --fail:#f28b7a;
       --fail-bg:rgba(242,139,122,.14);
+      --interest:#e0a552;
+      --principal:#c2ff00;
       --shadow:0 1px 2px rgba(0,0,0,.3), 0 12px 28px -14px rgba(0,0,0,.55);
     }
   }
@@ -59,6 +63,8 @@
     --pass-bg:rgba(95,216,138,.14);
     --fail:#f28b7a;
     --fail-bg:rgba(242,139,122,.14);
+    --interest:#e0a552;
+    --principal:#c2ff00;
     --shadow:0 1px 2px rgba(0,0,0,.3), 0 12px 28px -14px rgba(0,0,0,.55);
   }
 
@@ -189,6 +195,22 @@
   .badge.pass{ background:var(--pass-bg); color:var(--pass); }
   .badge.fail{ background:var(--fail-bg); color:var(--fail); }
 
+  .bd-echo{ margin:0 0 18px; color:var(--text-muted); font-size:.85rem; }
+  .bd-bar{ display:flex; width:100%; height:34px; border-radius:10px; overflow:hidden; border:1px solid var(--line); }
+  .bd-bar .seg{ height:100%; display:flex; align-items:center; justify-content:center; font-family:"IBM Plex Mono",monospace;
+    font-size:.78rem; font-weight:700; white-space:nowrap; overflow:hidden; min-width:0; }
+  .bd-bar .seg.principal{ background:var(--principal); color:var(--accent-ink); }
+  .bd-bar .seg.interest{ background:var(--interest); color:#1a1206; }
+  .bd-legend{ display:flex; flex-wrap:wrap; gap:20px; margin-top:14px; }
+  .bd-legend .item{ display:flex; align-items:center; gap:9px; }
+  .bd-legend .swatch{ width:12px; height:12px; border-radius:3px; flex:none; }
+  .bd-legend .swatch.principal{ background:var(--principal); }
+  .bd-legend .swatch.interest{ background:var(--interest); }
+  .bd-legend .lbl{ font-size:.82rem; color:var(--text-muted); }
+  .bd-legend .val{ font-family:"IBM Plex Mono",monospace; font-weight:700; font-size:.88rem; margin-inline-start:4px; }
+  .bd-rates{ display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:22px; }
+  @media (max-width:480px){ .bd-rates{ grid-template-columns:1fr; } }
+
   table{ width:100%; border-collapse:collapse; font-size:.88rem; }
   thead th{
     text-align:end; font-size:.72rem; text-transform:uppercase; letter-spacing:.03em; color:var(--text-muted);
@@ -239,6 +261,7 @@
   <nav class="tabs" role="tablist">
     <button id="tab-btn-check" class="active" role="tab" aria-selected="true" aria-controls="panel-check" data-i18n="tabCheck">შემოწმება</button>
     <button id="tab-btn-max" role="tab" aria-selected="false" aria-controls="panel-max" data-i18n="tabMax">მაქს. დასაშვები დანამატი</button>
+    <button id="tab-btn-breakdown" role="tab" aria-selected="false" aria-controls="panel-breakdown" data-i18n="tabBreakdown">განაწილება</button>
   </nav>
 
   <!-- ===================== TAB A: CHECKER ===================== -->
@@ -353,6 +376,44 @@
     </div>
   </section>
 
+  <!-- ===================== TAB C: BREAKDOWN ===================== -->
+  <section id="panel-breakdown" hidden role="tabpanel" aria-labelledby="tab-btn-breakdown">
+    <div class="card">
+      <div class="panel-title">
+        <h2 data-i18n="breakdownTitle">გადასახდელის განაწილება</h2>
+        <p class="sub" id="bd-echo"></p>
+      </div>
+
+      <div class="bd-bar" id="bd-bar">
+        <div class="seg principal" id="bd-seg-principal"></div>
+        <div class="seg interest" id="bd-seg-interest"></div>
+      </div>
+      <div class="bd-legend">
+        <div class="item">
+          <span class="swatch principal"></span>
+          <span class="lbl" data-i18n="bdPrincipal">ძირი</span>
+          <span class="val" id="bd-principal-val">—</span>
+        </div>
+        <div class="item">
+          <span class="swatch interest"></span>
+          <span class="lbl" data-i18n="bdInterest">პროცენტი</span>
+          <span class="val" id="bd-interest-val">—</span>
+        </div>
+      </div>
+
+      <div class="bd-rates">
+        <div class="stat">
+          <div class="label" data-i18n="bdAnnualRate">წლიური საპროცენტო განაკვეთი</div>
+          <div class="value" id="bd-annual-rate">—</div>
+        </div>
+        <div class="stat">
+          <div class="label" data-i18n="bdMonthlyRate">თვიური საპროცენტო განაკვეთი</div>
+          <div class="value" id="bd-monthly-rate">—</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <p class="foot-note" data-i18n="footNote">
     გამოთვლის ლოგიკა იმეორებს ეროვნული ბანკის პრეზიდენტის 2022 წლის 17 თებერვლის №15/04 ბრძანების პრინციპს
     (<a href="https://matsne.gov.ge/ka/document/download/5384792/0/ge/pdf" target="_blank" rel="noopener">დანართი №1</a>):
@@ -374,6 +435,7 @@
       capLine: "კანონიერი ჭერი<br>სამოქ. კოდექსის<br>625-ე მუხ., მე-2 ნაწ.",
       tabCheck: "შემოწმება",
       tabMax: "მაქს. დასაშვები დანამატი",
+      tabBreakdown: "განაწილება",
       inputsTitle: "ნივთისა და გადახდის მონაცემები",
       inputsSub: "შეავსე რეალური ვითარებით",
       labelPrice: "ნივთის ფასი (ნაღდი / საიტის ფასი)",
@@ -412,6 +474,12 @@
       thMonthly: "თვიური გადასახდელი",
       thTotalPrice: "განვადების სრული თანხა",
       priceEcho: (p,d,a) => `ფასი ${p} ₾ · მიწოდება ${d} ₾ · ავანსი ${a} ₾`,
+      breakdownTitle: "გადასახდელის განაწილება",
+      bdPrincipal: "ძირი",
+      bdInterest: "პროცენტი",
+      bdAnnualRate: "წლიური საპროცენტო განაკვეთი",
+      bdMonthlyRate: "თვიური საპროცენტო განაკვეთი",
+      bdEcho: (p,f,term) => `ფასი ${p} ₾ · ${f} · ${term}`,
       monthsShort: "თვე",
       formulasTitle: "გამოთვლის ფორმულები",
       formulaTotalLabel: "განვადების სრული თანხა",
@@ -432,6 +500,7 @@
       capLine: "Legal cap<br>Civil Code<br>Art. 625, para 2",
       tabCheck: "Check",
       tabMax: "Max allowed markup",
+      tabBreakdown: "Breakdown",
       inputsTitle: "Item & payment details",
       inputsSub: "Fill in the real scenario",
       labelPrice: "Item price (cash / site price)",
@@ -470,6 +539,12 @@
       thMonthly: "Monthly payment",
       thTotalPrice: "Total installment amount",
       priceEcho: (p,d,a) => `Price ${p} ₾ · delivery ${d} ₾ · down payment ${a} ₾`,
+      breakdownTitle: "Payment breakdown",
+      bdPrincipal: "Principal",
+      bdInterest: "Interest",
+      bdAnnualRate: "Annual interest rate",
+      bdMonthlyRate: "Monthly interest rate",
+      bdEcho: (p,f,term) => `Price ${p} ₾ · ${f} · ${term}`,
       monthsShort: "mo",
       formulasTitle: "Calculation formulas",
       formulaTotalLabel: "Total installment amount",
@@ -593,19 +668,20 @@
   const pct = n => (n*100).toLocaleString(I18N[state.lang].locale, {minimumFractionDigits:1, maximumFractionDigits:1}) + '%';
 
   // ================= tabs =================
-  const tabBtnCheck = document.getElementById('tab-btn-check');
-  const tabBtnMax = document.getElementById('tab-btn-max');
-  const panelCheck = document.getElementById('panel-check');
-  const panelMax = document.getElementById('panel-max');
-  tabBtnCheck.addEventListener('click', () => {
-    tabBtnCheck.classList.add('active'); tabBtnCheck.setAttribute('aria-selected','true');
-    tabBtnMax.classList.remove('active'); tabBtnMax.setAttribute('aria-selected','false');
-    panelCheck.hidden = false; panelMax.hidden = true;
-  });
-  tabBtnMax.addEventListener('click', () => {
-    tabBtnMax.classList.add('active'); tabBtnMax.setAttribute('aria-selected','true');
-    tabBtnCheck.classList.remove('active'); tabBtnCheck.setAttribute('aria-selected','false');
-    panelMax.hidden = false; panelCheck.hidden = true;
+  const tabs = [
+    { btn: document.getElementById('tab-btn-check'), panel: document.getElementById('panel-check') },
+    { btn: document.getElementById('tab-btn-max'), panel: document.getElementById('panel-max') },
+    { btn: document.getElementById('tab-btn-breakdown'), panel: document.getElementById('panel-breakdown') },
+  ];
+  tabs.forEach(({btn}) => {
+    btn.addEventListener('click', () => {
+      tabs.forEach(({btn:b, panel:p}) => {
+        const active = b === btn;
+        b.classList.toggle('active', active);
+        b.setAttribute('aria-selected', String(active));
+        p.hidden = !active;
+      });
+    });
   });
 
   // ================= language & theme controls =================
@@ -739,6 +815,27 @@
       tr.innerHTML = `<td>${i}</td><td>${fmtDate(dates[i])}</td><td>${money(payments[i-1])} ₾</td>`;
       tbody.appendChild(tr);
     }
+
+    // ---- breakdown tab (shares this tab's inputs) ----
+    const principal = totalPrice - finCost;
+    const principalPct = totalPrice > 0 ? principal/totalPrice : 0;
+    const interestPct = totalPrice > 0 ? finCost/totalPrice : 0;
+    const monthlyRate = Math.pow(1+eir, 1/12) - 1;
+    const formulaLabel = activeFormula === 'kerkheri' ? t('btnKerkheri') : t('btnStandard');
+
+    document.getElementById('bd-echo').textContent = t('bdEcho')(money(cashPrice), formulaLabel, `${term} ${t('monthsShort')}`);
+
+    const segPrincipal = document.getElementById('bd-seg-principal');
+    const segInterest = document.getElementById('bd-seg-interest');
+    segPrincipal.style.width = (principalPct*100) + '%';
+    segInterest.style.width = (interestPct*100) + '%';
+    segPrincipal.textContent = principalPct*100 >= 8 ? pct(principalPct) : '';
+    segInterest.textContent = interestPct*100 >= 8 ? pct(interestPct) : '';
+
+    document.getElementById('bd-principal-val').textContent = `${money(principal)} ₾ (${pct(principalPct)})`;
+    document.getElementById('bd-interest-val').textContent = `${money(finCost)} ₾ (${pct(interestPct)})`;
+    document.getElementById('bd-annual-rate').textContent = pct(eir);
+    document.getElementById('bd-monthly-rate').textContent = pct(monthlyRate);
   }
 
   // ================= max-markup tab =================
