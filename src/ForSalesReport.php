@@ -150,8 +150,13 @@ final class ForSalesReport
             'GENERATED_AT' => 'generatedAt',
         ];
         foreach ($consts as $const => $key) {
+            // \r? before the line-end anchor: the shared working tree this runs against can pick up
+            // CRLF line endings from a `git checkout`/`stash pop` (core.autocrlf=true on this Windows
+            // machine) even though the committed blob itself is LF-only -- without it, a CRLF-tainted
+            // working copy makes every replacement silently no-op (found 2026-09-18: a plain `php
+            // bin/for_sales_dump.php` run reported success but left the file byte-for-byte unchanged).
             $html = preg_replace(
-                '/^const ' . $const . ' = .*?;$/ms',
+                '/^const ' . $const . ' = .*?;\r?$/ms',
                 'const ' . $const . ' = ' . json_encode($data[$key], $flags) . ';',
                 $html,
                 1,
