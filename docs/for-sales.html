@@ -145,6 +145,7 @@
   .tablewrap{
     background:var(--surface); border:1px solid var(--line); border-radius:12px; overflow:hidden; box-shadow:var(--shadow);
   }
+  .tablewrap.matrix-wrap{ overflow-x:auto; }
   table{ width:100%; border-collapse:collapse; font-size:13.5px; }
   thead th{
     text-align:left; font-size:11px; text-transform:uppercase; letter-spacing:.06em; font-weight:700;
@@ -159,6 +160,19 @@
   td.num{ font-family:"IBM Plex Mono",monospace; font-variant-numeric:tabular-nums; font-weight:500; }
   td.date{ white-space:nowrap; }
   td.date .dow{ color:var(--muted); font-size:11.5px; margin-left:6px; }
+
+  table.matrix{ font-size:12.5px; }
+  table.matrix th, table.matrix td{ padding:8px 10px; white-space:nowrap; }
+  table.matrix th:first-child, table.matrix td:first-child{
+    position:sticky; left:0; text-align:left; background:var(--surface); z-index:1;
+    box-shadow:1px 0 0 var(--line);
+  }
+  table.matrix thead th:first-child{ background:var(--paper); z-index:2; }
+  table.matrix th.today-col, table.matrix td.today-col{ background:var(--good-soft); }
+  table.matrix tr.mtotal td{ font-weight:700; background:var(--paper); }
+  table.matrix tr.mtotal td:first-child{ background:var(--paper); }
+  .sc-n{ font-family:"IBM Plex Mono",monospace; font-variant-numeric:tabular-nums; font-weight:500; }
+  .sc-amt{ font-family:"IBM Plex Mono",monospace; font-variant-numeric:tabular-nums; font-size:10.5px; color:var(--muted); margin-top:1px; }
   .todaytag{
     display:inline-block; margin-left:8px; font-family:"IBM Plex Mono",monospace; font-size:9.5px; font-weight:700;
     letter-spacing:.05em; text-transform:uppercase; background:var(--warn-soft); color:var(--warn);
@@ -168,16 +182,6 @@
   .bar-cell{ width:150px; }
   .bar-track{ height:8px; border-radius:4px; background:var(--bar-track); overflow:hidden; display:flex; }
   .bar-fill{ height:100%; background:var(--lime); border-radius:4px; }
-  .bar-fill.seg-good{ background:var(--good); border-radius:0; }
-  .bar-fill.seg-bad{ background:var(--bad); border-radius:0; }
-  .bar-fill.seg-warn{ background:var(--warn); border-radius:0; }
-  .bar-track .seg-good:first-child{ border-radius:4px 0 0 4px; }
-  .bar-track .seg-good:only-child, .bar-track .seg-bad:only-child, .bar-track .seg-warn:only-child{ border-radius:4px; }
-
-  .legend{ display:flex; gap:16px; margin:14px 2px 0; font-size:12px; color:var(--muted); flex-wrap:wrap; }
-  .legend span{ display:inline-flex; align-items:center; gap:6px; }
-  .legend i{ width:9px; height:9px; border-radius:2px; display:inline-block; }
-  .legend i.good{ background:var(--good); } .legend i.bad{ background:var(--bad); } .legend i.warn{ background:var(--warn); }
 
   footer.note{
     margin-top:20px; font-size:12px; line-height:1.6; color:var(--muted);
@@ -213,10 +217,10 @@
     <div class="inner">
       <p class="eyebrow">Volta &middot; CRM Application Pipeline</p>
       <h1>განაცხადების ნაკადი დღეების მიხედვით</h1>
-      <p class="sub">სამი გვერდი, სამი კითხვა: რამდენი განაცხადი შემოვიდა, რამდენი გავიდა კომიტეტზე და რამდენმა დატოვა „ხელმოწერილია" სტატუსი — დღიური ჭრილით, 2026 წლის 1 სექტემბრიდან.</p>
+      <p class="sub">სამი გვერდი: რამდენი განაცხადი შემოვიდა, რამდენი გავიდა კომიტეტზე და რამდენი გაიყიდა — დღიურად და გაყიდვების მენეჯერების მიხედვით, 2026 წლის 1 სექტემბრიდან.</p>
       <div class="stamp">
         <span>წყარო: <b>VoltaStoreDB</b> (crm_activity_log)</span>
-        <span>მდგომარეობა: <b id="stampDate">&nbsp;</b></span>
+        <span>განახლდა: <b id="stampDate">&nbsp;</b></span>
         <span>ტიპი: <b>ყოველდღე ავტომატურად განახლდება</b></span>
       </div>
     </div>
@@ -225,7 +229,7 @@
   <nav class="tabs" id="tabs">
     <button class="active" data-page="apps">განაცხადები <span class="n">1</span></button>
     <button data-page="committee">კომიტეტზე გადასვლა <span class="n">2</span></button>
-    <button data-page="signed">ხელმოწერიდან გადასვლა <span class="n">3</span></button>
+    <button data-page="sales">გაყიდვები <span class="n">3</span></button>
   </nav>
 
   <section class="page active" id="page-apps">
@@ -241,38 +245,38 @@
 
   <section class="page" id="page-committee">
     <h2>განაცხადები, რომლებიც კომიტეტზე გავიდა</h2>
-    <p class="desc">სტატუსის ცვლილება „კომიტეტზე გაგზავნა" (სტატუსი 8) სტატუსების ჟურნალიდან (<code>crm_activity_log</code>). ერთი განაცხადი დღეში ერთხელ ითვლება „განაცხადის" სვეტში, თუნდაც რამდენჯერმე დაუბრუნდეს კომიტეტს — მოვლენების საერთო რაოდენობა ცალკე სვეტშია.</p>
+    <p class="desc">სტატუსის ცვლილება „კომიტეტზე გაგზავნა" (სტატუსი 8) სტატუსების ჟურნალიდან (<code>crm_activity_log</code>). თითოეული განაცხადი დღეში ერთხელ ითვლება, თუნდაც რამდენჯერმე დაუბრუნდეს კომიტეტს — გაყიდვების მენეჯერების მიხედვით, დღეების ჭრილში.</p>
     <div class="kpis" id="committee-kpis"></div>
     <p class="peak" id="committee-peak"></p>
-    <div class="tablewrap"><table id="committee-table">
-      <thead><tr><th>თარიღი</th><th class="num">განაცხადი</th><th class="num">მოვლენა</th><th class="bar-cell"></th></tr></thead>
+    <div class="tablewrap matrix-wrap"><table id="committee-table" class="matrix">
+      <thead></thead>
       <tbody></tbody>
     </table></div>
   </section>
 
-  <section class="page" id="page-signed">
-    <h2>„ხელმოწერილია"-დან სხვა სტატუსში გადასული განაცხადები</h2>
-    <p class="desc">განაცხადები, რომლებმაც სტატუსი 11 („ხელმოწერილია") დატოვეს სხვა სტატუსისკენ, დანიშნულების მიხედვით: <b style="color:var(--good)">აქტიური</b> (ნორმალური აქტივაცია), <b style="color:var(--bad)">უარყოფილი</b>, <b style="color:var(--warn)">კლიენტმა თქვა უარი</b>.</p>
-    <div class="kpis" id="signed-kpis"></div>
-    <p class="peak" id="signed-peak"></p>
-    <div class="tablewrap"><table id="signed-table">
-      <thead><tr><th>თარიღი</th><th class="num">აქტიური</th><th class="num">უარყოფილი</th><th class="num">კლიენტის უარი</th><th class="num">სხვა</th><th class="num">სულ</th><th class="bar-cell"></th></tr></thead>
+  <section class="page" id="page-sales">
+    <h2>გაყიდვები გაყიდვების მენეჯერების მიხედვით</h2>
+    <p class="desc">გაყიდვის დღედ ითვლება ის დღე, როცა შეკვეთა გახდა აქტიური (ხელმოწერილიდან აქტივაციამდე გადასვლა), ან — ერთჯერადი გადახდის შემთხვევაში — შექმნის დღე. თანხა იგივე წესით, რაც Daily Mail-ის Amount Sold-ში: რეალური განვადების გრაფიკი + ავანსი, სადაც გრაფიკს დაფინანსების დანამატი აქვს; საწყისი, სავარაუდო დანამატის გარეშე — თუ განვადების გრაფიკი დაფინანსების გარეშეა.</p>
+    <div class="kpis" id="sales-kpis"></div>
+    <p class="peak" id="sales-peak"></p>
+    <div class="tablewrap matrix-wrap"><table id="sales-table" class="matrix">
+      <thead></thead>
       <tbody></tbody>
     </table></div>
-    <div class="legend"><span><i class="good"></i>აქტიური</span><span><i class="bad"></i>უარყოფილი</span><span><i class="warn"></i>კლიენტის უარი</span></div>
   </section>
 
   <footer class="note">
-    <b>მონაცემთა შენიშვნა.</b> სტატუსის ცვლილებების რეალური ისტორია <code>crm_activity_log</code>-ში 2026 წლის 1 სექტემბრიდან იწყება (CRM-ის აქტივობის ჟურნალის ჩართვის თარიღი) — ამიტომ სამივე ცხრილი ამ დღიდან იწყება, შედარებადობისთვის. მწკრივი, რომელიც <span class="todaytag" style="top:0">დღეს</span>-ითაა მონიშნული, მიმდინარე დღის რიცხვია და გაიზრდება დღის ბოლომდე. თვითგადასვლები (ხელმოწერილიდან ისევ ხელმოწერილში) ცხრილი 3-დან გამორიცხულია, რადგან რეალურ სტატუსის ცვლილებას არ წარმოადგენს.
+    <b>მონაცემთა შენიშვნა.</b> სტატუსის ცვლილებების რეალური ისტორია <code>crm_activity_log</code>-ში 2026 წლის 1 სექტემბრიდან იწყება (CRM-ის აქტივობის ჟურნალის ჩართვის თარიღი) — ამიტომ ყველა ცხრილი ამ დღიდან იწყება, შედარებადობისთვის. მწკრივი ან სვეტი, რომელიც <span class="todaytag" style="top:0">დღეს</span>-ითაა მონიშნული, მიმდინარე დღის რიცხვია და გაიზრდება დღის ბოლომდე.
   </footer>
 </div>
 
 <script>
-const APPS = [["2026-09-01",145],["2026-09-02",152],["2026-09-03",124],["2026-09-04",148],["2026-09-05",119],["2026-09-06",133],["2026-09-07",166],["2026-09-08",143],["2026-09-09",194],["2026-09-10",204],["2026-09-11",165],["2026-09-12",172],["2026-09-13",212],["2026-09-14",182],["2026-09-15",164],["2026-09-16",184],["2026-09-17",211],["2026-09-18",23]];
-const COMMITTEE = [["2026-09-01",28,31],["2026-09-02",78,83],["2026-09-03",57,59],["2026-09-04",62,68],["2026-09-05",58,66],["2026-09-06",0,0],["2026-09-07",91,96],["2026-09-08",83,90],["2026-09-09",99,106],["2026-09-10",85,90],["2026-09-11",85,89],["2026-09-12",56,61],["2026-09-13",77,90],["2026-09-14",93,97],["2026-09-15",44,53],["2026-09-16",102,110],["2026-09-17",107,116],["2026-09-18",0,0]];
-// [date, active(1), rejected(6), declined(12), other]
-const SIGNED = [["2026-09-01",0,0,0,0],["2026-09-02",3,0,0,0],["2026-09-03",22,0,0,0],["2026-09-04",29,0,0,0],["2026-09-05",32,0,0,0],["2026-09-06",0,0,0,0],["2026-09-07",29,0,0,0],["2026-09-08",40,0,0,0],["2026-09-09",33,1,0,0],["2026-09-10",28,0,0,0],["2026-09-11",24,0,1,0],["2026-09-12",26,0,0,0],["2026-09-13",34,0,0,0],["2026-09-14",31,0,3,0],["2026-09-15",15,0,1,0],["2026-09-16",35,1,0,0],["2026-09-17",41,0,3,0],["2026-09-18",0,0,0,0]];
+const APPS = [["2026-09-01",145],["2026-09-02",152],["2026-09-03",124],["2026-09-04",148],["2026-09-05",119],["2026-09-06",133],["2026-09-07",166],["2026-09-08",143],["2026-09-09",194],["2026-09-10",204],["2026-09-11",165],["2026-09-12",172],["2026-09-13",212],["2026-09-14",182],["2026-09-15",164],["2026-09-16",184],["2026-09-17",211],["2026-09-18",47]];
+const COMMITTEE = [["2026-09-01",28,31],["2026-09-02",78,83],["2026-09-03",57,59],["2026-09-04",62,68],["2026-09-05",58,66],["2026-09-06",0,0],["2026-09-07",91,96],["2026-09-08",83,90],["2026-09-09",99,106],["2026-09-10",85,90],["2026-09-11",85,89],["2026-09-12",56,61],["2026-09-13",77,90],["2026-09-14",93,97],["2026-09-15",44,53],["2026-09-16",102,110],["2026-09-17",107,116],["2026-09-18",19,19]];
+const COMMITTEE_BY_MANAGER = [["ლარისა ბედია",[0,9,7,12,1,0,19,9,8,13,14,0,0,7,17,10,11,0]],["მაია ნახუცრიშვილი",[3,6,6,12,0,0,11,4,15,15,8,0,0,8,3,19,15,3]],["ალექსანდე მიქაძე",[2,4,7,0,0,0,7,8,16,13,9,0,7,10,8,16,8,0]],["მარიამ მაღრაძე",[0,6,5,9,6,0,0,6,8,8,11,10,7,0,0,11,12,3]],["მარიამ ნებიერიძე",[4,10,3,5,0,0,13,4,14,3,4,0,0,6,1,21,8,3]],["ლიკა ლიფონავა",[0,8,7,1,0,0,11,10,9,6,5,0,9,7,0,17,7,0]],["თათია ტლაშაძე",[5,7,6,0,12,0,14,4,8,6,9,0,7,7,0,0,6,5]],["მარიამ საგანელიძე",[4,9,5,6,10,0,0,6,1,5,7,10,14,0,4,7,8,0]],["მარიამ გიგოლაშვილი",[7,14,0,0,12,0,8,12,4,4,0,5,10,13,6,0,0,0]],["მარიამ ასიტაშვილი",[0,0,0,0,0,0,5,9,0,0,8,10,11,13,0,1,14,3]],["თამარ ჩხაიძე",[0,0,3,8,9,0,0,7,2,0,2,10,0,15,0,0,11,0]],["მარეხი პოპიაშვილი",[0,0,4,5,8,0,0,0,9,6,3,11,12,0,0,0,0,0]],["ნიკა ცხადაძე",[3,5,4,4,0,0,3,4,5,6,5,0,0,6,4,0,6,2]],["ტესტ ტესტ",[0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,1,0]]];
+const SALES_BY_MANAGER = [["ლარისა ბედია",[[0,0],[1,1450],[6,4800],[8,11330],[0,0],[0,0],[6,5740],[4,3510],[2,1909],[4,6370],[2,1599],[0,0],[0,0],[3,4460],[8,9526],[4,3300],[6,8730],[0,0]]],["მაია ნახუცრიშვილი",[[0,0],[0,0],[2,2840],[2,1720],[0,0],[0,0],[7,6200],[5,3190],[2,1900],[4,4540],[3,5590],[0,0],[0,0],[1,2110],[0,0],[5,5240],[5,7070],[0,0]]],["მარიამ მაღრაძე",[[0,0],[0,0],[0,0],[1,1200],[2,1720],[0,0],[1,1600],[4,6519],[1,1520],[3,4640],[1,470],[4,3400],[4,4810],[0,0],[0,0],[2,2880],[7,9110],[1,750]]],["ალექსანდე მიქაძე",[[0,0],[1,670],[0,0],[0,0],[0,0],[0,0],[1,649],[4,5030],[5,3880],[3,2620],[3,2600],[0,0],[1,1200],[4,5340],[1,1770],[5,5500],[6,8120],[1,570]]],["თათია ტლაშაძე",[[0,0],[1,900],[3,2710],[0,0],[8,4860],[0,0],[3,1980],[4,4640],[4,5240],[4,6130],[1,270],[0,0],[5,4100],[2,1250],[0,0],[0,0],[4,4960],[0,0]]],["მარიამ ნებიერიძე",[[0,0],[0,0],[1,1040],[5,4130],[0,0],[0,0],[1,1090],[4,5100],[4,5460],[2,1150],[2,1820],[0,0],[1,4490],[2,2500],[0,0],[6,5010],[5,4010],[0,0]]],["მარიამ საგანელიძე",[[0,0],[0,0],[4,2620],[1,720],[7,7220],[0,0],[0,0],[3,4380],[1,920],[2,1730],[2,2810],[5,3650],[3,3170],[2,2220],[0,0],[3,3900],[0,0],[0,0]]],["მარიამ გიგოლაშვილი",[[0,0],[0,0],[0,0],[0,0],[8,8160],[0,0],[1,230],[2,1780],[3,4080],[0,0],[1,1710],[3,2810],[3,2160],[5,6170],[3,2470],[1,1600],[0,0],[0,0]]],["ლიკა ლიფონავა",[[0,0],[0,0],[5,5807.44],[1,460],[0,0],[0,0],[2,1170],[2,2750],[1,420],[2,1780],[1,950],[0,0],[2,2040],[1,900],[0,0],[8,9860],[2,2500],[0,0]]],["მარეხი პოპიაშვილი",[[0,0],[0,0],[0,0],[3,3610],[3,2840],[0,0],[0,0],[0,0],[2,1580],[1,1040],[3,1570],[5,3630],[8,10090],[0,0],[0,0],[0,0],[0,0],[0,0]]],["მარიამ ასიტაშვილი",[[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[2,1420],[1,2010],[1,560],[0,0],[2,1760],[5,3890],[4,3840],[5,4850],[1,900],[0,0],[2,2110],[0,0]]],["თამარ ჩხაიძე",[[0,0],[0,0],[0,0],[2,3790],[3,3610],[0,0],[0,0],[2,2250],[2,1390],[0,0],[0,0],[4,3020],[0,0],[4,3950],[0,0],[0,0],[1,390],[1,470]]],["ნიკა ცხადაძე",[[0,0],[0,0],[0,0],[1,390],[0,0],[0,0],[3,2420],[1,1240],[3,3640],[3,4600],[3,2780],[0,0],[0,0],[0,0],[0,0],[0,0],[2,2500],[0,0]]],["მარი დევიძე",[[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[1,729],[0,0],[0,0],[1,2759],[0,0],[0,0],[0,0],[2,3900],[1,409],[0,0],[0,0]]],["ტესტ ტესტ",[[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[1,710],[1,780],[0,0],[1,1150],[0,0]]],["მირანდა ქართველიშვილი",[[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[1,135],[0,0]]]];
 const TODAY = APPS[APPS.length-1][0];
+const GENERATED_AT = "2026-09-18T07:44:25+00:00";
 const DOW = ["კვ","ორშ","სამ","ოთხ","ხუთ","პარ","შაბ"];
 
 function fmtDate(iso){
@@ -282,6 +286,37 @@ function fmtDate(iso){
 }
 function dow(iso){ return DOW[new Date(iso+"T00:00:00").getDay()]; }
 function fmt(n){ return n.toLocaleString("en-US"); }
+function fmtGEL(n){ return "₾" + Math.round(n).toLocaleString("en-US"); }
+function fmtDateTime(iso){
+  const d = new Date(iso);
+  const months = ["იან","თებ","მარ","აპრ","მაი","ივნ","ივლ","აგვ","სექ","ოქტ","ნოე","დეკ"];
+  const hh = String(d.getHours()).padStart(2,"0");
+  const mm = String(d.getMinutes()).padStart(2,"0");
+  return `${d.getDate()} ${months[d.getMonth()]}, ${d.getFullYear()}, ${hh}:${mm}`;
+}
+
+// Renders a "manager (rows) x date (columns)" table into #<id>-table. `rows` is [[name, perDateValues], ...],
+// already sorted by total descending. `cell(v)` renders one <td> body from a per-date value; `sum(a,b)` adds
+// two such values together (for the row/column/grand totals); `fmtTotal(v)` renders a total cell's body.
+function renderMatrix(id, rows, dates, cell, sum, zeroVal, fmtTotal){
+  const thead = document.querySelector("#"+id+"-table thead");
+  const tbody = document.querySelector("#"+id+"-table tbody");
+  const todayIdx = dates.indexOf(TODAY);
+  const dateHeaders = dates.map((d,i)=>`<th class="num${i===todayIdx?' today-col':''}">${fmtDate(d)}</th>`).join("");
+  thead.innerHTML = `<tr><th>მენეჯერი</th>${dateHeaders}<th class="num">სულ</th></tr>`;
+  const colTotals = dates.map(()=>zeroVal);
+  let grandTotal = zeroVal;
+  const bodyRows = rows.map(([name, vals])=>{
+    const total = vals.reduce(sum, zeroVal);
+    vals.forEach((v,i)=>{ colTotals[i] = sum(colTotals[i], v); });
+    grandTotal = sum(grandTotal, total);
+    const cells = vals.map((v,i)=>`<td class="num${i===todayIdx?' today-col':''}">${cell(v)}</td>`).join("");
+    return `<tr><td>${name}</td>${cells}<td class="num" style="font-weight:700">${fmtTotal(total)}</td></tr>`;
+  }).join("");
+  const footerCells = colTotals.map((v,i)=>`<td class="num${i===todayIdx?' today-col':''}">${fmtTotal(v)}</td>`).join("");
+  tbody.innerHTML = bodyRows + `<tr class="mtotal"><td>სულ</td>${footerCells}<td class="num">${fmtTotal(grandTotal)}</td></tr>`;
+  return grandTotal;
+}
 
 function kpiBlock(container, arr, last7Label, partial){
   const n = arr.length;
@@ -305,7 +340,7 @@ function kpiBlock(container, arr, last7Label, partial){
       <div class="delta">საშუალო &asymp; ${fmt(Math.round(last7/Math.min(7,n)))} / დღეში</div>
     </div>`;
 }
-document.getElementById("stampDate").textContent = fmtDate(TODAY) + ", " + TODAY.slice(0,4);
+document.getElementById("stampDate").textContent = fmtDateTime(GENERATED_AT);
 
 function renderApps(){
   const vals = APPS.map(r=>r[1]);
@@ -331,51 +366,65 @@ function renderCommittee(){
   const completed = COMMITTEE.slice(0,-1).length ? COMMITTEE.slice(0,-1) : COMMITTEE;
   const peakDay = completed.reduce((a,b)=>b[1]>a[1]?b:a);
   const lowDay = completed.reduce((a,b)=>b[1]<a[1]?b:a);
+  const curMonth = TODAY.slice(0,7);
+  const monthTotal = COMMITTEE.filter(([d])=>d.startsWith(curMonth)).reduce((s,r)=>s+r[1],0);
   kpiBlock(document.getElementById("committee-kpis"), vals, "ბოლო 7 დღე (სულ)", true);
   document.getElementById("committee-peak").innerHTML =
-    `პიკური დღე: <b>${fmt(peakDay[1])}</b> (${fmtDate(peakDay[0])}) &nbsp;&middot;&nbsp; მინიმალური: <b>${fmt(lowDay[1])}</b> (${fmtDate(lowDay[0])}${lowDay[1]===0?', შაბათი':''})`;
-  const tb = document.querySelector("#committee-table tbody");
-  tb.innerHTML = COMMITTEE.map(([d,apps,ev])=>`
-    <tr class="${d===TODAY?'today':''} ${apps===0?'zero':''}">
-      <td class="date">${fmtDate(d)}<span class="dow">${dow(d)}</span>${d===TODAY?'<span class="todaytag">დღეს</span>':''}</td>
-      <td class="num">${fmt(apps)}</td>
-      <td class="num" style="color:var(--muted)">${fmt(ev)}</td>
-      <td class="bar-cell"><div class="bar-track"><div class="bar-fill" style="width:${max?Math.max(apps/max*100,apps>0?4:0):0}%"></div></div></td>
-    </tr>`).join("");
+    `პიკური დღე: <b>${fmt(peakDay[1])}</b> (${fmtDate(peakDay[0])}) &nbsp;&middot;&nbsp; მინიმალური: <b>${fmt(lowDay[1])}</b> (${fmtDate(lowDay[0])}${lowDay[1]===0?', შაბათი':''}) &nbsp;&middot;&nbsp; თვის ჯამი: <b>${fmt(monthTotal)}</b>`;
+  const dates = COMMITTEE.map(r=>r[0]);
+  renderMatrix("committee", COMMITTEE_BY_MANAGER, dates,
+    v => v ? fmt(v) : '<span style="color:var(--muted)">&ndash;</span>',
+    (a,b) => a+b, 0,
+    v => fmt(v));
 }
 
-function renderSigned(){
-  const totals = SIGNED.map(r=>r[1]+r[2]+r[3]+r[4]);
-  const max = Math.max(...totals);
-  const completedTotals = totals.slice(0,-1).length ? totals.slice(0,-1) : totals;
-  const completedDays = totals.slice(0,-1).length ? SIGNED.slice(0,-1) : SIGNED;
-  let peakIdx=0; completedTotals.forEach((v,i)=>{ if(v>completedTotals[peakIdx]) peakIdx=i; });
-  kpiBlock(document.getElementById("signed-kpis"), totals, "ბოლო 7 დღე (სულ)", true);
-  document.getElementById("signed-peak").innerHTML =
-    `პიკური დღე: <b>${fmt(completedTotals[peakIdx])}</b> (${fmtDate(completedDays[peakIdx][0])}) &nbsp;&middot;&nbsp; აქედან <b>${fmt(SIGNED.reduce((s,r)=>s+r[1],0))}</b> გახდა აქტიური მთლიან პერიოდში`;
-  const tb = document.querySelector("#signed-table tbody");
-  tb.innerHTML = SIGNED.map(([d,a,r,c,o])=>{
-    const t = a+r+c+o;
-    const segs = [];
-    if(a) segs.push(`<div class="bar-fill seg-good" style="width:${t?a/t*100:0}%"></div>`);
-    if(r) segs.push(`<div class="bar-fill seg-bad" style="width:${t?r/t*100:0}%"></div>`);
-    if(c) segs.push(`<div class="bar-fill seg-warn" style="width:${t?c/t*100:0}%"></div>`);
-    if(o) segs.push(`<div class="bar-fill" style="width:${t?o/t*100:0}%;border-radius:0;background:var(--muted)"></div>`);
-    const barWidth = max?Math.max(t/max*100, t>0?4:0):0;
-    return `
-    <tr class="${d===TODAY?'today':''} ${t===0?'zero':''}">
-      <td class="date">${fmtDate(d)}<span class="dow">${dow(d)}</span>${d===TODAY?'<span class="todaytag">დღეს</span>':''}</td>
-      <td class="num" style="color:var(--good)">${a?fmt(a):'&ndash;'}</td>
-      <td class="num" style="color:var(--bad)">${r?fmt(r):'&ndash;'}</td>
-      <td class="num" style="color:var(--warn)">${c?fmt(c):'&ndash;'}</td>
-      <td class="num" style="color:var(--muted)">${o?fmt(o):'&ndash;'}</td>
-      <td class="num" style="font-weight:700">${fmt(t)}</td>
-      <td class="bar-cell"><div class="bar-track" style="width:${barWidth}%">${segs.join("")}</div></td>
-    </tr>`;
-  }).join("");
+function renderSales(){
+  const dates = COMMITTEE.map(r=>r[0]);
+  const dayTotals = dates.map(()=>[0,0]);
+  SALES_BY_MANAGER.forEach(([,vals])=>{
+    vals.forEach(([n,amt],i)=>{ dayTotals[i][0]+=n; dayTotals[i][1]+=amt; });
+  });
+  const n = dayTotals.length;
+  const todayVal = dayTotals[n-1], yestVal = n>1 ? dayTotals[n-2] : [0,0];
+  const last7 = dayTotals.slice(-7).reduce((s,v)=>[s[0]+v[0],s[1]+v[1]],[0,0]);
+  const deltaAmt = yestVal[1]===0 ? null : Math.round((todayVal[1]-yestVal[1])/yestVal[1]*100);
+  document.getElementById("sales-kpis").innerHTML = `
+    <div class="kpi partial">
+      <div class="label">დღეს (${fmtDate(TODAY)})</div>
+      <div class="value">${fmt(todayVal[0])}</div>
+      <div class="delta">${fmtGEL(todayVal[1])} &middot; მიმდინარე დღე</div>
+    </div>
+    <div class="kpi">
+      <div class="label">გუშინ</div>
+      <div class="value">${fmt(yestVal[0])}</div>
+      <div class="delta">${fmtGEL(yestVal[1])}${deltaAmt===null?'':' &middot; '+(deltaAmt>=0?'&#9650; +':'&#9660; ')+deltaAmt+'%'}</div>
+    </div>
+    <div class="kpi">
+      <div class="label">ბოლო 7 დღე (სულ)</div>
+      <div class="value">${fmt(last7[0])}</div>
+      <div class="delta">${fmtGEL(last7[1])}</div>
+    </div>`;
+
+  const completed = dayTotals.slice(0,-1).length ? dayTotals.slice(0,-1) : dayTotals;
+  const completedDates = dayTotals.slice(0,-1).length ? dates.slice(0,-1) : dates;
+  let peakIdx = 0;
+  completed.forEach((v,i)=>{ if(v[1]>completed[peakIdx][1]) peakIdx=i; });
+  const curMonth = TODAY.slice(0,7);
+  const monthTotal = dates.reduce((acc,d,i)=>{
+    if(d.startsWith(curMonth)){ acc[0]+=dayTotals[i][0]; acc[1]+=dayTotals[i][1]; }
+    return acc;
+  }, [0,0]);
+  document.getElementById("sales-peak").innerHTML =
+    `პიკური დღე: <b>${fmt(completed[peakIdx][0])}</b> გარიგება, <b>${fmtGEL(completed[peakIdx][1])}</b> (${fmtDate(completedDates[peakIdx])}) &nbsp;&middot;&nbsp; თვის ჯამი: <b>${fmt(monthTotal[0])}</b> გარიგება, <b>${fmtGEL(monthTotal[1])}</b>`;
+
+  const cellHtml = ([cnt,amt]) => cnt ? `<div class="sc-n">${fmt(cnt)}</div><div class="sc-amt">${fmtGEL(amt)}</div>` : '<span style="color:var(--muted)">&ndash;</span>';
+  renderMatrix("sales", SALES_BY_MANAGER, dates,
+    cellHtml,
+    (a,b) => [a[0]+b[0], a[1]+b[1]], [0,0],
+    cellHtml);
 }
 
-renderApps(); renderCommittee(); renderSigned();
+renderApps(); renderCommittee(); renderSales();
 
 document.getElementById("tabs").addEventListener("click", e=>{
   const btn = e.target.closest("button[data-page]");
