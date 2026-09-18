@@ -31,11 +31,11 @@ $html = ForSalesReport::applyToHtml($html, $data);
 file_put_contents($page, $html);
 
 fwrite(STDERR, sprintf(
-    "built in %.1fs -> %s (apps rows=%d, committee rows=%d, signed rows=%d, generatedAt=%s)\n",
+    "built in %.1fs -> %s (apps rows=%d, committee rows=%d, sales managers=%d, generatedAt=%s)\n",
     microtime(true) - $t,
     $page,
     count($data['apps']),
     count($data['committee']),
-    count($data['signed']),
+    count($data['salesByManager']),
     $data['generatedAt'],
 ));

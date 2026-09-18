@@ -7,11 +7,12 @@ namespace Volta\Funnel;
 use PDO;
 
 /**
- * "For Sales" — three CRM application-pipeline questions, one row per day, from HISTORY_START (the first
- * day crm_activity_log has real status-change events) through today:
+ * "For Sales" — CRM application-pipeline questions, one row per day, from HISTORY_START (the first day
+ * crm_activity_log has real status-change events) through today:
  *   1. Unique applications received (orders.created_at).
- *   2. Applications that moved to committee (installment.status_change, to=8).
- *   3. Applications that left "Signed" (status 11) for another status, broken out by destination.
+ *   2. Applications that moved to committee (installment.status_change, to=8), broken out by sales
+ *      manager x day for the committee tab's table.
+ *   3. Sales (count + amount) by sales manager x day, same definition as the Daily Mail Amount Sold report.
  * Same day-range/zero-fill/status-code conventions as NewDbOps (see volta-analytics-new-db/pull_new.sh's
  * Operations section) — this is a small, standalone sibling, not part of that report.
  */
@@ -23,7 +24,7 @@ final class ForSalesReport
     {
     }
 
-    /** @return array{apps: list<array{0:string,1:int}>, committee: list<array{0:string,1:int,2:int}>, signed: list<array{0:string,1:int,2:int,3:int,4:int}>, generatedAt: string} */
+    /** @return array{apps: list<array{0:string,1:int}>, committee: list<array{0:string,1:int,2:int}>, committeeByManager: list<array{0:string,1:list<int>}>, salesByManager: list<array{0:string,1:list<array{0:int,1:float}>}>, generatedAt: string} */
     public function build(): array
     {
         $today = (new \DateTimeImmutable('today'))->format('Y-m-d');
@@ -54,48 +55,101 @@ final class ForSalesReport
             $committee[] = [$d, $a, $e];
         }
 
-        // ---- 3. applications that left "Signed" (status 11) for another status, by destination
-        // Active = to 1 (activation event) or 5 (rare: logged straight to the stored Active code);
-        // Rejected = to 6; Customer declined = to 12; everything else (13 expired, etc.) -> "other".
-        // A self-transition (to 11, seen once as a same-day correction) is not a real status change and is excluded.
-        $signedByDay = [];
-        foreach ($this->q("SELECT DATE(created_at) d, JSON_EXTRACT(metadata,'\$.to') t, COUNT(DISTINCT entity_id) n
-            FROM crm_activity_log WHERE action='installment.status_change' AND JSON_EXTRACT(metadata,'\$.from')=11
-            AND JSON_EXTRACT(metadata,'\$.to')<>11 AND DATE(created_at) BETWEEN :start AND :end
-            GROUP BY d, t", ['start' => $start, 'end' => $today]) as $r) {
-            $d = (string) $r['d'];
-            $t = (int) $r['t'];
-            $n = (int) $r['n'];
-            $signedByDay[$d] ??= [0, 0, 0, 0];
-            if ($t === 1 || $t === 5) {
-                $signedByDay[$d][0] += $n;
-            } elseif ($t === 6) {
-                $signedByDay[$d][1] += $n;
-            } elseif ($t === 12) {
-                $signedByDay[$d][2] += $n;
-            } else {
-                $signedByDay[$d][3] += $n;
-            }
+        // ---- 2b. the same committee-bound applications, broken out by sales manager (orders.crm_sales_manager_id)
+        // for the manager x date table. Unique per (day, manager) — an application that bounced back to committee
+        // more than once on the same day still counts once, same rule as #2 above.
+        $commByManager = [];
+        foreach ($this->q("SELECT DATE(l.created_at) d,
+                COALESCE(NULLIF(TRIM(CONCAT(COALESCE(u.first_name,''),' ',COALESCE(u.last_name,''))),''),'დაუნიშნავი') manager,
+                COUNT(DISTINCT l.entity_id) apps
+            FROM crm_activity_log l JOIN orders o ON o.id=l.entity_id LEFT JOIN crm_users u ON u.id=o.crm_sales_manager_id
+            WHERE l.action='installment.status_change' AND JSON_EXTRACT(l.metadata,'\$.to')=8
+            AND DATE(l.created_at) BETWEEN :start AND :end GROUP BY d, manager", ['start' => $start, 'end' => $today]) as $r) {
+            $commByManager[(string) $r['manager']][(string) $r['d']] = (int) $r['apps'];
         }
-        $signed = [];
-        foreach ($days as $d) {
-            [$a, $rej, $c, $o] = $signedByDay[$d] ?? [0, 0, 0, 0];
-            $signed[] = [$d, $a, $rej, $c, $o];
+        $managerTotals = [];
+        foreach ($commByManager as $name => $byDay) {
+            $managerTotals[$name] = array_sum($byDay);
+        }
+        arsort($managerTotals);
+        $committeeByManager = [];
+        foreach (array_keys($managerTotals) as $name) {
+            $row = [];
+            foreach ($days as $d) {
+                $row[] = $commByManager[$name][$d] ?? 0;
+            }
+            $committeeByManager[] = [$name, $row];
+        }
+
+        // ---- 4. Sales by sales manager and day — count + amount, same definition and date key as the Daily
+        // Mail "Amount Sold" report (volta-analytics-new-db/pull_new.sh, revised 2026-09-15): keyed to the day
+        // the loan reaches Active status (Signed -> Active, crm_activity_log to=1), or crm_order_status=99
+        // (single-payment, no activation event, keyed to created_at). Amount = the real installment schedule
+        // total + advance whenever the schedule actually carries the financing markup (ground truth); falls
+        // back to the computed estimate (site price * standard/Karcher markup, CEIL'd to the nearest 10) only
+        // when the schedule is broken (= site price) and crm_creator_date >= 2026-09-01; otherwise site price.
+        // MUST stay in sync with pull_new.sh's copy of this same CASE expression if that formula ever changes.
+        $salesByManager = [];
+        foreach ($this->q("WITH act AS (
+                    SELECT entity_id, MIN(created_at) t FROM crm_activity_log
+                    WHERE action='installment.status_change' AND JSON_EXTRACT(metadata,'\$.to')=1 GROUP BY entity_id
+                    UNION ALL SELECT id, created_at FROM orders WHERE crm_order_status=99
+                )
+                SELECT DATE(act.t) d,
+                    COALESCE(NULLIF(TRIM(CONCAT(COALESCE(u.first_name,''),' ',COALESCE(u.last_name,''))),''),'დაუნიშნავი') manager,
+                    COUNT(*) deals,
+                    SUM(CASE WHEN o.crm_order_status=99 THEN o.base_grand_total
+                             WHEN s.tot IS NULL THEN o.base_grand_total
+                             WHEN ABS(s.tot - o.base_grand_total) >= 0.01 THEN s.tot + COALESCE(o.crm_advance_amount,0)
+                             WHEN o.crm_creator_date >= '2026-09-01' THEN CEIL((o.base_grand_total * (CASE WHEN EXISTS (
+                                    SELECT 1 FROM order_items oi
+                                    JOIN product_attribute_values pb ON pb.product_id=oi.product_id AND pb.attribute_id=25
+                                    JOIN attribute_options ao ON ao.id=pb.integer_value AND ao.admin_name='KARCHER GEORGIA'
+                                    WHERE oi.order_id=o.id
+                                  ) THEN (1.15*1.05*1.20) ELSE (1.05*1.20) END)) / 10) * 10
+                             WHEN s.tot + COALESCE(o.crm_advance_amount,0) <= o.base_grand_total + 0.01 THEN s.tot + COALESCE(o.crm_advance_amount,0)
+                             ELSE s.tot END) amount
+                FROM act JOIN orders o ON o.id=act.entity_id AND o.crm_active=1
+                LEFT JOIN crm_users u ON u.id=o.crm_sales_manager_id
+                LEFT JOIN (SELECT installment_id, SUM(schedule_amount) tot FROM crm_installment_schedules GROUP BY installment_id) s ON s.installment_id=o.id
+                WHERE DATE(act.t) BETWEEN :start AND :end GROUP BY d, manager", ['start' => $start, 'end' => $today]) as $r) {
+            $salesByManager[(string) $r['manager']][(string) $r['d']] = [(int) $r['deals'], round((float) $r['amount'], 2)];
+        }
+        $managerAmtTotals = [];
+        foreach ($salesByManager as $name => $byDay) {
+            $managerAmtTotals[$name] = array_sum(array_column($byDay, 1));
+        }
+        arsort($managerAmtTotals);
+        $salesByManagerRows = [];
+        foreach (array_keys($managerAmtTotals) as $name) {
+            $row = [];
+            foreach ($days as $d) {
+                $row[] = $salesByManager[$name][$d] ?? [0, 0.0];
+            }
+            $salesByManagerRows[] = [$name, $row];
         }
 
         return [
             'apps' => $apps,
             'committee' => $committee,
-            'signed' => $signed,
+            'committeeByManager' => $committeeByManager,
+            'salesByManager' => $salesByManagerRows,
             'generatedAt' => (new \DateTimeImmutable('now'))->format('c'),
         ];
     }
 
-    /** Swaps the three data consts (APPS/COMMITTEE/SIGNED) inside for-sales/for_sales.html for fresh data. */
+    /** Swaps the data consts (APPS/COMMITTEE/COMMITTEE_BY_MANAGER/SALES_BY_MANAGER/GENERATED_AT) inside for-sales/for_sales.html for fresh data. */
     public static function applyToHtml(string $html, array $data): string
     {
         $flags = JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES;
-        foreach (['APPS' => 'apps', 'COMMITTEE' => 'committee', 'SIGNED' => 'signed'] as $const => $key) {
+        $consts = [
+            'APPS' => 'apps',
+            'COMMITTEE' => 'committee',
+            'COMMITTEE_BY_MANAGER' => 'committeeByManager',
+            'SALES_BY_MANAGER' => 'salesByManager',
+            'GENERATED_AT' => 'generatedAt',
+        ];
+        foreach ($consts as $const => $key) {
             $html = preg_replace(
                 '/^const ' . $const . ' = .*?;$/ms',
                 'const ' . $const . ' = ' . json_encode($data[$key], $flags) . ';',
