@@ -102,6 +102,10 @@ table.postings td.purpose{white-space:normal;width:240px;max-width:240px}
 table.ledger{border-collapse:collapse;width:100%;min-width:640px}
 .ledger th{font-size:11.5px;font-weight:500;color:var(--muted);text-align:left;padding:9px 12px;border-bottom:1px solid var(--line);letter-spacing:.02em;white-space:nowrap;background:var(--surface);position:sticky;top:0;z-index:2}
 .ledger th.n,.ledger td.n{text-align:right}
+.ledger .mg-first{border-left:2px solid var(--line)}
+.ledger td.mg-alt,.ledger th.mg-alt{background-image:linear-gradient(rgba(127,127,127,.09),rgba(127,127,127,.09)) !important}
+.ledger th.mg-head{text-align:center;font-size:13px;font-weight:700;color:var(--accent);border-bottom:2px solid var(--accent);letter-spacing:.04em}
+
 .ledger td{padding:6px 12px;border-bottom:1px solid var(--line2);vertical-align:middle;white-space:nowrap}
 .ledger td.name{white-space:normal;min-width:340px;max-width:600px;position:sticky;left:0;z-index:1;background:var(--surface)}
 .ledger thead th:first-child{left:0;z-index:3}
@@ -166,8 +170,6 @@ footer{max-width:1380px;margin:0 auto;padding:0 28px 40px;color:var(--faint);fon
       <span class="tab-row-label" data-rl="general"></span>
       <div class="tab-row">
         <button role="tab" data-p="ov"></button>
-        <button role="tab" data-p="ar"></button>
-        <button role="tab" data-p="ex"></button>
         <button role="tab" data-p="mp"></button>
       </div>
     </div>
@@ -187,7 +189,6 @@ footer{max-width:1380px;margin:0 auto;padding:0 28px 40px;color:var(--faint);fon
         <button role="tab" data-p="pl"></button>
         <button role="tab" data-p="bs"></button>
         <button role="tab" data-p="cf"></button>
-        <button role="tab" data-p="tb"></button>
       </div>
     </div>
     <div class="tab-row-wrap" data-budget-group="1">
@@ -205,8 +206,6 @@ footer{max-width:1380px;margin:0 auto;padding:0 28px 40px;color:var(--faint);fon
 
 <main>
   <section class="panel" id="p-ov"></section>
-  <section class="panel" id="p-ar"></section>
-  <section class="panel" id="p-ex"></section>
   <section class="panel" id="p-mp"></section>
   <section class="panel" id="p-pb"></section>
   <section class="panel" id="p-bb"></section>
@@ -216,7 +215,6 @@ footer{max-width:1380px;margin:0 auto;padding:0 28px 40px;color:var(--faint);fon
   <section class="panel" id="p-bs"></section>
   <section class="panel" id="p-pl"></section>
   <section class="panel" id="p-cf"></section>
-  <section class="panel" id="p-tb"></section>
   <section class="panel" id="p-avpl"></section>
   <section class="panel" id="p-avbs"></section>
   <section class="panel" id="p-avcf"></section>
@@ -232,7 +230,7 @@ const BUDGET = __BUDGET__;   // 2026 P&L/BS budget, extracted from the finance t
 const MAPPING = __MAPPING__; // Oris account -> CF category reference, from the finance team's own tagging (null if not built)
 const M = D.months, NM = M.length;
 const years = [...new Set(M.map(m=>m.slice(0,4)))];
-const state = { year: years[years.length-1], month: null, tab: 'ov', lang: 'ka', open: new Set(), arLedger: '1 4 10', arQ: '', arN: 100, compactTabs: new Set(), theme: null, exOpenCell: new Map(), drillN: 40, drillSort: 'date', mpQ: '', mpN: 150, mpCat: '', mpSubcat: '', mpSubsub: '', mpInout: '', mpStatus: '' };
+const state = { year: years[years.length-1], month: null, tab: 'ov', lang: 'ka', open: new Set(), arLedger: '1 4 10', arQ: '', arN: 100, compactTabs: new Set(), theme: null, exOpenCell: new Map(), drillN: 40, drillSort: 'date', mpQ: '', mpN: 150, mpCat: '', mpSubcat: '', mpSubsub: '', mpInout: '', mpStatus: '', mpStmt: '', mpPl: '', mpBs: '', mpCf: '' };
 try{ const l=localStorage.getItem('volta-fin-lang'); if(l==='en'||l==='ka') state.lang=l; }catch(_){}
 try{ const th=localStorage.getItem('volta-fin-theme'); if(th==='light'||th==='dark'){ state.theme=th; document.documentElement.dataset.theme=th; } }catch(_){}
 
@@ -246,21 +244,21 @@ ka:{
   compactAll:'მხოლოდ მთავარი მუხლები', expandAll:'ყველა მუხლი',
   actual:'ფაქტი', budget:'ბიუჯეტი', diff:'სხვაობა', ytd:'დაგროვილი',
   avTitlePL:'მოგება-ზარალი: ფაქტი vs ბიუჯეტი', avTitleBS:'ბალანსი: ფაქტი vs ბიუჯეტი', avTitleCF:'ფულადი ნაკადები: ფაქტი vs ბიუჯეტი',
-  avNotePL:'ფაქტი ორისის ანგარიშთა გეგმის მიხედვითაა დაშლილი, ისე რომ ჯამში ზუსტად შეესატყვისებოდეს დანარჩენ ტაბებში დათვლილ წმინდა მოგებას (გაჟონვის/ორმაგი დათვლის გარეშე) — ყოველი ანგარიში, რომელსაც ბიუჯეტში საკუთარი სტრიქონი არ აქვს, თავს იყრის „სხვა შემოსავალში". „პარტნიორების/სხვა პერსონალის ხელფასი" (92/93), „მარკეტინგის ხელფასები" (101), „საეჭვო მოთხოვნების რეზერვი" (102 — ეს ანგარიში ორისში საერთოდ არაა გამოყენებული), „კორპორატიული ღონისძიება" (103), ცვეთა/პროცენტები/დივიდენდები (109/111-114/117) ცალკე ჩანაწერად ორისში არ იძებნება — ჯამური „არასაოპერაციო ხარჯები" (108) ხელმისაწვდომია, დეტალები არა. შემოსავალი/თვითღირებულება დღგ-ს ჩათვლით (78/80) გამოთვლილია x1.18-ით. სხვაობის % ბიუჯეტის სიდიდესთან შედარებით.',
+  avNotePL:'ფაქტი ორისიდან ცოცხლად ითვლება და ბიუჯეტის ფაილის სტრუქტურას მისდევს: „სხვა შემოსავალი“ (87) არის მომსახურების, ჯარიმებისა და პორტფელის გაყიდვის (84–86) ჯამი, EBITDA = მთლიანი მოგება − ოპექსი + 84–86; მარჟები ითვლება შემოსავლიდან დღგ-ს გარეშე (79). ოპექსის ანგარიშები მუხლებზე მათი შინაარსით არის მიბმული (გადამოწმებულია Excel-ის იანვარ–ივლისის ფაქტთან): ხელფასები — „შრომის ანაზღაურება“ (7 4 10), სოციალური დანარიცხები (7 4 15) და საკონსულტაციო (7 4 50); ისინი იყოფა „პარტნიორების ხელფასად“ (დირექტორების 4 სახელფასო ანგარიში და 3 1 10 1684) და „სხვა პერსონალის ხელფასად“ — იანვარ–თებერვალში ხელფასი საერთო ანგარიშზე (3 1 30) იყო დარიცხული, ამიტომ ამ თვეებში პარტნიორების ხელფასი 0-ია და ყველაფერი „სხვა პერსონალშია“ (Excel-ში პარტნიორების ხელფასი ≈64 ათასი ₾ ფიქსირებული რიცხვია, ორისიდან ვერ გამეორდება); მენეჯმენტის საკომისიო (7 4 90 49), ოფისის ქირა (7 4 20) და კორპორატიული ღონისძიება (7 4 90 44) Excel-ს ზუსტად ემთხვევა; ცვეთა (7 4 55) გადავიდა არასაოპერაციო ბლოკში, როგორც Excel-ში; მიწოდება = 7 3 + საკურიერო, სატრანსპორტო და ავტომობილის ხარჯები; მარკეტინგი = მარკეტინგის ხარჯები + სარეკლამო მომსახურება (7 4 90 10) + სხვა საკონსულტაციო (7 4 56); „საოფისე ხარჯები“ (95) არის ყველა დანარჩენი 7 4 ანგარიში (საოფისე, კომუნიკაცია, ბანკის ხარჯი, ფიზიკური პირების მომსახურება…), ამიტომ ოპექსში არაფერი რჩება მუხლის გარეშე. სესხის პროცენტი (8 2 10) კრედიტორის ანგარიშით იყოფა 111/112/113-ზე; საპროცენტო შემოსავალი (8 1 10) აკლდება საბანკო პროცენტს; განსაკუთრებული ხარჯი (9 1/9 2 — მოთხოვნების ჩამოწერა 16.01.2026 ხელშეკრულებებით) არის „საეჭვო მოთხოვნების რეზერვში“ (102) — Excel-ის რეზერვი (~25–46 ათასი ₾/თვე) მოდელის შეფასებაა და ორისში ცალკე არ არის; ქვეიჯარის შემოსავალი (6 1 90 2) აკლდება კომუნალურს (99); დანარჩენი 8 1/8 2 ნეტოდ და 7 4 18 არის „გაუთვალისწინებელში“ (104). კურსთა სხვაობა (8 2 50 / 8 1 50) და ავტომობილის რეალიზაცია (8 1 90 1 / 8 2 90 1) სახელით მიბმულია 115/116-ზე და 110-ზე. წმინდა მოგება უცვლელია და ზუსტად უდგება დანარჩენ ტაბებს (შეუსაბამებელი ნაშთი, თუ მომავალში გაჩნდება, 104-ში აისახება). „მარკეტინგის ხელფასები“ (101) და დივიდენდები (117) ორისში ცალკე ჩანაწერად არ იძებნება. შემოსავალი/თვითღირებულება დღგ-ს ჩათვლით (78/80) x1.18-ია. სხვაობის % ბიუჯეტთან შედარებით.',
   avNoteBS:'ფაქტი ორისის ბალანსის ანგარიშებიდან, იმავე ლოგიკით რაც ბალანსის ტაბზეა. გრძელვადიანი სესხები ორისში ერთ ანგარიშზეა თავმოყრილი (4 1 90) კონტრაგენტის მიხედვით — ბანკის/ზუკის/პარტნიორის სესხები დაშლილია კონკრეტული კონტრაგენტის კოდების მიხედვით, გადამოწმებული იანვრის ბიუჯეტთან (სხვაობა 1-14%). „მოთხოვნების კორექტირება" (127) და „საპენსიო შენატანი" (145) ორისში შესატყვისი ანგარიში არ არსებობს.',
-  avNoteCF:'ფაქტობრივი მონაცემი ისევ ცოცხლად, პირდაპირ ორისიდან არის გამოთვლილი — არა Excel-იდან კოპირებული. მეთოდი: ფინანსური გუნდის საკუთარ ფაილში („Badget VS Acctual Jul\'2026.xlsx") აღმოვაჩინე დამალული შიტი „Oris" — 122,841-სტრიქონიანი ორისის სრული ექსპორტი, სადაც მათ თვითონ აქვთ თითოეულ გატარებას მინიჭებული საკუთარი კატეგორია (რითაც აგებულია მათი CF\'Jul\'2026 მოდელი). ეს მონიშვნა ცოცხალი არ არის (ერთჯერადი სნეპშოტია, ივლისში ჩერდება), მაგრამ კონტრ-ანგარიშის კოდის მიხედვით დაჯგუფებით გამოვიდა გამძლე მეფინგი: ანგარიშის კოდი → კატეგორია. გადამოწმდა პირდაპირ — ამ მეფინგით ორისიდან ხელახლა გამოვთვალე იანვარი-ივლისის ფაქტი და შევადარე მათსავე მოდელს: თითქმის ყველა მუხლი ემთხვევა 0-3%-ის სიზუსტით (რამდენიმე — მენეჯმენტის საკომისიო, ოფისის ქირა, კორპორატიული ღონისძიება, ორივე საპროცენტო მუხლი, სამივე სესხის აღების მუხლი — ზუსტად ემთხვევა). ეს ასევე ორ ადრინდელ შეცდომას ასწორებს: „4 1 90 8019" (Claret Horizon Holdings) ფინანსური გუნდის მონაცემით ზუკის სესხია, არა პარტნიორის; „4 1 90 11677" (Finhub Georgia) ცალკე „სესხი ფინჰაბზე" კატეგორიაა, არა პარტნიორის სესხი — ორივე ადრე არასწორად იყო კლასიფიცირებული ანგარიშის სახელით (არა გამოყენებით). ასევე გასწორდა ადრინდელი მცდარი დასკვნა, რომ საინვესტიციო საქმიანობა ნულია მთელი წლის განმავლობაში — რეალურად არის (სისტემის განვითარება, ავტომობილის შესყიდვა), უბრალოდ ჩვეულებრივი მომწოდებლის ანგარიშის გავლით გატარდება, არა ცალკე ინვესტიციის ანგარიშით. რადგან ეს ცოცხალი ანგარიშის-კოდის მეფინგია (არა კოპირებული რიცხვი), ავტომატურად ფარავს ყველა თვეს, რაც ორისშია — აგვისტო/სექტემბერი აღარ არის „–". 2026-09-18: ეს მეფინგი შედარებული და გავრცობილია ფინანსური გუნდის ახალი, უფრო ახალი ფაილით — დაემატა Cogs/Marketing/Delivery-ის რამდენიმე გამოტოვებული ანგარიში (თითოეული ცალკე გადამოწმებული იანვარი-ივლისის ფაქტთან, გაუმჯობესებას თუ არა ამოწმებდა), და აღმოჩნდა „პარტნიორის კაპიტალის პროცენტის" ორი რეალური ანგარიშიც (გიორგი ზავრაშვილი ახალი და ჯორჯინა ფროფერთის სესხების პროცენტი) — თუმცა მათზე პროცენტის დარიცხვა მხოლოდ აგვისტოში დაიწყო, ასე რომ იანვარი-ივლისში ეს მუხლი კვლავ სამართლიანად ნულს/„–"-ს აჩვენებდა. პარტნიორთა ხელფასი (35/36): ორისის მონაცემებში (71 თანამშრომლის სახელფასო ანგარიშები) ვერსად მოიძებნა, თუ ვინ არის პარტნიორი — ყველა უბრალოდ „ხელფასია" მონიშნული. მომხმარებელმა თავად დაადასტურა (2026-09-18), რომ პარტნიორის ანაზღაურება საერთოდ არ გადის სახელფასო ანგარიშის გავლით — მიდის ცალკე, „შპს ვივო თრეიდის" (ანგარიში 3 1 10 1684) ანგარიშ-ფაქტურით, „საკონსულტაციო მომსახურების" სახით — ეს ახლა „პარტნიორთა ხელფასი"-ს ცოცხალი წყაროა, ხოლო „სხვა პერსონალის ხელფასი" ითვლის სრულ 71-კაციან სახელფასო ანგარიშს (რადგან სხვა ვერცერთი ცალკე პარტნიორი ვერ იდენტიფიცირდა სახელფასო სისტემაში). რაც კვლავ „–"-ითაა და რატომ: შემოსავალი (მომსახურება/ჯარიმა/პორტფელი/ძირითადი თანხა/ავანსი) — კლიენტის ანგარიში ერთდროულად რამდენიმე ტიპის შემოსავალს შეიცავს, ანგარიშის დონეზე ვერ იყოფა. დღგ, გიორგის ქონებით სესხის უზრუნველყოფა, გაუთვალისწინებელი ხარჯები — შესაბამისი ანგარიში არ იძებნება. გამყიდველების საოფისე ინვენტარი (Capex) — შემოწმებით, მხოლოდ ~37%-ია აღდგენადი (ბევრი მომწოდებელი ერთდროულად სხვა კატეგორიასაც ფარავს) — არასრული რიცხვის ჩვენება მცდარი შთაბეჭდილების მომტანი იქნებოდა, ამიტომ „–"-ადაა დატოვებული. დაწვრილება: ნებისმიერ არანულოვან უჯრაზე დაჭერით ჩანს ის გატარებები, რომლებისგანაც შედგება. ოპერაციული ნაკადების (26, 27, 33) ჯამი ნაშთებიდან გამოიანგარიშება (ნაშთის ცვლილება მინუს ფინანსური და საინვესტიციო), ამიტომ ჩამოთვლილი გატარებები მცირედ (რამდენიმე ათასი ₾-მდე) შეიძლება განსხვავდებოდეს — ამას პანელი წითლად აჩვენებს (ვალუტის დღიური კურსების სხვაობა). ფინჰაბის (Finhub Georgia) ნაკადები ერთხელ, სუფთა ნაშთით (გაცემული − დაბრუნებული) აისახება „Loan to Finhub“ სტრიქონში, ისევე როგორც ფინანსური გუნდის მოდელში; 2026-09-21-მდე ის ფინანსური ნაკადების ჯამებში ორჯერ ითვლებოდა (ივლისში 50 000 ₾).',
+  avNoteCF:'ფაქტობრივი მონაცემი ისევ ცოცხლად, პირდაპირ ორისიდან არის გამოთვლილი — არა Excel-იდან კოპირებული. მეთოდი: ფინანსური გუნდის საკუთარ ფაილში („Badget VS Acctual Jul\'2026.xlsx") აღმოვაჩინე დამალული შიტი „Oris" — 122,841-სტრიქონიანი ორისის სრული ექსპორტი, სადაც მათ თვითონ აქვთ თითოეულ გატარებას მინიჭებული საკუთარი კატეგორია (რითაც აგებულია მათი CF\'Jul\'2026 მოდელი). ეს მონიშვნა ცოცხალი არ არის (ერთჯერადი სნეპშოტია, ივლისში ჩერდება), მაგრამ კონტრ-ანგარიშის კოდის მიხედვით დაჯგუფებით გამოვიდა გამძლე მეფინგი: ანგარიშის კოდი → კატეგორია. გადამოწმდა პირდაპირ — ამ მეფინგით ორისიდან ხელახლა გამოვთვალე იანვარი-ივლისის ფაქტი და შევადარე მათსავე მოდელს: თითქმის ყველა მუხლი ემთხვევა 0-3%-ის სიზუსტით (რამდენიმე — მენეჯმენტის საკომისიო, ოფისის ქირა, კორპორატიული ღონისძიება, ორივე საპროცენტო მუხლი, სამივე სესხის აღების მუხლი — ზუსტად ემთხვევა). ეს ასევე ორ ადრინდელ შეცდომას ასწორებს: „4 1 90 8019" (Claret Horizon Holdings) ფინანსური გუნდის მონაცემით ზუკის სესხია, არა პარტნიორის; „4 1 90 11677" (Finhub Georgia) ცალკე „სესხი ფინჰაბზე" კატეგორიაა, არა პარტნიორის სესხი — ორივე ადრე არასწორად იყო კლასიფიცირებული ანგარიშის სახელით (არა გამოყენებით). ასევე გასწორდა ადრინდელი მცდარი დასკვნა, რომ საინვესტიციო საქმიანობა ნულია მთელი წლის განმავლობაში — რეალურად არის (სისტემის განვითარება, ავტომობილის შესყიდვა), უბრალოდ ჩვეულებრივი მომწოდებლის ანგარიშის გავლით გატარდება, არა ცალკე ინვესტიციის ანგარიშით. რადგან ეს ცოცხალი ანგარიშის-კოდის მეფინგია (არა კოპირებული რიცხვი), ავტომატურად ფარავს ყველა თვეს, რაც ორისშია — აგვისტო/სექტემბერი აღარ არის „–". 2026-09-18: ეს მეფინგი შედარებული და გავრცობილია ფინანსური გუნდის ახალი, უფრო ახალი ფაილით — დაემატა Cogs/Marketing/Delivery-ის რამდენიმე გამოტოვებული ანგარიში (თითოეული ცალკე გადამოწმებული იანვარი-ივლისის ფაქტთან, გაუმჯობესებას თუ არა ამოწმებდა), და აღმოჩნდა „პარტნიორის კაპიტალის პროცენტის" ორი რეალური ანგარიშიც (გიორგი ზავრაშვილი ახალი და ჯორჯინა ფროფერთის სესხების პროცენტი) — თუმცა მათზე პროცენტის დარიცხვა მხოლოდ აგვისტოში დაიწყო, ასე რომ იანვარი-ივლისში ეს მუხლი კვლავ სამართლიანად ნულს/„–"-ს აჩვენებდა. პარტნიორთა ხელფასი (35/36): ორისის მონაცემებში (71 თანამშრომლის სახელფასო ანგარიშები) ვერსად მოიძებნა, თუ ვინ არის პარტნიორი — ყველა უბრალოდ „ხელფასია" მონიშნული. მომხმარებელმა თავად დაადასტურა (2026-09-18), რომ პარტნიორის ანაზღაურება საერთოდ არ გადის სახელფასო ანგარიშის გავლით — მიდის ცალკე, „შპს ვივო თრეიდის" (ანგარიში 3 1 10 1684) ანგარიშ-ფაქტურით, „საკონსულტაციო მომსახურების" სახით — ეს ახლა „პარტნიორთა ხელფასი"-ს ცოცხალი წყაროა, ხოლო „სხვა პერსონალის ხელფასი" ითვლის სრულ 71-კაციან სახელფასო ანგარიშს (რადგან სხვა ვერცერთი ცალკე პარტნიორი ვერ იდენტიფიცირდა სახელფასო სისტემაში). რაც კვლავ „–"-ითაა და რატომ: შემოსავალი (მომსახურება/ჯარიმა/პორტფელი/ძირითადი თანხა/ავანსი) — კლიენტის ანგარიში ერთდროულად რამდენიმე ტიპის შემოსავალს შეიცავს, ანგარიშის დონეზე ვერ იყოფა. დღგ, გიორგის ქონებით სესხის უზრუნველყოფა, გაუთვალისწინებელი ხარჯები — შესაბამისი ანგარიში არ იძებნება. გამყიდველების საოფისე ინვენტარი (Capex) — შემოწმებით, მხოლოდ ~37%-ია აღდგენადი (ბევრი მომწოდებელი ერთდროულად სხვა კატეგორიასაც ფარავს) — არასრული რიცხვის ჩვენება მცდარი შთაბეჭდილების მომტანი იქნებოდა, ამიტომ „–"-ადაა დატოვებული. დაწვრილება: ნებისმიერ არანულოვან უჯრაზე დაჭერით ჩანს ის გატარებები, რომლებისგანაც შედგება. ოპერაციული ნაკადების (26, 27, 33) ჯამი ნაშთებიდან გამოიანგარიშება (ნაშთის ცვლილება მინუს ფინანსური და საინვესტიციო), ამიტომ ჩამოთვლილი გატარებები მცირედ (რამდენიმე ათასი ₾-მდე) შეიძლება განსხვავდებოდეს — ამას პანელი წითლად აჩვენებს (ვალუტის დღიური კურსების სხვაობა). ფინჰაბის (Finhub Georgia) ნაკადები ერთხელ, სუფთა ნაშთით (გაცემული − დაბრუნებული) აისახება „Loan to Finhub“ სტრიქონში, ისევე როგორც ფინანსური გუნდის მოდელში; 2026-09-21-მდე ის ფინანსური ნაკადების ჯამებში ორჯერ ითვლებოდა (ივლისში 50 000 ₾). ხელფასების სტრიქონები (35/36) ახლა ფინანსური გუნდის Excel-ის მიხედვითაა: „სხვა პერსონალის ხელფასში“ შედის მთელი სახელფასო გადახდა — თანამშრომლების ანგარიშები (3 1 32), გადასახდელი ხელფასები (3 1 30, იანვარ-თებერვალში ხელფასი ამ ანგარიშით გადიოდა), სოციალური გადასახადი (3 3 70), დაზღვევა და ერთიანი საგადასახადო ანგარიში (3 3 20 1); „პარტნიორების ხელფასი“ კვლავ 3 1 10 1684-ია. Excel-ში იანვარ-აპრილში ერთიანი საგადასახადო ანგარიშიდან დღგ-ს გადახდა (36 990 / 47 899 / 49 300 / 67 548 ₾) ხელით არის გამოყოფილი, ანგარიშის წესით ეს ვერ გამეორდება, ამიტომ ამ თვეებში ხელფასი იმდენით მეტია; მაისი-ივნისი Excel-ს ±5 ათასით უახლოვდება. ახალი კაპექსის სტრიქონი 59 (ოფისის აღჭურვილობა) მხოლოდ იმ ანგარიშებს იჭერს, რომლებიც Excel-ში ამ ჭდეს ატარებს.',
   avTitlePF:'პორტფელი: ფაქტი vs ბიუჯეტი', avTitleAS:'ბიუჯეტის დაშვებები: ფაქტი vs ბიუჯეტი',
   avNotePF:'„პორტფელი თვის დასაწყისში" და „დარჩენილი პორტფელი" ფაქტობრივად მიახლოებულია ორისის მოთხოვნების ანგარიშის (1 4 10, მყიდველების მთლიანი დავალიანება) ნაშთით — ეს ზუსტად არ ემთხვევა სესხის პორტფელის საკუთარ განმარტებას (მხოლოდ ძირი, დარიცხული ჯარიმის/საკომისიოს გარეშე), ამიტომ ბიუჯეტთან სხვაობა ნაწილობრივ განმარტების განსხვავებითაც შეიძლება იყოს გამოწვეული, არა მხოლოდ რეალური გადახრით. „სულ ინკასაცია", „CAC" და „დარჩენილი კლიენტები" სესხების/მარკეტინგის სისტემის მონაცემია და ორისის ბუღალტრულ აღრიცხვაში საერთოდ არ ფიქსირდება — ფაქტი ამ სამ მუხლზე არ ჩანს.',
   avNoteAS:'ფაქტობრივად გამოთვლილია მხოლოდ ის მუხლები, რომლებისთვისაც ორისში პირდაპირი შესატყვისი ანგარიშია: „მარკირება" = (შემოსავალი − თვითღირებულება) / თვითღირებულება (გაყიდვების მთელ მოცულობაზე, განვადება და ნაღდი გაყიდვები ერთმანეთისგან განუცალკევებლად); „მარკეტინგის ხარჯი" = ანგარიში 7 4 90 39 / შემოსავალი; „ჯარიმის შემოსავალი" = ანგარიში 8 1 25 / შემოსავალი — ეს ბოლო რიცხვი საგრძნობლად აღემატება ბიუჯეტის დაშვებას, ღირს გადამოწმდეს, ორისი ამ ანგარიშზე ბიუჯეტის მოდელთან შედარებით უფრო ფართო წრეს ხომ არ ითვლის. დანარჩენი მუხლები (გაყიდვების ზრდის ტემპი, მხოლოდ განვადებაზე მარკირება, რეზერვის განაკვეთი, ინკასაციის განაკვეთი, თავდებულის %) სესხის გრაფიკის, კლიენტების რაოდენობის ან წინა წლის თვიური დეტალის მონაცემს მოითხოვს — ესეც ორისში ან ამ დაფის 2026-წლიან ფარგლებში ხელმისაწვდომი არ არის.',
   budgetTitlePL:'მოგება-ზარალის ბიუჯეტი 2026', budgetTitleBS:'ბალანსის ბიუჯეტი 2026', budgetTitleCF:'ფულადი ნაკადების ბიუჯეტი 2026', budgetTitlePF:'პორტფელის ბიუჯეტი 2026', budgetTitleAS:'ბიუჯეტის დაშვებები 2026',
   budgetSrc:s=>`წყარო: ${s.source} (ფურცელი ${s.sheet}) · ბიუჯეტის სვეტები, ფაქტობრივი მონაცემები არ არის შერეული`,
   mpMissing:'მეფინგის ფაილი არ არის ჩატვირთული.',
-  mpSrc:(src,n)=>`წყარო: ${src} · ორისის ${fmt(n,0)} გატარება, თითოეული ხელით მონიშნული ფინანსური გუნდის მიერ`,
+  mpSrc:(src,n)=>`ანგარიშთა გეგმა ორისიდან · კატეგორიები: ${src}`,
   mpAccounts:'ანგარიში', mpAvgConf:'საშ. სანდოობა', mpNeedReview:'გადასამოწმებელი (<50%)',
   mpCoverage:'დაფარვა', mpCoverageSub:(a,b)=>`${fmt(a,0)} / ${fmt(b,0)} ანგარიშს აქვს მონიშვნა`,
   mpRows:'ანგარიში', mpAccName:'დასახელება', mpCat:'კატეგორია', mpSubcat:'ქვე-კატეგორია', mpSubsub:'ქვე-ქვე-კატეგორია', mpInOut:'მიმართულება',
-  mpConf:'სანდოობა', mpStatus:'სტატუსი',
-  mpNote:'თითოეული ანგარიშისთვის ნაჩვენებია მისი ყველაზე ბოლო (თარიღით) მონიშნული გატარების კატეგორია, ქვე-კატეგორია, ქვე-ქვე-კატეგორია, მიმართულება, სანდოობა და სტატუსი — არა ისტორიული საშუალო. ეს ცხრილი ორისის საბანკო ანგარიშებს (1 1/1 2) არ შეიცავს — ისინი თავად ფულადი სახსრებია, არა კატეგორია. „დაფარვა" გვიჩვენებს, რომ ამ ფაილში საერთოდ გამოჩენილი ანგარიშებიდან რამდენს აქვს რაიმე მონიშვნა — დანარჩენი ანგარიშები (მაგ. ბევრი კლიენტის კოდი) ამ ცხრილში საერთოდ არ ჩანს, რადგან ფინანსურ გუნდს ჯერ არ დაუმონიშნავს, არა იმიტომ რომ რამე გამოტოვებულია. ეს არის საცნობარო ცხრილი: აჩვენებს რას ეყრდნობა `build_data.py`-ის ცოცხალი Cash Flow გამოთვლა, მაგრამ ცხრილის განახლება ავტომატურად არ ცვლის იმ გამოთვლას — თუ მეფინგი გადაისინჯება, საჭიროა ცალკე გადატანა.',
+  mpConf:'სანდოობა', mpStatus:'სტატუსი', mpInPl:'მოგება-ზარალშია', mpInBs:'ბალანსშია', mpInCf:'ფულად ნაკადებშია', mpStmtDiffK:'განსხვავდება ფაილის ჭდისგან', mpStmtDiffSub:'ანგარიშგება მიჰყვება Excel-ს', mpPlCol:'მოგება-ზარალი (მუხლი)', mpBsCol:'ბალანსი (მუხლი)', mpCfCol:'ფულადი ნაკადები (მუხლი)', mpNoOwn:'(საკუთარი მუხლის გარეშე)', mpNoLine:'ბიუჯეტის მუხლის გარეშე', mpCfOp:'საოპერაციო ნაკადი (საკუთარი მუხლის გარეშე)', mpCfCash:'ფული (საწყისი/საბოლოო ნაშთი)', mpCfXfer:'შიდა გადარიცხვა (ფულად ნაკადში არ ითვლება)', mpStmtCol:'ანგარიშგებაში', mpStmtUsed:'გამოიყენება ანგარიშგებაში', mpStmtDiff:n=>`${n} განსხვავდება ფაილის ჭდისგან`, mpStmtUsedOpt:'გამოიყენება ანგარიშგებაში', mpStmtDiffOpt:'განსხვავდება ფაილის ჭდისგან', mpStmtUnusedOpt:'არ გამოიყენება', mpDiffTip:'ნაჩვენებია Excel-ის კატეგორია (ანგარიშგება მას მიჰყვება). ფაილის ჭდე',
+  mpNote:'თითოეული ანგარიშისთვის ჩანს, რომელ მუხლზეა გატარებული მოგება-ზარალში, ბალანსში და ფულად ნაკადებში — იმავე განსაზღვრებებიდან, რომლებითაც ანგარიშგებებია აწყობილი, ამიტომ ორივე ყოველთვის ერთმანეთს ემთხვევა. „საკუთარი მუხლის გარეშე“ ნიშნავს, რომ ანგარიში შედის მხოლოდ ჯამურ სტრიქონში (მაგ. ოპექსი ან მოკლევადიანი აქტივები). ფულადი ნაკადების მუხლი აქ ისეთი ანგარიშებისთვისაა, რომლებიც ფულთან პირდაპირ გადის; საოპერაციო ნაკადის ჯამში ისინიც შედიან. კატეგორია/ქვე-კატეგორია/მიმართულება ფინანსური გუნდის ფაილიდანაა, ხოლო თუ ფაილის ჭდე Excel-ის მოდელს ეწინააღმდეგება ან ჭდე არ არის, ნაჩვენებია Excel-ის კატეგორია (მარკერი „Excel“). ფულადი სახსრების ანგარიშები (1 1/1 2) ბალანსზე „ფულში“ ჩანს.',
   budgetNotePL:'ერთხელ, ხელით გადმოტანილი ფაილიდან — ავტომატურად არ განახლდება ორისის განახლებასთან ერთად. „საერთო მოგება", „EBITDA" და „წმინდა მოგება" გამუქებულია, დანარჩენი ცალკეული მუხლებია.',
   budgetNoteBS:'ერთხელ, ხელით გადმოტანილი ფაილიდან — ავტომატურად არ განახლდება ორისის განახლებასთან ერთად. ვალდებულებები და კაპიტალი ორიგინალ ფაილში უარყოფითი ნიშნით ინახება, აქ დადებითადაა ნაჩვენები (თანხვედრისთვის დანარჩენ ჩანართებთან); სქემის საკუთარი მრგვალების ცდომილება ~0.14 ₾-ია და შენარჩუნებულია წყაროდან.',
   budgetNoteCF:'ერთხელ, ხელით გადმოტანილი ფაილიდან — ავტომატურად არ განახლდება ორისის განახლებასთან ერთად. სამი საქმიანობა: საოპერაციო, საინვესტიციო, საფინანსო; თითოეულში შემოსვლა/გასავალის ქვეჯამი გამუქებულია.',
@@ -282,7 +280,7 @@ ka:{
   yearly:'წლიური შეჯამება', yearlyCap:'ყველა წელი, ₾ · მოგება/ზარალი დახურვის გატარებების გარეშე',
   monthlySum:'თვიური შეჯამება', monthlyCap:'თვეების მიხედვით, ₾ · მოგება/ზარალი დახურვის გატარებების გარეშე', cashME:'ფული თვის ბოლოს',
   margin:'მარჟა', adm:'ადმ. ხარჯები', cashYE:'ფული წლის ბოლოს', arShort:'მოთხოვნები', liabShort:'ვალდებულებები',
-  bs:'ბალანსი', account:'ანგარიში', change:'ცვლილება', assets:'აქტივები', totAssets:'სულ აქტივები', liabilities:'ვალდებულებები', totLiab:'სულ ვალდებულებები', equity:'საკუთარი კაპიტალი', totEq:'სულ კაპიტალი', totLE:'სულ ვალდებულებები და კაპიტალი',
+  bs:'ბალანსი', dRevW:'შემოსავალი (დღგ-ს გარეშე)', dOpex:'საოპერაციო ხარჯები', dOfRev:'შემოსავლიდან', dPlChart:'შემოსავალი, ხარჯები და წმინდა მოგება თვეების მიხედვით', dPlCap:'ბიუჯეტის ფაილის სტრიქონებით, ორისიდან ცოცხლად', dBsChart:'ვალდებულებები, კაპიტალი და აქტივები თვეების ბოლოს', stmtBudgetNote:'სტრიქონების დასახელებები და თანმიმდევრობა ბიუჯეტის ფაილისაა, თანხები კი ცოცხლად ორისიდან ითვლება (იგივე გამოთვლა, რაც „ფაქტი vs ბიუჯეტი“ ტაბებში). სტრიქონები, რომლებსაც ორისის ანგარიშებთან სანდო შესაბამისობა ჯერ არ აქვს, ნაჩვენებია ტირეთი; მათი სია და მიზეზები იმავე ტაბების შენიშვნებშია.', account:'ანგარიში', change:'ცვლილება', assets:'აქტივები', totAssets:'სულ აქტივები', totLE:'სულ ვალდებულებები და კაპიტალი', liabilities:'ვალდებულებები', totLiab:'სულ ვალდებულებები', equity:'საკუთარი კაპიტალი', totEq:'სულ კაპიტალი', totLE:'სულ ვალდებულებები და კაპიტალი',
   bsCheck:'კონტროლი: აქტივები − (ვალდებულებები + კაპიტალი) =', periodStart:'პერიოდის დასაწყისი',
   bsNote:'„საანგარიშგებო პერიოდის მოგება/ზარალი" (5 3 30) გამოთვლილია შემოსავლებისა და ხარჯების ანგარიშების ნაშთიდან, ორისის თვიური დახურვის გატარებების გარეშე, ამიტომ ნებისმიერი თვის ბოლოს სწორ დაგროვილ შედეგს აჩვენებს. ცვეთის ანგარიშები (2 2, 2 6) აქტივებში უარყოფითი ნიშნით ჩანს. ვალუტის ოპერაციები გადაყვანილია ლარში იმ დღის კურსით.',
   plTitle:'მოგება-ზარალის ანგარიშგება', item:'მუხლი', chg:'ცვლ.', opRev:'საოპერაციო შემოსავლები', cogs:'რეალიზებული საქონლის/პროდუქციის თვითღირებულება', opEx:'საოპერაციო ხარჯები', nonOp:'არასაოპერაციო და სხვა შემოსავლები/ხარჯები',
@@ -319,21 +317,21 @@ en:{
   compactAll:'Main items only', expandAll:'All items',
   actual:'Actual', budget:'Budget', diff:'Diff', ytd:'YTD',
   avTitlePL:'Profit & Loss: Actual vs Budget', avTitleBS:'Balance Sheet: Actual vs Budget', avTitleCF:'Cash Flow: Actual vs Budget',
-  avNotePL:'Actual is broken down by Oris account so the total reconciles exactly to the net profit shown on the other tabs (no leakage, no double-counting) - every account without its own budget line is folded into "Other Revenue". "Salary of Shareholders/Other Staff" (92/93), "Marketing Salaries" (101), "Provision" (102 - this Oris account is never actually posted to), "Corporate Party" (103), and depreciation/interest/dividends (109/111-114/117) have no isolable Oris line - the "Non-Operational Expenses" total (108) is available, its detail rows are not. Revenue/Cogs incl. VAT (78/80) are derived as x1.18. Diff % is relative to the budget figure.',
+  avNotePL:'Actual is computed live from Oris and follows the budget file\'s structure: \'Other Revenue\' (87) is the subtotal of services, penalty and portfolio sales (84-86); EBITDA = gross profit - Opex + 84-86; margins are relative to Revenue W/O VAT (79). Opex accounts are tied to budget lines by their meaning (checked against the Excel actuals for Jan-Jul): salaries are \'Labor compensation\' (7 4 10), social accruals (7 4 15) and consultancy (7 4 50), split into \'Salary of Shareholders\' (the four directors\' payroll accounts and 3 1 10 1684) and \'Salary of Other Staff\' - in Jan-Feb salaries were accrued to the generic 3 1 30 account, so Shareholders\' salary is 0 there and everything sits in Other Staff (the Excel\'s ~64k shareholder figure is a flat number that Oris cannot reproduce); Management Fee (7 4 90 49), Office Rent (7 4 20) and Corporate Party (7 4 90 44) match the Excel to the cent; depreciation (7 4 55) moved to the non-operating block like in the Excel; Delivery = 7 3 + courier, transport and vehicle costs; Marketing = marketing expenses + advertising services (7 4 90 10) + other consulting (7 4 56); \'Office Expenses\' (95) is every other 7 4 account (office, communication, bank fees, services by individuals...), so nothing in Opex is left without a budget line. Loan interest (8 2 10) is split by lender account into 111/112/113; interest income (8 1 10) reduces Bank Interest; extraordinary expense (9 1/9 2 - receivables written off on contracts dated 16.01.2026) is in Provision (102) - the Excel\'s provision (~25-46k/month) is a model estimate that does not exist in Oris; sublease income (6 1 90 2) reduces Utility (99); the remaining 8 1/8 2, net, and 7 4 18 are in Unpredictable (104). FX difference (8 2 50 / 8 1 50) and the car sale (8 1 90 1 / 8 2 90 1) are tied by name to 115/116 and 110. Net profit is unchanged and still ties exactly to the other tabs (any unclassified balance that may appear in the future is carried in 104). \'Marketing Salaries\' (101) and dividends (117) have no isolable Oris line. Revenue/Cogs incl. VAT (78/80) are x1.18. Diff % is relative to the budget.',
   avNoteBS:'Actual is from Oris\'s own balance-sheet accounts, same logic as the Balance Sheet tab. Long-term loans all sit in one Oris account (4 1 90) split only by contragent - Bank/Zuk/Shareholder loans are separated by the specific contragent codes that name them, checked against the January budget (1-14% variance). "Provision" (127, the receivables allowance) and "Pension Contribution" (145) have no matching Oris account.',
-  avNoteCF:'Actuals are computed LIVE from Oris again - not copied from Excel. Method: a hidden sheet ("Oris") inside the finance team\'s own workbook ("Badget VS Acctual Jul\'2026.xlsx") turned out to be a 122,841-row raw Oris export where THEY had tagged every cash-flow transaction with their own category, the same tagging their CF\'Jul\'2026 model is built from. That tagging isn\'t live (a one-time snapshot, stops at July), but grouping it by counter-account code produced a durable account-code-to-category map. Validated directly: recomputing January-July actuals from live Oris data with this map and comparing to the finance team\'s own model matched to within 0-3% for nearly every category (several - Management Fee, Office Rent, Corporate Party, both interest splits, all three loan-draw categories - matched exactly). This also corrected two earlier mistakes: \'4 1 90 8019\' ("Claret Horizon Holdings") is tagged Zuk by the finance team, not Shareholder; \'4 1 90 11677\' ("Finhub Georgia") is its own "Loan To Finhub" category, not a shareholder loan - both were misclassified before, by account NAME rather than actual usage. It also overturned an earlier wrong finding that Investing activity was zero all year - it isn\'t (real System Development and vehicle capex exist), it just routes through the ordinary supplier-payable ledger instead of a dedicated investing account. Because this is a live account mapping, not a copied number, it automatically covers every month Oris has data for - August/September are no longer "–". 2026-09-18: this mapping was compared against a newer file the finance team supplied and extended - a handful of missed Cogs/Marketing/Delivery accounts were added (each individually checked against the January-July actual, confirmed to help before keeping), and two real accounts for "Interest of Shareholder\'s Equity" turned up (the interest on the Giorgi Zavrashvili-akhali and Georgina Properties shareholder loans) - but interest on those only started accruing in August, so this row still correctly showed zero/"–" for January-July either way. Salary of Shareholders/Other Staff (35/36): no payroll account (71 employees) distinguishes a shareholder from staff - every one is tagged just "Salary." The user confirmed directly (2026-09-18) that shareholder compensation doesn\'t run through payroll at all - it\'s paid separately, through "შპს ვივო თრეიდი" (account 3 1 10 1684), invoiced as "consulting services," and that the plain-"Salary"-tagged accounts are all Other Staff. That vendor account is now the live source for row 35, and row 36 sums the full 71-account payroll ledger. What\'s still "–" and why: Revenue (Services/Penalty/Portfolio/Principal/Advance) - a customer\'s account mixes every revenue type, can\'t be split by account alone. VAT, Securing a Loan with Giorgi\'s Property, Unpredictable Expenses - no matching account found. Salesman Office Equipment Capex - checked directly, only ~37% of real spend is traceable this way (too many vendors also cover other categories) - showing that partial figure would be misleading, so it stays "–". Drill-down: click any non-zero cell to see the postings it is made of. The Operating totals (26, 27, 33) are derived from balances (cash change minus Financing and Investing), so the listed postings can differ slightly (up to a few thousand ₾) - the panel shows that difference in red (daily FX-rate timing between the two legs of a transfer). Finhub Georgia flows are reported once, netted (lent - repaid) in the \'Loan to Finhub\' line, as in the finance team\'s model; until 2026-09-21 they were counted twice in the Financing totals (Jul 2026 by 50,000).',
+  avNoteCF:'Actuals are computed LIVE from Oris again - not copied from Excel. Method: a hidden sheet ("Oris") inside the finance team\'s own workbook ("Badget VS Acctual Jul\'2026.xlsx") turned out to be a 122,841-row raw Oris export where THEY had tagged every cash-flow transaction with their own category, the same tagging their CF\'Jul\'2026 model is built from. That tagging isn\'t live (a one-time snapshot, stops at July), but grouping it by counter-account code produced a durable account-code-to-category map. Validated directly: recomputing January-July actuals from live Oris data with this map and comparing to the finance team\'s own model matched to within 0-3% for nearly every category (several - Management Fee, Office Rent, Corporate Party, both interest splits, all three loan-draw categories - matched exactly). This also corrected two earlier mistakes: \'4 1 90 8019\' ("Claret Horizon Holdings") is tagged Zuk by the finance team, not Shareholder; \'4 1 90 11677\' ("Finhub Georgia") is its own "Loan To Finhub" category, not a shareholder loan - both were misclassified before, by account NAME rather than actual usage. It also overturned an earlier wrong finding that Investing activity was zero all year - it isn\'t (real System Development and vehicle capex exist), it just routes through the ordinary supplier-payable ledger instead of a dedicated investing account. Because this is a live account mapping, not a copied number, it automatically covers every month Oris has data for - August/September are no longer "–". 2026-09-18: this mapping was compared against a newer file the finance team supplied and extended - a handful of missed Cogs/Marketing/Delivery accounts were added (each individually checked against the January-July actual, confirmed to help before keeping), and two real accounts for "Interest of Shareholder\'s Equity" turned up (the interest on the Giorgi Zavrashvili-akhali and Georgina Properties shareholder loans) - but interest on those only started accruing in August, so this row still correctly showed zero/"–" for January-July either way. Salary of Shareholders/Other Staff (35/36): no payroll account (71 employees) distinguishes a shareholder from staff - every one is tagged just "Salary." The user confirmed directly (2026-09-18) that shareholder compensation doesn\'t run through payroll at all - it\'s paid separately, through "შპს ვივო თრეიდი" (account 3 1 10 1684), invoiced as "consulting services," and that the plain-"Salary"-tagged accounts are all Other Staff. That vendor account is now the live source for row 35, and row 36 sums the full 71-account payroll ledger. What\'s still "–" and why: Revenue (Services/Penalty/Portfolio/Principal/Advance) - a customer\'s account mixes every revenue type, can\'t be split by account alone. VAT, Securing a Loan with Giorgi\'s Property, Unpredictable Expenses - no matching account found. Salesman Office Equipment Capex - checked directly, only ~37% of real spend is traceable this way (too many vendors also cover other categories) - showing that partial figure would be misleading, so it stays "–". Drill-down: click any non-zero cell to see the postings it is made of. The Operating totals (26, 27, 33) are derived from balances (cash change minus Financing and Investing), so the listed postings can differ slightly (up to a few thousand ₾) - the panel shows that difference in red (daily FX-rate timing between the two legs of a transfer). Finhub Georgia flows are reported once, netted (lent - repaid) in the \'Loan to Finhub\' line, as in the finance team\'s model; until 2026-09-21 they were counted twice in the Financing totals (Jul 2026 by 50,000). The salary rows (35/36) now follow the finance team\'s Excel: \'Salary of Other Staff\' takes the WHOLE payroll cash-out - employee accounts (3 1 32), salary payable (3 1 30; January-February salaries went through it), social tax (3 3 70), staff insurance and the unified tax account (3 3 20 1); \'Salary of Shareholders\' stays 3 1 10 1684. In January-April the Excel splits VAT paid out of the unified tax account by hand (36,990 / 47,899 / 49,300 / 67,548), which no account rule can reproduce, so salary is higher by that amount in those months; May-June are within about 5k of the Excel. The new capex row 59 (office equipment) only catches the accounts the Excel tags that way.',
   avTitlePF:'Portfolio: Actual vs Budget', avTitleAS:'Budget Assumptions: Actual vs Budget',
   avNotePF:'"Portfolio at Start of Month" and "Remaining Portfolio" actuals are approximated from Oris\'s total customer-receivables balance (account 1 4 10) — this doesn\'t exactly match the loan portfolio\'s own definition (principal only, excluding accrued fees/penalties), so part of the variance against budget may reflect a definitional difference rather than real performance. "Total Collection", "CAC" and "Remaining Clients" are loan-system/marketing metrics that Oris\'s bookkeeping never records — no actual is shown for these three.',
   avNoteAS:'Only the rows with a direct matching Oris account get a computed actual: "Mark Up" = (Revenue − Cogs) / Cogs (whole sales volume, installment and cash sales not split apart); "Marketing Expense" = account 7 4 90 39 / Revenue; "Fine Income" = account 8 1 25 / Revenue — this last figure comes out noticeably above the budget assumption, worth checking whether Oris books a wider set of transactions under this account than the budget model intends. The remaining rows (Sales Growth, Markup on installments only, Provision Rate, Collection Rate, Downpayment %) need a loan schedule, a customer count, or last year\'s monthly detail — none of which are available from Oris or within this dashboard\'s 2026-only scope.',
   budgetTitlePL:'2026 P&L Budget', budgetTitleBS:'2026 Balance Sheet Budget', budgetTitleCF:'2026 Cash Flow Budget', budgetTitlePF:'2026 Portfolio Budget', budgetTitleAS:'2026 Budget Assumptions',
   budgetSrc:s=>`Source: ${s.source} (sheet ${s.sheet}) · budget columns only, no actuals mixed in`,
   mpMissing:'Mapping file not loaded.',
-  mpSrc:(src,n)=>`Source: ${src} · ${fmt(n,0)} Oris postings, each hand-tagged by the finance team`,
+  mpSrc:(src,n)=>`Oris chart of accounts · categories: ${src}`,
   mpAccounts:'Accounts', mpAvgConf:'Avg. confidence', mpNeedReview:'Needs review (<50%)',
   mpCoverage:'Coverage', mpCoverageSub:(a,b)=>`${fmt(a,0)} / ${fmt(b,0)} accounts have a tag`,
   mpRows:'accounts', mpAccName:'Name', mpCat:'Category', mpSubcat:'Sub-category', mpSubsub:'Sub-sub-category', mpInOut:'Direction',
-  mpConf:'Confidence', mpStatus:'Status',
-  mpNote:'For each account, the category, sub-category, sub-sub-category, direction, confidence and status shown are from its single MOST RECENT (by date) tagged posting - not a historical average. This table excludes Oris\'s own cash/bank accounts (1 1/1 2) - they\'re the cash itself, not a category. "Coverage" shows what share of the accounts that appear anywhere in this file have any tag at all - the rest (many customer codes among them) simply haven\'t been tagged by the finance team yet, not something missing from this extraction. This is a REFERENCE table showing what `build_data.py`\'s live Cash Flow computation is based on - updating this table doesn\'t automatically change that computation; a revised mapping needs to be carried over separately.',
+  mpConf:'Confidence', mpStatus:'Status', mpInPl:'In P&L', mpInBs:'In Balance Sheet', mpInCf:'In Cash Flow', mpStmtDiffK:'Differ from file tag', mpStmtDiffSub:'statements follow the Excel model', mpPlCol:'P&L line', mpBsCol:'Balance Sheet line', mpCfCol:'Cash Flow line', mpNoOwn:'(no own line)', mpNoLine:'No budget line', mpCfOp:'Operating flow (no own line)', mpCfCash:'Cash (opening/closing balance)', mpCfXfer:'Internal transfer (excluded from cash flow)', mpStmtCol:'In statements', mpStmtUsed:'Used in statements', mpStmtDiff:n=>`${n} differ from the file tag`, mpStmtUsedOpt:'Used in statements', mpStmtDiffOpt:'Differs from the file tag', mpStmtUnusedOpt:'Not used', mpDiffTip:'Excel model category shown (the statements follow it). File tag',
+  mpNote:'For every account this shows the line it is posted to in the P&L, the Balance Sheet and the Cash Flow - taken from the very same definitions the statements are built from, so the two always agree. "No own line" means the account only rolls into a total row (e.g. Opex or Short Term Assets). The Cash Flow line here covers accounts that move cash directly; they also sit inside the Operating flow total. Category / sub-category / direction come from the finance team\'s file; where the file tag contradicts the Excel model or is missing, the Excel category is shown ("Excel" badge). Cash/bank accounts (1 1/1 2) appear on the Balance Sheet as Cash.',
   budgetNotePL:'Imported once, by hand, from the finance team\'s Excel model - it does not refresh automatically with the Oris updates. "Gross Profit", "EBITDA" and "Net Profit" are bolded subtotals; everything else is an individual line item.',
   budgetNoteBS:'Imported once, by hand, from the finance team\'s Excel model - it does not refresh automatically with the Oris updates. Liabilities and equity are stored as negative in the source file; shown positive here to match the rest of the app. The source workbook carries its own ~0.14 ₾ rounding residual, kept as-is.',
   budgetNoteCF:'Imported once, by hand, from the finance team\'s Excel model - it does not refresh automatically with the Oris updates. Three activities: operating, investing, financing; each activity\'s Cash In / Cash Out subtotal is bolded.',
@@ -355,7 +353,7 @@ en:{
   yearly:'Yearly summary', yearlyCap:'All years, ₾ · profit/loss without closing entries',
   monthlySum:'Monthly summary', monthlyCap:'By month, ₾ · profit/loss without closing entries', cashME:'Cash, month end',
   margin:'Margin', adm:'G&A expenses', cashYE:'Cash at year end', arShort:'Receivables', liabShort:'Liabilities',
-  bs:'Balance Sheet', account:'Account', change:'Change', assets:'Assets', totAssets:'Total assets', liabilities:'Liabilities', totLiab:'Total liabilities', equity:'Equity', totEq:'Total equity', totLE:'Total liabilities and equity',
+  bs:'Balance Sheet', dRevW:'Revenue (excl. VAT)', dOpex:'Opex', dOfRev:'of revenue', dPlChart:'Revenue, opex and net profit by month', dPlCap:'budget-file line items, live from Oris', dBsChart:'Liabilities, equity and assets at month end', stmtBudgetNote:'Line names and order follow the finance team\'s budget file; amounts are computed live from Oris (the same calculation as the Actual-vs-Budget tabs). Lines with no reliable Oris account mapping yet show a dash; the list and reasons are in the notes of those tabs.', account:'Account', change:'Change', assets:'Assets', totAssets:'Total assets', totLE:'Total liabilities & equity', liabilities:'Liabilities', totLiab:'Total liabilities', equity:'Equity', totEq:'Total equity', totLE:'Total liabilities and equity',
   bsCheck:'Check: assets − (liabilities + equity) =', periodStart:'start of period',
   bsNote:'"Profit/loss for the reporting period" (5 3 30) is computed from the balances of the income and expense accounts, without the monthly closing entries Oris posts, so it shows the correct cumulative result at any month end. Depreciation accounts (2 2, 2 6) appear under assets with a negative sign. Foreign-currency transactions are converted to lari at the rate of the transaction date.',
   plTitle:'Profit and Loss Statement', item:'Line item', chg:'Chg.', opRev:'Operating revenue', cogs:'Cost of goods / products sold', opEx:'Operating expenses', nonOp:'Non-operating and other income / expenses',
@@ -597,30 +595,74 @@ function renderOV(){
 /* ---------- BALANCE SHEET ---------- */
 function bsVal(st,code){ const v=S(st,code); let x=close(v); if(code==='5'||code==='5 3'||code==='5 3 30'){ const p=plNet(st); x+=p.o+p.n; } const cls=code[0]; return (cls==='1'||cls==='2')? x : -x; }
 function bsOpen(st,code){ const v=S(st,code); let x=v.o; if(code==='5'||code==='5 3'||code==='5 3 30'){ x+=plNet(st).o; } const cls=code[0]; return (cls==='1'||cls==='2')? x : -x; }
+/* ---------- headline dashboards on top of the P&L and Balance Sheet statements ----------
+   Same look as the Cash Flow tab (KPI cards + one monthly chart), built from the very same live numbers the
+   budget-layout tables below use (PL_ACTUALS / BS_ACTUALS), so cards, chart and table always agree. */
+const plSum=(row,s0,e0)=>{ let x=0; for(let j=s0;j<=e0;j++) x+=PL_ACTUALS[row](j); return x; };
+function plDash(P){
+  const t=T(); const rev=plSum(79,P.s,P.e), gp=plSum(82,P.s,P.e), opex=plSum(90,P.s,P.e), eb=plSum(105,P.s,P.e), np=plSum(118,P.s,P.e);
+  const pc=v=>rev?`${(v/rev*100).toFixed(1)}% ${t.dOfRev}`:'';
+  let h=`<div class="kpis">${kpi(t.dRevW,rev)}${kpi(t.gross,gp,pc(gp))}${kpi(t.dOpex,opex,pc(opex))}${kpi('EBITDA',eb,pc(eb))}${kpi(t.net,np,pc(np))}</div>`;
+  h+=`<div class="card"><h3>${t.dPlChart}</h3><div class="cap">${yLbl(state.year)}, ₾ · ${t.dPlCap}</div><div class="legend"><span><i style="background:${cssVar('--accent')}"></i>${t.dRevW}</span><span><i style="background:${cssVar('--amber')}"></i>${t.dOpex}</span><span><i style="background:${cssVar('--pos')}"></i>${t.net}</span></div><div class="chart" id="c-pl"></div></div>`;
+  return h;
+}
+function plDashDraw(el){
+  const t=T(); const YM=yearMonths(state.year); const f=row=>YM.map(x=>x.real?PL_ACTUALS[row](x.idx):0);
+  barChart(el.querySelector('#c-pl'),YM.map(ymLabel),[{name:t.dRevW,color:cssVar('--accent'),vals:f(79)},{name:t.dOpex,color:cssVar('--amber'),vals:f(90)}],{name:t.net,color:cssVar('--pos'),vals:f(118)});
+}
+const bsAt=(row,j)=>{ if(j>=0) return BS_ACTUALS[row](j); const codes=row===154?['5']:AVBS_CODES[row]; return codes.reduce((s0,c)=>s0+bsOpen(stats(0,0),c),0); };
+function bsDash(P){
+  const t=T(); const e=P.e, s0=P.s-1;
+  const card=(label,row,inv)=>{ const cur=bsAt(row,e), prev=bsAt(row,s0); return kpi(label,cur,delta(cur,prev,inv)); };
+  let h=`<div class="kpis">${card(t.totAssets,135)}${card(t.cash,125)}${card(t.ar,126)}${card(t.totLiab,152,true)}${card(t.totEq,154)}</div>`;
+  h+=`<div class="card"><h3>${t.dBsChart}</h3><div class="cap">${yLbl(state.year)}, ${t.eomBal}, ₾</div><div class="legend"><span><i style="background:${cssVar('--amber')}"></i>${t.totLiab}</span><span><i style="background:${cssVar('--accent')}"></i>${t.totEq}</span><span><i style="background:${cssVar('--pos')}"></i>${t.totAssets}</span></div><div class="chart" id="c-bs"></div></div>`;
+  return h;
+}
+function bsDashDraw(el){
+  const t=T(); const YM=yearMonths(state.year); const f=row=>YM.map(x=>x.real?BS_ACTUALS[row](x.idx):0);
+  barChart(el.querySelector('#c-bs'),YM.map(ymLabel),[{name:t.totLiab,color:cssVar('--amber'),vals:f(152)},{name:t.totEq,color:cssVar('--accent'),vals:f(154)}],{name:t.totAssets,color:cssVar('--pos'),vals:f(135)});
+}
+/* Statements in the finance team's own budget-file layout (line names/order from BUDGET.pl / BUDGET.bs),
+   filled with LIVE Oris actuals - the same PL_ACTUALS / BS_ACTUALS the Actual-vs-Budget tabs use. Lines with
+   no reliable Oris mapping show "-" (never guessed). Drill-down reuses the avpl/avbs scopes. */
+function stmtTable(scope,rows,ACT,compactId,withTotal){
+  const t=T(); const YM=yearMonths(state.year); const nc=YM.length+1+(withTotal?1:0);
+  let h=`<table class="ledger"><thead><tr><th>${t.item}</th>${YM.map(x=>`<th class="n" ${!x.real?'style="color:var(--faint)"':''}>${ymLabel(x)}</th>`).join('')}${withTotal?`<th class="n">${t.total}</th>`:''}</tr></thead><tbody>`;
+  for(const b of rows){ if(state.compactTabs.has(compactId)&&b.level===2) continue;
+    const label=state.lang==='en'?(b.en||b.ka):b.ka; const cls=b.level===1?(b.bold?'total':'lvl1'):''; const ind=b.level===2?'ind1':'';
+    if(b.pct){ h+=`<tr>${pctNameTd(b)}${YM.map(x=>x.real?avPctCell(pctActual(b,x.idx,x.idx)):cell(undefined)).join('')}${withTotal?avPctCell(pctActual(b,0,M.length-1)):''}</tr>`; continue; }
+    const fn=ACT[b.row]; let tot=0;
+    const tds=YM.map(x=>{ if(!fn||!x.real) return cell(undefined); const v=fn(x.idx); tot+=v; return cell(v,{drill:dr(scope,b.row,x.mm,x.mm)}); }).join('');
+    h+=`<tr class="${cls}"><td class="name ${ind}">${esc(label)}</td>${tds}${withTotal?(fn?cell(tot,{drill:dr(scope,b.row,1,12)}):cell(undefined)):''}</tr>${drillPanel(scope,b.row,nc)}`; }
+  return h+`</tbody></table>`;
+}
 function renderBS(){
   const t=T(); const P=period(); const st=stats(P.s,P.e);
   const A=bsVal(st,'1')+bsVal(st,'2'), Lb=bsVal(st,'3')+bsVal(st,'4'), E=bsVal(st,'5');
   const diff=A-(Lb+E);
   let h=periodHead(t.bs, `${t.asOf}: <b>${endOfLbl(P.e)}</b>`);
+  h+=bsDash(P);
   h+=`<div class="check">${t.bsCheck} <span class="${Math.abs(diff)<0.05?'ok':'bad'} num">${fmt(diff)}</span></div>`;
   h+=`<p class="note">${t.bsNote}</p>`;
   const YM=yearMonths(state.year); const ys=YM.map(x=>x.idx);
-  if(ys.length>1){
+  if(BUDGET){ h+=`<div class="card mt"><h3><span>${t.bs} · ${t.byMonth} · ${state.year}</span>${compactBtn('bs')}</h3><div class="cap">${t.eomBal}, ₾</div><p class="note">${t.pClickHintBal}</p><div class="tablewrap" style="box-shadow:none;border:0">${stmtTable('avbs',BUDGET.bs,BS_ACTUALS,'bs',false)}</div></div><p class="note">${t.stmtBudgetNote}</p>`; }
+  else if(ys.length>1){
     const mkeep=(k)=>ys.some(j=>Math.abs(bsVal(stats(ys[0],j),k))>0.004) || k==='5 3 30';
-    const mrow=(code,lv,has,open,id)=>{ const l=lv<=2?`lvl${lv}`:''; return `<tr class="${l}">${nameCell(code,lv,has,open,id)}${ys.map((j,i)=>cell(bsVal(stats(ys[0],j),code),{drill:YM[i].real?dr('bsm',code,YM[i].mm,YM[i].mm):undefined})).join('')}</tr>${drillPanel('bsm',code,ys.length+1)}`; };
+    const mrow=(code,lv,has,open,id)=>{ const l=lv<=2?`lvl${lv}`:''; return `<tr class="${l}">${nameCell(code,lv,has,open,id)}${ys.map((j,i)=>YM[i].real?cell(bsVal(stats(ys[0],j),code),{drill:dr('bsm',code,YM[i].mm,YM[i].mm)}):cell(undefined)).join('')}</tr>${drillPanel('bsm',code,ys.length+1)}`; };
     const mopts={prefix:'bsm',openTo:1,maxLevel:state.compactTabs.has('bs')?1:4,keep:mkeep,row:mrow,sortVal:(k)=>bsVal(stats(ys[0],ys[ys.length-1]),k)};
     const mtot=(codes)=>ys.map(j=>{ const s2=stats(ys[0],j); return codes.reduce((s,c)=>s+bsVal(s2,c),0); });
     let hm=`<div class="card mt"><h3><span>${t.bs} · ${t.byMonth} · ${state.year}</span>${compactBtn('bs')}</h3><div class="cap">${t.eomBal}, ₾</div><p class="note">${t.pClickHintBal}</p><div class="tablewrap" style="box-shadow:none;border:0"><table class="ledger"><thead><tr><th>${t.account}</th>${YM.map(x=>`<th class="n" ${!x.real?'style="color:var(--faint)"':''}>${ymLabel(x)}</th>`).join('')}</tr></thead><tbody>`;
     hm+=`<tr class="head"><td colspan="${ys.length+1}">${t.assets}</td></tr>${treeRows(['1','2'],null,mopts)}`;
-    hm+=`<tr class="sub"><td>${t.totAssets}</td>${mtot(['1','2']).map((v,i)=>cell(v,{drill:YM[i].real?dr('bsm','TA',YM[i].mm,YM[i].mm):undefined})).join('')}</tr>${drillPanel('bsm','TA',ys.length+1)}`;
+    hm+=`<tr class="sub"><td>${t.totAssets}</td>${mtot(['1','2']).map((v,i)=>YM[i].real?cell(v,{drill:dr('bsm','TA',YM[i].mm,YM[i].mm)}):cell(undefined)).join('')}</tr>${drillPanel('bsm','TA',ys.length+1)}`;
     hm+=`<tr class="head"><td colspan="${ys.length+1}">${t.liabilities}</td></tr>${treeRows(['3','4'],null,mopts)}`;
-    hm+=`<tr class="sub"><td>${t.totLiab}</td>${mtot(['3','4']).map((v,i)=>cell(v,{drill:YM[i].real?dr('bsm','TL',YM[i].mm,YM[i].mm):undefined})).join('')}</tr>${drillPanel('bsm','TL',ys.length+1)}`;
+    hm+=`<tr class="sub"><td>${t.totLiab}</td>${mtot(['3','4']).map((v,i)=>YM[i].real?cell(v,{drill:dr('bsm','TL',YM[i].mm,YM[i].mm)}):cell(undefined)).join('')}</tr>${drillPanel('bsm','TL',ys.length+1)}`;
     hm+=`<tr class="head"><td colspan="${ys.length+1}">${t.equity}</td></tr>${treeRows(['5'],null,mopts)}`;
-    hm+=`<tr class="sub"><td>${t.totEq}</td>${mtot(['5']).map(v=>cell(v)).join('')}</tr>`;
+    hm+=`<tr class="sub"><td>${t.totEq}</td>${mtot(['5']).map((v,i)=>YM[i].real?cell(v):cell(undefined)).join('')}</tr>`;
+    hm+=`<tr class="total"><td>${t.totLE}</td>${mtot(['3','4','5']).map((v,i)=>YM[i].real?cell(v):cell(undefined)).join('')}</tr>`;
     hm+=`</tbody></table></div></div>`;
     h+=hm;
   }
-  document.getElementById('p-bs').innerHTML=h;
+  const bsEl=document.getElementById('p-bs'); bsEl.innerHTML=h; bsDashDraw(bsEl);
 }
 
 /* ---------- P&L ---------- */
@@ -635,8 +677,10 @@ function renderPL(){
   const t=T(); const P=period();
   const val=(s,c)=>{ const v=S(s,c); return incSign(c)? v.c-v.d : v.d-v.c; };
   let h=periodHead(t.plTitle, `${t.period}: <b>${P.label}</b>`);
+  if(BUDGET) h+=plDash(P);
   const YM=yearMonths(state.year); const ys=YM.map(x=>x.idx);
   const mp=ys.map(j=>plLines(stats(j,j)));
+  if(BUDGET){ h+=`<div class="card mt"><h3><span>${t.plTitle} · ${t.byMonth} · ${state.year}</span>${compactBtn('pl')}</h3><div class="cap">${t.exPos}</div><p class="note">${t.pClickHint}</p><div class="tablewrap" style="box-shadow:none;border:0">${stmtTable('avpl',plLayout(true),PL_ACTUALS,'pl',true)}</div></div><p class="note">${t.stmtBudgetNote}</p><p class="note">${t.plNote}</p>`; const plEl=document.getElementById('p-pl'); plEl.innerHTML=h; plDashDraw(plEl); return; }
   const monthlyVal=(code,j)=>val(stats(j,j),code);
   const mkeep=(k)=>ys.some(j=>Math.abs(monthlyVal(k,j))>0.004);
   const mrow=(code,lv,has,open,id)=>{ const l=lv<=2?`lvl${lv}`:''; const vals=ys.map(j=>monthlyVal(code,j)); return `<tr class="${l}">${nameCell(code,lv,has,open,id)}${vals.map((v,i)=>cell(v,{drill:YM[i].real?dr('plm',code,YM[i].mm,YM[i].mm):undefined})).join('')}${cell(vals.reduce((a,b)=>a+b,0),{drill:dr('plm',code,1,12)})}</tr>${drillPanel('plm',code,ys.length+2)}`; };
@@ -673,7 +717,7 @@ function renderTB(){
   const YM=yearMonths(state.year); const ys=YM.map(x=>x.idx);
   if(ys.length>1){
     const mkeep=(k)=>ys.some(j=>Math.abs(tbVal(stats(ys[0],j),k))>0.004);
-    const mrow=(code,lv,has,open,id)=>{ const l=lv<=2?`lvl${lv}`:''; return `<tr class="${l}">${nameCell(code,lv,has,open,id)}${ys.map((j,i)=>cell(tbVal(stats(ys[0],j),code),{drill:YM[i].real?dr('tbm',code,YM[i].mm,YM[i].mm):undefined})).join('')}</tr>${drillPanel('tbm',code,ys.length+1)}`; };
+    const mrow=(code,lv,has,open,id)=>{ const l=lv<=2?`lvl${lv}`:''; return `<tr class="${l}">${nameCell(code,lv,has,open,id)}${ys.map((j,i)=>YM[i].real?cell(tbVal(stats(ys[0],j),code),{drill:dr('tbm',code,YM[i].mm,YM[i].mm)}):cell(undefined)).join('')}</tr>${drillPanel('tbm',code,ys.length+1)}`; };
     const mopts={prefix:'tbm',openTo:1,maxLevel:state.compactTabs.has('tb')?1:4,keep:mkeep,row:mrow,sortVal:(k)=>tbVal(stats(ys[0],ys[ys.length-1]),k)};
     let hm=`<div class="card mt"><h3><span>${t.tbTitle} · ${t.byMonth} · ${state.year}</span>${compactBtn('tb')}</h3><div class="cap">${t.closeBal}, ₾</div><p class="note">${t.pClickHintBal}</p><div class="tablewrap" style="box-shadow:none;border:0"><table class="ledger"><thead><tr><th>${t.account}</th>${YM.map(x=>`<th class="n" ${!x.real?'style="color:var(--faint)"':''}>${ymLabel(x)}</th>`).join('')}</tr></thead><tbody>`;
     hm+=treeRows(['1','2','3','4','5','6','7','8 1','8 2','9 1','9 2'],null,mopts);
@@ -763,48 +807,97 @@ function renderAR(){
 // REFERENCE view of the source data, not a live re-derivation of CF_CAT_CODES itself - if this
 // file is refreshed with a cleaner copy, re-run extract_mapping.py (then build_dashboard.py) to
 // update it, and separately decide whether to fold any changes into CF_CAT_CODES.
-function mpConfClass(c){ return c>=80?'ok':c>=50?'diff':'no_oris'; }
 function mpOptions(field){ return [...new Set(MAPPING.rows.map(r=>r[field]).filter(v=>v))].sort((a,b)=>a.localeCompare(b)); }
 function mpSelect(id,label,current,options){
   return `<select id="${id}" aria-label="${esc(label)}"><option value="">${esc(label)}</option>`
     + options.map(o=>`<option value="${esc(o)}" ${o===current?'selected':''}>${esc(o)}</option>`).join('') + `</select>`;
 }
+const CAT_ROW={cogs:34,salary_sh:35,salary_other:36,management_fee:37,delivery:38,marketing:39,marketing_salaries:40,office_rent:41,office_exp:42,utility:44,
+  interest_investors:46,interest_sh:47,interest_bank:48,corporate_party:50,capex_sysdev:58,capex_office:59,capex_truck:60,loan_bog:63,loan_sh_draw:64,loan_zuk_draw:65,
+  dividend:68,loan_to_finhub:69,loan_sh_repay:70,loan_principal_all:71,other_sales:55};
+function stmtLabel(c){ const row=CAT_ROW[c]; const b=BUDGET&&BUDGET.cf&&BUDGET.cf.find(x=>x.row===row); return b?(state.lang==='en'?(b.en||b.ka):b.ka):c; }
+/* ---- where each account is posted in the statements (2026-09-21): derived from the very same definitions the statements use ---- */
+const MP_PL_DETAIL=[79,81,84,85,86,91,94,95,96,98,99,100,102,103,104,109,110,115,116];
+const MP_BS_DETAIL=[125,126,128,130,131,132,133,134,138,139,140,141,142,143,144,146,147,149,150,151];
+let _mpIdx=null;
+function mpIndex(){
+  if(_mpIdx) return _mpIdx;
+  const pl=new Map(), bs=new Map(), cash=new Set();
+  for(const r of MP_PL_DETAIL) for(const [c] of AVPL_SPEC[r]) if(!pl.has(c)) pl.set(c,r);
+  for(const [c,r] of [['8 1 10',113],['8 2 10','int'],['8 2',104],['8 1',104],['9 1',102],['9 2',102],['7 4 10','sal'],['7 4 50','sal'],['7 4 15',93],['7 4',95],['7 3',91],['6','none'],['7','none'],['8','none'],['9','none']]) if(!pl.has(c)) pl.set(c,r);
+  for(const r of MP_BS_DETAIL) for(const c of AVBS_CODES[r]) if(!bs.has(c)) bs.set(c,r);
+  bs.set('5 3 10',155); bs.set('5 3 30',156); bs.set('1 6 35','t124');
+  for(const [c,r] of [['1','t124'],['2','t129'],['3','t137'],['4','t148'],['5','t154']]) if(!bs.has(c)) bs.set(c,r);
+  for(const [md,si,di,ki] of JR.r){ const d=JR.c[di], k=JR.c[ki]; const dc=isCash(d), kc=isCash(k); if(dc&&!kc&&k!=='1 6 35') cash.add(k); if(kc&&!dc&&d!=='1 6 35') cash.add(d); }
+  return _mpIdx={pl,bs,cash};
+}
+function mpFind(map,code){ let c=code; while(c){ if(map.has(c)) return map.get(c); const i=c.lastIndexOf(' '); c=i<0?'':c.slice(0,i); } return null; }
+function mpLinesOf(r){
+  const ix=mpIndex(); const cls=r.code[0]; const o={pl:[],bs:[],cf:[]};
+  if('6789'.includes(cls)){ const v=mpFind(ix.pl,r.code); if(v!==null) o.pl.push(v); }
+  if('12345'.includes(cls) && !isCash(r.code)){ const v=mpFind(ix.bs,r.code); if(v!==null) o.bs.push(v); }
+  if(isCash(r.code)) o.bs.push(125);
+  if(SH_PAYROLL.includes(r.code)||SH_CONSULT.includes(r.code)) o.pl.push(92); else if(r.code.startsWith('3 1 32 ')) o.pl.push(93);
+  for(const c of (r.stmt||[])){ o.cf.push(c); if(c==='interest_investors') o.pl.push(111); else if(c==='interest_sh') o.pl.push(112); else if(c==='interest_bank') o.pl.push(113); }
+  if(!o.cf.length && ix.cash.has(r.code)) o.cf.push('op');
+  if(isCash(r.code)) o.cf.push('cash');
+  if(r.code==='1 6 35') o.cf.push('xfer');
+  return o;
+}
+function mpLabels(r){
+  const t=T(); if(r._l && r._l.lang===state.lang) return r._l;
+  const lab=(rows,n)=>{ const b=rows.find(x=>x.row===n); return b?(state.lang==='en'?(b.en||b.ka):b.ka):String(n); };
+  const pl=x=>x==='sal'?[92,93].map(n=>lab(BUDGET.pl,n)).join(' / '):x==='int'?[111,112,113].map(n=>lab(BUDGET.pl,n)).join(' / '):x==='opex'?lab(BUDGET.pl,90)+' '+t.mpNoOwn:x==='none'?t.mpNoLine:lab(BUDGET.pl,x);
+  const bsl=x=>typeof x==='string'&&x[0]==='t'?lab(BUDGET.bs,+x.slice(1))+' '+t.mpNoOwn:lab(BUDGET.bs,x);
+  const cf=x=>x==='op'?t.mpCfOp:x==='cash'?t.mpCfCash:x==='xfer'?t.mpCfXfer:stmtLabel(x);
+  const L=mpLinesOf(r); r._l={lang:state.lang,pl:L.pl.map(pl),bs:L.bs.map(bsl),cf:L.cf.map(cf)}; return r._l;
+}
 function renderMapping(){
   const t=T(); const el=document.getElementById('p-mp');
-  if(!MAPPING){ el.innerHTML=periodHead(t.tabs.mp,'')+`<p class="note">${t.mpMissing}</p>`; return; }
-  let rows=MAPPING.rows;
+  if(!MAPPING||!BUDGET){ el.innerHTML=periodHead(t.tabs.mp,'')+`<p class="note">${t.mpMissing}</p>`; return; }
+  const all=MAPPING.rows; all.forEach(mpLabels);
+  let rows=all;
   const q=state.mpQ.trim().toLowerCase();
   const qCode=q.replace(/\s+/g,'');
-  if(q) rows=rows.filter(r=>r.code.toLowerCase().replace(/\s+/g,'').includes(qCode)||(r.name||'').toLowerCase().includes(q)||(r.cat||'').toLowerCase().includes(q)||(r.subcat||'').toLowerCase().includes(q)||(r.subsub||'').toLowerCase().includes(q));
+  if(q) rows=rows.filter(r=>r.code.toLowerCase().replace(/\s+/g,'').includes(qCode)||(r.name||'').toLowerCase().includes(q)||(r.cat||'').toLowerCase().includes(q)||(r.subcat||'').toLowerCase().includes(q)||(r.subsub||'').toLowerCase().includes(q)||r._l.pl.concat(r._l.bs,r._l.cf).some(x=>x.toLowerCase().includes(q)));
   if(state.mpCat) rows=rows.filter(r=>r.cat===state.mpCat);
   if(state.mpSubcat) rows=rows.filter(r=>r.subcat===state.mpSubcat);
   if(state.mpSubsub) rows=rows.filter(r=>r.subsub===state.mpSubsub);
   if(state.mpInout) rows=rows.filter(r=>r.inout===state.mpInout);
-  if(state.mpStatus) rows=rows.filter(r=>r.status===state.mpStatus);
-  const withConf=rows.filter(r=>r.confidence!==null);
-  const needReview=rows.filter(r=>r.confidence===null||r.confidence<50).length;
-  const avgConf=withConf.length?withConf.reduce((s,r)=>s+r.confidence,0)/withConf.length:0;
-  const covPct=MAPPING.accountsInFile?(MAPPING.accountsTagged/MAPPING.accountsInFile*100):0;
+  if(state.mpPl) rows=rows.filter(r=>r._l.pl.includes(state.mpPl));
+  if(state.mpBs) rows=rows.filter(r=>r._l.bs.includes(state.mpBs));
+  if(state.mpCf) rows=rows.filter(r=>r._l.cf.includes(state.mpCf));
+  if(state.mpStmt==='differs') rows=rows.filter(r=>r.sagree==='differs'); else if(state.mpStmt==='unused') rows=rows.filter(r=>!r._l.pl.length&&!r._l.bs.length&&!r._l.cf.length);
+  const cnt=k=>all.filter(r=>r._l[k].length).length;
+  const uniq=k=>[...new Set(all.flatMap(r=>r._l[k]))].sort((a,b)=>a.localeCompare(b));
   let h=periodHead(t.tabs.mp, t.mpSrc(MAPPING.source, MAPPING.totalRows));
-  h+=`<div class="kpis">${kpi(t.mpAccounts,'<span class="num">'+MAPPING.rows.length+'</span>')}${kpi(t.mpAvgConf,avgConf.toFixed(0)+'%')}${kpi(t.mpNeedReview,'<span class="num">'+needReview+'</span>')}${kpi(t.mpCoverage,covPct.toFixed(0)+'%',t.mpCoverageSub(MAPPING.accountsTagged,MAPPING.accountsInFile))}</div>`;
+  h+=`<div class="kpis">${kpi(t.mpAccounts,'<span class="num">'+all.length+'</span>')}${kpi(t.mpInPl,'<span class="num">'+cnt('pl')+'</span>')}${kpi(t.mpInBs,'<span class="num">'+cnt('bs')+'</span>')}${kpi(t.mpInCf,'<span class="num">'+cnt('cf')+'</span>')}${kpi(t.mpStmtDiffK,'<span class="num">'+(MAPPING.stmtDiffers||0)+'</span>',t.mpStmtDiffSub)}</div>`;
   h+=`<div class="toolbar"><input type="search" id="mpq" placeholder="${t.search}" value="${esc(state.mpQ)}">`
+    + mpSelect('mpfPl',t.mpPlCol,state.mpPl,uniq('pl'))
+    + mpSelect('mpfBs',t.mpBsCol,state.mpBs,uniq('bs'))
+    + mpSelect('mpfCf',t.mpCfCol,state.mpCf,uniq('cf'))
     + mpSelect('mpfCat',t.mpCat,state.mpCat,mpOptions('cat'))
     + mpSelect('mpfSubcat',t.mpSubcat,state.mpSubcat,mpOptions('subcat'))
     + mpSelect('mpfSubsub',t.mpSubsub,state.mpSubsub,mpOptions('subsub'))
     + mpSelect('mpfInout',t.mpInOut,state.mpInout,mpOptions('inout'))
-    + mpSelect('mpfStatus',t.mpStatus,state.mpStatus,mpOptions('status'))
-    + `<span style="color:var(--muted);font-size:12.5px">${rows.length} ${t.mpRows}${(q||state.mpCat||state.mpSubcat||state.mpSubsub||state.mpInout||state.mpStatus)?' '+t.filtered:''}</span></div>`;
-  h+=`<div class="tablewrap"><table class="ledger"><thead><tr><th>${t.code}</th><th>${t.mpAccName}</th><th>${t.mpCat}</th><th>${t.mpSubcat}</th><th>${t.mpSubsub}</th><th>${t.mpInOut}</th><th class="n">${t.mpConf}</th><th>${t.mpStatus}</th></tr></thead><tbody>`;
-  const show=rows.slice(0,state.mpN);
-  for(const r of show) h+=`<tr><td class="code" style="margin:0">${esc(r.code)}</td><td class="name">${esc(r.name||'–')}</td><td>${esc(r.cat||'–')}</td><td>${esc(r.subcat||'–')}</td><td>${esc(r.subsub||'–')}</td><td>${esc(r.inout||'–')}</td><td class="n">${r.confidence===null?'<span class="n zero">–</span>':`<span class="st ${mpConfClass(r.confidence)}">${r.confidence.toFixed(0)}%</span>`}</td><td style="font-size:12px;color:var(--muted)">${esc(r.status||'–')}</td></tr>`;
+    + `<select id="mpfStmt" aria-label="${esc(t.mpStmtCol)}"><option value="">${esc(t.mpStmtCol)}</option><option value="differs" ${state.mpStmt==='differs'?'selected':''}>${esc(t.mpStmtDiffOpt)}</option><option value="unused" ${state.mpStmt==='unused'?'selected':''}>${esc(t.mpStmtUnusedOpt)}</option></select>`
+    + `<span style="color:var(--muted);font-size:12.5px">${rows.length} ${t.mpRows}${(q||state.mpCat||state.mpSubcat||state.mpSubsub||state.mpInout||state.mpPl||state.mpBs||state.mpCf||state.mpStmt)?' '+t.filtered:''}</span></div>`;
+  h+=`<div class="tablewrap"><table class="ledger"><thead><tr><th>${t.code}</th><th>${t.mpAccName}</th><th>${t.mpPlCol}</th><th>${t.mpBsCol}</th><th>${t.mpCfCol}</th><th>${t.mpCat}</th><th>${t.mpSubcat}</th><th>${t.mpSubsub}</th><th>${t.mpInOut}</th></tr></thead><tbody>`;
+  const show=rows.slice(0,state.mpN); const cellL=a=>a.length?esc(a.join('; ')):'<span class="n zero">–</span>';
+  for(const r of show) h+=`<tr><td class="code" style="margin:0">${esc(r.code)}</td><td class="name">${esc(r.name||'–')}</td><td style="font-size:12px">${cellL(r._l.pl)}</td><td style="font-size:12px">${cellL(r._l.bs)}</td><td style="font-size:12px">${cellL(r._l.cf)}${r.excel?` <span class="st ok" title="${esc(t.mpDiffTip+': '+(r.file||'–'))}">Excel</span>`:''}</td><td>${esc(r.cat||'–')}</td><td>${esc(r.subcat||'–')}</td><td>${esc(r.subsub||'–')}</td><td>${esc(r.inout||'–')}</td></tr>`;
   h+=`</tbody></table>`;
   if(rows.length>state.mpN) h+=`<div class="more"><button id="mpmore" style="color:var(--accent);font-weight:500">${t.showMore(Math.min(300,rows.length-state.mpN),rows.length)}</button></div>`;
   h+=`</div><p class="note">${t.mpNote}</p>`;
   el.innerHTML=h;
   const inp=el.querySelector('#mpq'); let tm; inp.addEventListener('input',()=>{ clearTimeout(tm); tm=setTimeout(()=>{ state.mpQ=inp.value; state.mpN=150; const pos=inp.selectionStart; renderMapping(); const n=document.getElementById('mpq'); n.focus(); n.setSelectionRange(pos,pos); },250); });
   const mb=el.querySelector('#mpmore'); if(mb) mb.addEventListener('click',()=>{ state.mpN+=300; renderMapping(); });
-  const filterMap=[['mpfCat','mpCat'],['mpfSubcat','mpSubcat'],['mpfSubsub','mpSubsub'],['mpfInout','mpInout'],['mpfStatus','mpStatus']];
+  const filterMap=[['mpfPl','mpPl'],['mpfBs','mpBs'],['mpfCf','mpCf'],['mpfCat','mpCat'],['mpfSubcat','mpSubcat'],['mpfSubsub','mpSubsub'],['mpfInout','mpInout'],['mpfStmt','mpStmt']];
   for(const [elId,key] of filterMap){ const sel=el.querySelector('#'+elId); if(sel) sel.addEventListener('change',()=>{ state[key]=sel.value; state.mpN=150; renderMapping(); }); }
+}
+function mpOptions(field){ return [...new Set(MAPPING.rows.map(r=>r[field]).filter(v=>v))].sort((a,b)=>a.localeCompare(b)); }
+function mpSelect(id,label,current,options){
+  return `<select id="${id}" aria-label="${esc(label)}"><option value="">${esc(label)}</option>`
+    + options.map(o=>`<option value="${esc(o)}" ${o===current?'selected':''}>${esc(o)}</option>`).join('') + `</select>`;
 }
 
 /* ---------- EXPENSES ---------- */
@@ -844,7 +937,9 @@ function renderPB(){
   const mlabels=BUDGET.months.map(m=>GM()[+m.slice(5)-1]);
   let h=periodHead(t.budgetTitlePL, t.budgetSrc(BUDGET), compactBtn('pb'));
   h+=`<div class="tablewrap"><table class="ledger"><thead><tr><th>${t.item}</th>${mlabels.map(l=>`<th class="n">${l}</th>`).join('')}<th class="n">${t.total}</th></tr></thead><tbody>`;
-  for(const r of BUDGET.pl){ if(state.compactTabs.has('pb') && r.level===2) continue; h+=budgetRow(r,[...r.vals,r.vals.reduce((a,b)=>a+b,0)]); }
+  for(const r of plLayout(false)){ if(state.compactTabs.has('pb') && r.level===2) continue;
+    if(r.pct){ h+=`<tr>${pctNameTd(r)}${mlabels.map((_,j)=>avPctCell(pctBudget(r,j,j))).join('')}${avPctCell(pctBudget(r,0,11))}</tr>`; continue; }
+    h+=budgetRow(r,[...r.vals,r.vals.reduce((a,b)=>a+b,0)]); }
   h+=`</tbody></table></div>`;
   h+=`<p class="note">${t.budgetNotePL}</p>`;
   el.innerHTML=h;
@@ -899,7 +994,12 @@ function renderASB(){
 }
 
 /* ---------- ACTUAL vs BUDGET (PL / BS / CF) ---------- */
-function fixAvHead(el){ const rows=el.querySelectorAll('.ledger thead tr'); if(rows.length===2){ const h=rows[0].getBoundingClientRect().height; rows[1].querySelectorAll('th').forEach(th=>th.style.top=h+'px'); } }
+function fixAvHead(el){ const rows=el.querySelectorAll('.ledger thead tr'); if(rows.length===2){ const h=rows[0].getBoundingClientRect().height; rows[1].querySelectorAll('th').forEach(th=>th.style.top=h+'px'); }
+  /* month blocks: every Actual/Budget/Diff triple (or the single Actual/Budget/Diff YTD triple) gets a strong left divider and alternating tint, so it is obvious which month a column belongs to */
+  const tbl=el.querySelector('.ledger'); if(!tbl) return; const w=tbl.querySelectorAll('thead tr:nth-child(2) th').length; if(w<4) return;
+  const mark=(tr)=>{ const c=[...tr.children]; if(c.length!==w) return; c.forEach((x,i)=>{ if(i===0) return; const g=Math.floor((i-1)/3); if((i-1)%3===0) x.classList.add('mg-first'); if(g%2===1) x.classList.add('mg-alt'); }); };
+  tbl.querySelectorAll('thead tr:nth-child(2), tbody tr').forEach(mark);
+  const r1=tbl.querySelector('thead tr:first-child'); if(r1){ [...r1.children].forEach((x,i)=>{ if(i===0) return; x.classList.add('mg-head','mg-first'); if((i-1)%2===1) x.classList.add('mg-alt'); }); } }
 function avHead(t,months,withYTD,ytdLabel){
   const r1=`<th></th>`+months.map(m=>`<th colspan="3">${m}</th>`).join('')+(withYTD?`<th colspan="3">${ytdLabel||t.ytd}</th>`:'');
   const trip=`<th class="n">${t.actual}</th><th class="n">${t.budget}</th><th class="n">${t.diff}</th>`;
@@ -924,6 +1024,9 @@ function avRowTds(acts,buds,withYTD,ytdOk,ytdN,drill){
   return tds;
 }
 function avItemRow(b,actFn,withYTD,ytdOk,n,ytdN,scope){
+  if(b.pct){ const acts=[],buds=[]; for(let j=0;j<n;j++){ acts.push(pctActual(b,j,j)); buds.push(pctBudget(b,j,j)); }
+    let tds=avRowTdsPct(acts,buds); if(withYTD){ const ya=pctActual(b,0,n-1), yb=pctBudget(b,0,n-1); tds+=avPctCell(ya)+avPctCell(yb)+avPctCell(ya-yb); }
+    return `<tr>${pctNameTd(b)}${tds}</tr>`; }
   const label=state.lang==='en'?(b.en||b.ka):b.ka; const cls=b.level===1?(b.bold?'total':'lvl1'):''; const ind=b.level===2?'ind1':'';
   const acts=[]; for(let j=0;j<n;j++) acts.push(actFn?actFn(j):undefined);
   return `<tr class="${cls}"><td class="name ${ind}">${esc(label)}</td>${avRowTds(acts,b.vals.slice(0,n),withYTD,ytdOk,ytdN,scope?[scope,b.row]:undefined)}</tr>${scope?drillPanel(scope,b.row,1+3*n+(withYTD?3:0)):''}`;
@@ -933,6 +1036,46 @@ function avItemRow(b,actFn,withYTD,ytdOk,n,ytdN,scope){
    accounts (6 1 10/6 1 20, 7 1+7 2, 7 3+7 4); every remaining class-6/class-8-1 sub-account not
    individually named by the budget gets folded into "Other Revenue" (87) as a catch-all, so nothing
    from class 6-9 is silently dropped. See avNotePL for what's approximate/unavailable and why. */
+/* Loan-interest postings (Oris 8 2 10) split by LENDER through the counter account (3 4 10 <lender>) using the same
+   account->category map as the cash-flow tab (interest_investors / interest_sh / interest_bank): the accrual
+   entries are booked against the very lender accounts the finance team tagged. Built lazily from the journal. */
+let _INT=null;
+function intRows(){
+  if(_INT) return _INT; const CM=D.cat_multi||{}; const o={investors:[],sh:[],bank:[],other:[]};
+  for(const [md,si,di,ki,amt] of JR.r){ const d=JR.c[di], k=JR.c[ki]; let ctr,sg;
+    if(d.startsWith('8 2 10')){ ctr=k; sg=1; } else if(k.startsWith('8 2 10')){ ctr=d; sg=-1; } else continue;
+    const cs=CM[ctr]||[]; const key=cs.includes('interest_investors')?'investors':cs.includes('interest_sh')?'sh':cs.includes('interest_bank')?'bank':'other';
+    o[key].push([jdate(md),JR.s[si],ctr,sg*amt]); }
+  return _INT=o;
+}
+const intByMonth=(()=>{ let c=null; return key=>{ if(!c){ c={}; const r=intRows(); for(const k in r){ c[k]={}; for(const x of r[k]){ const mm=+x[0].slice(5,7); c[k][mm]=(c[k][mm]||0)+x[3]; } } } return j=>(c[key][+M[j].slice(5,7)]||0); }; })();
+/* Salary accruals (Oris 7 4 10 / 7 4 15 / 7 4 50) split Shareholders vs Other Staff by the COUNTER account of each accrual
+   posting (2026-09-21): the four director payroll accounts (3 1 32 0109/0011/0004/0012 - the same people who received the
+   1 7 91 dividend advances) and the consultancy 3 1 10 1684 (user-confirmed shareholder compensation) are "Salary of
+   Shareholders"; everything else is "Salary of Other Staff". Jan-Feb accruals were booked against the generic '3 1 30'
+   (salary payable), which cannot be attributed to a person, so those months are entirely "Other Staff". */
+const SH_PAYROLL=['3 1 32 0109','3 1 32 0011','3 1 32 0004','3 1 32 0012'], SH_CONSULT=['3 1 10 1684'];
+let _SAL=null;
+function salRows(){
+  if(_SAL) return _SAL; const o={sh:[],other:[]};
+  const isS=x=>['7 4 10','7 4 15','7 4 50'].some(p=>x===p||x.startsWith(p+' '));
+  for(const [md,si,di,ki,amt] of JR.r){ const d=JR.c[di], k=JR.c[ki]; let acct,ctr,sg;
+    if(isS(d)){ acct=d; ctr=k; sg=1; } else if(isS(k)){ acct=k; ctr=d; sg=-1; } else continue;
+    const sh=(acct.startsWith('7 4 10')&&SH_PAYROLL.includes(ctr))||(acct.startsWith('7 4 50')&&SH_CONSULT.includes(ctr));
+    (sh?o.sh:o.other).push([jdate(md),JR.s[si],ctr,sg*amt]); }
+  return _SAL=o;
+}
+const salByMonth=(()=>{ let c=null; return key=>{ if(!c){ c={}; const r=salRows(); for(const k in r){ c[k]={}; for(const x of r[k]){ const mm=+x[0].slice(5,7); c[k][mm]=(c[k][mm]||0)+x[3]; } } } return j=>(c[key][+M[j].slice(5,7)]||0); }; })();
+/* Opex accounts -> budget lines, by the account's meaning (validated against the Excel actuals Jan-Jul 2026: Management Fee,
+   Office Rent and Corporate Party match to the cent; Salaries match exactly in Jan/Apr/May; Depreciation Feb-Jul). */
+const OPX_DEL=['7 3','7 4 90 12','7 4 90 47','7 4 27','7 4 16','7 4 90 18','7 4 90 24','7 4 90 25','7 4 90 40','7 4 29'];
+const OPX_SYS=['7 4 22','7 4 90 32','7 4 90 34','7 4 90 42','7 4 90 48','7 4 90 52','7 4 45'];
+const OPX_UTIL=['7 4 90 11','7 4 90 27','7 4 90 28','7 4 90 50'];
+const OPX_MKT=['7 4 90 39','7 4 90 10','7 4 56']; // advertising services and other consulting are Marketing (user decision 2026-09-21; the cash-flow tab already has them there)
+const OPX_SAL=['7 4 10','7 4 15','7 4 50'];
+/* "Office Expenses" (95) = every other 7 4 account (general admin: household, communication, bank fees, services by
+   individuals, ...) - a complement, so nothing in Opex is left without a budget line. */
+const OPX_EXPL7=[...OPX_DEL.filter(c=>c!=='7 3'),'7 4 90 49','7 4 20',...OPX_SYS,...OPX_UTIL,...OPX_MKT,'7 4 90 44','7 4 55','7 4 18',...OPX_SAL];
 const PL_ACTUALS=(()=>{
   const incA=c=>j=>{ const v=S(stats(j,j),c); return v.c-v.d; };
   const expA=c=>j=>{ const v=S(stats(j,j),c); return v.d-v.c; };
@@ -941,27 +1084,74 @@ const PL_ACTUALS=(()=>{
   const cogs81=sumA(expA('7 2'),expA('7 1'));
   const gross82=j=>rev79(j)-cogs81(j);
   const serv84=incA('6 1 91'), pen85=incA('8 1 25'), pbs86=incA('6 1 90 1');
-  const oth87=sumA(incA('6 1 90 2'),incA('8 1 10'),incA('8 1 20'),incA('8 1 30'),incA('8 1 50'),incA('8 1 90'));
-  const opex90=sumA(expA('7 3'),expA('7 4'));
-  const ebitda105=j=>gross82(j)+serv84(j)+pen85(j)+pbs86(j)+oth87(j)-opex90(j);
-  const nonop108=expA('8 2');
-  const net118=j=>ebitda105(j)-nonop108(j)+incA('9 1')(j)-expA('9 2')(j);
+  // "Other Revenue" (87) is the SUBTOTAL of 84+85+86, exactly like the budget file.
+  const oth87=sumA(serv84,pen85,pbs86);
+  /* Oris accounts with no budget line of their own are folded INTO budget lines by meaning (2026-09-21, per the user):
+       9 1 / 9 2 "extraordinary expenses" (customer-receivable write-offs on contracts of 16.01.2026)  -> Provision (102)
+       6 1 90 2 sublease income (utility cost recharged to a tenant)                                  -> Utility Cost (99), as a reduction
+       8 1 10 interest income                                                                         -> Bank Interest (113), as a reduction
+       other 8 2 (11/15/90 excl. car sale) and other 8 1 (20/30/90 excl. car sale), net                -> Unpredictable Expenses (104)
+       8 2 10 loan interest -> Investors Interest (111) / Shareholder's Interest (112) / Bank Interest (113) by lender account. */
+  const prov102=sumA(expA('9 1'),expA('9 2'));
+  const util99=j=>sumA(...OPX_UTIL.map(expA))(j)-incA('6 1 90 2')(j);
+  const misc=j=>expA('8 2')(j)-expA('8 2 10')(j)-expA('8 2 50')(j)-expA('8 2 90 1')(j)
+              +expA('8 1')(j)-expA('8 1 10')(j)-expA('8 1 25')(j)-expA('8 1 50')(j)-expA('8 1 90 1')(j);
+  const ppe110=sumA(expA('8 2 90 1'),expA('8 1 90 1')), fxexp115=expA('8 2 50'), fxinc116=expA('8 1 50');
+  const int111=intByMonth('investors'), int112=intByMonth('sh');
+  const int113=j=>intByMonth('bank')(j)+intByMonth('other')(j)+expA('8 1 10')(j);
+  const dep109=expA('7 4 55');
+  const sal92=salByMonth('sh'), sal9x=sumA(expA('7 4 10'),expA('7 4 15'),expA('7 4 50')), sal93=j=>sal9x(j)-sal92(j);
+  const del91=sumA(...OPX_DEL.map(expA)), sys98=sumA(...OPX_SYS.map(expA)), mkt100=sumA(...OPX_MKT.map(expA));
+  const off95=j=>expA('7 4')(j)-OPX_EXPL7.reduce((s0,c)=>s0+expA(c)(j),0);
+  const opexBase=j=>expA('7 3')(j)+expA('7 4')(j)-dep109(j)+prov102(j)+misc(j);
+  const opexRaw=j=>opexBase(j)-incA('6 1 90 2')(j);
+  const nonop108=sumA(ppe110,dep109,int111,int112,int113,fxexp115,fxinc116);
+  const netRaw=j=>gross82(j)-opexRaw(j)+oth87(j)-nonop108(j);
+  // Safety net: an Oris P&L account that is not classified above would break the tie to the net profit on the other tabs.
+  // Whatever is left over (0 today, checked) is carried in Unpredictable Expenses so the statement always ties.
+  const resid=j=>netRaw(j)-plLines(stats(j,j)).net;
+  const opex90=j=>opexRaw(j)+resid(j);
+  const ebitda105=j=>gross82(j)-opex90(j)+oth87(j);
+  const net118=j=>ebitda105(j)-nonop108(j);
   return {
     78:j=>rev79(j)*1.18, 79:rev79, 80:j=>cogs81(j)*1.18, 81:cogs81, 82:gross82,
-    84:serv84, 85:pen85, 86:pbs86, 87:oth87, 90:opex90, 91:expA('7 3'),
-    94:expA('7 4 90 49'), 95:sumA(expA('7 4 25'),expA('7 4 90 5')), 96:expA('7 4 20'),
-    98:sumA(expA('7 4 22'),expA('7 4 90 32'),expA('7 4 90 34'),expA('7 4 90 42'),expA('7 4 90 48'),expA('7 4 90 52'),expA('7 4 45')),
-    99:sumA(expA('7 4 90 11'),expA('7 4 90 27'),expA('7 4 90 28'),expA('7 4 90 50')),
-    100:expA('7 4 90 39'), 104:expA('7 4 18'), 105:ebitda105, 108:nonop108, 118:net118,
+    84:serv84, 85:pen85, 86:pbs86, 87:oth87, 90:opex90, 91:del91,
+    92:sal92, 93:sal93, 94:expA('7 4 90 49'), 95:off95, 96:expA('7 4 20'),
+    98:sys98,
+    99:util99, 100:mkt100, 102:prov102, 103:expA('7 4 90 44'), 104:j=>expA('7 4 18')(j)+misc(j)+resid(j), 105:ebitda105,
+    108:nonop108, 109:dep109, 110:ppe110, 111:int111, 112:int112, 113:int113, 115:fxexp115, 116:fxinc116, 118:net118,
   };
 })();
+/* P&L row layout shared by PL Budget / Profit & Loss Statement / PL Actual vs Budget: the budget file's own rows, with
+   its structure applied - Revenue From Services / Penalty / Sales of Portfolio Bad Debts are the (indented) components of
+   the "Other Revenue" subtotal, and the four margin rows the Excel model has (Gross Profit, Gross Revenue, EBITDA, Net
+   Profit margin = profit / Revenue W/O VAT). */
+const PL_MARGINS=[
+  {after:82, row:'m83', ka:'მთლიანი მოგების მარჟა', en:'Gross Profit Margin', num:[82]},
+  {after:87, row:'m88', ka:'მთლიანი შემოსავლის მარჟა', en:'Gross Revenue Margin', num:[87,82]},
+  {after:105, row:'m106', ka:'EBITDA მარჟა', en:'EBITDA Profit Margin', num:[105]},
+  {after:118, row:'m119', ka:'წმინდა მოგების მარჟა', en:'Net Profit Margin', num:[118]},
+];
+function plLayout(withOris){
+  const out=[];
+  for(const r of BUDGET.pl){
+    let b=r; if(r.row>=84&&r.row<=86) b={...r,level:2,bold:false}; if(r.row===87) b={...r,level:1,bold:true};
+    out.push(b);
+    for(const m of PL_MARGINS) if(m.after===r.row) out.push({row:m.row,ka:m.ka,en:m.en,level:1,bold:false,pct:true,num:m.num,den:79});
+  }
+  return out;
+}
+const plBudRow=n=>BUDGET.pl.find(r=>r.row===n);
+function pctBudget(b,j0,j1){ let num=0,den=0; for(let j=j0;j<=j1;j++){ for(const n of b.num) num+=plBudRow(n).vals[j]; den+=plBudRow(b.den).vals[j]; } return den?num/den:NaN; }
+function pctActual(b,j0,j1){ let num=0,den=0; for(let j=j0;j<=j1;j++){ for(const n of b.num) num+=PL_ACTUALS[n](j); den+=PL_ACTUALS[b.den](j); } return den?num/den:NaN; }
+const pctNameTd=(b)=>`<td class="name" style="font-style:italic;color:var(--muted)">${esc(state.lang==='en'?b.en:b.ka)}</td>`;
 function renderAVPL(){
   const t=T(); const el=document.getElementById('p-avpl');
   if(!BUDGET){ el.innerHTML=periodHead(t.avTitlePL,'')+`<p class="note">${t.budgetMissing}</p>`; return; }
   const n=D.months.length; const mlabels=D.months.slice(0,n).map(m=>GM()[+m.slice(5)-1]);
   let h=periodHead(t.avTitlePL, t.budgetSrc(BUDGET), compactBtn('avpl'));
   h+=`<p class="note">${t.pClickHint}</p><div class="tablewrap"><table class="ledger">${avHead(t,mlabels,true)}<tbody>`;
-  for(const b of BUDGET.pl){ if(state.compactTabs.has('avpl') && b.level===2) continue; h+=avItemRow(b, PL_ACTUALS[b.row], true, true, n, undefined, 'avpl'); }
+  for(const b of plLayout(true)){ if(state.compactTabs.has('avpl') && b.level===2) continue; h+=avItemRow(b, PL_ACTUALS[b.row], true, true, n, undefined, 'avpl'); }
   h+=`</tbody></table></div>`;
   h+=`<p class="note">${t.avNotePL}</p>`;
   el.innerHTML=h; fixAvHead(el);
@@ -975,10 +1165,15 @@ const LOAN_BANK=['4 1 90 10611','4 1 90 3746','4 1 90 4693','4 1 90 5506','4 1 9
 const LOAN_ZUK=['4 1 90 8018'];
 const LOAN_SH=['4 1 90 11677','4 1 90 11998','4 1 90 12284','4 1 90 1318','4 1 90 1684','4 1 90 2426','4 1 90 5959','4 1 90 8019'];
 const BS_ACTUALS=(()=>{
+  // Equity split (2026-09-21): "Profit & Loss" = this year's cumulative net profit straight from the P&L, and
+  // "Retained Earning" = total equity - that. The raw Oris split (5 3 10 vs 5 3 30) depended on when the bookkeeper
+  // happened to transfer the month's profit to retained earnings (done monthly until July, not for Aug/Sep), so the
+  // two rows jumped around while total equity was right; this way the BS ties to the P&L in every month.
+  const ytdNet=j=>{ let x=0; for(let i=0;i<=j;i++) x+=PL_ACTUALS[118](i); return x; };
   const bv=(c,j)=>bsVal(stats(0,j),c);
   const sumBv=(...codes)=>j=>codes.reduce((s,c)=>s+bv(c,j),0);
   return {
-    124:j=>bsVal(stats(0,j),'1'), 125:j=>cashClose(stats(0,j)), 126:j=>bv('1 4 10',j), 128:j=>bv('1 6',j),
+    124:j=>bsVal(stats(0,j),'1'), 125:j=>cashClose(stats(0,j)), 126:j=>bv('1 4 10',j), 128:j=>AVBS_CODES[128].reduce((s,c)=>s+bv(c,j),0),
     129:j=>bsVal(stats(0,j),'2'), 130:j=>bv('2 1 60',j), 131:j=>bv('2 1 80',j), 132:j=>bv('2 1 90',j), 133:j=>bv('2 5',j),
     134:sumBv('2 2','2 6'), 135:j=>bsVal(stats(0,j),'1')+bsVal(stats(0,j),'2'),
     137:j=>bsVal(stats(0,j),'3'), 138:j=>bv('3 1 10',j), 139:j=>bv('3 1 20',j), 140:sumBv('3 1 30','3 1 32'),
@@ -986,7 +1181,7 @@ const BS_ACTUALS=(()=>{
     146:j=>bv('3 3 80',j), 147:j=>bv('3 4 10',j), 148:j=>bsVal(stats(0,j),'4'),
     149:sumBv(...LOAN_SH), 150:sumBv(...LOAN_BANK), 151:sumBv(...LOAN_ZUK),
     152:j=>bsVal(stats(0,j),'3')+bsVal(stats(0,j),'4'), 154:j=>bsVal(stats(0,j),'5'),
-    155:j=>bv('5 3 10',j), 156:j=>bv('5 3 30',j), 157:j=>bsVal(stats(0,j),'3')+bsVal(stats(0,j),'4')+bsVal(stats(0,j),'5'),
+    155:j=>bsVal(stats(0,j),'5')-ytdNet(j), 156:ytdNet, 157:j=>bsVal(stats(0,j),'3')+bsVal(stats(0,j),'4')+bsVal(stats(0,j),'5'),
   };
 })();
 function renderAVBS(){
@@ -1036,7 +1231,7 @@ const LIVE_CF_ACTUALS=(()=>{
   // came from a narrower check that didn't consider capex booked through the ordinary supplier-
   // payable ledger, which is how it turns out Oris actually records it here).
   const invIn=catInSum('other_sales');
-  const invOut=catOutSum('capex_sysdev','capex_truck');
+  const invOut=catOutSum('capex_sysdev','capex_truck','capex_office');
   const finNet=j=>finIn(j)-finOut(j), invNet=j=>invIn(j)-invOut(j);
   // Operating Cash In/Out (27/33): every non-cash-to-cash D.cf flow that isn't Financing or
   // Investing - computed as the total (all real external flows, '1 6 35' excluded same as the
@@ -1058,7 +1253,7 @@ const LIVE_CF_ACTUALS=(()=>{
   const bankRepay=j=>catOut('loan_principal_all')(j)-shRepay(j);
   return {
     26:opNet, 27:opIn, 33:opOut,
-    52:invNet, 53:invIn, 55:invIn, 57:invOut, 58:catOutSum('capex_sysdev'), 60:catOutSum('capex_truck'),
+    52:invNet, 53:invIn, 55:invIn, 57:invOut, 58:catOutSum('capex_sysdev'), 59:catOutSum('capex_office'), 60:catOutSum('capex_truck'),
     34:catOutSum('cogs'), 35:catOutSum('salary_sh'), 36:catOutSum('salary_other'),
     37:catOutSum('management_fee'), 38:catOutSum('delivery'), 39:catOutSum('marketing'),
     40:catOutSum('marketing_salaries'), 41:catOutSum('office_rent'), 42:catOutSum('office_exp'),
@@ -1151,23 +1346,36 @@ const PLGRP={
   OP:{f:'op',list:PLI('6',...PL_COGS,'7 3','7 4')},
   NET:{f:'net',list:PLI('6',...PL_COGS,'7 3','7 4','8 1','8 2','9 1','9 2')},
 };
+const leafCodes=(root,excl=[])=>Object.keys(POSTINGS).filter(c=>(c===root||c.startsWith(root+' '))&&!excl.some(e=>c===e||c.startsWith(e+' ')));
+const MISC_CODES=[...leafCodes('8 2',['8 2 10','8 2 50','8 2 90 1']),...leafCodes('8 1',['8 1 10','8 1 25','8 1 50','8 1 90 1'])];
+const NINE_CODES=[...leafCodes('9 1'),...leafCodes('9 2')];
+const opexE=['7 3',...leafCodes('7 4',['7 4 55']),...NINE_CODES,...MISC_CODES,'6 1 90 2'];
+const opexEBITDA=[...PL_REV,...PL_COGS,'6 1 91','8 1 25','6 1 90 1',...opexE];
+const inRows=k=>(f,t)=>intRows()[k].filter(r=>{ const mm=+r[0].slice(5,7); return mm>=f&&mm<=t; });
+const allInt=(f,t)=>['investors','sh','bank','other'].flatMap(k=>inRows(k)(f,t));
 const AVPL_SPEC={
   79:PLI(...PL_REV), 81:PLE(...PL_COGS), 82:PLI(...PL_REV,...PL_COGS), 84:PLI('6 1 91'), 85:PLI('8 1 25'), 86:PLI('6 1 90 1'),
-  87:PLI('6 1 90 2','8 1 10','8 1 20','8 1 30','8 1 50','8 1 90'), 90:PLE('7 3','7 4'), 91:PLE('7 3'), 94:PLE('7 4 90 49'),
-  95:PLE('7 4 25','7 4 90 5'), 96:PLE('7 4 20'), 98:PLE('7 4 22','7 4 90 32','7 4 90 34','7 4 90 42','7 4 90 48','7 4 90 52','7 4 45'),
-  99:PLE('7 4 90 11','7 4 90 27','7 4 90 28','7 4 90 50'), 100:PLE('7 4 90 39'), 104:PLE('7 4 18'),
-  105:PLI(...PL_REV,...PL_COGS,...PL_OTHREV,'7 3','7 4'), 108:PLE('8 2'),
-  118:PLI(...PL_REV,...PL_COGS,...PL_OTHREV,'7 3','7 4','8 2','9 1','9 2'),
+  87:PLI('6 1 91','8 1 25','6 1 90 1'), 90:PLE(...opexE), 91:PLE(...OPX_DEL), 92:{rows:(f,t)=>salRows().sh.filter(r=>{ const mm=+r[0].slice(5,7); return mm>=f&&mm<=t; })},
+  93:{rows:(f,t)=>salRows().other.filter(r=>{ const mm=+r[0].slice(5,7); return mm>=f&&mm<=t; })}, 94:PLE('7 4 90 49'),
+  95:PLE(...leafCodes('7 4',OPX_EXPL7)), 96:PLE('7 4 20'), 98:PLE(...OPX_SYS),
+  99:PLE(...OPX_UTIL,'6 1 90 2'), 100:PLE(...OPX_MKT), 102:PLE(...NINE_CODES), 103:PLE('7 4 90 44'), 109:PLE('7 4 55'),
+  104:PLE('7 4 18',...MISC_CODES),
+  105:[...PLI(...PL_REV,...PL_COGS,'6 1 91','8 1 25','6 1 90 1'),...PLE(...opexE).map(([c])=>[c,-1])],
+  108:{list:PLE('7 4 55','8 2 90 1','8 1 90 1','8 2 50','8 1 50','8 1 10'),rows:allInt},
+  110:PLE('8 2 90 1','8 1 90 1'), 111:{rows:inRows('investors')}, 112:{rows:inRows('sh')},
+  113:{list:PLE('8 1 10'),rows:(f,t)=>[...inRows('bank')(f,t),...inRows('other')(f,t)]},
+  115:PLE('8 2 50'), 116:PLE('8 1 50'),
+  118:{list:[...PLI(...PL_REV,...PL_COGS,'6 1 91','8 1 25','6 1 90 1'),...PLE(...opexE,'7 4 55','8 2 90 1','8 1 90 1','8 2 50','8 1 50','8 1 10').map(([c])=>[c,-1])],rows:(f,t)=>allInt(f,t).map(r=>[r[0],r[1],r[2],-r[3]])},
 };
-const AVBS_CODES={124:['1'],125:['1 1','1 2'],126:['1 4 10'],128:['1 6'],129:['2'],130:['2 1 60'],131:['2 1 80'],132:['2 1 90'],133:['2 5'],134:['2 2','2 6'],135:['1','2'],
+const AVBS_CODES={124:['1'],125:['1 1','1 2'],126:['1 4 10'],128:(children['1 6']||[]).filter(c=>c!=='1 6 35'),129:['2'],130:['2 1 60'],131:['2 1 80'],132:['2 1 90'],133:['2 5'],134:['2 2','2 6'],135:['1','2'],
   137:['3'],138:['3 1 10'],139:['3 1 20'],140:['3 1 30','3 1 32'],141:['3 3 10'],142:['3 3 20'],143:['3 3 30'],144:['3 3 40'],146:['3 3 80'],147:['3 4 10'],148:['4'],
-  149:LOAN_SH,150:LOAN_BANK,151:LOAN_ZUK,152:['3','4'],155:['5 3 10']};
+  149:LOAN_SH,150:LOAN_BANK,151:LOAN_ZUK,152:['3','4']};
 /* Cash-flow category postings: cash-account legs whose counter account belongs to a CF category
    (build_data.py's CF_CAT_CODES, shipped as D.cat_multi). Built once, lazily. */
 const ci=(sg,cs)=>cs.map(c=>[c,'in',sg]), co=(sg,cs)=>cs.map(c=>[c,'out',sg]);
 const ci1=(sg,cs)=>ci(sg,cs), co1=cs=>co(1,cs);
 const neg=l=>l.map(([c,d,g])=>[c,d,-g]);
-const FIN_IN=['loan_principal_all'], INV_IN=['other_sales'], INV_OUT=['capex_sysdev','capex_truck'];
+const FIN_IN=['loan_principal_all'], INV_IN=['other_sales'], INV_OUT=['capex_sysdev','capex_truck','capex_office'];
 const FINHUB_NET=[...co1(['loan_to_finhub']),...ci1(-1,['loan_to_finhub'])];
 const FIN_OUT_LIST=[...co1(['loan_principal_all']),...FINHUB_NET,...co1(['dividend'])];
 const FIN_CATS=['loan_principal_all','loan_to_finhub','dividend'];
@@ -1176,7 +1384,7 @@ const CFS={
   34:co(1,['cogs']), 35:co(1,['salary_sh']), 36:co(1,['salary_other']), 37:co(1,['management_fee']), 38:co(1,['delivery']), 39:co(1,['marketing']),
   40:co(1,['marketing_salaries']), 41:co(1,['office_rent']), 42:co(1,['office_exp']), 44:co(1,['utility']),
   46:co(1,['interest_investors']), 47:co(1,['interest_sh']), 48:co(1,['interest_bank']), 50:co(1,['corporate_party']),
-  52:[...ci(1,INV_IN),...co(-1,INV_OUT)], 53:ci(1,INV_IN), 55:ci(1,INV_IN), 57:co(1,INV_OUT), 58:co(1,['capex_sysdev']), 60:co(1,['capex_truck']),
+  52:[...ci(1,INV_IN),...co(-1,INV_OUT)], 53:ci(1,INV_IN), 55:ci(1,INV_IN), 57:co(1,INV_OUT), 58:co(1,['capex_sysdev']), 59:co(1,['capex_office']), 60:co(1,['capex_truck']),
   61:[...ci(1,FIN_IN),...neg(FIN_OUT_LIST)], 62:ci(1,FIN_IN), 63:ci(1,['loan_bog']), 64:ci(1,['loan_sh_draw']), 65:ci(1,['loan_zuk_draw']),
   67:FIN_OUT_LIST, 68:co(1,['dividend']), 69:FINHUB_NET, 70:co(1,['loan_sh_repay']),
   71:[...co(1,['loan_principal_all']),...co(-1,['loan_sh_repay'])],
@@ -1215,7 +1423,7 @@ const RESOLVE={
   tbm:key=>{ const b=base0(); const sg=tbSign(key); return bal([[key,sg]],j=>tbVal(stats(b,j),key),()=>sg*S(stats(b,b),key).o); },
   cf:key=>({rows:cfRows(CFS[key]),kind:'flow',val:LIVE_CF_ACTUALS[key]}),
   cfacc:cfaccEntry,
-  avpl:key=>flow(AVPL_SPEC[key],PL_ACTUALS[key]),
+  avpl:key=>{ const sp=AVPL_SPEC[key]; return {kind:'flow',val:PL_ACTUALS[key],...(Array.isArray(sp)?{list:sp}:sp)}; },
   avbs:key=>{ const codes=AVBS_CODES[key]; return bal(codes.map(c=>[c,bsCls(c)]),BS_ACTUALS[key],()=>codes.reduce((s,c)=>s+bsOpen(stats(0,0),c),0)); },
   avpf:()=>bal([['1 4 10',1]],j=>close(S(stats(0,j),'1 4 10')),()=>S(stats(0,0),'1 4 10').o),
 };
@@ -1228,7 +1436,7 @@ function drillData(scope,key,f,t){
   const idx=mm=>M.indexOf(`${YEAR0}-${p2(mm)}`);
   let rows=[];
   if(e.list){ for(const [c,sg] of e.list) for(const p of collectPostings(c)){ const mm=+p[0].slice(5,7); if(mm>=f&&mm<=t) rows.push([p[0],p[1],p[2],p[3]*sg]); } }
-  else rows=e.rows(f,t);
+  if(e.rows) rows=rows.concat(e.rows(f,t));
   let sum=0; for(const r of rows) sum+=r[3];
   let jf=-1,jt=-1; for(let m=f;m<=t;m++){ const i=idx(m); if(i>=0){ if(jf<0) jf=i; jt=i; } }
   const out={rows,sum,kind:e.kind};
@@ -1257,7 +1465,7 @@ function drillPanel(scope,key,colspan){
 }
 
 /* ---------- wiring ---------- */
-const R={ov:renderOV,bs:renderBS,pl:renderPL,tb:renderTB,cf:renderCF,ar:renderAR,ex:renderEX,mp:renderMapping,pb:renderPB,bb:renderBB,cfb:renderCFB,pob:renderPOB,asb:renderASB,avpl:renderAVPL,avbs:renderAVBS,avcf:renderAVCF,avpf:renderAVPF,avas:renderAVAS};
+const R={ov:renderOV,bs:renderBS,pl:renderPL,cf:renderCF,mp:renderMapping,pb:renderPB,bb:renderBB,cfb:renderCFB,pob:renderPOB,asb:renderASB,avpl:renderAVPL,avbs:renderAVBS,avcf:renderAVCF,avpf:renderAVPF,avas:renderAVAS};
 const BUDGET_TABS=['pb','bb','cfb','pob','asb','avpl','avbs','avcf','avpf','avas'];
 function render(){ document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('on',p.id==='p-'+state.tab)); document.querySelectorAll('#tabs button').forEach(b=>b.setAttribute('aria-selected',b.dataset.p===state.tab));
   const noMonth=BUDGET_TABS.includes(state.tab); document.getElementById('l-month').hidden=noMonth; document.getElementById('month').hidden=noMonth;
