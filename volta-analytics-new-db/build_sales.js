@@ -175,6 +175,27 @@ const salesMonthlyStats = threeWay(r => classifyProduct(r.category), 'Uncategori
 const subcategoryStats = threeWay(r => classifySubcategory(r.category), 'Uncategorized');
 const brandStats = threeWay(r => classifyBrand(r.brand), 'No Brand');
 
+// ---------- Product Sales (Sales Analyze > Product Sales): Category > Subcategory > Product, by month ----------
+// Same buckets as Sales Monthly (a line is "categorized" exactly when its Product(EN) label exists), but each
+// bucket also carries the mapping sheet's Category(EN) / Subcategory(EN) for that product, so the table can nest
+// Product under Subcategory under Category. Grand totals therefore equal Sales Monthly's. A product label that
+// appears under two different subcategories (e.g. "Knife Set") stays two rows, one per parent.
+const PS_SEP = '';
+const PS_FALLBACK = ['Uncategorized', '', 'Uncategorized'].join(PS_SEP);
+function classifyTriple(raw) {
+  const v = lookup(raw);
+  const prod = v && label(v.productEn);
+  if (!prod) return null;
+  return [label(v.categoryEn) || 'Uncategorized', label(v.subcategoryEn) || '(no subcategory)', prod].join(PS_SEP);
+}
+const productStats = threeWay(r => classifyTriple(r.category), PS_FALLBACK);
+for (const dt of Object.keys(productStats)) {
+  for (const row of productStats[dt].rows) {
+    const [category, subcategory, product] = row.bucket.split(PS_SEP);
+    row.category = category; row.subcategory = subcategory; row.product = product; delete row.bucket;
+  }
+}
+
 // ---------- Category / Brand (port of buildCategoryBrandReport) ----------
 function buildCategoryBrandReport(rows) {
   const byCategory = {};
@@ -222,7 +243,7 @@ if (fs.existsSync(path.join(__dirname, 'old_aug_markup.tsv'))) {
 }
 const augMargins = Object.values(augMarginsByBucket).map(e => ({ bucket: e.bucket, site: r2(e.site), installmentTotal: r2(e.installmentTotal), qty: e.qty }));
 
-const payload = { salesMonthlyStats, brandStats, subcategoryStats, categoryBrandBreakdown, augMargins, cutover: CUTOVER, generatedAt: new Date().toISOString().slice(0, 16).replace('T', ' ') + ' UTC' };
+const payload = { salesMonthlyStats, brandStats, subcategoryStats, categoryBrandBreakdown, productStats, augMargins, cutover: CUTOVER, generatedAt: new Date().toISOString().slice(0, 16).replace('T', ' ') + ' UTC' };
 fs.writeFileSync(path.join(__dirname, 'sales_data.json'), JSON.stringify(payload));
 
 // ---------- checks ----------
