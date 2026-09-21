@@ -8,8 +8,11 @@ tpl = open(os.path.join(TOOLS, 'dashboard_template.html'), encoding='utf-8').rea
 data = open(os.path.join(BASE, 'dash_data.json'), encoding='utf-8').read()
 budp = os.path.join(BASE, 'budget_data.json')
 budget = open(budp, encoding='utf-8').read() if os.path.exists(budp) else 'null'
+mapp = os.path.join(BASE, 'mapping_data.json')
+mapping = open(mapp, encoding='utf-8').read() if os.path.exists(mapp) else 'null'
 out = (tpl.replace('__DATA__', data.replace('</script', '<\\/script'))
-          .replace('__BUDGET__', budget.replace('</script', '<\\/script')))
+          .replace('__BUDGET__', budget.replace('</script', '<\\/script'))
+          .replace('__MAPPING__', mapping.replace('</script', '<\\/script')))
 targets = [os.path.join(REPO, 'Volta_Finance.html'), os.path.join(BASE, 'Volta_Finance.html')]
 if len(sys.argv) > 1: targets.append(sys.argv[1])
 for p in targets:

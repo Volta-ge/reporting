@@ -64,6 +64,78 @@ def _build_vendor_category_map():
 
 VENDOR_CATEGORY = _build_vendor_category_map()
 
+# Live, per-account-code CF category map (2026-09-18), replacing the earlier vendor-tracing/
+# accrual-pairing heuristics above for the CF Actual-vs-Budget and Cash-Flow-by-month views.
+# Source: the finance team's own workbook ("Badget VS Acctual Jul'2026.xlsx") turned out to
+# contain a hidden "Oris" sheet - a 122,841-row raw WIRING export where THEY had already tagged
+# each transaction with their own category/sub-category (columns X/Z/AA), used to build their
+# CF'Jul'2026 model. That per-transaction tagging isn't itself live (it's a one-time snapshot, not
+# a formula, and stops at Jul 2026) - but grouping it by COUNTER ACCOUNT CODE and taking each
+# code's majority tag turns it into a durable, reusable mapping: for each code below, >=50% of its
+# tagged cash-flow volume in that snapshot carried the given category. Validated by reproducing the
+# workbook's own Jan-Jul 2026 Actual figures from live Oris data using exactly this mapping -
+# matches to within 0-3% for nearly every category (several - Management Fee, Office Rent,
+# Corporate Party, the interest splits, all three loan-draw categories - matched exactly). This
+# ALSO corrected several codes this project had previously mis-classified by account NAME alone
+# (see LOAN_SH/LOAN_ZUK below): e.g. '4 1 90 8019' ("Claret Horizon Holdings") is tagged "Loan From
+# Zuk" here, not Shareholder, and '4 1 90 11677' ("Finhub Georgia") is its own "Loan To Finhub"
+# category, not a shareholder loan - both of those were wrong in every earlier round of this file.
+# Known weak spots (kept out of this map, left uncategorized): "Office Equipment Capex" only
+# reconstructs to ~37% of the workbook's figure (too many vendors below the 50% bar to be useful);
+# revenue-side "Principal" vs "Advance" can't be split by account at all (every customer's AR code
+# carries both). "Salary of Shareholders" (2026-09-18): no PAYROLL account (`3 1 32`) distinguishes
+# shareholder from staff - every one of the 71 employee codes, including the one confirmed
+# shareholder on payroll, is tagged plain "Salary". The finance model pays it a different way
+# instead: user-confirmed that '3 1 10 1684' ("შპს ვივო თრეიდი") - a vendor invoicing "consulting"
+# services (accrues to '7 4 50'), not a payroll account at all - IS the shareholder's compensation.
+# 'salary_other' below is every '3 1 32' code EXCEPT none (no shareholder is on payroll, so this
+# is simply the whole payroll ledger) - queried live so it stays current as staff changes.
+CF_CAT_CODES = {
+    'salary_sh': ['3 1 10 1684'],
+    'salary_other': [r[0] for r in con.execute("SELECT DISTINCT COUNT FROM ACC_NAME WHERE COUNT LIKE '3 1 32 %'")],
+    'cogs': ['3 1 10 10009', '3 1 10 10362', '3 1 10 10404', '3 1 10 10459', '3 1 10 10828', '3 1 10 11006', '3 1 10 11227', '3 1 10 11264', '3 1 10 11485', '3 1 10 11592', '3 1 10 145', '3 1 10 173', '3 1 10 2054', '3 1 10 2106', '3 1 10 2124', '3 1 10 2175', '3 1 10 2256', '3 1 10 2872', '3 1 10 3860', '3 1 10 3870', '3 1 10 4', '3 1 10 4184', '3 1 10 4559', '3 1 10 4775', '3 1 10 5204', '3 1 10 5492', '3 1 10 55', '3 1 10 5697', '3 1 10 6', '3 1 10 663', '3 1 10 6957', '3 1 10 7', '3 1 10 70', '3 1 10 7081', '3 1 10 7117', '3 1 10 7294', '3 1 10 7430', '3 1 10 7464', '3 1 10 796', '3 1 10 7977', '3 1 10 8651', '3 1 10 878', '3 1 10 9154', '3 1 10 9241', '3 1 10 9344', '3 1 10 9454', '3 1 10 9468', '3 1 10 9549', '3 1 10 9789',
+             '1 6 10', '3 1 10 11484', '7 2 10'],  # added 2026-09-18 from the newer mapping file, validated to reduce Jan-Jul error (42.1k -> 35.0k GEL)
+    'management_fee': ['3 1 10 9019'],
+    'office_rent': ['3 1 10 10794', '3 1 10 11837', '3 1 10 12513', '3 1 10 3755', '3 1 10 8190'],
+    'corporate_party': ['1 4 30 0012', '3 1 10 6883', '3 1 10 8276', '3 1 10 8633'],
+    'marketing': ['3 1 10 10232', '3 1 10 159', '3 1 10 5238', '3 1 10 5980', '3 1 10 6360', '3 1 10 6705', '3 1 10 9449', '3 1 10 9745', '3 1 10 9788', '3 1 31 0054', '3 1 31 0055', '3 1 31 0093', '3 1 31 0103', '3 1 31 0105', '3 1 31 0158', '3 1 31 0160', '3 1 31 11226', '3 1 31 11387', '3 1 31 12096', '3 1 31 8681', '3 1 31 9747', '3 1 31 9916', '7 4 90 39',
+                  '3 1 10 12527', '3 1 10 12534', '3 1 31 12648', '3 1 31 12972'],  # added 2026-09-18, validated (Jan-Jul error 1.0k -> 0.5k GEL)
+    'marketing_salaries': ['3 1 10 8992', '3 1 31 0064'],
+    'delivery': ['3 1 10 11370', '3 1 10 1400', '3 1 10 1705', '3 1 10 2006', '3 1 10 2340', '3 1 10 3803', '3 1 10 5634', '3 1 10 723', '3 1 10 8094', '3 1 10 9110', '3 1 10 9649', '3 1 10 968', '3 1 10 9746', '3 1 31 0107', '3 1 31 11593', '3 1 31 11675', '3 1 31 11676', '3 1 31 11792', '3 1 31 11851', '3 1 31 11953', '3 1 31 11968', '3 1 31 11970', '3 1 31 11971', '7 4 90 18',
+                 '7 4 90 12', '7 3 40', '3 1 10 12456', '3 1 10 12600', '7 4 90 24'],  # added 2026-09-18, all Aug/Sep-only postings, no effect on the already-validated Jan-Jul fit (checked individually)
+    'utility': ['3 1 10 1120', '3 1 10 11756', '3 1 10 2450', '3 1 10 4298', '3 1 10 475', '3 1 10 9046'],
+    'office_exp': ['1 4 10 12186', '3 1 10 10100', '3 1 10 10242', '3 1 10 10505', '3 1 10 11350', '3 1 10 11674', '3 1 10 11835', '3 1 10 12185', '3 1 10 12485', '3 1 10 1278', '3 1 10 1459', '3 1 10 1477', '3 1 10 174', '3 1 10 2', '3 1 10 2767', '3 1 10 3', '3 1 10 3121', '3 1 10 3200', '3 1 10 3708', '3 1 10 3950', '3 1 10 4119', '3 1 10 4474', '3 1 10 4582', '3 1 10 4588', '3 1 10 4825', '3 1 10 4880', '3 1 10 4936', '3 1 10 5214', '3 1 10 5570', '3 1 10 6802', '3 1 10 6927', '3 1 10 6944', '3 1 10 7526', '3 1 10 7708', '3 1 10 7981', '3 1 10 7990', '3 1 10 7991', '3 1 10 8093', '3 1 10 8131', '3 1 10 8136', '3 1 10 8143', '3 1 10 8184', '3 1 10 8185', '3 1 10 8186', '3 1 10 8189', '3 1 10 8191', '3 1 10 8299', '3 1 10 8331', '3 1 10 8377', '3 1 10 8449', '3 1 10 8451', '3 1 10 90', '3 1 10 9343', '3 1 10 9432', '3 1 10 9532', '3 1 10 9568', '3 1 10 9790', '3 1 31 0040', '3 1 31 0046', '3 1 31 0092', '3 1 31 0095', '3 1 31 0096', '3 1 31 0097', '3 1 31 0104', '3 1 31 0106', '3 1 31 0108', '3 1 31 0171', '3 1 31 11721', '3 1 31 11969', '3 1 31 12044', '7 4 12', '7 4 90 3', '7 4 90 37', '8 1 50', '8 2 50'],
+    'dividend': ['3 4 20'],
+    'loan_to_finhub': ['1 4 50 1309', '4 1 90 11677'],
+    'interest_investors': ['3 4 10 1318', '3 4 10 8018', '3 4 10 9019'],
+    'interest_bank': ['3 4 10 11658', '3 4 10 11677', '3 4 10 2426', '3 4 10 3951', '3 4 10 4820', '3 4 10 5606', '3 4 10 5719', '3 4 10 7536', '7 4 90 33'],
+    # Found 2026-09-18 via the newer mapping file: interest on the two confirmed shareholder-loan
+    # principals ('4 1 90 12284'/'4 1 90 11998', same account NAMES) only started being paid in
+    # Aug 2026 - genuinely zero for Jan-Jul (matches the CF Actual-vs-Budget model's own zero for
+    # "Interest of Shareholder's Equity" that whole period, so this doesn't contradict it, just
+    # extends coverage past where the old file stopped).
+    'interest_sh': ['3 4 10 12284', '3 4 10 12285'],
+    'loan_bog': ['4 1 90 10611'],
+    'loan_sh_draw': ['4 1 90 11998', '4 1 90 12284'],
+    'loan_zuk_draw': ['4 1 90 8018', '4 1 90 8019'],
+    'loan_sh_repay': ['4 1 90 12284'],
+    'capex_sysdev': ['3 1 10 10213', '3 1 10 2424', '3 1 10 8376'],
+    'capex_truck': ['3 1 10 2020'],
+    'other_sales': ['1 4 10 4559'],
+}
+# '4 1 90 11677' (Finhub Georgia) is deliberately NOT in this list: it is a 'loan_to_finhub' account (see
+# above) and being in both double-counted its flows in the Financing totals (found 2026-09-21 while
+# building the postings drill-down; the finance team's own Excel actuals confirm it - Jul-2026 bank
+# repayment 26,052 not 76,052, Financing in 976,705 not 1,076,705). Finhub is reported once, netted, in
+# the 'Loan to Finhub' line.
+LOAN_4190_ALL = ['4 1 90 10611', '4 1 90 11998', '4 1 90 12284', '4 1 90 1684',
+                  '4 1 90 2426', '4 1 90 3746', '4 1 90 4693', '4 1 90 5506', '4 1 90 5959',
+                  '4 1 90 7426', '4 1 90 8018', '4 1 90 8019']
+CF_CAT_CODES['loan_principal_all'] = LOAN_4190_ALL
+CODE_TO_CAT = {c: cat for cat, codes in CF_CAT_CODES.items() for c in codes}
+CAT_MULTI = {c: [cat for cat, codes in CF_CAT_CODES.items() if c in codes] for c in
+             {c for codes in CF_CAT_CODES.values() for c in codes}}
+
 
 def cf_counter(code):
     if code.startswith(VENDOR_TRACE_LEDGERS) and code in VENDOR_CATEGORY:
@@ -79,23 +151,24 @@ mi = {m: i for i, m in enumerate(months)}
 agg = collections.defaultdict(lambda: collections.defaultdict(lambda: [0.0, 0.0]))
 opening = collections.defaultdict(float)          # leaf code -> net (dr-cr) from all history before YEAR
 cf = collections.defaultdict(lambda: [0.0, 0.0])  # (cash4, counter3, m) -> [in,out]   -- YEAR only
+cf_cat = collections.defaultdict(lambda: [0.0, 0.0])  # (category, m) -> [in,out], see CF_CAT_CODES above
 closing = collections.defaultdict(float)          # m -> net closed (audit)            -- YEAR only
 stats = collections.Counter()
 
-# Individual journal postings for the Expense Analysis tab's drill-down ("show postings" toggle,
-# so the finance team can eyeball whether the bookkeeper's entries look right, not just the totals).
-# Scoped to just these 5 root classes - the only ones the EX tab shows - since embedding every
-# WIRING row for the whole ledger would be far larger than needed (~2.7k rows here vs 267k total).
-EX_ROOTS = ('7 4', '7 3', '7 1', '8 2', '9 2')
-postings = collections.defaultdict(list)  # depth()-truncated code -> [[date, story, counter_code, signed_amount], ...]
-# `story` is WIRING.STORY, a free-text narrative the bookkeeper enters per posting (e.g. "ხელფასის
-# დარიცხვა", "შეძენილია საქონელი შპს X-სგან") - used as the "purpose" column in the Expense
-# Analysis tab's per-cell drill-down. About a quarter of rows have it blank; the frontend falls
-# back to the counter-account's name in that case (`counter_code` is kept for exactly that).
+# Full-year journal for the dashboard's "click any number -> see its postings" drill-down (Expense
+# Analysis, the Statements tabs and Actual-vs-Budget). Each WIRING row is stored ONCE as
+# [mmdd, story_idx, debit_idx, credit_idx, money_gel] with the story text and the (depth-truncated)
+# account codes dictionary-encoded - the JS builds the per-account index (debit +, credit -) from it.
+# ~85k rows for 2026 -> ~3.5 MB instead of the ~2.7k EX-only rows it used to embed.
+jr_story, jr_code, jr_rows = {}, {}, []
 
 
-def is_ex(code):
-    return any(code == r or code.startswith(r + ' ') for r in EX_ROOTS)
+def _ji(dct, key):
+    i = dct.get(key)
+    if i is None:
+        i = dct[key] = len(dct)
+    return i
+
 
 rates = collections.defaultdict(list)
 for cur_, dt, qty, c in con.execute("SELECT MON_TYPE, DATE, QTY, CURS FROM Rate ORDER BY DATE"):
@@ -133,16 +206,22 @@ for date, story, d, k, money, mon in cur:
         m = mi[date[:7]]
         agg[depth(d)][m][0] += money
         agg[depth(k)][m][1] += money
-        if is_ex(d):
-            postings[depth(d)].append([date, (story or '').strip(), depth(k), round(money, 2)])
-        if is_ex(k):
-            postings[depth(k)].append([date, (story or '').strip(), depth(d), round(-money, 2)])
+        jr_rows.append([int(date[5:7]) * 100 + int(date[8:10]), _ji(jr_story, (story or '').strip()),
+                        _ji(jr_code, depth(d)), _ji(jr_code, depth(k)), round(money, 2)])
         dc = d.startswith('1 1 ') or d.startswith('1 2 ')
         kc = k.startswith('1 1 ') or k.startswith('1 2 ')
         if dc:
             cf[(depth(d), cf_counter(k), m)][0] += money
+            dk = depth(k)
+            if dk != '1 6 35':
+                for cat in CAT_MULTI.get(dk, ()):
+                    cf_cat[(cat, m)][0] += money
         if kc:
             cf[(depth(k), cf_counter(d), m)][1] += money
+            dd = depth(d)
+            if dd != '1 6 35':
+                for cat in CAT_MULTI.get(dd, ()):
+                    cf_cat[(cat, m)][1] += money
     else:
         stats['pre2026'] += 1
         opening[depth(d)] += money
@@ -171,7 +250,8 @@ for c in sorted(need):
 
 aggo = {c: [x for m in sorted(v) for x in (m, round(v[m][0], 2), round(v[m][1], 2))] for c, v in agg.items()}
 cfo = [[c, x, m, round(v[0], 2), round(v[1], 2)] for (c, x, m), v in sorted(cf.items())]
-postingso = {c: sorted(v, key=lambda x: x[0], reverse=True) for c, v in postings.items()}
+cfcato = [[cat, m, round(v[0], 2), round(v[1], 2)] for (cat, m), v in sorted(cf_cat.items())]
+journal = {'s': list(jr_story), 'c': list(jr_code), 'r': jr_rows}
 
 _srcp = os.path.join(BASE, 'source.json')
 _src = json.load(open(_srcp, encoding='utf-8')) if os.path.exists(_srcp) else {'source': 'unknown', 'asof': YEAR + '-01-01'}
@@ -183,8 +263,8 @@ meta = {
     'stats': dict(stats), 'fx_gel': {k: round(v, 2) for k, v in fx_gel.items()},
     'closing': {months[m]: round(v, 2) for m, v in sorted(closing.items())},
 }
-json.dump({'meta': meta, 'months': months, 'acc': acc, 'agg': aggo, 'cf': cfo, 'postings': postingso}, open(OUT, 'w', encoding='utf-8'),
+json.dump({'meta': meta, 'months': months, 'acc': acc, 'agg': aggo, 'cf': cfo, 'cf_cat': cfcato, 'journal': journal, 'cat_multi': CAT_MULTI}, open(OUT, 'w', encoding='utf-8'),
            ensure_ascii=False, separators=(',', ':'))
 print(meta['stats'], 'codes', len(acc), 'agg codes', len(aggo), 'cf rows', len(cfo),
-      'postings codes', len(postingso), 'postings rows', sum(len(v) for v in postingso.values()),
+      'journal rows', len(jr_rows), 'stories', len(jr_story),
       'size MB', round(os.path.getsize(OUT) / 1e6, 2))
