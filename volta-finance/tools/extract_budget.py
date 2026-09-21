@@ -1,12 +1,17 @@
-r"""One-time extraction of the P&L Budget and Balance Sheet Budget lines from the finance
-team's Excel model into budget_data.json, for the "PL Budget"/"BS Budget" tabs.
+r"""One-time extraction of the P&L/BS/CF Budget lines - and, for CF only, the finance team's own
+Actual column - from the finance team's Excel model into budget_data.json.
 
 Source: D:\all\volta\Finance\Badget VS Acctual Jul'2026.xlsx, sheet FS-BvsA'Jul'26.
-Only the BUDGET columns (B/2026-1 .. B/2026-12, i.e. columns G-R) are pulled - no Actual, no
-Variance. This is a curated row list (not a generic dump): row numbers, indent level and
-bold/section flags were picked by hand after inspecting the sheet, because the workbook has no
-machine-readable outline/level markers of its own. Re-run this script (then build_dashboard.py)
-if the user supplies an updated budget workbook; it is NOT part of the Oris refresh.py chain.
+PL/BS pull only the BUDGET columns (B/2026-1 .. B/2026-12, i.e. columns G-R) - no Actual, no
+Variance. CF additionally pulls its own Actual columns (Y:AE, "A/2026-1".."A/2026-7", Jan-Jul
+2026) - these mirror the sheet CF'Jul'2026's own category/sub-category rollup row-for-row against
+CF_ROWS below, and are the finance team's own already-reconciled cash actuals (see CF_ROWS'
+row-number comments and the dashboard's avNoteCF for why these are used directly instead of a
+JS-side Oris derivation). This is a curated row list (not a generic dump): row numbers, indent
+level and bold/section flags were picked by hand after inspecting the sheet, because the workbook
+has no machine-readable outline/level markers of its own. Re-run this script (then
+build_dashboard.py) if the user supplies an updated budget workbook; it is NOT part of the Oris
+refresh.py chain.
 """
 import json, os, sys
 import openpyxl
@@ -16,6 +21,10 @@ BASE = os.environ.get('VOLTA_FIN_DATA', 'D:/all/volta/Volta_Accounting')
 OUT = os.path.join(BASE, 'budget_data.json')
 SHEET = "FS-BvsA'Jul'26"
 MONTH_COLS = ['G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R']  # Budget Jan..Dec 2026
+# Actual Jan..Jul 2026, same row numbers as CF_ROWS below - this is the finance team's own already-
+# reconciled actual (see extract_budget.py's CF section for why the JS-side Oris derivation was
+# retired in favor of these). Only CF uses this; PL/BS still budget-only per the original scope.
+CF_ACT_COLS = ['Y', 'Z', 'AA', 'AB', 'AC', 'AD', 'AE']
 
 # (row, label_ka, level, bold)  -- level 1 = section/total line, 2 = detail line
 PL_ROWS = [
@@ -171,6 +180,13 @@ def month_vals(r):
     return [round(v, 2) if isinstance(v, (int, float)) else 0.0 for v in (col(r, c) for c in MONTH_COLS)]
 
 
+def cf_act_vals(r):
+    vals = [col(r, c) for c in CF_ACT_COLS]
+    if not any(isinstance(v, (int, float)) for v in vals):
+        return None
+    return [round(v, 2) if isinstance(v, (int, float)) else 0.0 for v in vals]
+
+
 pl = [{'row': r, 'ka': ka, 'en': PL_EN.get(r, ka), 'level': lv, 'bold': b, 'vals': month_vals(r)}
       for r, ka, lv, b in PL_ROWS]
 def bs_vals(r):
@@ -185,7 +201,8 @@ bs = [{'row': r, 'ka': (col(r, 'B') or '').strip(), 'en': (col(r, 'C') or '').st
        'vals': bs_vals(r)}
       for r, lv, b in BS_ROWS]
 
-cf = [{'row': r, 'ka': ka, 'en': CF_EN.get(r, ka), 'level': lv, 'bold': b, 'vals': month_vals(r)}
+cf = [{'row': r, 'ka': ka, 'en': CF_EN.get(r, ka), 'level': lv, 'bold': b, 'vals': month_vals(r),
+       'act': cf_act_vals(r)}
       for r, ka, lv, b in CF_ROWS]
 portfolio = [{'row': r, 'ka': ka, 'en': en, 'level': 1, 'bold': r == 16, 'vals': month_vals(r)}
              for r, en, ka in PORTFOLIO_ROWS]
