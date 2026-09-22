@@ -1,18 +1,23 @@
 <?php
 // reporting.volta.ge/for_marketing.php — "For Marketing": good-payers list, live.
 //
-// Serves for-marketing/for_marketing.html with its data consts (GOOD_PAYERS/FM_SUMMARY/GENERATED_AT)
-// recomputed from VoltaStoreDB right now (src/ForMarketingReport.php). Cached in data/ for CACHE_TTL
-// seconds, keyed by today's date, so a normal page load costs nothing; ?refresh=1 forces a recompute. If
-// config.php has no 'voltastoredb' block or the database is unreachable, the last committed static build
-// is served instead (kept fresh daily by bin/for_marketing_dump.php), with a note.
+// Serves for-marketing/for_marketing.html with its data consts (GOOD_PAYERS/NEVER_PURCHASED/FM_SUMMARY/
+// GENERATED_AT) recomputed from VoltaStoreDB right now (src/ForMarketingReport.php). Cached in data/ for
+// CACHE_TTL seconds, keyed by today's date, so a normal page load costs nothing; ?refresh=1 forces a
+// recompute. If config.php has no 'voltastoredb' block or the database is unreachable, the last committed
+// static build is served instead (kept fresh daily by bin/for_marketing_dump.php), with a note.
 declare(strict_types=1);
 
 namespace Volta\Funnel;
 
 const CACHE_TTL = 3600;
 
-ini_set('memory_limit', '256M');
+// build() now loads the full customers table, every order (not just customer_id-linked ones),
+// order_items, addresses and volta_application_data (the 2026-09-22 PID-widening/guest-order work) —
+// 256M was fine for the original GOOD_PAYERS-only query set but fatals (bare 500, no fallback banner:
+// PHP's OOM kill happens before the try/catch can run) under this larger one. Matches bin/
+// for_marketing_dump.php's own 1024M.
+ini_set('memory_limit', '1024M');
 
 require __DIR__ . '/../src/Database.php';
 require __DIR__ . '/../src/ForMarketingReport.php';
