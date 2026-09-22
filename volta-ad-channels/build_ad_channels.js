@@ -194,6 +194,15 @@ table.logi-table td.logi-extra-first{border-left:3px solid #1a1a34}
 .page-nav button.active{background:var(--text-primary);color:var(--surface-1)}
 .chan-tab{display:none}
 .chan-tab.active{display:block}
+.chan-glossary{background:var(--surface-1);border:1px solid var(--border);border-radius:12px;padding:16px 18px;margin-top:6px}
+.chan-glossary-title{font-size:13px;font-weight:700;margin-bottom:10px}
+.chan-glossary-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+@media (max-width:900px){.chan-glossary-grid{grid-template-columns:1fr}}
+.chan-glossary-grid b{font-size:12px;color:var(--text-primary)}
+.chan-glossary-grid dl{margin:8px 0 0}
+.chan-glossary-grid dt{font-size:11.5px;font-weight:700;color:var(--text-primary);margin-top:8px}
+.chan-glossary-grid dt:first-child{margin-top:0}
+.chan-glossary-grid dd{font-size:11.5px;color:var(--text-secondary);margin:2px 0 0;line-height:1.5}
 .theme-toggle-btn{position:fixed;top:16px;right:16px;z-index:1000;width:34px;height:34px;border-radius:50%;border:1px solid var(--border);background:var(--surface-1);color:var(--text-secondary);display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;box-shadow:0 1px 3px rgba(0,0,0,.12)}
 .theme-toggle-btn:hover{color:var(--text-primary);border-color:var(--text-muted)}
 .theme-toggle-btn svg{width:18px;height:18px}
@@ -246,6 +255,48 @@ table.logi-table td.logi-extra-first{border-left:3px solid #1a1a34}
       <div class="report-card"><div class="report-scroll-top" id="chanGa4MonthScrollTop"><div></div></div><div class="report-scroll" id="chanGa4MonthScrollBody"><table class="logi-table" id="chanGa4MonthTable"><tbody></tbody></table></div></div>
     </div>
     <p class="note">Sessions/Users/Conversions cover all traffic to the site (every channel, not only paid), from GA4 property ${GA4_PROPERTY_ID}. Engaged Sessions = sessions lasting 10s+, with 2+ pageviews, or with a conversion (GA4's own "real visit" filter, comparable to Meta's Outbound Clicks / Google Ads' Interactions above). Conversions = GA4 key events.</p>
+  </div>
+
+  <div class="chan-glossary">
+    <div class="chan-glossary-title">What each metric counts</div>
+    <div class="chan-glossary-grid">
+      <div>
+        <b>Meta Ads</b>
+        <dl>
+          <dt>Spend</dt><dd>Total amount spent, in the account's own currency.</dd>
+          <dt>Impressions</dt><dd>How many times an ad was shown on screen. The same person seeing it twice counts as 2.</dd>
+          <dt>Clicks (all)</dt><dd>Every tap anywhere on the ad unit &mdash; likes, comments, shares, photo-expand, page-name tap &mdash; not just clicks that leave Facebook/Instagram for the site.</dd>
+          <dt>Outbound Clicks</dt><dd>Only the clicks that actually took someone to the website. The metric that corresponds to a real site visit.</dd>
+          <dt>CTR (outbound)</dt><dd>Outbound Clicks &divide; Impressions &mdash; the share of ad views that sent someone to the site.</dd>
+          <dt>CPC (outbound)</dt><dd>Spend &divide; Outbound Clicks &mdash; the real cost per site visit driven.</dd>
+        </dl>
+      </div>
+      <div>
+        <b>Google Ads</b>
+        <dl>
+          <dt>Cost</dt><dd>Total amount spent, in the account's own currency.</dd>
+          <dt>Impressions</dt><dd>How many times an ad was shown.</dd>
+          <dt>Interactions</dt><dd>The platform's broader "main user action" count &mdash; clicks plus other engagement (e.g. swiping a Shopping ad's images).</dd>
+          <dt>Clicks</dt><dd>Clicks specifically. Usually close to Interactions; the two differ when a campaign has non-click engagement.</dd>
+          <dt>Conversions</dt><dd>Completed target actions (as defined in the Google Ads account), attributed to the campaign/day.</dd>
+          <dt>CTR</dt><dd>Clicks &divide; Impressions.</dd>
+          <dt>CPC</dt><dd>Cost &divide; Clicks.</dd>
+          <dt>Cost / Conversion</dt><dd>Cost &divide; Conversions &mdash; how much each completed conversion cost.</dd>
+        </dl>
+      </div>
+      <div>
+        <b>Website Traffic (GA4)</b>
+        <dl>
+          <dt>Sessions</dt><dd>One visit episode &mdash; starts when someone arrives, ends after 30 minutes of inactivity. One person can create several sessions in a day.</dd>
+          <dt>Users</dt><dd>Unique people, regardless of how many sessions each had.</dd>
+          <dt>Engaged Sessions</dt><dd>Sessions lasting 10 seconds or more, with 2+ pageviews, or that included a conversion &mdash; GA4's own filter for a "real" visit vs. an instant bounce.</dd>
+          <dt>Conversions</dt><dd>GA4 key events (e.g. form submits, purchases) reached during the session.</dd>
+          <dt>Engagement rate</dt><dd>Engaged Sessions &divide; Sessions.</dd>
+          <dt>Conversion rate</dt><dd>Conversions &divide; Sessions.</dd>
+        </dl>
+      </div>
+    </div>
+    <p class="note" style="margin-top:10px">All three channels show a "raw platform count" next to its "qualified/outbound" counterpart (Meta: Clicks (all) vs Outbound Clicks; Google Ads: Interactions vs Clicks; GA4: Sessions vs Engaged Sessions) so the numbers stay comparable across tabs &mdash; e.g. why an ad platform's own click count can run far ahead of GA4 Sessions.</p>
   </div>
 </div>
 
