@@ -1,11 +1,11 @@
 <?php
 // reporting.volta.ge/for_sales.php — "For Sales": application pipeline, live.
 //
-// Serves for-sales/for_sales.html with its three data consts (APPS/COMMITTEE/SIGNED) recomputed from
-// VoltaStoreDB right now (src/ForSalesReport.php). Cached in data/ for CACHE_TTL seconds, keyed by today's
-// date, so a normal page load costs nothing; ?refresh=1 forces a recompute. If config.php has no
-// 'voltastoredb' block or the database is unreachable, the last committed static build is served instead
-// (kept fresh daily by bin/for_sales_dump.php), with a note.
+// Serves for-sales/for_sales.html with its data consts (APPS/COMMITTEE/COMMITTEE_BY_MANAGER/
+// SALES_BY_MANAGER/GENERATED_AT) recomputed from VoltaStoreDB right now (src/ForSalesReport.php). Cached
+// in data/ for CACHE_TTL seconds, keyed by today's date, so a normal page load costs nothing; ?refresh=1
+// forces a recompute. If config.php has no 'voltastoredb' block or the database is unreachable, the last
+// committed static build is served instead (kept fresh daily by bin/for_sales_dump.php), with a note.
 declare(strict_types=1);
 
 namespace Volta\Funnel;
@@ -36,7 +36,7 @@ if (!isset($config['voltastoredb'])) {
     $cached = (!$force && is_file($cacheFile) && (time() - filemtime($cacheFile)) < CACHE_TTL)
         ? json_decode((string) file_get_contents($cacheFile), true) : null;
 
-    if (!is_array($cached) || !isset($cached['apps'], $cached['committee'], $cached['signed'])) {
+    if (!is_array($cached) || !isset($cached['apps'], $cached['committee'], $cached['committeeByManager'], $cached['salesByManager'])) {
         try {
             $pdo = Database::connect($config['voltastoredb']);
             $cached = (new ForSalesReport($pdo))->build();
@@ -56,7 +56,7 @@ if (!isset($config['voltastoredb'])) {
             }
             $why = $root === $e ? $e->getMessage() : ($e->getMessage() . ' Driver said: ' . $root->getMessage());
             $stale = is_file($cacheFile) ? json_decode((string) file_get_contents($cacheFile), true) : null;
-            if (is_array($stale) && isset($stale['apps'])) {
+            if (is_array($stale) && isset($stale['apps'], $stale['committee'], $stale['committeeByManager'], $stale['salesByManager'])) {
                 $cached = $stale;
                 $fallbackNote = 'live refresh failed (' . $why . ') — showing the last cached numbers from ' . ($stale['generatedAt'] ?? '?');
             } else {
@@ -66,7 +66,7 @@ if (!isset($config['voltastoredb'])) {
         }
     }
 
-    if (is_array($cached) && isset($cached['apps'], $cached['committee'], $cached['signed'])) {
+    if (is_array($cached) && isset($cached['apps'], $cached['committee'], $cached['committeeByManager'], $cached['salesByManager'])) {
         $html = ForSalesReport::applyToHtml($html, $cached);
     }
 }
