@@ -80,7 +80,10 @@ const meta = pack(
    { key: 'cpc', label: 'CPC (outbound)', fmt: 'money', fn: o => o.outbound ? o.spend / o.outbound : 0 }],
   metaMap
 );
-const metaCampaigns = parseTsv('channels_meta_campaigns.tsv').map(r => ({ name: r.name, status: r.status, spend: num(r.spend), impressions: num(r.impressions), clicks: num(r.clicks) }));
+const metaCampaigns = parseTsv('channels_meta_campaigns.tsv').map(r => {
+  const spend = num(r.spend), impressions = num(r.impressions), clicks = num(r.clicks), outbound = num(r.outbound_clicks);
+  return { name: r.name, status: r.status, spend, impressions, clicks, outbound, ctr: impressions ? outbound / impressions : 0, cpc: outbound ? spend / outbound : 0 };
+});
 
 const gadsMap = toMap(parseTsv('channels_gads_daily.tsv'), ['cost', 'impressions', 'clicks', 'interactions', 'conversions']);
 const gads = pack(
@@ -94,7 +97,10 @@ const gads = pack(
    { key: 'cpa', label: 'Cost / Conversion', fmt: 'money', fn: o => o.conversions ? o.cost / o.conversions : 0 }],
   gadsMap
 );
-const gadsCampaigns = parseTsv('channels_gads_campaigns.tsv').map(r => ({ name: r.name, status: r.status, spend: num(r.cost), impressions: num(r.impressions), clicks: num(r.clicks) }));
+const gadsCampaigns = parseTsv('channels_gads_campaigns.tsv').map(r => {
+  const spend = num(r.cost), impressions = num(r.impressions), clicks = num(r.clicks), interactions = num(r.interactions), conversions = num(r.conversions);
+  return { name: r.name, status: r.status, spend, impressions, clicks, interactions, conversions, ctr: impressions ? clicks / impressions : 0, cpc: clicks ? spend / clicks : 0, cpa: conversions ? spend / conversions : 0 };
+});
 
 const ga4Map = toMap(parseTsv('channels_ga4_daily.tsv'), ['sessions', 'engaged_sessions', 'users', 'conversions']);
 const ga4 = pack(
@@ -221,7 +227,7 @@ table.logi-table td.logi-extra-first{border-left:3px solid #1a1a34}
       <div class="report-card"><div class="report-scroll-top" id="chanMetaDayScrollTop"><div></div></div><div class="report-scroll" id="chanMetaDayScrollBody"><table class="logi-table" id="chanMetaDayTable"><tbody></tbody></table></div></div>
       <div class="report-card"><div class="report-scroll-top" id="chanMetaMonthScrollTop"><div></div></div><div class="report-scroll" id="chanMetaMonthScrollBody"><table class="logi-table" id="chanMetaMonthTable"><tbody></tbody></table></div></div>
     </div>
-    <div class="table-card"><table class="logi-mini" id="chanMetaCampTable"><colgroup><col style="width:40%"></colgroup><tbody></tbody></table></div>
+    <div class="table-card"><table class="logi-mini" id="chanMetaCampTable"><colgroup><col style="width:24%"></colgroup><tbody></tbody></table></div>
   </div>
 
   <div class="chan-tab" data-tab="gads">
@@ -230,7 +236,7 @@ table.logi-table td.logi-extra-first{border-left:3px solid #1a1a34}
       <div class="report-card"><div class="report-scroll-top" id="chanGadsDayScrollTop"><div></div></div><div class="report-scroll" id="chanGadsDayScrollBody"><table class="logi-table" id="chanGadsDayTable"><tbody></tbody></table></div></div>
       <div class="report-card"><div class="report-scroll-top" id="chanGadsMonthScrollTop"><div></div></div><div class="report-scroll" id="chanGadsMonthScrollBody"><table class="logi-table" id="chanGadsMonthTable"><tbody></tbody></table></div></div>
     </div>
-    <div class="table-card"><table class="logi-mini" id="chanGadsCampTable"><colgroup><col style="width:40%"></colgroup><tbody></tbody></table></div>
+    <div class="table-card"><table class="logi-mini" id="chanGadsCampTable"><colgroup><col style="width:24%"></colgroup><tbody></tbody></table></div>
   </div>
 
   <div class="chan-tab" data-tab="ga4">
@@ -307,16 +313,34 @@ var CHANNELS_JSON = ${JSON.stringify(payload)};
     (syncFns[btn.dataset.tab] || []).forEach(function (fn) { fn(); });
   });
 
-  function renderCamp(id, rows) {
-    var h = '<tr class="logi-mini-title"><td colspan="5">Top campaigns &mdash; last 30 days</td></tr>';
-    h += '<tr class="logi-mini-head"><td>Campaign</td><td>Status</td><td>Spend</td><td>Impressions</td><td>Clicks</td></tr>';
+  var money = function (v) { return '$' + v.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); };
+  function renderCamp(id, rows, cols) {
+    var h = '<tr class="logi-mini-title"><td colspan="' + (cols.length + 1) + '">Top campaigns &mdash; last 30 days</td></tr>';
+    h += '<tr class="logi-mini-head"><td>Campaign</td>' + cols.map(function (c) { return '<td>' + c.label + '</td>'; }).join('') + '</tr>';
     rows.forEach(function (r, i) {
-      h += '<tr class="logi-mini-data' + (i % 2 ? ' logi-mini-alt' : '') + '"><td>' + r.name + '</td><td>' + r.status + '</td><td>$' + r.spend.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + '</td><td>' + fmt(r.impressions) + '</td><td>' + fmt(r.clicks) + '</td></tr>';
+      h += '<tr class="logi-mini-data' + (i % 2 ? ' logi-mini-alt' : '') + '"><td>' + r.name + ' <span style="color:var(--text-muted);font-size:10.5px">(' + r.status + ')</span></td>'
+        + cols.map(function (c) { return '<td>' + c.fmt(r[c.key]) + '</td>'; }).join('') + '</tr>';
     });
     document.getElementById(id + 'Table').querySelector('tbody').innerHTML = h;
   }
-  renderCamp('chanMetaCamp', C.metaCampaigns);
-  renderCamp('chanGadsCamp', C.gadsCampaigns);
+  renderCamp('chanMetaCamp', C.metaCampaigns, [
+    { key: 'spend', label: 'Spend', fmt: money },
+    { key: 'impressions', label: 'Impressions', fmt: fmt },
+    { key: 'clicks', label: 'Clicks (all)', fmt: fmt },
+    { key: 'outbound', label: 'Outbound Clicks', fmt: fmt },
+    { key: 'ctr', label: 'CTR (outbound)', fmt: pct },
+    { key: 'cpc', label: 'CPC (outbound)', fmt: money },
+  ]);
+  renderCamp('chanGadsCamp', C.gadsCampaigns, [
+    { key: 'spend', label: 'Cost', fmt: money },
+    { key: 'impressions', label: 'Impressions', fmt: fmt },
+    { key: 'interactions', label: 'Interactions', fmt: fmt },
+    { key: 'clicks', label: 'Clicks', fmt: fmt },
+    { key: 'ctr', label: 'CTR', fmt: pct },
+    { key: 'cpc', label: 'CPC', fmt: money },
+    { key: 'conversions', label: 'Conversions', fmt: function (v) { return v.toLocaleString('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 }); } },
+    { key: 'cpa', label: 'Cost / Conversion', fmt: money },
+  ]);
 })();
 (function () {
   var SUN = '<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>';

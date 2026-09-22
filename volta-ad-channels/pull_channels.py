@@ -79,7 +79,7 @@ def pull_meta():
 
     camp = []
     curl, cparams = f"https://graph.facebook.com/v21.0/{META_ACCOUNT}/campaigns", {
-        "fields": "name,status,insights.date_preset(last_30d){spend,impressions,clicks}",
+        "fields": "name,status,insights.date_preset(last_30d){spend,impressions,clicks,outbound_clicks}",
         "limit": 200,
         "access_token": META_TOKEN,
     }
@@ -95,9 +95,9 @@ def pull_meta():
         spend = float(ins.get("spend", 0) or 0)
         if spend <= 0:
             continue
-        crows.append((c["name"], c.get("status", ""), spend, ins.get("impressions", 0), ins.get("clicks", 0)))
+        crows.append((c["name"], c.get("status", ""), spend, ins.get("impressions", 0), ins.get("clicks", 0), outbound(ins)))
     crows.sort(key=lambda x: -x[2])
-    write_tsv("channels_meta_campaigns.tsv", ["name", "status", "spend", "impressions", "clicks"], crows[:15])
+    write_tsv("channels_meta_campaigns.tsv", ["name", "status", "spend", "impressions", "clicks", "outbound_clicks"], crows[:15])
     return {"currency": acct.get("currency", "USD"), "account": acct.get("name", "")}
 
 
@@ -132,15 +132,15 @@ def pull_gads():
     camps = list(svc.search(
         customer_id=GADS_CUSTOMER_ID,
         query="""
-            SELECT campaign.name, campaign.status, metrics.cost_micros, metrics.impressions, metrics.clicks
+            SELECT campaign.name, campaign.status, metrics.cost_micros, metrics.impressions, metrics.clicks, metrics.interactions, metrics.conversions
             FROM campaign
             WHERE segments.date DURING LAST_30_DAYS
             ORDER BY metrics.cost_micros DESC
             LIMIT 15
         """,
     ))
-    crows = [(c.campaign.name, c.campaign.status.name, c.metrics.cost_micros / 1e6, c.metrics.impressions, c.metrics.clicks) for c in camps if c.metrics.cost_micros > 0]
-    write_tsv("channels_gads_campaigns.tsv", ["name", "status", "cost", "impressions", "clicks"], crows)
+    crows = [(c.campaign.name, c.campaign.status.name, c.metrics.cost_micros / 1e6, c.metrics.impressions, c.metrics.clicks, c.metrics.interactions, c.metrics.conversions) for c in camps if c.metrics.cost_micros > 0]
+    write_tsv("channels_gads_campaigns.tsv", ["name", "status", "cost", "impressions", "clicks", "interactions", "conversions"], crows)
     return {"currency": currency, "account": name}
 
 
