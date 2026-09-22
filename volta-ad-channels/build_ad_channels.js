@@ -62,18 +62,33 @@ function pack(baseDefs, deriveDefs, map) {
   return { day: withEx(dayRows, true), month: withEx(monthRows, false) };
 }
 
-const metaMap = toMap(parseTsv('channels_meta_daily.tsv'), ['spend', 'impressions', 'clicks']);
+// Each channel shows a "raw platform metric" alongside its "qualified/outbound" counterpart, so the three
+// tabs read consistently and a viewer can see why e.g. Meta's own reported clicks run far ahead of GA4
+// Sessions: Meta Clicks (all) counts every tap on the ad unit (likes/comments/shares/photo-expand, not just
+// outbound clicks); Google Ads Interactions is the analogous broader count (clicks + other engagement, e.g.
+// shopping-ad swipes); GA4 Engaged Sessions is the "qualified visit" counterpart to raw Sessions. Verified
+// live 2026-09-22 that all three pairs actually differ for this account (see pull_channels.py's comments for
+// the numbers). CTR/CPC are derived from the qualified metric (Outbound Clicks / Clicks), not the raw one --
+// that was the original bug the user caught (CTR/CPC looked inflated next to GA4).
+const metaMap = toMap(parseTsv('channels_meta_daily.tsv'), ['spend', 'impressions', 'clicks', 'outbound_clicks']);
 const meta = pack(
-  [{ key: 'spend', col: 'spend', label: 'Spend', fmt: 'money' }, { key: 'impressions', col: 'impressions', label: 'Impressions', fmt: 'int' }, { key: 'clicks', col: 'clicks', label: 'Clicks', fmt: 'int' }],
-  [{ key: 'ctr', label: 'CTR', fmt: 'pct', fn: o => o.impressions ? o.clicks / o.impressions : 0 },
-   { key: 'cpc', label: 'CPC', fmt: 'money', fn: o => o.clicks ? o.spend / o.clicks : 0 }],
+  [{ key: 'spend', col: 'spend', label: 'Spend', fmt: 'money' },
+   { key: 'impressions', col: 'impressions', label: 'Impressions', fmt: 'int' },
+   { key: 'clicks', col: 'clicks', label: 'Clicks (all)', fmt: 'int' },
+   { key: 'outbound', col: 'outbound_clicks', label: 'Outbound Clicks', fmt: 'int' }],
+  [{ key: 'ctr', label: 'CTR (outbound)', fmt: 'pct', fn: o => o.impressions ? o.outbound / o.impressions : 0 },
+   { key: 'cpc', label: 'CPC (outbound)', fmt: 'money', fn: o => o.outbound ? o.spend / o.outbound : 0 }],
   metaMap
 );
 const metaCampaigns = parseTsv('channels_meta_campaigns.tsv').map(r => ({ name: r.name, status: r.status, spend: num(r.spend), impressions: num(r.impressions), clicks: num(r.clicks) }));
 
-const gadsMap = toMap(parseTsv('channels_gads_daily.tsv'), ['cost', 'impressions', 'clicks', 'conversions']);
+const gadsMap = toMap(parseTsv('channels_gads_daily.tsv'), ['cost', 'impressions', 'clicks', 'interactions', 'conversions']);
 const gads = pack(
-  [{ key: 'cost', col: 'cost', label: 'Cost', fmt: 'money' }, { key: 'impressions', col: 'impressions', label: 'Impressions', fmt: 'int' }, { key: 'clicks', col: 'clicks', label: 'Clicks', fmt: 'int' }, { key: 'conversions', col: 'conversions', label: 'Conversions', fmt: 'dec1' }],
+  [{ key: 'cost', col: 'cost', label: 'Cost', fmt: 'money' },
+   { key: 'impressions', col: 'impressions', label: 'Impressions', fmt: 'int' },
+   { key: 'interactions', col: 'interactions', label: 'Interactions', fmt: 'int' },
+   { key: 'clicks', col: 'clicks', label: 'Clicks', fmt: 'int' },
+   { key: 'conversions', col: 'conversions', label: 'Conversions', fmt: 'dec1' }],
   [{ key: 'ctr', label: 'CTR', fmt: 'pct', fn: o => o.impressions ? o.clicks / o.impressions : 0 },
    { key: 'cpc', label: 'CPC', fmt: 'money', fn: o => o.clicks ? o.cost / o.clicks : 0 },
    { key: 'cpa', label: 'Cost / Conversion', fmt: 'money', fn: o => o.conversions ? o.cost / o.conversions : 0 }],
@@ -81,10 +96,14 @@ const gads = pack(
 );
 const gadsCampaigns = parseTsv('channels_gads_campaigns.tsv').map(r => ({ name: r.name, status: r.status, spend: num(r.cost), impressions: num(r.impressions), clicks: num(r.clicks) }));
 
-const ga4Map = toMap(parseTsv('channels_ga4_daily.tsv'), ['sessions', 'users', 'conversions']);
+const ga4Map = toMap(parseTsv('channels_ga4_daily.tsv'), ['sessions', 'engaged_sessions', 'users', 'conversions']);
 const ga4 = pack(
-  [{ key: 'sessions', col: 'sessions', label: 'Sessions', fmt: 'int' }, { key: 'users', col: 'users', label: 'Users', fmt: 'int' }, { key: 'conversions', col: 'conversions', label: 'Conversions', fmt: 'int' }],
-  [{ key: 'convrate', label: 'Conversion rate', fmt: 'pct', fn: o => o.sessions ? o.conversions / o.sessions : 0 }],
+  [{ key: 'sessions', col: 'sessions', label: 'Sessions', fmt: 'int' },
+   { key: 'engaged', col: 'engaged_sessions', label: 'Engaged Sessions', fmt: 'int' },
+   { key: 'users', col: 'users', label: 'Users', fmt: 'int' },
+   { key: 'conversions', col: 'conversions', label: 'Conversions', fmt: 'int' }],
+  [{ key: 'engrate', label: 'Engagement rate', fmt: 'pct', fn: o => o.sessions ? o.engaged / o.sessions : 0 },
+   { key: 'convrate', label: 'Conversion rate', fmt: 'pct', fn: o => o.sessions ? o.conversions / o.sessions : 0 }],
   ga4Map
 );
 
@@ -220,7 +239,7 @@ table.logi-table td.logi-extra-first{border-left:3px solid #1a1a34}
       <div class="report-card"><div class="report-scroll-top" id="chanGa4DayScrollTop"><div></div></div><div class="report-scroll" id="chanGa4DayScrollBody"><table class="logi-table" id="chanGa4DayTable"><tbody></tbody></table></div></div>
       <div class="report-card"><div class="report-scroll-top" id="chanGa4MonthScrollTop"><div></div></div><div class="report-scroll" id="chanGa4MonthScrollBody"><table class="logi-table" id="chanGa4MonthTable"><tbody></tbody></table></div></div>
     </div>
-    <p class="note">Sessions/Users/Conversions cover all traffic to the site (every channel, not only paid), from GA4 property ${GA4_PROPERTY_ID}. Conversions = GA4 key events.</p>
+    <p class="note">Sessions/Users/Conversions cover all traffic to the site (every channel, not only paid), from GA4 property ${GA4_PROPERTY_ID}. Engaged Sessions = sessions lasting 10s+, with 2+ pageviews, or with a conversion (GA4's own "real visit" filter, comparable to Meta's Outbound Clicks / Google Ads' Interactions above). Conversions = GA4 key events.</p>
   </div>
 </div>
 
