@@ -120,6 +120,7 @@
   .page .desc{ margin:0 0 20px; color:var(--muted); font-size:13.5px; line-height:1.55; max-width:64ch; }
 
   .kpis{ display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-bottom:10px; }
+  #apps-kpis{ grid-template-columns:repeat(4,1fr); }
   .kpi{
     background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:16px 16px 14px;
     box-shadow:var(--shadow);
@@ -187,8 +188,12 @@
 
   @media (max-width:640px){
     .kpis{ grid-template-columns:1fr; }
+    #apps-kpis{ grid-template-columns:1fr; }
     .bar-cell{ width:96px; }
     thead th, tbody td{ padding:8px 9px; }
+  }
+  @media (min-width:641px) and (max-width:860px){
+    #apps-kpis{ grid-template-columns:repeat(2,1fr); }
   }
   .theme-toggle-btn{position:fixed;top:16px;right:16px;z-index:1000;width:34px;height:34px;border-radius:50%;border:1px solid var(--line);background:var(--surface);color:var(--muted);display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;box-shadow:var(--shadow)}
   .theme-toggle-btn:hover{color:var(--ink);border-color:var(--muted)}
@@ -343,6 +348,15 @@ function renderApps(){
   const peakDay = completed.reduce((a,b)=>b[1]>a[1]?b:a);
   const lowDay = completed.reduce((a,b)=>b[1]<a[1]?b:a);
   kpiBlock(document.getElementById("apps-kpis"), vals, "ბოლო 7 დღე (სულ)", true);
+  const curMonth = TODAY.slice(0,7);
+  const monthRows = APPS.filter(([d])=>d.startsWith(curMonth));
+  const monthTotal = monthRows.reduce((s,[,n])=>s+n,0);
+  document.getElementById("apps-kpis").insertAdjacentHTML("beforeend", `
+    <div class="kpi">
+      <div class="label">თვის ჯამი</div>
+      <div class="value">${fmt(monthTotal)}</div>
+      <div class="delta">საშუალო &asymp; ${fmt(Math.round(monthTotal/monthRows.length))} / დღეში</div>
+    </div>`);
   document.getElementById("apps-peak").innerHTML =
     `პიკური დღე: <b>${fmt(peakDay[1])}</b> (${fmtDate(peakDay[0])}) &nbsp;&middot;&nbsp; ყველაზე მშვიდი დღე: <b>${fmt(lowDay[1])}</b> (${fmtDate(lowDay[0])})`;
   const tb = document.querySelector("#apps-table tbody");
