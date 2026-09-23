@@ -77,12 +77,13 @@ const meta = pack(
    { key: 'clicks', col: 'clicks', label: 'Clicks (all)', fmt: 'int' },
    { key: 'outbound', col: 'outbound_clicks', label: 'Outbound Clicks', fmt: 'int' }],
   [{ key: 'ctr', label: 'CTR (outbound)', fmt: 'pct', fn: o => o.impressions ? o.outbound / o.impressions : 0 },
-   { key: 'cpc', label: 'CPC (outbound)', fmt: 'money', fn: o => o.outbound ? o.spend / o.outbound : 0 }],
+   { key: 'cpc', label: 'CPC (outbound)', fmt: 'money', fn: o => o.outbound ? o.spend / o.outbound : 0 },
+   { key: 'clicksPerDollar', label: 'Outbound Clicks per $1', fmt: 'dec2', fn: o => o.spend ? o.outbound / o.spend : 0 }],
   metaMap
 );
 const metaCampaigns = parseTsv('channels_meta_campaigns.tsv').map(r => {
   const spend = num(r.spend), impressions = num(r.impressions), clicks = num(r.clicks), outbound = num(r.outbound_clicks);
-  return { name: r.name, status: r.status, spend, impressions, clicks, outbound, ctr: impressions ? outbound / impressions : 0, cpc: outbound ? spend / outbound : 0 };
+  return { name: r.name, status: r.status, spend, impressions, clicks, outbound, ctr: impressions ? outbound / impressions : 0, cpc: outbound ? spend / outbound : 0, clicksPerDollar: spend ? outbound / spend : 0 };
 });
 
 const gadsMap = toMap(parseTsv('channels_gads_daily.tsv'), ['cost', 'impressions', 'clicks', 'interactions', 'conversions']);
@@ -269,6 +270,7 @@ table.logi-table td.logi-extra-first{border-left:3px solid #1a1a34}
           <dt>Outbound Clicks</dt><dd>Only the clicks that actually took someone to the website. The metric that corresponds to a real site visit.</dd>
           <dt>CTR (outbound)</dt><dd>Outbound Clicks &divide; Impressions &mdash; the share of ad views that sent someone to the site.</dd>
           <dt>CPC (outbound)</dt><dd>Spend &divide; Outbound Clicks &mdash; the real cost per site visit driven.</dd>
+          <dt>Outbound Clicks per $1</dt><dd>Outbound Clicks &divide; Spend &mdash; the inverse of CPC: how many site visits one dollar buys.</dd>
         </dl>
       </div>
       <div>
@@ -330,6 +332,7 @@ var CHANNELS_JSON = ${JSON.stringify(payload)};
     if (kind === 'money') return '$' + v.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     if (kind === 'pct') return pct(v);
     if (kind === 'dec1') return v.toLocaleString('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+    if (kind === 'dec2') return v.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     return fmt(v);
   }
   function rowHtml(cls, r) {
@@ -381,6 +384,7 @@ var CHANNELS_JSON = ${JSON.stringify(payload)};
     { key: 'outbound', label: 'Outbound Clicks', fmt: fmt },
     { key: 'ctr', label: 'CTR (outbound)', fmt: pct },
     { key: 'cpc', label: 'CPC (outbound)', fmt: money },
+    { key: 'clicksPerDollar', label: 'Outbound Clicks per $1', fmt: function (v) { return v.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); } },
   ]);
   renderCamp('chanGadsCamp', C.gadsCampaigns, [
     { key: 'spend', label: 'Cost', fmt: money },
