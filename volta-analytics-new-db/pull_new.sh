@@ -578,6 +578,22 @@ Q "WITH $PF_BOOK, a AS (SELECT b.* FROM book b WHERE b.kind = 'active')
 Q "WITH $PF_BOOK SELECT b.kind, COUNT(*) n, SUM(b.closed_at IS NULL) no_close_at, ROUND(SUM(b.rem), 2) rem, SUM(b.rem <= 1) fully_paid, MIN(DATE(b.disb)) first_disb, MAX(DATE(b.disb)) last_disb, MIN(DATE(b.closed_at)) first_close, MAX(DATE(b.closed_at)) last_close FROM book b GROUP BY b.kind ORDER BY b.kind;" > "$S/pf_quality.tsv"
 Q "SELECT SUM(o.crm_close_type IN (1,2) AND (o.crm_close_date < o.crm_creator_date OR YEAR(o.crm_close_date) < 2019)) bad_close_dates, SUM(o.crm_active = 1 AND o.crm_order_status = 5 AND o.grand_total <= 0) active_zero_balance, SUM(o.crm_order_status = 99) single_all, SUM(o.crm_close_type IN (1,2) AND o.crm_close_date >= '$CUTOVER') closes_since_cutover FROM orders o;" > "$S/pf_quality2.tsv"
 
+# Finance / Profit Margins, Part 2 (Installment Total vs Site Price, September 2026 only -- a fixed
+# reference month like Part 1's August, not a rolling one; re-derive this block if a later month is ever
+# wanted instead). Real per-order numbers, no matching needed: build_sales.js joins this to new_sales_lines.
+# tsv's own site price (order_items.base_total) by order_id. schedule_sum/advance follow the same "advance
+# already inside the schedule vs posted separately" rule as ForSalesReport/Daily Mail's Amount Sold.
+Q "SELECT o.id order_id, COALESCE((SELECT SUM(s.schedule_amount) FROM crm_installment_schedules s WHERE s.installment_id = o.id), 0) schedule_sum,
+   COALESCE(o.crm_advance_amount, 0) advance, o.base_grand_total
+   FROM orders o WHERE o.crm_order_status = 5 AND o.crm_creator_date >= '2026-09-01' AND DATE(o.crm_creator_date) <= '$END';" > "$S/new_sept_installment_totals.tsv"
+
+# Finance / Profit Margins, Purchase Price (Site Price vs Purchase Price, September, moved off August/old-DB
+# entirely on 2026-09-23). VoltaStoreDB's cost IS tracked, just as a per-product EAV attribute (id 12, "cost")
+# rather than a plain column, and only sparsely filled in so far -- 45 of 387 distinct September-sold
+# products (11.6%) as of 2026-09-23. This grows as staff backfill it, so re-pull it on every refresh rather
+# than treating today's coverage as final.
+Q "SELECT product_id, float_value cost FROM product_attribute_values WHERE attribute_id = 12 AND float_value > 0;" > "$S/new_product_costs.tsv"
+
 echo "END=$TODAY"
 wc -l "$S"/pf_*.tsv | sed "s#$S/##"
 

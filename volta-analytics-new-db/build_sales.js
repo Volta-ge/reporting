@@ -229,21 +229,79 @@ function buildCategoryBrandReport(rows) {
 const categoryBrandBreakdown = {};
 for (const dt of ['all', 'installment', 'single']) categoryBrandBreakdown[dt] = buildCategoryBrandReport(dt === 'all' ? rawRows : rawRows.filter(r => r.deal_type === dt));
 
-// ---------- Finance / Profit Margins: August-only installment total vs site price, per product category ----------
-// old_aug_markup.tsv (pull_old.sh): per product line, Aug 1-30 installment loans, site = SUM(Final_Price),
-// installment_total = the loan's Full_Cost allocated to the line by its site-price share. Classified with the
-// same product classifier as Sales Monthly so the categories line up row for row with the retail margin.
-const augMarginsByBucket = {};
-if (fs.existsSync(path.join(__dirname, 'old_aug_markup.tsv'))) {
-  for (const r of parseTsv('old_aug_markup.tsv')) {
-    const bucket = classifyProduct(r.category) || 'Uncategorized';
-    const e = (augMarginsByBucket[bucket] ||= { bucket, site: 0, installmentTotal: 0, qty: 0 });
-    e.site += +r.site; e.installmentTotal += +r.installment_total; e.qty += +r.qty;
+// ---------- Finance / Profit Margins, per product category (rebuilt 2026-09-23, third time same day) ----------
+// Entirely September / VoltaStoreDB now -- no old DB, no August, per the user's explicit call ("სექტემბერში
+// იყოს მხოლოს სექტემბრის, თან ახალი ბაზაა"). All three figures come from the SAME order_item row's own
+// order_id/product_id, so there is no cross-database or cross-month matching anywhere in this tab any more:
+//   Site Price       = order_items.base_total (the line's own price on that September sale) -- 100% of lines.
+//   Installment Price = the order's real crm_installment_schedules total (+ advance where not already
+//                       inside the schedule) allocated to each line by its share of the order's site-price
+//                       total, same technique as before -- 442/479 September installment orders (92%) have
+//                       posted schedule data; the rest are very recent orders still processing.
+//   Purchase Price    = the product's `cost` EAV attribute (id 12) -- a real field, just sparsely filled in
+//                       so far: 45 of 387 distinct September-sold products (11.6%) as of 2026-09-23. Expected
+//                       to fill in over time (re-pulled fresh on every refresh, not a one-off snapshot), so
+//                       this coverage number should rise on its own as staff backfill it -- surfaced in the
+//                       page so that's visible, not hidden behind an average.
+const productCostById = {};
+if (fs.existsSync(path.join(__dirname, 'new_product_costs.tsv'))) {
+  for (const r of parseTsv('new_product_costs.tsv')) productCostById[r.product_id] = +r.cost;
+}
+const sepInstallmentLines = fs.existsSync(path.join(__dirname, 'new_sales_lines.tsv'))
+  ? parseTsv('new_sales_lines.tsv').filter(r => r.deal_type === 'installment') : [];
+
+// Site vs Purchase -- line-level, only lines whose product has a cost value (both sides scoped to the same
+// subset, so the margin is apples-to-apples rather than comparing a full Site Price against a partial Cost).
+const margin1ByBucket = {};
+let margin1LinesTotal = 0, margin1LinesMatched = 0;
+for (const r of sepInstallmentLines) {
+  margin1LinesTotal++;
+  const cost = productCostById[r.product_id];
+  if (!(cost > 0)) continue;
+  margin1LinesMatched++;
+  const bucket = classifyProduct(newProductRawCategory(r.product_id)) || 'Uncategorized';
+  const e = (margin1ByBucket[bucket] ||= { bucket, site: 0, cost: 0, qty: 0 });
+  e.site += +r.sales; e.cost += cost * (+r.qty || 1); e.qty += +r.qty;
+}
+const margin1 = Object.values(margin1ByBucket).map(e => ({ bucket: e.bucket, site: r2(e.site), cost: r2(e.cost), qty: e.qty }));
+
+// Installment vs Site -- order-level (a whole order's real schedule total can only be allocated once every
+// line in it is known), same allocation technique as before.
+const margin2ByBucket = {};
+let margin2OrdersTotal = 0, margin2OrdersMatched = 0;
+if (fs.existsSync(path.join(__dirname, 'new_sept_installment_totals.tsv'))) {
+  const totByOrder = {};
+  for (const r of parseTsv('new_sept_installment_totals.tsv')) {
+    totByOrder[r.order_id] = { schedule: +r.schedule_sum, advance: +r.advance, price: +r.base_grand_total };
+  }
+  const byOrder = {};
+  for (const r of sepInstallmentLines) (byOrder[r.order_id] ||= []).push(r);
+  for (const [orderId, orderLines] of Object.entries(byOrder)) {
+    margin2OrdersTotal++;
+    const t = totByOrder[orderId];
+    const siteTotal = orderLines.reduce((s, r) => s + (+r.sales), 0);
+    if (!t || siteTotal <= 0) continue;
+    // same "advance already inside the schedule vs posted separately" rule as ForSalesReport/Daily Mail
+    const instTotal = t.schedule + (t.schedule + t.advance <= t.price ? t.advance : 0);
+    margin2OrdersMatched++;
+    orderLines.forEach(r => {
+      const bucket = classifyProduct(newProductRawCategory(r.product_id)) || 'Uncategorized';
+      const site = +r.sales;
+      const e = (margin2ByBucket[bucket] ||= { bucket, site: 0, installmentTotal: 0, qty: 0 });
+      e.site += site;
+      e.installmentTotal += instTotal * (site / siteTotal);
+      e.qty += +r.qty;
+    });
   }
 }
-const augMargins = Object.values(augMarginsByBucket).map(e => ({ bucket: e.bucket, site: r2(e.site), installmentTotal: r2(e.installmentTotal), qty: e.qty }));
+const margin2 = Object.values(margin2ByBucket).map(e => ({ bucket: e.bucket, site: r2(e.site), installmentTotal: r2(e.installmentTotal), qty: e.qty }));
+const marginCoverage = {
+  part1LinesTotal: margin1LinesTotal, part1LinesMatched: margin1LinesMatched,
+  part2OrdersTotal: margin2OrdersTotal, part2OrdersMatched: margin2OrdersMatched,
+};
+console.log('Profit Margins (September, VoltaStoreDB only): Site-vs-Purchase', margin1LinesMatched + '/' + margin1LinesTotal, 'lines have a cost value | Installment-vs-Site', margin2OrdersMatched + '/' + margin2OrdersTotal, 'orders have posted schedule data');
 
-const payload = { salesMonthlyStats, brandStats, subcategoryStats, categoryBrandBreakdown, productStats, augMargins, cutover: CUTOVER, generatedAt: new Date().toISOString().slice(0, 16).replace('T', ' ') + ' UTC' };
+const payload = { salesMonthlyStats, brandStats, subcategoryStats, categoryBrandBreakdown, productStats, margin1, margin2, marginCoverage, cutover: CUTOVER, generatedAt: new Date().toISOString().slice(0, 16).replace('T', ' ') + ' UTC' };
 fs.writeFileSync(path.join(__dirname, 'sales_data.json'), JSON.stringify(payload));
 
 // ---------- checks ----------
