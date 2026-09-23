@@ -95,22 +95,34 @@ const gads = pack(
    { key: 'conversions', col: 'conversions', label: 'Conversions', fmt: 'dec1' }],
   [{ key: 'ctr', label: 'CTR', fmt: 'pct', fn: o => o.impressions ? o.clicks / o.impressions : 0 },
    { key: 'cpc', label: 'CPC', fmt: 'money', fn: o => o.clicks ? o.cost / o.clicks : 0 },
-   { key: 'cpa', label: 'Cost / Conversion', fmt: 'money', fn: o => o.conversions ? o.cost / o.conversions : 0 }],
+   { key: 'cpa', label: 'Cost / Conversion', fmt: 'money', fn: o => o.conversions ? o.cost / o.conversions : 0 },
+   { key: 'clicksPerDollar', label: 'Clicks per $1', fmt: 'dec2', fn: o => o.cost ? o.clicks / o.cost : 0 }],
   gadsMap
 );
 const gadsCampaigns = parseTsv('channels_gads_campaigns.tsv').map(r => {
   const spend = num(r.cost), impressions = num(r.impressions), clicks = num(r.clicks), interactions = num(r.interactions), conversions = num(r.conversions);
-  return { name: r.name, status: r.status, spend, impressions, clicks, interactions, conversions, ctr: impressions ? clicks / impressions : 0, cpc: clicks ? spend / clicks : 0, cpa: conversions ? spend / conversions : 0 };
+  return { name: r.name, status: r.status, spend, impressions, clicks, interactions, conversions, ctr: impressions ? clicks / impressions : 0, cpc: clicks ? spend / clicks : 0, cpa: conversions ? spend / conversions : 0, clicksPerDollar: spend ? clicks / spend : 0 };
 });
 
+// GA4 itself carries no cost data (it's not an ad platform) -- "per $1" here is necessarily BLENDED: total
+// Sessions (every source, not just paid) against the two paid channels' combined spend. Not a per-channel
+// efficiency number like Meta's/Google Ads' own (it mixes organic/direct/referral traffic into the numerator),
+// but a common blended view marketers do track. Labeled and explained as such below, not left ambiguous.
+const combinedSpendByDay = {};
+for (const d of Object.keys(metaMap)) combinedSpendByDay[d] = (combinedSpendByDay[d] || 0) + metaMap[d].spend;
+for (const d of Object.keys(gadsMap)) combinedSpendByDay[d] = (combinedSpendByDay[d] || 0) + gadsMap[d].cost;
+
 const ga4Map = toMap(parseTsv('channels_ga4_daily.tsv'), ['sessions', 'engaged_sessions', 'users', 'conversions']);
+for (const d of Object.keys(ga4Map)) ga4Map[d].adSpend = combinedSpendByDay[d] || 0;
 const ga4 = pack(
   [{ key: 'sessions', col: 'sessions', label: 'Sessions', fmt: 'int' },
    { key: 'engaged', col: 'engaged_sessions', label: 'Engaged Sessions', fmt: 'int' },
    { key: 'users', col: 'users', label: 'Users', fmt: 'int' },
-   { key: 'conversions', col: 'conversions', label: 'Conversions', fmt: 'int' }],
+   { key: 'conversions', col: 'conversions', label: 'Conversions', fmt: 'int' },
+   { key: 'adSpend', col: 'adSpend', label: 'Combined Ad Spend (Meta + Google Ads)', fmt: 'money' }],
   [{ key: 'engrate', label: 'Engagement rate', fmt: 'pct', fn: o => o.sessions ? o.engaged / o.sessions : 0 },
-   { key: 'convrate', label: 'Conversion rate', fmt: 'pct', fn: o => o.sessions ? o.conversions / o.sessions : 0 }],
+   { key: 'convrate', label: 'Conversion rate', fmt: 'pct', fn: o => o.sessions ? o.conversions / o.sessions : 0 },
+   { key: 'sessPerDollar', label: 'Sessions per $1 (blended, all traffic)', fmt: 'dec2', fn: o => o.adSpend ? o.sessions / o.adSpend : 0 }],
   ga4Map
 );
 
@@ -284,6 +296,7 @@ table.logi-table td.logi-extra-first{border-left:3px solid #1a1a34}
           <dt>CTR</dt><dd>Clicks &divide; Impressions.</dd>
           <dt>CPC</dt><dd>Cost &divide; Clicks.</dd>
           <dt>Cost / Conversion</dt><dd>Cost &divide; Conversions &mdash; how much each completed conversion cost.</dd>
+          <dt>Clicks per $1</dt><dd>Clicks &divide; Cost &mdash; the inverse of CPC: how many clicks one dollar buys.</dd>
         </dl>
       </div>
       <div>
@@ -295,6 +308,8 @@ table.logi-table td.logi-extra-first{border-left:3px solid #1a1a34}
           <dt>Conversions</dt><dd>GA4 key events (e.g. form submits, purchases) reached during the session.</dd>
           <dt>Engagement rate</dt><dd>Engaged Sessions &divide; Sessions.</dd>
           <dt>Conversion rate</dt><dd>Conversions &divide; Sessions.</dd>
+          <dt>Combined Ad Spend</dt><dd>Meta Spend + Google Ads Cost for that day/month &mdash; GA4 itself has no cost data, this is pulled in from the other two tabs.</dd>
+          <dt>Sessions per $1 (blended)</dt><dd>Sessions &divide; Combined Ad Spend. Unlike Meta's/Google Ads' own per-$1 metrics, this is <b>blended</b>: the numerator is ALL site traffic (paid + organic + direct + referral), not just the ads' own visitors, so it is not a clean per-channel efficiency number &mdash; a rough "how far did total ad spend go" view, nothing more.</dd>
         </dl>
       </div>
     </div>
@@ -395,6 +410,7 @@ var CHANNELS_JSON = ${JSON.stringify(payload)};
     { key: 'cpc', label: 'CPC', fmt: money },
     { key: 'conversions', label: 'Conversions', fmt: function (v) { return v.toLocaleString('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 }); } },
     { key: 'cpa', label: 'Cost / Conversion', fmt: money },
+    { key: 'clicksPerDollar', label: 'Clicks per $1', fmt: function (v) { return v.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); } },
   ]);
 })();
 (function () {
