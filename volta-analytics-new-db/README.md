@@ -63,7 +63,6 @@ bash pull_new.sh                  # every group's extracts through today (Daily 
 node merge.js && node build_report_data.js        # Daily Mail    -> REPORT_JSON in the HTML
 node build_sales.js && node patch_sales_tabs.js   # Sales Analyze -> SALES_JSON in the HTML
 node build_logistics.js                            # Logistics/Marketing/Operations/Customers/Collections/Portfolio -> the other six *_JSON lines
-node build_funnel.js                               # Daily Mail > Full Sales Funnel -> FUNNEL_JSON (+ rewrites funnel_ga4_month.tsv when the GA4 daily extract is present)
 ```
 
 `build_logistics.js` runs all six of its groups in one pass, each self-contained (own CSS/nav/page/render
@@ -87,23 +86,6 @@ Excel export of Logistics Daily: `node build_logistics_xlsx.js`, then the same w
 | `pull_new.sh` / `pull_old.sh` | DB extracts for every group in one script each (new DB: rolling; old DB: frozen, only if the TSVs are lost) |
 | `merge.js`, `build_report_data.js` | Daily Mail series (daily + monthly) and injection into the HTML |
 | `build_logistics.js` | Logistics Daily, Marketing/Leads, Operations, Customers Analyze, Collections Analyze and Portfolio Analyze — one script, six self-contained sections (each its own CSS/nav/page/render block and its own `<prefix>_data.json`), run in that order |
-| `build_funnel.js`, `funnel_apps.tsv`, `funnel_ga4_month.tsv` | Daily Mail > Full Sales Funnel: `funnel_apps.tsv` (pull_new.sh: applications by month × status today × underwriting approval × recorded reason) + GA4 sessions per month → gitignored `funnel_data.json` → `const FUNNEL_JSON` + the nav button / page / render block between `funnel-*` markers. `funnel_ga4_month.tsv` is COMMITTED on purpose: the live PHP page reads it (the server has no GA4 access); the builder rewrites it from `../volta-ad-channels/channels_ga4_daily.tsv` whenever that (gitignored, credential-fed) daily extract is present |
-
-## Daily Mail — Full Sales Funnel
-
-One column per calendar month of 2026, from the top of the funnel to the signed contract: **website sessions**
-(Google Analytics 4, all traffic; engaged sessions and active users as memo rows) → **applications submitted**
-(`orders` by `created_at` month, migrated January–August rows included — so slightly different from the Report
-tab's old-DB history) → **Volta's screening** (the status each of that month's applications is in *today*:
-rejected = `crm_order_status` 6 with the reason recorded in `orders.crm_reason`, expired = 13, still in process
-= 4/7/8/15/16/17/9/10, plus a memo of underwriting approvals `crm_underwriter_status_id = 16`) → **the
-customer's side** (declined after approval = 12, with its reason) → **final agreement** (signed/active
-installment = 11/5/1, single-payment sale = 99, together as a total, as % of applications and per 100 sessions).
-State, not events: a recent month keeps changing on refresh as its applications get decided. Reasons: spelling
-variants merged (`build_funnel.js` REASON_ALIAS), em-dash suffixes dropped, reasons with < 5 applications in total
-grouped as "Other (rare)", blank as "Unspecified"; English glosses from the same table the Operations tab uses.
-Live in PHP as `NewDbReport::fullFunnel()` (part of the streamed `core` section, `FUNNEL_JSON`); verified
-identical to the Node build (2026-09-23). Refresh: `bash pull_new.sh` then `node build_funnel.js`.
 | `build_sales.js`, `patch_sales_tabs.js` | Sales Analyze reports (JS port of `FunnelRepository`'s bucketed reports + `ProductClassifier`) and injection |
 | `build_daily_mail_xlsx.js`, `build_logistics_xlsx.js`, `write_daily_mail_xlsx.ps1` | Excel exports (Daily Mail / Logistics Daily); the .ps1 is the shared Excel-COM writer |
 | `old_*.tsv`, `new_*.tsv`, `logi_*.tsv`, `mkt_*.tsv`, `ops_*.tsv`, `cust_*.tsv`, `coll_*.tsv`, `pf_*.tsv` | inputs, all written by `pull_new.sh` |

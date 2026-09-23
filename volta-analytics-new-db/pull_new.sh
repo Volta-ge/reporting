@@ -597,22 +597,5 @@ Q "SELECT product_id, float_value cost FROM product_attribute_values WHERE attri
 echo "END=$TODAY"
 wc -l "$S"/pf_*.tsv | sed "s#$S/##"
 
-# ================ Daily Mail — Full Sales Funnel ================
-# Applications by application MONTH (orders.created_at, Jan 2026 through today) x the status each one is in TODAY
-# (crm_order_status, same code list NewDbOps verified against the CRM) x whether underwriting approved it
-# (crm_underwriter_status_id = 16) x the recorded reason for the two "no" outcomes: Volta's rejection (6) and the
-# customer's own decline (12) — orders.crm_reason, populated on ~99% of those rows for every month of 2026 (unlike
-# crm_activity_log, whose status history only starts 2026-09-01 and records no reason at all for 12). State, not
-# events: a month's row set is where its applications stand now, so recent months keep moving on refresh.
-# Website sessions (the top of this funnel) are NOT pulled here: build_funnel.js aggregates them per month from
-# ../volta-ad-channels/channels_ga4_daily.tsv (GA4, pulled by pull_channels.py with credentials kept outside the
-# repo) into funnel_ga4_month.tsv, which IS committed so the live PHP page can read it on the server.
-FUNNEL_MSTART='2026-01-01'
-Q "SELECT DATE_FORMAT(o.created_at,'%Y-%m') m, o.crm_order_status st, (COALESCE(o.crm_underwriter_status_id,0)=16) uw16,
-     CASE WHEN o.crm_order_status IN (6,12) THEN LEFT(TRIM(REPLACE(REPLACE(REPLACE(COALESCE(o.crm_reason,''), CHAR(10),' '), CHAR(13),' '), CHAR(9),' ')), 80) ELSE '' END reason, COUNT(*) n
-   FROM orders o WHERE o.created_at >= '$FUNNEL_MSTART' AND DATE(o.created_at) <= '$TODAY'
-   GROUP BY m, st, uw16, reason ORDER BY m, st, uw16, reason;" > "$S/funnel_apps.tsv"
-wc -l "$S/funnel_apps.tsv" | sed "s#$S/##"
-
 echo "END=$END"
 wc -l "$S"/new_*.tsv "$S"/logi_*.tsv "$S"/mkt_*.tsv "$S"/ops_*.tsv "$S"/cust_*.tsv "$S"/coll_*.tsv "$S"/pf_*.tsv | sed "s#$S/##"

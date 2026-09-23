@@ -39,10 +39,7 @@ if (!isset($config['voltastoredb'])) {
     $cacheFile = $cacheDir . '/newdb_' . $end . '.json';
     $force = isset($_GET['refresh']);
     $cached = (!$force && is_file($cacheFile) && (time() - filemtime($cacheFile)) < CACHE_TTL) ? json_decode((string) file_get_contents($cacheFile), true) : null;
-    // 'funnel' (Daily Mail > Full Sales Funnel, added 2026-09-23) is part of the core build: a cache written before it
-    // existed is treated as incomplete so the first load after the deploy computes it instead of serving the
-    // committed numbers for up to an hour
-    $complete = static fn ($c) => is_array($c) && isset($c['report'], $c['sales'], $c['funnel']) && !array_diff_key(NewDbReport::GROUPS, $c);
+    $complete = static fn ($c) => is_array($c) && isset($c['report'], $c['sales']) && !array_diff_key(NewDbReport::GROUPS, $c);
     if (!$complete($cached)) {
         try {
             set_time_limit(120);
@@ -82,7 +79,6 @@ if (!isset($config['voltastoredb'])) {
                     $setConst($html, 'REPORT_JSON', $payload['report']);
                     $setConst($html, 'SALES_JSON', $payload['sales']);
                     $setConst($html, 'LOGI_JSON', $payload['logistics']);
-                    if (isset($payload['funnel'])) { $setConst($html, 'FUNNEL_JSON', $payload['funnel']); }
                     echo "<!doctype html>\n<html lang=\"ka\">\n<head>\n<meta charset=\"utf-8\">\n<meta name=\"viewport\" content=\"width=device-width,initial-scale=1\">\n</head>\n<body>\n";
                     echo $html;
                     echo '<script>window.__streamInit && window.__streamInit(5);</script>' . "\n";
@@ -147,9 +143,6 @@ if (!isset($config['voltastoredb'])) {
         $html = preg_replace('/^const SALES_JSON = .*;$/m', 'const SALES_JSON = ' . json_encode($cached['sales'], $flags) . ';', $html, 1, $c2);
         if (isset($cached['logistics'])) {
             $html = preg_replace('/^const LOGI_JSON = .*;$/m', 'const LOGI_JSON = ' . json_encode($cached['logistics'], $flags) . ';', $html, 1);
-        }
-        if (isset($cached['funnel'])) {
-            $html = preg_replace('/^const FUNNEL_JSON = .*;$/m', 'const FUNNEL_JSON = ' . json_encode($cached['funnel'], $flags) . ';', $html, 1);
         }
         foreach (NewDbReport::GROUPS as $key => $class) {
             if (!isset($cached[$key])) { continue; }
