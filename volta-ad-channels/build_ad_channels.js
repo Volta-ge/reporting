@@ -84,7 +84,7 @@ const meta = pack(
 const metaCampaigns = parseTsv('channels_meta_campaigns.tsv').map(r => {
   const spend = num(r.spend), impressions = num(r.impressions), clicks = num(r.clicks), outbound = num(r.outbound_clicks);
   return { name: r.name, status: r.status, spend, impressions, clicks, outbound, ctr: impressions ? outbound / impressions : 0, cpc: outbound ? spend / outbound : 0, clicksPerDollar: spend ? outbound / spend : 0 };
-});
+}).sort((a, b) => b.clicksPerDollar - a.clicksPerDollar);
 
 const gadsMap = toMap(parseTsv('channels_gads_daily.tsv'), ['cost', 'impressions', 'clicks', 'interactions', 'conversions']);
 const gads = pack(
@@ -102,7 +102,7 @@ const gads = pack(
 const gadsCampaigns = parseTsv('channels_gads_campaigns.tsv').map(r => {
   const spend = num(r.cost), impressions = num(r.impressions), clicks = num(r.clicks), interactions = num(r.interactions), conversions = num(r.conversions);
   return { name: r.name, status: r.status, spend, impressions, clicks, interactions, conversions, ctr: impressions ? clicks / impressions : 0, cpc: clicks ? spend / clicks : 0, cpa: conversions ? spend / conversions : 0, clicksPerDollar: spend ? clicks / spend : 0 };
-});
+}).sort((a, b) => b.clicksPerDollar - a.clicksPerDollar);
 
 // GA4 itself carries no cost data (it's not an ad platform) -- "per $1" here is necessarily BLENDED: total
 // Sessions (every source, not just paid) against the two paid channels' combined spend. Not a per-channel
@@ -384,7 +384,7 @@ var CHANNELS_JSON = ${JSON.stringify(payload)};
 
   var money = function (v) { return '$' + v.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); };
   function renderCamp(id, rows, cols) {
-    var h = '<tr class="logi-mini-title"><td colspan="' + (cols.length + 1) + '">Top campaigns &mdash; last 30 days</td></tr>';
+    var h = '<tr class="logi-mini-title"><td colspan="' + (cols.length + 1) + '">Top campaigns &mdash; last 30 days, sorted by ' + cols[cols.length - 1].label + '</td></tr>';
     h += '<tr class="logi-mini-head"><td>Campaign</td>' + cols.map(function (c) { return '<td>' + c.label + '</td>'; }).join('') + '</tr>';
     rows.forEach(function (r, i) {
       h += '<tr class="logi-mini-data' + (i % 2 ? ' logi-mini-alt' : '') + '"><td>' + r.name + ' <span style="color:var(--text-muted);font-size:10.5px">(' + r.status + ')</span></td>'
