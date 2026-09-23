@@ -292,6 +292,7 @@ table.ps-table tr.ps-hidden { display: none; }
         <button data-page="report" class="active">Report</button>
         <button data-page="mtdstats">MTD Statistics</button>
         <button data-page="dailystats">Daily Statistics</button>
+        <button data-page="fullfunnel">Full Sales Funnel</button>
       </div>
     </div>
     <div class="nav-group">
@@ -405,6 +406,21 @@ table.ps-table tr.ps-hidden { display: none; }
   </div>
 </div>
 </div><!-- /page dailystats -->
+<!-- funnel-page-start -->
+<div class="page" data-page="fullfunnel" id="page-fullfunnel">
+<div class="wrap">
+  <p class="section-title">Full Sales Funnel &mdash; from website sessions to signed cases</p>
+  <p class="note">One column per calendar month of 2026 (the current month is month-to-date). Website sessions are the month's traffic; every other row is the applications <b>submitted in that month</b> and the status each of them is in <b>today</b> &mdash; a recent month keeps moving on refresh as its applications get decided. Percentages are shares of that month's applications (the two rates under the stage totals say so explicitly). Tap a section header to collapse it.</p>
+  <div class="banner" id="funnelBanner"></div>
+  <div class="report-card">
+    <div class="report-scroll-top" id="funnelScrollTop"><div></div></div>
+    <div class="report-scroll" id="funnelScrollBody">
+      <table class="rpt rpt-pivot rpt-pivot-compact" id="funnelTable"><tbody></tbody></table>
+    </div>
+  </div>
+</div>
+</div>
+<!-- funnel-page-end -->
 <div class="page" data-page="salesmonthly" id="page-salesmonthly">
 <div class="wrap">
   <p class="section-title">Sales Monthly &mdash; by product category</p>
@@ -1684,6 +1700,94 @@ __registerPage(['dailystats'], () => renderPivotReport(
 ));
 
 
+/* ---------- Full Sales Funnel ---------- */
+const FUNNEL_JSON = {"months":["2026-01","2026-02","2026-03","2026-04","2026-05","2026-06","2026-07","2026-08","2026-09"],"curMonth":"2026-09","monthStart":"2026-01","ga4":{"sessions":[32210,34211,36123,44830,83114,112517,116119,105015,68027],"engaged":[18938,20521,22248,27014,45554,63620,64244,58312,38731],"users":[22552,23571,24937,32278,61930,85242,86695,78748,49657],"through":"2026-09-21"},"apps":[1858,2231,2575,2841,3153,4891,4385,3455,3746],"rejected":[1128,1258,1333,1643,1741,2871,2647,2091,1815],"expired":[4,13,16,5,4,6,5,6,0],"inProcess":[10,17,8,6,4,1,1,2,120],"uwApproved":[470,711,900,812,1036,1438,1243,827,696],"declined":[64,330,453,492,558,865,707,650,1185],"signedActive":[541,600,755,685,841,1137,1019,680,536],"singlePay":[7,13,10,6,5,10,6,23,9],"other":[104,0,0,4,0,1,0,3,81],"rejectReasons":[{"ka":"შეუსაბამო მონაცემები","en":"Inconsistent data","vals":[274,562,466,493,560,839,909,716,479]},{"ka":"მოვალეთა რეესტრი","en":"Debtors' registry","vals":[271,290,287,390,426,727,562,440,478]},{"ka":"ვერ ვუკავშირდები","en":"Cannot reach the customer","vals":[71,102,86,168,173,444,303,264,189]},{"ka":"დასაფარია მიმდინარე","en":"Existing loan must be repaid first","vals":[85,120,149,137,146,180,230,257,130]},{"ka":"გადახდისუუნარო","en":"Insolvent","vals":[82,44,115,133,140,236,224,97,119]},{"ka":"დუბლირებული","en":"Duplicate application","vals":[10,13,54,144,111,172,135,134,309]},{"ka":"ხიშნიკი (NO SMS)","en":"Suspected fraud (no SMS)","vals":[56,95,155,139,56,41,65,24,1]},{"ka":"ხიშნიკი","en":"Suspected fraud","vals":[0,0,1,0,75,148,159,106,69]},{"ka":"კლიენტის უარი","en":"Customer refused","vals":[268,0,0,0,0,0,0,0,0]},{"ka":"პროდუქციის არ ქონა","en":"Product unavailable","vals":[11,24,7,17,15,12,13,9,15]},{"ka":"უარი განვადებაზე","en":"Installment refused","vals":[0,0,1,0,5,1,1,2,0]},{"ka":"სხვა (იშვიათი)","en":"Other (rare, < 5 in total)","vals":[0,0,0,0,0,0,0,2,9],"other":true},{"ka":"მიზეზი არ არის მითითებული","en":"Unspecified","vals":[0,8,12,22,34,71,46,40,17],"unspecified":true}],"declineReasons":[{"ka":"აღარ არის დაინტერესებული","en":"No longer interested","vals":[31,142,184,270,309,520,452,263,309]},{"ka":"სხვა","en":"Other","vals":[20,123,195,133,132,139,116,95,0]},{"ka":"ავანსი","en":"Down payment","vals":[1,20,18,20,51,54,32,208,427]},{"ka":"მაღალი ფასი","en":"Price too high","vals":[8,42,49,69,62,150,106,68,108]},{"ka":"არ პასუხობს","en":"Not responding","vals":[4,0,1,0,0,0,0,3,154]},{"ka":"პროდუქციის არ ქონა","en":"Product unavailable","vals":[0,0,0,0,0,0,0,7,44]},{"ka":"დუბლირებული","en":"Duplicate application","vals":[0,0,0,0,0,0,0,0,22]},{"ka":"საკონტაქტო პირებთან დაკავშირება","en":"Contact-person check","vals":[0,0,0,0,0,0,0,0,19]},{"ka":"კლიენტის უარი","en":"Customer refused","vals":[0,1,6,0,2,2,0,0,0]},{"ka":"მიტანის ვადა/პირობები","en":"Delivery time / terms","vals":[0,0,0,0,0,0,0,0,7]},{"ka":"მიტანის საფასური","en":"Delivery fee","vals":[0,2,0,0,2,0,1,0,1]},{"ka":"სხვა (იშვიათი)","en":"Other (rare, < 5 in total)","vals":[0,0,0,0,0,0,0,0,26],"other":true},{"ka":"მიზეზი არ არის მითითებული","en":"Unspecified","vals":[0,0,0,0,0,0,0,6,68],"unspecified":true}],"generatedAt":"2026-09-23 12:27 UTC"};
+(function () {
+  const F = FUNNEL_JSON;
+  const DASH = '&ndash;';
+  const fmtN = n => (n === null || n === undefined) ? null : Math.round(n).toLocaleString('en-US');
+  const fmtP = (n, d) => (n === null || n === undefined || d === null || d === undefined) ? null : (d ? (n / d * 100).toLocaleString('en-US', { maximumFractionDigits: 1 }) + '%' : '0%');
+  const sum = a => a.reduce((x, y) => x + (y || 0), 0);
+  const MN = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const mLabel = m => { const [y, mo] = m.split('-').map(Number); return MN[mo - 1] + ' ' + y + (m === F.curMonth ? ' (MTD)' : ''); };
+  const n = F.months.length, colspan = n + 2;
+  const cell = (v, cls) => (v === null || v === undefined) ? '<td class="dash ' + (cls || '') + '">' + DASH + '</td>' : '<td class="' + (cls || '') + '">' + v + '</td>';
+  let secN = 0;
+  const secRow = (cls, text) => { const id = 'fsec' + (++secN); return { id, row: '<tr class="' + cls + '" data-toggle="' + id + '"><td colspan="' + colspan + '"><span class="rpt-chevron">&#9662;</span>' + text + '</td></tr>' }; };
+  const plain = (cls, text) => '<tr class="' + cls + '"><td colspan="' + colspan + '">' + text + '</td></tr>';
+  // one row: label + one value per month + a total column; vals = numbers (or nulls), tot = number|null|'skip'
+  const row = (sec, cls, label, vals, tot, isPct, denom) => {
+    let tds = '';
+    for (let i = 0; i < n; i++) tds += isPct ? cell(fmtP(vals[i], denom ? denom[i] : null), 'pct-cell') : cell(fmtN(vals[i]));
+    const t = tot === 'skip' ? null : (isPct ? fmtP(tot, denom ? sum(denom) : null) : fmtN(tot));
+    return '<tr class="' + cls + '" data-sec="' + sec + '"><td>' + label + '</td>' + tds + cell(t, isPct ? 'pct-cell' : '') + '</tr>';
+  };
+  const cnt = (sec, cls, label, vals) => row(sec, cls, label, vals, sum(vals), false);
+  const rate = (sec, label, num, den) => row(sec, 'rpt-plain', '<span style="color:var(--text-muted)">' + label + '</span>', num, sum(num), true, den);
+  const anyGa4 = F.ga4.sessions.some(v => v !== null);
+  const ga4Total = arr => anyGa4 ? sum(arr) : null;
+
+  let h = '';
+  h += plain('rpt-title', 'Full Sales Funnel &mdash; website sessions &rarr; applications &rarr; Volta\'s decision &rarr; customer\'s decision &rarr; signed cases');
+  h += plain('rpt-title', 'One column per calendar month of 2026 &middot; application rows = applications submitted that month, by their status today');
+  h += '<tr class="rpt-colhead"><td>Funnel stage / metric</td>' + F.months.map(m => '<td>' + mLabel(m) + '</td>').join('') + '<td>Total</td></tr>';
+
+  const s1 = secRow('rpt-section', '1. Website traffic (GA4)'); h += s1.row;
+  h += row(s1.id, 'rpt-peach', 'Website sessions', F.ga4.sessions, ga4Total(F.ga4.sessions), false);
+  h += row(s1.id, 'rpt-plain', 'of which engaged sessions (10 s+, 2+ pages or a conversion)', F.ga4.engaged, ga4Total(F.ga4.engaged), false);
+  h += row(s1.id, 'rpt-plain', 'Active users', F.ga4.users, ga4Total(F.ga4.users), false);
+
+  const s2 = secRow('rpt-section', '2. Applications'); h += s2.row;
+  h += cnt(s2.id, 'rpt-peach-strong', 'Applications submitted', F.apps);
+  h += row(s2.id, 'rpt-plain', '<span style="color:var(--text-muted)">Applications as % of website sessions</span>', F.apps, sum(F.apps), true, F.ga4.sessions);
+
+  const s3 = secRow('rpt-section', '3. Volta\'s screening &mdash; status of the month\'s applications today'); h += s3.row;
+  h += cnt(s3.id, 'rpt-peach', 'Rejected by Volta (status 6)', F.rejected);
+  h += rate(s3.id, '% of applications', F.rejected, F.apps);
+  for (const r of F.rejectReasons) h += cnt(s3.id, 'rpt-plain', '&nbsp;&nbsp;&middot; ' + r.ka + (r.en ? ' <span style="color:var(--text-muted)">(' + r.en + ')</span>' : ''), r.vals);
+  h += cnt(s3.id, 'rpt-plain', 'Expired (status 13)', F.expired);
+  h += cnt(s3.id, 'rpt-plain', 'Still in process (4 / 7 / 8 / 15 / 16 / 17 / 9 / 10)', F.inProcess);
+  if (sum(F.other)) h += cnt(s3.id, 'rpt-plain', 'Other / unverified statuses (3, 14)', F.other);
+  h += cnt(s3.id, 'rpt-plain', 'Memo: approved by underwriting (underwriting status 16), whatever happened next', F.uwApproved);
+  h += rate(s3.id, '% of applications', F.uwApproved, F.apps);
+
+  const s4 = secRow('rpt-section', '4. Customer\'s side &mdash; declined after Volta said yes'); h += s4.row;
+  h += cnt(s4.id, 'rpt-peach', 'Customer declined (status 12)', F.declined);
+  h += rate(s4.id, '% of applications', F.declined, F.apps);
+  for (const r of F.declineReasons) h += cnt(s4.id, 'rpt-plain', '&nbsp;&nbsp;&middot; ' + r.ka + (r.en ? ' <span style="color:var(--text-muted)">(' + r.en + ')</span>' : ''), r.vals);
+
+  const s5 = secRow('rpt-section-strong', '5. Final agreement between the customer and Volta'); h += s5.row;
+  h += cnt(s5.id, 'rpt-green', 'Signed installment cases (status 11 Signed / 5 Active / 1)', F.signedActive);
+  h += cnt(s5.id, 'rpt-plain', 'Single-payment sales (status 99)', F.singlePay);
+  const finalAll = F.months.map((m, i) => F.signedActive[i] + F.singlePay[i]);
+  h += cnt(s5.id, 'rpt-green', 'Total final agreements (signed + single payment)', finalAll);
+  h += rate(s5.id, '% of applications', finalAll, F.apps);
+  h += row(s5.id, 'rpt-plain', '<span style="color:var(--text-muted)">Final agreements as % of website sessions</span>', finalAll, sum(finalAll), true, F.ga4.sessions);
+
+  h += '<tr class="rpt-footer"><td colspan="' + colspan + '">Source: VoltaStoreDB only (no old-DB history in this tab). <b>Applications</b> = <code>orders</code> rows by application month (<code>created_at</code>), including the applications migrated from the old CRM for January&ndash;August, so the counts differ slightly from the Daily Mail Report tab (which reads those months from myvolta.info). <b>Statuses</b> = <code>crm_order_status</code> as of today, the same code list the Operations tab verified against the CRM: 6 = Volta rejected the application, 12 = the customer declined after approval, 13 = expired, 11 / 5 / 1 = contract signed / loan active / legacy active, 99 = single-payment sale; everything else is still in process. <b>Reasons</b> = <code>orders.crm_reason</code> as recorded on the application (present on ~99% of rejected and declined applications in every month of 2026); spelling variants are merged (e.g. \u201Cპროდუქტის არ ქონა\u201D into \u201Cპროდუქციის არ ქონა\u201D, an em-dash suffix such as \u201C&mdash; აქტიური ჩანაწერი\u201D dropped), reasons with fewer than ' + 5 + ' applications in total are grouped as Other (rare). <b>Website sessions</b> = Google Analytics 4 (property 369140604, all traffic, not only paid), summed per month' + (F.ga4.through ? ', data through ' + F.ga4.through : '') + '; the two \u201Cas % of website sessions\u201D rows divide the month\'s applications / final agreements by that month\'s sessions. Generated ' + F.generatedAt + '.</td></tr>';
+
+  function render() {
+    const table = document.getElementById('funnelTable');
+    if (!table) return;
+    table.querySelector('tbody').innerHTML = h;
+    table.querySelectorAll('tr[data-toggle]').forEach(header => {
+      header.addEventListener('click', () => {
+        const id = header.getAttribute('data-toggle');
+        const chevron = header.querySelector('.rpt-chevron');
+        const rows = table.querySelectorAll('tr[data-sec="' + id + '"]');
+        const collapsing = rows.length && !rows[0].classList.contains('is-collapsed');
+        rows.forEach(r => r.classList.toggle('is-collapsed', collapsing));
+        if (chevron) chevron.style.transform = collapsing ? 'rotate(-90deg)' : 'rotate(0deg)';
+      });
+    });
+    const banner = document.getElementById('funnelBanner');
+    if (banner) banner.innerHTML = '<b>How to read it:</b> each month starts with the website sessions Google Analytics counted, then the applications submitted that month, then how Volta decided them (rejections with the recorded reason, expiries, still open), then how many approved applicants said no themselves (with their reason), and finally how many ended in a signed installment contract or a single-payment sale. Month totals of the stage rows add up to the month\'s applications' + (anyGa4 ? '' : ' &mdash; GA4 sessions are not available in this build (funnel_ga4_month.tsv missing)') + '.';
+    if (window.__funnelScrollUpdate) window.__funnelScrollUpdate();
+  }
+  if (document.getElementById('funnelScrollTop') && !window.__funnelScrollUpdate) window.__funnelScrollUpdate = setupTopScrollSync('funnelScrollTop', 'funnelScrollBody');
+  if (window.__registerPage) window.__registerPage(['fullfunnel'], render); else render();
+})();
+/* ---------- /Full Sales Funnel ---------- */
 /* ---------- Sales Analyze (ported from Volta_Analytics) ---------- */
 const salesMonthlyStats = SALES_JSON.salesMonthlyStats, brandStats = SALES_JSON.brandStats, subcategoryStats = SALES_JSON.subcategoryStats, categoryBrandBreakdown = SALES_JSON.categoryBrandBreakdown;
 const SALES_CUTOVER = SALES_JSON.cutover;
