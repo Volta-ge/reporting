@@ -328,8 +328,10 @@ ${dataLine}
   h += row(s2.id, 'rpt-plain', '<span style="color:var(--text-muted)">Applications as % of website sessions</span>', F.apps, sum(F.apps), true, F.ga4.sessions);
 
   // reason rows: sorted by the last month, each count with its share of the stage's own total (denom)
-  // breakdown rows carry fn-detail: the "Main stages" view (#funnelViewNav) hides them and leaves every numbered stage
-  const reasonRowsHtml = (sec, rows, denom) => { let s = ''; for (const r of rows.slice().sort(byLastMonth)) s += cntPct(sec, 'rpt-plain fn-detail', '&nbsp;&nbsp;&middot; ' + r.ka + (r.en ? ' <span style="color:var(--text-muted)">(' + r.en + ')</span>' : ''), r.vals, denom); return s; };
+  // breakdown rows carry fn-detail: the "Main stages" view (#funnelViewNav) hides them and leaves every numbered stage.
+  // Their inline share is of the month's APPLICATIONS (user, 2026-09-24: "აპლიკაციების რა პროცენტს შეადგენს
+  // თითოეული სტატუსი"), not of the stage — the stage's own share row above them already gives that base.
+  const reasonRowsHtml = (sec, rows) => { let s = ''; for (const r of rows.slice().sort(byLastMonth)) s += cntPct(sec, 'rpt-plain fn-detail', '&nbsp;&nbsp;&middot; ' + r.ka + (r.en ? ' <span style="color:var(--text-muted)">(' + r.en + ')</span>' : ''), r.vals, F.apps); return s; };
   // a sub-stage (3.1 / 6.1 / 8.1): its header belongs to the parent section (hidden when it collapses) and toggles its
   // own rows; a total + share row like every other stage, then its items sorted by the last month
   const subStage = (parent, title, totalLabel, totals, shareLabel, denom, items) => {
@@ -337,7 +339,7 @@ ${dataLine}
     let s = '<tr class="rpt-section" data-sec="' + parent + '" data-toggle="' + id + '"><td colspan="' + colspan + '"><span class="rpt-chevron">&#9662;</span>' + title + '</td></tr>';
     s += cnt(id, 'rpt-peach', totalLabel, totals);
     s += rate(id, shareLabel, totals, denom);
-    for (const it of items.filter(it => sum(it.vals) || it.always).sort(byLastMonth)) s += cntPct(id, 'rpt-plain fn-detail', '&nbsp;&nbsp;&middot; ' + it.label, it.vals, totals);
+    for (const it of items.filter(it => sum(it.vals) || it.always).sort(byLastMonth)) s += cntPct(id, 'rpt-plain fn-detail', '&nbsp;&nbsp;&middot; ' + it.label, it.vals, F.apps);
     return s;
   };
   // the sub-stage totals, needed both for their own rows and for the check at the end
@@ -349,7 +351,7 @@ ${dataLine}
   const s3 = secRow('rpt-section', '3. Rejected by sales &mdash; before the committee, no underwriting decision (3 + 3.1 + 4 + 5 + single-payment sales in 10 = Applications)'); h += s3.row;
   h += cnt(s3.id, 'rpt-peach', 'Rejected by sales (status 6, no underwriting decision)', F.rejSales);
   h += rate(s3.id, '% of applications', F.rejSales, F.apps);
-  h += reasonRowsHtml(s3.id, F.rejectSalesReasons, F.rejSales);
+  h += reasonRowsHtml(s3.id, F.rejectSalesReasons);
   h += subStage(s3.id, '3.1 Other statuses at the sales stage', 'Other statuses at the sales stage (awaiting, unreachable, expired)', st31, '% of applications', F.apps, [
     { label: 'Still with sales, awaiting (status 4 / 7)', vals: F.openSales, always: true },
     { label: 'Customer unreachable &mdash; &ldquo;უკონტაქტო&rdquo; (status 14)', vals: F.otherSales },
@@ -359,7 +361,7 @@ ${dataLine}
   const s4 = secRow('rpt-section', '4. Customer withdrew at the sales stage &mdash; before the committee'); h += s4.row;
   h += cnt(s4.id, 'rpt-peach', 'Customer withdrew at the sales stage (status 12, no underwriting decision)', F.declSales);
   h += rate(s4.id, '% of applications', F.declSales, F.apps);
-  h += reasonRowsHtml(s4.id, F.declineSalesReasons, F.declSales);
+  h += reasonRowsHtml(s4.id, F.declineSalesReasons);
 
   const s5 = secRow('rpt-section', '5. Reached the committee = 2 Applications &minus; 3 &minus; 3.1 &minus; 4 &minus; single-payment sales (6 + 6.1 + 7 + 8 = 5)'); h += s5.row;
   h += cnt(s5.id, 'rpt-peach-strong', 'Passed on to the committee (an underwriting decision recorded, at the committee, or signed)', F.committee);
@@ -369,7 +371,7 @@ ${dataLine}
   const s6 = secRow('rpt-section', '6. Rejected by the committee &mdash; underwriting said no'); h += s6.row;
   h += cnt(s6.id, 'rpt-peach', 'Rejected by the committee (status 6, underwriting decision recorded)', F.rejCmt);
   h += rate(s6.id, '% of reached the committee', F.rejCmt, F.committee);
-  h += reasonRowsHtml(s6.id, F.rejectCommitteeReasons, F.rejCmt);
+  h += reasonRowsHtml(s6.id, F.rejectCommitteeReasons);
   h += subStage(s6.id, '6.1 Other committee statuses', 'Other committee statuses (awaiting a decision, unreachable, expired)', st61, '% of reached the committee', F.committee, [
     { label: 'At the committee / clarification needed, awaiting a decision (status 8 / 15)', vals: F.openCmt, always: true },
     { label: 'Customer unreachable &mdash; &ldquo;უკონტაქტო&rdquo; (status 14)', vals: F.otherCmt },
@@ -379,7 +381,7 @@ ${dataLine}
   const s7 = secRow('rpt-section', '7. Customer withdrew at the committee stage &mdash; before approval'); h += s7.row;
   h += cnt(s7.id, 'rpt-peach', 'Customer withdrew at the committee stage (status 12, before approval)', F.declCmt);
   h += rate(s7.id, '% of reached the committee', F.declCmt, F.committee);
-  h += reasonRowsHtml(s7.id, F.declineCommitteeReasons, F.declCmt);
+  h += reasonRowsHtml(s7.id, F.declineCommitteeReasons);
 
   // ---- gate 3: approval (8.1 + 9 + Signed in 10 = Approved)
   const s8 = secRow('rpt-section', '8. Approved by underwriting (= 8.1 + 9 + Signed in 10)'); h += s8.row;
@@ -396,7 +398,7 @@ ${dataLine}
   const s9 = secRow('rpt-section', '9. Customer declined after approval &mdash; although underwriting approved'); h += s9.row;
   h += cnt(s9.id, 'rpt-peach', 'Customer declined after approval (status 12)', F.declPost);
   h += rate(s9.id, '% of approved', F.declPost, F.approved);
-  h += reasonRowsHtml(s9.id, F.declineAfterReasons, F.declPost);
+  h += reasonRowsHtml(s9.id, F.declineAfterReasons);
 
   const s10 = secRow('rpt-section-strong', '10. Final agreement between the customer and Volta'); h += s10.row;
   h += cnt(s10.id, 'rpt-green', 'Signed / active installment (status 11 / 5 / 1)', F.signedActive);
