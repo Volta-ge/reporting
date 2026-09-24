@@ -226,6 +226,7 @@ ${CSS_MARK}
 #funnelTable td.pct-cell { color: var(--rpt-muted); font-style: italic; }
 #funnelTable tr.rpt-peach td.pct-cell, #funnelTable tr.rpt-peach-strong td.pct-cell, #funnelTable tr.rpt-green td.pct-cell { color: var(--rpt-ink); font-style: normal; }
 #funnelTable .pct-inline { color: var(--rpt-muted); font-style: italic; font-weight: 400; }
+#funnelTable.is-summary tr.fn-detail { display: none; }
 ${CSS_END}`;
   const cssAnchor = '.report-scroll-top > div { height: 1px; }';
   must(cssAnchor, 'css anchor');
@@ -250,8 +251,12 @@ ${PAGE_START}
 <div class="page" data-page="fullfunnel" id="page-fullfunnel">
 <div class="wrap">
   <p class="section-title">Full Sales Funnel &mdash; from website sessions to signed cases</p>
-  <p class="note">One column per calendar month of 2026 (the current month is month-to-date, through yesterday). Website sessions are the month's traffic; every other row is the applications <b>submitted in that month</b> and the status each of them was in <b>at the end of yesterday</b> (today's changes are not in yet) &mdash; a recent month keeps moving on refresh as its applications get decided. Three gates, in the order a case travels: <b>sales</b> screen the applications first (3 rejected by sales, 3.1 still with sales / unreachable / expired, 4 the customer withdrew there) and pass the rest on to the <b>committee</b> (5); the committee rejects (6), leaves some waiting (6.1), loses some to the customer (7) and <b>approves</b> the rest (8); of the approved, 8.1 fall out on Volta's side, 9 are declined by the customer and the rest are signed (10, together with the single-payment sales that need no underwriting). Each percentage row names its base. Tap a section header to collapse it.</p>
+  <p class="note">One column per calendar month of 2026 (the current month is month-to-date, through yesterday). Website sessions are the month's traffic; every other row is the applications <b>submitted in that month</b> and the status each of them was in <b>at the end of yesterday</b> (today's changes are not in yet) &mdash; a recent month keeps moving on refresh as its applications get decided. Three gates, in the order a case travels: <b>sales</b> screen the applications first (3 rejected by sales, 3.1 still with sales / unreachable / expired, 4 the customer withdrew there) and pass the rest on to the <b>committee</b> (5); the committee rejects (6), leaves some waiting (6.1), loses some to the customer (7) and <b>approves</b> the rest (8); of the approved, 8.1 fall out on Volta's side, 9 are declined by the customer and the rest are signed (10, together with the single-payment sales that need no underwriting). Each percentage row names its base. <b>Main stages</b> shows only the numbered stages; <b>Detailed breakdown</b> adds the reasons and the sub-stage items. Tap a section header to collapse it.</p>
   <div class="banner" id="funnelBanner"></div>
+  <div class="page-nav" id="funnelViewNav" style="margin-bottom:-8px;">
+    <button data-view="summary" type="button">Main stages</button>
+    <button data-view="detail" type="button" class="active">Detailed breakdown</button>
+  </div>
   <div class="report-card">
     <div class="report-scroll-top" id="funnelScrollTop"><div></div></div>
     <div class="report-scroll" id="funnelScrollBody">
@@ -323,7 +328,8 @@ ${dataLine}
   h += row(s2.id, 'rpt-plain', '<span style="color:var(--text-muted)">Applications as % of website sessions</span>', F.apps, sum(F.apps), true, F.ga4.sessions);
 
   // reason rows: sorted by the last month, each count with its share of the stage's own total (denom)
-  const reasonRowsHtml = (sec, rows, denom) => { let s = ''; for (const r of rows.slice().sort(byLastMonth)) s += cntPct(sec, 'rpt-plain', '&nbsp;&nbsp;&middot; ' + r.ka + (r.en ? ' <span style="color:var(--text-muted)">(' + r.en + ')</span>' : ''), r.vals, denom); return s; };
+  // breakdown rows carry fn-detail: the "Main stages" view (#funnelViewNav) hides them and leaves every numbered stage
+  const reasonRowsHtml = (sec, rows, denom) => { let s = ''; for (const r of rows.slice().sort(byLastMonth)) s += cntPct(sec, 'rpt-plain fn-detail', '&nbsp;&nbsp;&middot; ' + r.ka + (r.en ? ' <span style="color:var(--text-muted)">(' + r.en + ')</span>' : ''), r.vals, denom); return s; };
   // a sub-stage (3.1 / 6.1 / 8.1): its header belongs to the parent section (hidden when it collapses) and toggles its
   // own rows; a total + share row like every other stage, then its items sorted by the last month
   const subStage = (parent, title, totalLabel, totals, shareLabel, denom, items) => {
@@ -331,7 +337,7 @@ ${dataLine}
     let s = '<tr class="rpt-section" data-sec="' + parent + '" data-toggle="' + id + '"><td colspan="' + colspan + '"><span class="rpt-chevron">&#9662;</span>' + title + '</td></tr>';
     s += cnt(id, 'rpt-peach', totalLabel, totals);
     s += rate(id, shareLabel, totals, denom);
-    for (const it of items.filter(it => sum(it.vals) || it.always).sort(byLastMonth)) s += cntPct(id, 'rpt-plain', '&nbsp;&nbsp;&middot; ' + it.label, it.vals, totals);
+    for (const it of items.filter(it => sum(it.vals) || it.always).sort(byLastMonth)) s += cntPct(id, 'rpt-plain fn-detail', '&nbsp;&nbsp;&middot; ' + it.label, it.vals, totals);
     return s;
   };
   // the sub-stage totals, needed both for their own rows and for the check at the end
@@ -429,6 +435,20 @@ ${dataLine}
         if (chevron) chevron.style.transform = collapsing ? 'rotate(-90deg)' : 'rotate(0deg)';
       });
     });
+    // Main stages / Detailed breakdown toggle — remembered per browser
+    const nav = document.getElementById('funnelViewNav');
+    if (nav && !nav.__wired) {
+      nav.__wired = true;
+      const apply = v => {
+        table.classList.toggle('is-summary', v === 'summary');
+        nav.querySelectorAll('button[data-view]').forEach(b => b.classList.toggle('active', b.getAttribute('data-view') === v));
+        try { localStorage.setItem('funnelView', v); } catch (e) {}
+        if (window.__funnelScrollUpdate) window.__funnelScrollUpdate();
+      };
+      nav.querySelectorAll('button[data-view]').forEach(b => b.addEventListener('click', () => apply(b.getAttribute('data-view'))));
+      let saved = 'detail'; try { saved = localStorage.getItem('funnelView') || 'detail'; } catch (e) {}
+      apply(saved === 'summary' ? 'summary' : 'detail');
+    }
     const banner = document.getElementById('funnelBanner');
     if (banner) banner.innerHTML = '<b>How to read it:</b> each month starts with the website sessions Google Analytics counted, then the applications submitted that month, then the sales screening (rejected by sales with the recorded reason, still with sales, the customer withdrew there with their reason) and how many were passed on to the committee, then the committee\\'s decision on those (rejected with the reason, still waiting, the customer withdrew there, approved), then the approved ones that did not end in a contract (rejected or expired after approval, still in process, declined by the customer with their reason), and finally the signed installment contracts and single-payment sales together. 3 + 3.1 + 4 + 5 + single-payment sales = applications; 6 + 6.1 + 7 + 8 = reached the committee; 8.1 + 9 + signed = approved' + (anyGa4 ? '' : ' &mdash; GA4 sessions are not available in this build (funnel_ga4_month.tsv missing)') + '.';
     if (window.__funnelScrollUpdate) window.__funnelScrollUpdate();
