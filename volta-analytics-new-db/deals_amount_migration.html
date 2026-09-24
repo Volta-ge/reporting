@@ -168,6 +168,19 @@ table.rpt-pivot td.rpt-group-toggle { cursor: pointer; user-select: none; text-a
 
 .report-scroll-top { overflow-x: auto; overflow-y: hidden; height: 14px; margin-bottom: -1px; }
 .report-scroll-top > div { height: 1px; }
+/* --- funnel --- */
+#page-fullfunnel .wrap { max-width: 1500px; }
+#funnelTable { width: 100%; font-size: 12.5px; }
+#funnelTable td { padding: 7px 10px; }
+#funnelTable td:first-child { min-width: 300px; max-width: none; white-space: normal; line-height: 1.35; }
+#funnelTable td:not(:first-child) { min-width: 84px; }
+#funnelTable tr.rpt-colhead td { font-size: 11px; }
+#funnelTable tr.rpt-title td { font-size: 13px; }
+#funnelTable tr.rpt-footer td { white-space: normal; font-size: 11.5px; }
+#funnelTable td.pct-cell { color: var(--rpt-muted); font-style: italic; }
+#funnelTable tr.rpt-peach td.pct-cell, #funnelTable tr.rpt-peach-strong td.pct-cell, #funnelTable tr.rpt-green td.pct-cell { color: var(--rpt-ink); font-style: normal; }
+#funnelTable .pct-inline { color: var(--rpt-muted); font-style: italic; font-weight: 400; }
+/* --- /funnel --- */
 /* --- pf --- */
 .pf-title { color: var(--text-primary); font-weight: 700; font-size: 13px; margin: 14px 0 -6px; }
 table.logi-table tr.pf-memo td { background: #fff; color: #5a5a75; font-style: italic; }
@@ -292,6 +305,7 @@ table.ps-table tr.ps-hidden { display: none; }
         <button data-page="report" class="active">Report</button>
         <button data-page="mtdstats">MTD Statistics</button>
         <button data-page="dailystats">Daily Statistics</button>
+        <button data-page="fullfunnel">Full Sales Funnel</button>
       </div>
     </div>
     <div class="nav-group">
@@ -405,6 +419,21 @@ table.ps-table tr.ps-hidden { display: none; }
   </div>
 </div>
 </div><!-- /page dailystats -->
+<!-- funnel-page-start -->
+<div class="page" data-page="fullfunnel" id="page-fullfunnel">
+<div class="wrap">
+  <p class="section-title">Full Sales Funnel &mdash; from website sessions to signed cases</p>
+  <p class="note">One column per calendar month of 2026 (the current month is month-to-date, through yesterday). Website sessions are the month's traffic; every other row is the applications <b>submitted in that month</b> and the status each of them was in <b>at the end of yesterday</b> (today's changes are not in yet) &mdash; a recent month keeps moving on refresh as its applications get decided. Three gates, in the order a case travels: <b>sales</b> screen the applications first (3 rejected by sales, 3.1 still with sales / unreachable / expired, 4 the customer withdrew there) and pass the rest on to the <b>committee</b> (5); the committee rejects (6), leaves some waiting (6.1), loses some to the customer (7) and <b>approves</b> the rest (8); of the approved, 8.1 fall out on Volta's side, 9 are declined by the customer and the rest are signed (10, together with the single-payment sales that need no underwriting). Each percentage row names its base. Tap a section header to collapse it.</p>
+  <div class="banner" id="funnelBanner"></div>
+  <div class="report-card">
+    <div class="report-scroll-top" id="funnelScrollTop"><div></div></div>
+    <div class="report-scroll" id="funnelScrollBody">
+      <table class="rpt rpt-pivot rpt-pivot-compact" id="funnelTable"><tbody></tbody></table>
+    </div>
+  </div>
+</div>
+</div>
+<!-- funnel-page-end -->
 <div class="page" data-page="salesmonthly" id="page-salesmonthly">
 <div class="wrap">
   <p class="section-title">Sales Monthly &mdash; by product category</p>
@@ -1684,6 +1713,170 @@ __registerPage(['dailystats'], () => renderPivotReport(
 ));
 
 
+/* ---------- Full Sales Funnel ---------- */
+const FUNNEL_JSON = {"months":["2026-01","2026-02","2026-03","2026-04","2026-05","2026-06","2026-07","2026-08","2026-09"],"curMonth":"2026-09","monthStart":"2026-01","appsThrough":"2026-09-23","ga4":{"sessions":[32210,34211,36123,44830,83114,112517,116119,105015,68027],"engaged":[18938,20521,22248,27014,45554,63620,64244,58312,38731],"users":[22552,23571,24937,32278,61930,85242,86695,78748,49657],"through":"2026-09-21"},"apps":[1858,2231,2575,2841,3153,4891,4385,3455,3800],"committee":[1183,1718,1950,2422,2753,4293,3833,2850,1549],"rejSales":[518,263,295,38,36,37,74,88,1011],"declSales":[34,215,296,360,351,545,468,486,1074],"expiredSales":[4,13,16,5,4,5,3,6,0],"openSales":[10,9,8,6,4,1,1,2,107],"otherSales":[102,0,0,4,0,0,0,0,50],"singlePay":[7,13,10,6,5,10,6,23,9],"rejCmt":[581,995,1038,1605,1705,2834,2573,2003,817],"declCmt":[4,5,12,5,11,20,17,20,26],"expiredCmt":[0,0,0,0,0,1,0,0,0],"openCmt":[0,7,0,0,0,0,0,0,4],"otherCmt":[0,0,0,0,0,0,0,0,1],"approved":[598,711,900,812,1037,1438,1243,827,701],"signedActive":[541,600,755,685,841,1137,1019,680,544],"declPost":[26,110,145,127,196,300,222,144,93],"rejPost":[29,0,0,0,0,0,0,0,4],"expiredPost":[0,0,0,0,0,0,2,0,0],"openPost":[0,1,0,0,0,0,0,0,29],"otherPost":[2,0,0,0,0,1,0,3,31],"rejectSalesReasons":[{"ka":"მოვალეთა რეესტრი","en":"Debtors' registry","vals":[229,249,242,0,0,0,0,5,469]},{"ka":"დუბლირებული","en":"Duplicate application","vals":[10,13,19,2,0,0,14,19,307]},{"ka":"ვერ ვუკავშირდები","en":"Cannot reach the customer","vals":[0,0,0,0,0,0,0,35,172]},{"ka":"შეუსაბამო მონაცემები","en":"Inconsistent data","vals":[18,0,0,0,0,0,0,3,13]},{"ka":"პროდუქციის არ ქონა","en":"Product unavailable","vals":[0,0,0,0,0,0,0,0,13]},{"ka":"გადახდისუუნარო","en":"Insolvent","vals":[3,0,0,0,0,0,0,0,8]},{"ka":"დასაფარია მიმდინარე","en":"Existing loan must be repaid first","vals":[15,0,0,0,0,0,0,0,3]},{"ka":"კლიენტის უარი","en":"Customer refused","vals":[235,0,0,0,0,0,0,0,0]},{"ka":"ხიშნიკი (NO SMS)","en":"Suspected fraud (no SMS)","vals":[8,1,33,36,36,36,60,21,0]},{"ka":"სხვა (იშვიათი)","en":"Other (rare, < 5 in total)","vals":[0,0,1,0,0,1,0,2,9],"other":true},{"ka":"მიზეზი არ არის მითითებული","en":"Unspecified","vals":[0,0,0,0,0,0,0,3,17],"unspecified":true}],"declineSalesReasons":[{"ka":"ავანსი","en":"Down payment","vals":[0,13,17,18,50,54,28,179,400]},{"ka":"აღარ არის დაინტერესებული","en":"No longer interested","vals":[10,69,87,177,162,297,287,185,258]},{"ka":"არ პასუხობს","en":"Not responding","vals":[4,0,1,0,0,0,0,2,145]},{"ka":"მაღალი ფასი","en":"Price too high","vals":[7,35,39,63,52,127,92,58,99]},{"ka":"პროდუქციის არ ქონა","en":"Product unavailable","vals":[0,0,0,0,0,0,0,6,42]},{"ka":"დუბლირებული","en":"Duplicate application","vals":[0,0,0,0,0,0,0,0,22]},{"ka":"საკონტაქტო პირებთან დაკავშირება","en":"Contact-person check","vals":[0,0,0,0,0,0,0,0,18]},{"ka":"მიტანის ვადა/პირობები","en":"Delivery time / terms","vals":[0,0,0,0,0,0,0,0,7]},{"ka":"სხვა","en":"Other","vals":[13,96,146,102,84,65,61,55,0]},{"ka":"კლიენტის უარი","en":"Customer refused","vals":[0,1,6,0,2,2,0,0,0]},{"ka":"სხვა (იშვიათი)","en":"Other (rare, < 5 in total)","vals":[0,1,0,0,1,0,0,0,23],"other":true},{"ka":"მიზეზი არ არის მითითებული","en":"Unspecified","vals":[0,0,0,0,0,0,0,1,60],"unspecified":true}],"rejectCommitteeReasons":[{"ka":"შეუსაბამო მონაცემები","en":"Inconsistent data","vals":[256,562,466,493,560,839,909,713,472]},{"ka":"დასაფარია მიმდინარე","en":"Existing loan must be repaid first","vals":[70,120,149,137,146,180,230,257,127]},{"ka":"გადახდისუუნარო","en":"Insolvent","vals":[79,44,115,133,140,236,224,97,113]},{"ka":"ხიშნიკი","en":"Suspected fraud","vals":[0,0,0,0,75,147,159,106,69]},{"ka":"მოვალეთა რეესტრი","en":"Debtors' registry","vals":[42,41,45,390,426,727,562,435,18]},{"ka":"ვერ ვუკავშირდები","en":"Cannot reach the customer","vals":[71,102,86,168,173,444,303,229,13]},{"ka":"დუბლირებული","en":"Duplicate application","vals":[0,0,35,142,111,172,121,115,2]},{"ka":"პროდუქციის არ ქონა","en":"Product unavailable","vals":[11,24,7,17,15,12,13,9,2]},{"ka":"ხიშნიკი (NO SMS)","en":"Suspected fraud (no SMS)","vals":[48,94,122,103,20,5,5,3,1]},{"ka":"უარი განვადებაზე","en":"Installment refused","vals":[0,0,1,0,5,1,1,2,0]},{"ka":"სხვა (იშვიათი)","en":"Other (rare, < 5 in total)","vals":[4,0,0,0,0,0,0,0,0],"other":true},{"ka":"მიზეზი არ არის მითითებული","en":"Unspecified","vals":[0,8,12,22,34,71,46,37,0],"unspecified":true}],"declineCommitteeReasons":[{"ka":"აღარ არის დაინტერესებული","en":"No longer interested","vals":[3,2,5,3,10,15,9,7,15]},{"ka":"ავანსი","en":"Down payment","vals":[0,0,0,1,0,0,0,3,4]},{"ka":"მაღალი ფასი","en":"Price too high","vals":[1,1,0,1,0,4,3,2,1]},{"ka":"სხვა","en":"Other","vals":[0,2,7,0,1,1,5,6,0]},{"ka":"სხვა (იშვიათი)","en":"Other (rare, < 5 in total)","vals":[0,0,0,0,0,0,0,0,4],"other":true},{"ka":"მიზეზი არ არის მითითებული","en":"Unspecified","vals":[0,0,0,0,0,0,0,2,2],"unspecified":true}],"declineAfterReasons":[{"ka":"აღარ არის დაინტერესებული","en":"No longer interested","vals":[18,71,92,90,137,208,156,71,37]},{"ka":"ავანსი","en":"Down payment","vals":[1,7,1,1,1,0,4,26,28]},{"ka":"მაღალი ფასი","en":"Price too high","vals":[0,6,10,5,10,19,11,8,10]},{"ka":"არ პასუხობს","en":"Not responding","vals":[0,0,0,0,0,0,0,1,7]},{"ka":"სხვა","en":"Other","vals":[7,25,42,31,47,73,50,34,0]},{"ka":"სხვა (იშვიათი)","en":"Other (rare, < 5 in total)","vals":[0,1,0,0,1,0,1,1,5],"other":true},{"ka":"მიზეზი არ არის მითითებული","en":"Unspecified","vals":[0,0,0,0,0,0,0,3,6],"unspecified":true}],"generatedAt":"2026-09-24 08:06 UTC"};
+(function () {
+  const F = FUNNEL_JSON;
+  const DASH = '&ndash;';
+  const fmtN = n => (n === null || n === undefined) ? null : Math.round(n).toLocaleString('en-US');
+  const fmtP = (n, d) => (n === null || n === undefined || d === null || d === undefined) ? null : (d ? (n / d * 100).toLocaleString('en-US', { maximumFractionDigits: 1 }) + '%' : '0%');
+  const sum = a => a.reduce((x, y) => x + (y || 0), 0);
+  const MN = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const mLabel = m => { const [y, mo] = m.split('-').map(Number); return MN[mo - 1] + ' ' + y + (m === F.curMonth ? ' (MTD)' : ''); };
+  const n = F.months.length, colspan = n + 2;
+  const cell = (v, cls) => (v === null || v === undefined) ? '<td class="dash ' + (cls || '') + '">' + DASH + '</td>' : '<td class="' + (cls || '') + '">' + v + '</td>';
+  let secN = 0;
+  const secRow = (cls, text) => { const id = 'fsec' + (++secN); return { id, row: '<tr class="' + cls + '" data-toggle="' + id + '"><td colspan="' + colspan + '"><span class="rpt-chevron">&#9662;</span>' + text + '</td></tr>' }; };
+  const plain = (cls, text) => '<tr class="' + cls + '"><td colspan="' + colspan + '">' + text + '</td></tr>';
+  // one row: label + one value per month + a total column; vals = numbers (or nulls), tot = number|null|'skip'
+  const row = (sec, cls, label, vals, tot, isPct, denom) => {
+    let tds = '';
+    for (let i = 0; i < n; i++) tds += isPct ? cell(fmtP(vals[i], denom ? denom[i] : null), 'pct-cell') : cell(fmtN(vals[i]));
+    const t = tot === 'skip' ? null : (isPct ? fmtP(tot, denom ? sum(denom) : null) : fmtN(tot));
+    return '<tr class="' + cls + '" data-sec="' + sec + '"><td>' + label + '</td>' + tds + cell(t, isPct ? 'pct-cell' : '') + '</tr>';
+  };
+  const cnt = (sec, cls, label, vals) => row(sec, cls, label, vals, sum(vals), false);
+  const rate = (sec, label, num, den) => row(sec, 'rpt-plain', '<span style="color:var(--text-muted)">' + label + '</span>', num, sum(num), true, den);
+  // a breakdown row: the count, then in the same cell its share of the stage it belongs to (denom = that stage's row)
+  const cntPct = (sec, cls, label, vals, denom) => {
+    const c = (v, d) => { if (v === null || v === undefined) return cell(null); const p = fmtP(v, d); return '<td>' + fmtN(v) + (p === null ? '' : ' <span class="pct-inline">(' + p + ')</span>') + '</td>'; };
+    let tds = '';
+    for (let i = 0; i < n; i++) tds += c(vals[i], denom ? denom[i] : null);
+    return '<tr class="' + cls + '" data-sec="' + sec + '"><td>' + label + '</td>' + tds + c(sum(vals), denom ? sum(denom) : null) + '</tr>';
+  };
+  // every breakdown list is ordered by the LAST month's count (the current picture), ties by the total
+  const byLastMonth = (a, b) => (b.vals[n - 1] - a.vals[n - 1]) || (sum(b.vals) - sum(a.vals));
+  const anyGa4 = F.ga4.sessions.some(v => v !== null);
+  const ga4Total = arr => anyGa4 ? sum(arr) : null;
+
+  let h = '';
+  h += plain('rpt-title', 'Full Sales Funnel &mdash; website sessions &rarr; applications &rarr; Volta\'s decision &rarr; customer\'s decision &rarr; signed cases');
+  const longDate = d => { if (!d) return ''; const [y, mo, da] = d.split('-').map(Number); return da + ' ' + MN[mo - 1] + ' ' + y; };
+  h += plain('rpt-title', 'One column per calendar month of 2026 &middot; applications submitted 1 Jan &ndash; ' + longDate(F.appsThrough) + ' (through yesterday), by the status each was in at the end of that day');
+  h += '<tr class="rpt-colhead"><td>Funnel stage / metric</td>' + F.months.map(m => '<td>' + mLabel(m) + '</td>').join('') + '<td>Total</td></tr>';
+
+  const s1 = secRow('rpt-section', '1. Website traffic (GA4)'); h += s1.row;
+  h += row(s1.id, 'rpt-peach', 'Website sessions', F.ga4.sessions, ga4Total(F.ga4.sessions), false);
+
+  const s2 = secRow('rpt-section', '2. Applications'); h += s2.row;
+  h += cnt(s2.id, 'rpt-peach-strong', 'Applications submitted', F.apps);
+  h += row(s2.id, 'rpt-plain', '<span style="color:var(--text-muted)">Applications as % of website sessions</span>', F.apps, sum(F.apps), true, F.ga4.sessions);
+
+  // reason rows: sorted by the last month, each count with its share of the stage's own total (denom)
+  const reasonRowsHtml = (sec, rows, denom) => { let s = ''; for (const r of rows.slice().sort(byLastMonth)) s += cntPct(sec, 'rpt-plain', '&nbsp;&nbsp;&middot; ' + r.ka + (r.en ? ' <span style="color:var(--text-muted)">(' + r.en + ')</span>' : ''), r.vals, denom); return s; };
+  // a sub-stage (3.1 / 6.1 / 8.1): its header belongs to the parent section (hidden when it collapses) and toggles its
+  // own rows; a total + share row like every other stage, then its items sorted by the last month
+  const subStage = (parent, title, totalLabel, totals, shareLabel, denom, items) => {
+    const id = 'fsec' + (++secN);
+    let s = '<tr class="rpt-section" data-sec="' + parent + '" data-toggle="' + id + '"><td colspan="' + colspan + '"><span class="rpt-chevron">&#9662;</span>' + title + '</td></tr>';
+    s += cnt(id, 'rpt-peach', totalLabel, totals);
+    s += rate(id, shareLabel, totals, denom);
+    for (const it of items.filter(it => sum(it.vals) || it.always).sort(byLastMonth)) s += cntPct(id, 'rpt-plain', '&nbsp;&nbsp;&middot; ' + it.label, it.vals, totals);
+    return s;
+  };
+  // the sub-stage totals, needed both for their own rows and for the check at the end
+  const st31 = F.months.map((m, i) => F.expiredSales[i] + F.openSales[i] + F.otherSales[i]);
+  const st61 = F.months.map((m, i) => F.expiredCmt[i] + F.openCmt[i] + F.otherCmt[i]);
+  const st81 = F.months.map((m, i) => F.rejPost[i] + F.expiredPost[i] + F.openPost[i] + F.otherPost[i]);
+
+  // ---- gate 1: the sales screening (3 + 3.1 + 4 + 5 + single-payment sales in 10 = Applications)
+  const s3 = secRow('rpt-section', '3. Rejected by sales &mdash; before the committee, no underwriting decision (3 + 3.1 + 4 + 5 + single-payment sales in 10 = Applications)'); h += s3.row;
+  h += cnt(s3.id, 'rpt-peach', 'Rejected by sales (status 6, no underwriting decision)', F.rejSales);
+  h += rate(s3.id, '% of applications', F.rejSales, F.apps);
+  h += reasonRowsHtml(s3.id, F.rejectSalesReasons, F.rejSales);
+  h += subStage(s3.id, '3.1 Other statuses at the sales stage', 'Other statuses at the sales stage (awaiting, unreachable, expired)', st31, '% of applications', F.apps, [
+    { label: 'Still with sales, awaiting (status 4 / 7)', vals: F.openSales, always: true },
+    { label: 'Customer unreachable &mdash; &ldquo;უკონტაქტო&rdquo; (status 14)', vals: F.otherSales },
+    { label: 'Expired at the sales stage (status 13)', vals: F.expiredSales },
+  ]);
+
+  const s4 = secRow('rpt-section', '4. Customer withdrew at the sales stage &mdash; before the committee'); h += s4.row;
+  h += cnt(s4.id, 'rpt-peach', 'Customer withdrew at the sales stage (status 12, no underwriting decision)', F.declSales);
+  h += rate(s4.id, '% of applications', F.declSales, F.apps);
+  h += reasonRowsHtml(s4.id, F.declineSalesReasons, F.declSales);
+
+  const s5 = secRow('rpt-section', '5. Reached the committee = 2 Applications &minus; 3 &minus; 3.1 &minus; 4 &minus; single-payment sales (6 + 6.1 + 7 + 8 = 5)'); h += s5.row;
+  h += cnt(s5.id, 'rpt-peach-strong', 'Passed on to the committee (an underwriting decision recorded, at the committee, or signed)', F.committee);
+  h += rate(s5.id, '% of applications', F.committee, F.apps);
+
+  // ---- gate 2: the committee (6 + 6.1 + 7 + 8 = Reached the committee)
+  const s6 = secRow('rpt-section', '6. Rejected by the committee &mdash; underwriting said no'); h += s6.row;
+  h += cnt(s6.id, 'rpt-peach', 'Rejected by the committee (status 6, underwriting decision recorded)', F.rejCmt);
+  h += rate(s6.id, '% of reached the committee', F.rejCmt, F.committee);
+  h += reasonRowsHtml(s6.id, F.rejectCommitteeReasons, F.rejCmt);
+  h += subStage(s6.id, '6.1 Other committee statuses', 'Other committee statuses (awaiting a decision, unreachable, expired)', st61, '% of reached the committee', F.committee, [
+    { label: 'At the committee / clarification needed, awaiting a decision (status 8 / 15)', vals: F.openCmt, always: true },
+    { label: 'Customer unreachable &mdash; &ldquo;უკონტაქტო&rdquo; (status 14)', vals: F.otherCmt },
+    { label: 'Expired at the committee (status 13)', vals: F.expiredCmt },
+  ]);
+
+  const s7 = secRow('rpt-section', '7. Customer withdrew at the committee stage &mdash; before approval'); h += s7.row;
+  h += cnt(s7.id, 'rpt-peach', 'Customer withdrew at the committee stage (status 12, before approval)', F.declCmt);
+  h += rate(s7.id, '% of reached the committee', F.declCmt, F.committee);
+  h += reasonRowsHtml(s7.id, F.declineCommitteeReasons, F.declCmt);
+
+  // ---- gate 3: approval (8.1 + 9 + Signed in 10 = Approved)
+  const s8 = secRow('rpt-section', '8. Approved by underwriting (= 8.1 + 9 + Signed in 10)'); h += s8.row;
+  h += cnt(s8.id, 'rpt-peach', 'Approved by underwriting (underwriting status 16)', F.approved);
+  h += rate(s8.id, '% of reached the committee', F.approved, F.committee);
+  h += rate(s8.id, '% of applications', F.approved, F.apps);
+  h += subStage(s8.id, '8.1 Other underwriting statuses', 'Other underwriting statuses (rejected / expired after approval, in process, cancelled)', st81, '% of approved', F.approved, [
+    { label: 'Rejected after approval (status 6)', vals: F.rejPost, always: true },
+    { label: 'Expired after approval (status 13)', vals: F.expiredPost, always: true },
+    { label: 'Approved, still in process (16 / 17 / 9 / 10)', vals: F.openPost, always: true },
+    { label: 'Signed, then cancelled (status 18)', vals: F.otherPost },
+  ]);
+
+  const s9 = secRow('rpt-section', '9. Customer declined after approval &mdash; although underwriting approved'); h += s9.row;
+  h += cnt(s9.id, 'rpt-peach', 'Customer declined after approval (status 12)', F.declPost);
+  h += rate(s9.id, '% of approved', F.declPost, F.approved);
+  h += reasonRowsHtml(s9.id, F.declineAfterReasons, F.declPost);
+
+  const s10 = secRow('rpt-section-strong', '10. Final agreement between the customer and Volta'); h += s10.row;
+  h += cnt(s10.id, 'rpt-green', 'Signed / active installment (status 11 / 5 / 1)', F.signedActive);
+  h += cnt(s10.id, 'rpt-plain', 'Single-payment sales (status 99, no underwriting)', F.singlePay);
+  const finalAll = F.months.map((m, i) => F.signedActive[i] + F.singlePay[i]);
+  h += cnt(s10.id, 'rpt-green', 'Total final agreements (signed + single payment)', finalAll);
+  h += rate(s10.id, '% of applications', finalAll, F.apps);
+  h += row(s10.id, 'rpt-plain', '<span style="color:var(--text-muted)">Final agreements as % of website sessions</span>', finalAll, sum(finalAll), true, F.ga4.sessions);
+
+  // Check — not a stage, a comparison: the stages subtracted from the applications must leave 0 every month.
+  // One chain: 2 − 3 − 3.1 − 4 − 6 − 6.1 − 7 − 8.1 − 9 − 10. The two subtotals are not in it: 5 (reached the
+  // committee) is fully split into 6 + 6.1 + 7 + 8, and 8 (approved) into 8.1 + 9 + the signed cases inside 10
+  const check = F.months.map((m, i) => F.apps[i] - F.rejSales[i] - st31[i] - F.declSales[i] - F.rejCmt[i] - st61[i] - F.declCmt[i] - st81[i] - F.declPost[i] - finalAll[i]);
+  const checkRow = (sec, label, vals) => {
+    const c = v => '<td style="color:' + (v === 0 ? 'var(--good)' : 'var(--critical)') + ';font-weight:700">' + (v === 0 ? '0 &#10003;' : fmtN(v)) + '</td>';
+    return '<tr class="rpt-plain" data-sec="' + sec + '"><td>' + label + '</td>' + vals.map(c).join('') + c(sum(vals)) + '</tr>';
+  };
+  const sChk = secRow('rpt-section', 'Check &mdash; stages subtracted from each other (must be 0 in every month)'); h += sChk.row;
+  h += checkRow(sChk.id, '2 Applications &minus; 3 Rejected by sales &minus; 3.1 Other at the sales stage &minus; 4 Withdrew at the sales stage &minus; 6 Rejected by the committee &minus; 6.1 Other committee statuses &minus; 7 Withdrew at the committee stage &minus; 8.1 Other underwriting statuses &minus; 9 Declined after approval &minus; 10 Final agreements', check);
+
+  h += '<tr class="rpt-footer"><td colspan="' + colspan + '">Source: VoltaStoreDB only (no old-DB history in this tab). <b>Applications</b> = <code>orders</code> rows by application month (<code>created_at</code>), 1 January through ' + longDate(F.appsThrough) + ' &mdash; yesterday, like every other Daily Mail figure; today\'s applications are never included &mdash; including the applications migrated from the old CRM for January&ndash;August, so the counts differ slightly from the Daily Mail Report tab (which reads those months from myvolta.info). <b>Three gates.</b> Reached the committee (5) = an underwriting decision is recorded on the case (<code>crm_underwriter_status_id</code> set &mdash; the same concept for the January&ndash;August months migrated from the old CRM, which have no status log), or the case is at the committee (status 8), or it is signed; a committee entry logged after yesterday does not count yet. Everything else was screened out by sales (3, 3.1, 4) or is a single-payment sale (in 10), so 3 + 3.1 + 4 + 5 + single-payment = Applications. Approved (8) = <code>crm_underwriter_status_id = 16</code> (every signed loan from February 2026 on carries it; January\'s 128 signed loans without it are legacy loans migrated from the old CRM and are counted as approved), so 6 + 6.1 + 7 + 8 = 5; and 8.1 + 9 + Signed = 8. <b>Statuses</b> = <code>crm_order_status</code> as of the end of yesterday (' + longDate(F.appsThrough) + '): where a status changed after that, the earlier status is taken back from <code>crm_activity_log</code>, and an approval logged after that day does not count yet &mdash; so the whole tab is one consistent end-of-day picture. The same code list the Operations tab verified against the CRM: 6 = rejected (by sales when no underwriting decision is recorded, by the committee when one is), 12 = the customer declined (split the same way: at the sales stage, at the committee stage, or after approval), 13 = expired, 14 = &ldquo;უკონტაქტო&rdquo; (the customer could not be reached; the CRM log\'s own wording), 11 / 5 / 1 = contract signed / loan active / legacy active, 18 = signed and activated, then cancelled (Bagisto status canceled, close type 4), 99 = single-payment sale (paid in full, no underwriting); everything else is still in process (4 Pending, 7 In processing, 8 At committee, 15 Clarification needed, 16 Approved, 17 Disbursement in process, 9 Invoice &amp; contract draft sent, 10 Contract sent for signing). <b>Reasons</b> = <code>orders.crm_reason</code> as recorded on the application (present on ~99% of rejected and declined applications in every month of 2026); spelling variants are merged (e.g. \u201Cპროდუქტის არ ქონა\u201D into \u201Cპროდუქციის არ ქონა\u201D, an em-dash suffix such as \u201C&mdash; აქტიური ჩანაწერი\u201D dropped), reasons with fewer than ' + 5 + ' applications in total are grouped as Other (rare). <b>Website sessions</b> = Google Analytics 4 (property 369140604, all traffic, not only paid), summed per month' + (F.ga4.through ? ', data through ' + F.ga4.through : '') + '; the two \u201Cas % of website sessions\u201D rows divide the month\'s applications / final agreements by that month\'s sessions. Generated ' + F.generatedAt + '.</td></tr>';
+
+  function render() {
+    const table = document.getElementById('funnelTable');
+    if (!table) return;
+    table.querySelector('tbody').innerHTML = h;
+    table.querySelectorAll('tr[data-toggle]').forEach(header => {
+      header.addEventListener('click', () => {
+        const id = header.getAttribute('data-toggle');
+        const chevron = header.querySelector('.rpt-chevron');
+        const rows = Array.from(table.querySelectorAll('tr[data-sec="' + id + '"]'));
+        // one level of nesting (3 > 3.1): a sub-stage header inside this section takes its own rows along
+        rows.slice().forEach(r => { const sub = r.getAttribute('data-toggle'); if (sub) rows.push(...table.querySelectorAll('tr[data-sec="' + sub + '"]')); });
+        const collapsing = rows.length && !rows[0].classList.contains('is-collapsed');
+        rows.forEach(r => r.classList.toggle('is-collapsed', collapsing));
+        if (chevron) chevron.style.transform = collapsing ? 'rotate(-90deg)' : 'rotate(0deg)';
+      });
+    });
+    const banner = document.getElementById('funnelBanner');
+    if (banner) banner.innerHTML = '<b>How to read it:</b> each month starts with the website sessions Google Analytics counted, then the applications submitted that month, then the sales screening (rejected by sales with the recorded reason, still with sales, the customer withdrew there with their reason) and how many were passed on to the committee, then the committee\'s decision on those (rejected with the reason, still waiting, the customer withdrew there, approved), then the approved ones that did not end in a contract (rejected or expired after approval, still in process, declined by the customer with their reason), and finally the signed installment contracts and single-payment sales together. 3 + 3.1 + 4 + 5 + single-payment sales = applications; 6 + 6.1 + 7 + 8 = reached the committee; 8.1 + 9 + signed = approved' + (anyGa4 ? '' : ' &mdash; GA4 sessions are not available in this build (funnel_ga4_month.tsv missing)') + '.';
+    if (window.__funnelScrollUpdate) window.__funnelScrollUpdate();
+  }
+  if (document.getElementById('funnelScrollTop') && !window.__funnelScrollUpdate) window.__funnelScrollUpdate = setupTopScrollSync('funnelScrollTop', 'funnelScrollBody');
+  if (window.__registerPage) window.__registerPage(['fullfunnel'], render); else render();
+})();
+/* ---------- /Full Sales Funnel ---------- */
 /* ---------- Sales Analyze (ported from Volta_Analytics) ---------- */
 const salesMonthlyStats = SALES_JSON.salesMonthlyStats, brandStats = SALES_JSON.brandStats, subcategoryStats = SALES_JSON.subcategoryStats, categoryBrandBreakdown = SALES_JSON.categoryBrandBreakdown;
 const SALES_CUTOVER = SALES_JSON.cutover;

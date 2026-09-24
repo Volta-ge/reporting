@@ -55,7 +55,7 @@ final class NewDbReport
         $logistics = $this->logistics();
         $logistics['cutover'] = self::CUTOVER;
         $logistics['generatedAt'] = $generatedAt;
-        $out = ['report' => $report, 'sales' => $sales, 'logistics' => $logistics];
+        $out = ['report' => $report, 'sales' => $sales, 'logistics' => $logistics, 'funnel' => $this->fullFunnel()];
         // The five newer groups (Marketing, Operations, Customers, Collections, Portfolio) live in their own classes —
         // src/NewDbMkt.php … — each the PHP twin of volta-analytics-new-db/build_<prefix>.js and returning exactly the
         // structure of <prefix>_data.json. A missing class file simply leaves that tab on the committed static numbers.
@@ -105,7 +105,7 @@ final class NewDbReport
         $logistics = $this->logistics();
         $logistics['cutover'] = self::CUTOVER;
         $logistics['generatedAt'] = $generatedAt;
-        $out = ['report' => $report, 'sales' => $sales, 'logistics' => $logistics];
+        $out = ['report' => $report, 'sales' => $sales, 'logistics' => $logistics, 'funnel' => $this->fullFunnel()];
         $onSection('core', $out, null);
 
         $groups = [
@@ -340,6 +340,188 @@ final class NewDbReport
         }
 
         return ['pending' => $pending, 'delivery' => $delivery, 'byCity' => $byCity, 'byGoods' => $byGoods, 'openCases' => $openCases, 'statusByDay' => $statusByDay];
+    }
+
+    // ------------------------------------------------------------------ Daily Mail > Full Sales Funnel
+
+    private const FUNNEL_MONTH_START = '2026-01';
+    private const FUNNEL_IN_PROCESS = [4, 7, 8, 15, 16, 17, 9, 10];
+    private const FUNNEL_MIN_REASON_TOTAL = 5;
+    /** Georgian as typed in the CRM -> canonical Georgian (same table as build_funnel.js REASON_ALIAS) */
+    private const FUNNEL_REASON_ALIAS = [
+        'პროდუქტის არ ქონა' => 'პროდუქციის არ ქონა', 'დუბლი' => 'დუბლირებული', 'დუბლირებული განაცხადი' => 'დუბლირებული',
+        'არ პასუხოსბ' => 'არ პასუხობს', 'არ მპასუხობს' => 'არ პასუხობს',
+    ];
+    /** canonical Georgian -> English gloss (same table as build_funnel.js REASON_EN) */
+    private const FUNNEL_REASON_EN = [
+        'შეუსაბამო მონაცემები' => 'Inconsistent data', 'მოვალეთა რეესტრი' => "Debtors' registry", 'ვერ ვუკავშირდები' => 'Cannot reach the customer',
+        'დასაფარია მიმდინარე' => 'Existing loan must be repaid first', 'გადახდისუუნარო' => 'Insolvent', 'დუბლირებული' => 'Duplicate application',
+        'ხიშნიკი (NO SMS)' => 'Suspected fraud (no SMS)', 'ხიშნიკი' => 'Suspected fraud', 'კლიენტის უარი' => 'Customer refused',
+        'პროდუქციის არ ქონა' => 'Product unavailable', 'უარი განვადებაზე' => 'Installment refused', 'არ პასუხობს' => 'Not responding',
+        'აღარ არის დაინტერესებული' => 'No longer interested', 'სხვა' => 'Other', 'ავანსი' => 'Down payment', 'მაღალი ფასი' => 'Price too high',
+        'საკონტაქტო პირებთან დაკავშირება' => 'Contact-person check', 'მიტანის ვადა/პირობები' => 'Delivery time / terms', 'მიტანის საფასური' => 'Delivery fee',
+        'ხანდაზმული განაცხადი' => 'Expired application',
+    ];
+
+    /**
+     * PHP twin of volta-analytics-new-db/build_funnel.js (same SQL as pull_new.sh's funnel_apps.tsv, same
+     * aggregation), returning exactly the structure of funnel_data.json: applications by application month x the
+     * status each is in today, the recorded reasons for Volta's rejections (6) and the customer's declines (12),
+     * plus GA4 website sessions per month read from the committed funnel_ga4_month.tsv (this server has no GA4
+     * access; build_funnel.js regenerates that file from the daily GA4 extract wherever that extract exists).
+     */
+    private function fullFunnel(): array
+    {
+        // applications through YESTERDAY, like every other Daily Mail figure (statuses are still as of now)
+        $through = new \DateTimeImmutable('yesterday');
+        $curMonth = $through->format('Y-m');
+        // statuses as of the end of that day too — same reconstruction as pull_new.sh (rev / ap subqueries):
+        // a status changed after END is taken back to the `from` of the earliest later change, an approval first
+        // logged after END does not count yet
+        $endTs = $through->format('Y-m-d') . ' 23:59:59';
+        $stmt = $this->pdo->prepare("SELECT DATE_FORMAT(o.created_at,'%Y-%m') m, COALESCE(rev.st_from, o.crm_order_status) st,
+     (COALESCE(o.crm_underwriter_status_id,0)=16 AND ap.entity_id IS NULL) uw16,
+     (o.crm_underwriter_status_id IS NOT NULL AND cm.entity_id IS NULL) cmt,
+     CASE WHEN COALESCE(rev.st_from, o.crm_order_status) IN (6,12) THEN LEFT(TRIM(REPLACE(REPLACE(REPLACE(COALESCE(o.crm_reason,''), CHAR(10),' '), CHAR(13),' '), CHAR(9),' ')), 80) ELSE '' END reason, COUNT(*) n
+   FROM orders o
+   LEFT JOIN (SELECT l.entity_id, CAST(JSON_EXTRACT(l.metadata,'$.from') AS UNSIGNED) st_from FROM crm_activity_log l
+              WHERE l.action='installment.status_change' AND l.created_at > :e1
+                AND l.id = (SELECT MIN(l2.id) FROM crm_activity_log l2 WHERE l2.entity_id=l.entity_id AND l2.action='installment.status_change' AND l2.created_at > :e2)) rev ON rev.entity_id=o.id
+   LEFT JOIN (SELECT DISTINCT a.entity_id FROM crm_activity_log a WHERE a.action='installment.status_change' AND JSON_EXTRACT(a.metadata,'$.to')=16 AND a.created_at > :e3
+                AND NOT EXISTS (SELECT 1 FROM crm_activity_log b WHERE b.entity_id=a.entity_id AND b.action='installment.status_change' AND JSON_EXTRACT(b.metadata,'$.to')=16 AND b.created_at <= :e4)) ap ON ap.entity_id=o.id
+   LEFT JOIN (SELECT DISTINCT a.entity_id FROM crm_activity_log a WHERE a.action='installment.status_change' AND JSON_EXTRACT(a.metadata,'$.to')=8 AND a.created_at > :e5
+                AND NOT EXISTS (SELECT 1 FROM crm_activity_log b WHERE b.entity_id=a.entity_id AND b.action='installment.status_change' AND JSON_EXTRACT(b.metadata,'$.to')=8 AND b.created_at <= :e6)) cm ON cm.entity_id=o.id
+   WHERE o.created_at >= :mstart AND DATE(o.created_at) <= :today
+   GROUP BY m, st, uw16, cmt, reason ORDER BY m, st, uw16, cmt, reason");
+        $stmt->execute(['mstart' => self::FUNNEL_MONTH_START . '-01', 'today' => $through->format('Y-m-d'), 'e1' => $endTs, 'e2' => $endTs, 'e3' => $endTs, 'e4' => $endTs, 'e5' => $endTs, 'e6' => $endTs]);
+        $rows = $stmt->fetchAll();
+
+        $lastMonth = self::FUNNEL_MONTH_START;
+        foreach ($rows as $r) { if ((string) $r['m'] > $lastMonth) { $lastMonth = (string) $r['m']; } }
+        $months = [];
+        for ($m = new \DateTimeImmutable(self::FUNNEL_MONTH_START . '-01'), $end = max($lastMonth, $curMonth); $m->format('Y-m') <= $end; $m = $m->modify('first day of next month')) {
+            $months[] = $m->format('Y-m');
+        }
+        $mi = array_flip($months);
+        $n = count($months);
+        $zeros = static fn (): array => array_fill(0, $n, 0);
+
+        // Two gates (see build_funnel.js for the reasoning, verified against the DB 2026-09-23): approved =
+        // crm_underwriter_status_id = 16 or already signed (January's migrated legacy loans lack the flag);
+        // status 12 is split into "withdrew before a decision" (no approval) and "declined after approval".
+        // Three gates since 2026-09-24 (see build_funnel.js): sales stage (no underwriting decision) / committee
+        // (decision recorded, at the committee, or signed) / approved. Same key order as the Node payload.
+        $keys = ['apps', 'committee',
+            'rejSales', 'declSales', 'expiredSales', 'openSales', 'otherSales', 'singlePay',
+            'rejCmt', 'declCmt', 'expiredCmt', 'openCmt', 'otherCmt', 'approved',
+            'signedActive', 'declPost', 'rejPost', 'expiredPost', 'openPost', 'otherPost'];
+        $S = [];
+        foreach ($keys as $k) { $S[$k] = $zeros(); }
+        $reasonAcc = ['rejSales' => [], 'declSales' => [], 'rejCmt' => [], 'declCmt' => [], 'declPost' => []];
+        $addReason = static function (string $bucket, string $raw, int $i, int $cnt) use (&$reasonAcc, $zeros): void {
+            $k = self::funnelReasonKey($raw);
+            if (!isset($reasonAcc[$bucket][$k])) { $reasonAcc[$bucket][$k] = $zeros(); }
+            $reasonAcc[$bucket][$k][$i] += $cnt;
+        };
+        foreach ($rows as $r) {
+            if (!isset($mi[(string) $r['m']])) { continue; }
+            $i = $mi[(string) $r['m']];
+            $st = (int) $r['st'];
+            $cnt = (int) $r['n'];
+            $uw16 = (int) $r['uw16'] === 1;
+            $reason = (string) ($r['reason'] ?? '');
+            $S['apps'][$i] += $cnt;
+            if ($st === 99) { $S['singlePay'][$i] += $cnt; continue; }
+            $signed = $st === 11 || $st === 5 || $st === 1;
+            // reached the committee = underwriting decision recorded, at the committee, or signed (January's legacy loans have no underwriter status)
+            $reached = (int) $r['cmt'] === 1 || $signed || $st === 8;
+            if (!$reached) {
+                if ($st === 6) { $S['rejSales'][$i] += $cnt; $addReason('rejSales', $reason, $i, $cnt); }
+                elseif ($st === 12) { $S['declSales'][$i] += $cnt; $addReason('declSales', $reason, $i, $cnt); }
+                elseif ($st === 13) { $S['expiredSales'][$i] += $cnt; }
+                elseif (in_array($st, self::FUNNEL_IN_PROCESS, true)) { $S['openSales'][$i] += $cnt; }
+                else { $S['otherSales'][$i] += $cnt; }
+                continue;
+            }
+            $S['committee'][$i] += $cnt;
+            if ($signed) { $S['approved'][$i] += $cnt; $S['signedActive'][$i] += $cnt; continue; }
+            if ($uw16) {
+                $S['approved'][$i] += $cnt;
+                if ($st === 12) { $S['declPost'][$i] += $cnt; $addReason('declPost', $reason, $i, $cnt); }
+                elseif ($st === 6) { $S['rejPost'][$i] += $cnt; }
+                elseif ($st === 13) { $S['expiredPost'][$i] += $cnt; }
+                elseif (in_array($st, self::FUNNEL_IN_PROCESS, true)) { $S['openPost'][$i] += $cnt; }
+                else { $S['otherPost'][$i] += $cnt; }
+            } else {
+                if ($st === 6) { $S['rejCmt'][$i] += $cnt; $addReason('rejCmt', $reason, $i, $cnt); }
+                elseif ($st === 12) { $S['declCmt'][$i] += $cnt; $addReason('declCmt', $reason, $i, $cnt); }
+                elseif ($st === 13) { $S['expiredCmt'][$i] += $cnt; }
+                elseif (in_array($st, self::FUNNEL_IN_PROCESS, true)) { $S['openCmt'][$i] += $cnt; }
+                else { $S['otherCmt'][$i] += $cnt; }
+            }
+        }
+        foreach ($months as $i => $m) {
+            $sales = $S['rejSales'][$i] + $S['declSales'][$i] + $S['expiredSales'][$i] + $S['openSales'][$i] + $S['otherSales'][$i] + $S['singlePay'][$i];
+            $cmt = $S['rejCmt'][$i] + $S['declCmt'][$i] + $S['expiredCmt'][$i] + $S['openCmt'][$i] + $S['otherCmt'][$i] + $S['approved'][$i];
+            $post = $S['signedActive'][$i] + $S['declPost'][$i] + $S['rejPost'][$i] + $S['expiredPost'][$i] + $S['openPost'][$i] + $S['otherPost'][$i];
+            if ($sales + $cmt !== $S['apps'][$i] || $cmt !== $S['committee'][$i] || $post !== $S['approved'][$i]) {
+                throw new \RuntimeException("Full Sales Funnel does not close for $m: apps {$S['apps'][$i]} vs " . ($sales + $cmt) . ", committee {$S['committee'][$i]} vs $cmt, approved {$S['approved'][$i]} vs $post");
+            }
+        }
+
+        // GA4 sessions per month (committed monthly file; absent -> nulls, the page says so)
+        $ga4 = ['sessions' => array_fill(0, $n, null), 'engaged' => array_fill(0, $n, null), 'users' => array_fill(0, $n, null), 'through' => null];
+        if (is_file($this->dir . '/funnel_ga4_month.tsv')) {
+            foreach ($this->tsv('funnel_ga4_month.tsv') as $r) {
+                if (!isset($mi[$r['m']])) { continue; }
+                $i = $mi[$r['m']];
+                $ga4['sessions'][$i] = (int) $r['sessions'];
+                $ga4['engaged'][$i] = (int) $r['engaged_sessions'];
+                $ga4['users'][$i] = (int) $r['users'];
+                if (($r['through'] ?? '') !== '' && ($ga4['through'] === null || $r['through'] > $ga4['through'])) { $ga4['through'] = $r['through']; }
+            }
+        }
+
+        $out = ['months' => $months, 'curMonth' => $curMonth, 'monthStart' => self::FUNNEL_MONTH_START, 'appsThrough' => $through->format('Y-m-d'), 'ga4' => $ga4];
+        foreach ($keys as $k) { $out[$k] = $S[$k]; }   // same key order as build_funnel.js's `...S` spread
+        $out['rejectSalesReasons'] = self::funnelReasonRows($reasonAcc['rejSales'], $n);
+        $out['declineSalesReasons'] = self::funnelReasonRows($reasonAcc['declSales'], $n);
+        $out['rejectCommitteeReasons'] = self::funnelReasonRows($reasonAcc['rejCmt'], $n);
+        $out['declineCommitteeReasons'] = self::funnelReasonRows($reasonAcc['declCmt'], $n);
+        $out['declineAfterReasons'] = self::funnelReasonRows($reasonAcc['declPost'], $n);
+        $out['generatedAt'] = gmdate('Y-m-d H:i') . ' UTC';
+        return $out;
+    }
+
+    private static function funnelReasonKey(string $raw): string
+    {
+        $r = trim($raw);
+        $r = trim(preg_replace('/\.$/', '', $r) ?? $r);
+        $dash = strpos($r, " \u{2014} ");
+        if ($dash !== false && $dash > 0) { $r = trim(substr($r, 0, $dash)); }
+        return self::FUNNEL_REASON_ALIAS[$r] ?? $r;
+    }
+
+    /** reasonRows() in build_funnel.js: named reasons by the LAST month's count desc (ties by total, then label), then Other (rare), then Unspecified */
+    private static function funnelReasonRows(array $acc, int $n): array
+    {
+        $rows = [];
+        $other = null;
+        $unspecified = null;
+        foreach ($acc as $ka => $vals) {
+            $ka = (string) $ka;
+            $total = array_sum($vals);
+            if ($ka === '') { $unspecified = $unspecified === null ? $vals : array_map(static fn ($a, $b) => $a + $b, $unspecified, $vals); continue; }
+            if ($total < self::FUNNEL_MIN_REASON_TOTAL) { $other = $other === null ? $vals : array_map(static fn ($a, $b) => $a + $b, $other, $vals); continue; }
+            $rows[] = ['ka' => $ka, 'en' => self::FUNNEL_REASON_EN[$ka] ?? '', 'vals' => array_values($vals), 'total' => $total];
+        }
+        $last = $n - 1;
+        usort($rows, static fn (array $a, array $b): int => ($b['vals'][$last] <=> $a['vals'][$last]) ?: ($b['total'] <=> $a['total']) ?: strcmp($a['ka'], $b['ka']));
+        $out = [];
+        foreach ($rows as $r) { $out[] = ['ka' => $r['ka'], 'en' => $r['en'], 'vals' => $r['vals']]; }
+        if ($other !== null) { $out[] = ['ka' => 'სხვა (იშვიათი)', 'en' => 'Other (rare, < ' . self::FUNNEL_MIN_REASON_TOTAL . ' in total)', 'vals' => array_values($other), 'other' => true]; }
+        if ($unspecified !== null) { $out[] = ['ka' => 'მიზეზი არ არის მითითებული', 'en' => 'Unspecified', 'vals' => array_values($unspecified), 'unspecified' => true]; }
+        return $out;
     }
 
     // ------------------------------------------------------------------ helpers

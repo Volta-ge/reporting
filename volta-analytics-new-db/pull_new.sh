@@ -597,5 +597,42 @@ Q "SELECT product_id, float_value cost FROM product_attribute_values WHERE attri
 echo "END=$TODAY"
 wc -l "$S"/pf_*.tsv | sed "s#$S/##"
 
+# ================ Daily Mail — Full Sales Funnel ================
+# Applications by application MONTH (orders.created_at, Jan 2026 through YESTERDAY = $END, like every other Daily
+# Mail extract — the user: "წინა დღით აჩვენებდეს", today is never in the report) x the status each one is in TODAY
+# (crm_order_status, same code list NewDbOps verified against the CRM) x whether underwriting approved it
+# (crm_underwriter_status_id = 16) x the recorded reason for the two "no" outcomes: Volta's rejection (6) and the
+# customer's own decline (12) — orders.crm_reason, populated on ~99% of those rows for every month of 2026 (unlike
+# crm_activity_log, whose status history only starts 2026-09-01 and records no reason at all for 12). State, not
+# events: a month's row set is where its applications stand now, so recent months keep moving on refresh.
+# Website sessions (the top of this funnel) are NOT pulled here: build_funnel.js aggregates them per month from
+# ../volta-ad-channels/channels_ga4_daily.tsv (GA4, pulled by pull_channels.py with credentials kept outside the
+# repo) into funnel_ga4_month.tsv, which IS committed so the live PHP page can read it on the server.
+# Statuses are ALSO as of the end of END (user 2026-09-24: "გუშინდელის ჩათვლით რა სტატუსებიც იყო"): where
+# crm_activity_log shows a status change after END 23:59:59, the `from` of the earliest such change is the status
+# the case had at that moment (rev); an approval (to=16) first logged after END does not count yet (ap). Migrated
+# Jan–Aug cases have no log before Sep 1 but any later change IS logged, so the same rule covers them. ~1 s.
+FUNNEL_MSTART='2026-01-01'
+Q "SELECT DATE_FORMAT(o.created_at,'%Y-%m') m, COALESCE(rev.st_from, o.crm_order_status) st,
+     (COALESCE(o.crm_underwriter_status_id,0)=16 AND ap.entity_id IS NULL) uw16,
+     (o.crm_underwriter_status_id IS NOT NULL AND cm.entity_id IS NULL) cmt,
+     CASE WHEN COALESCE(rev.st_from, o.crm_order_status) IN (6,12) THEN LEFT(TRIM(REPLACE(REPLACE(REPLACE(COALESCE(o.crm_reason,''), CHAR(10),' '), CHAR(13),' '), CHAR(9),' ')), 80) ELSE '' END reason, COUNT(*) n
+   FROM orders o
+   LEFT JOIN (SELECT l.entity_id, CAST(JSON_EXTRACT(l.metadata,'\$.from') AS UNSIGNED) st_from FROM crm_activity_log l
+              WHERE l.action='installment.status_change' AND l.created_at > '$END 23:59:59'
+                AND l.id = (SELECT MIN(l2.id) FROM crm_activity_log l2 WHERE l2.entity_id=l.entity_id AND l2.action='installment.status_change' AND l2.created_at > '$END 23:59:59')) rev ON rev.entity_id=o.id
+   LEFT JOIN (SELECT DISTINCT a.entity_id FROM crm_activity_log a WHERE a.action='installment.status_change' AND JSON_EXTRACT(a.metadata,'\$.to')=16 AND a.created_at > '$END 23:59:59'
+                AND NOT EXISTS (SELECT 1 FROM crm_activity_log b WHERE b.entity_id=a.entity_id AND b.action='installment.status_change' AND JSON_EXTRACT(b.metadata,'\$.to')=16 AND b.created_at <= '$END 23:59:59')) ap ON ap.entity_id=o.id
+   LEFT JOIN (SELECT DISTINCT a.entity_id FROM crm_activity_log a WHERE a.action='installment.status_change' AND JSON_EXTRACT(a.metadata,'\$.to')=8 AND a.created_at > '$END 23:59:59'
+                AND NOT EXISTS (SELECT 1 FROM crm_activity_log b WHERE b.entity_id=a.entity_id AND b.action='installment.status_change' AND JSON_EXTRACT(b.metadata,'\$.to')=8 AND b.created_at <= '$END 23:59:59')) cm ON cm.entity_id=o.id
+   WHERE o.created_at >= '$FUNNEL_MSTART' AND DATE(o.created_at) <= '$END'
+   GROUP BY m, st, uw16, cmt, reason ORDER BY m, st, uw16, cmt, reason;" > "$S/funnel_apps.tsv"
+# cmt = reached the committee: an underwriting decision is recorded (crm_underwriter_status_id set — the same
+# concept for the migrated Jan–Aug months, which have no status log), minus cases whose first "to committee"
+# (status 8) event is after END. Verified 2026-09-24 for Sep 1–23: 1,559 by this vs 1,564 by log to=8, 1,548 in
+# both — the CRM's own Sales funnel page shows 1,583 (it counts today's events too).
+printf 'through\n%s\n' "$END" > "$S/funnel_meta.tsv"   # build_funnel.js: the last application day in the extract
+wc -l "$S/funnel_apps.tsv" | sed "s#$S/##"
+
 echo "END=$END"
 wc -l "$S"/new_*.tsv "$S"/logi_*.tsv "$S"/mkt_*.tsv "$S"/ops_*.tsv "$S"/cust_*.tsv "$S"/coll_*.tsv "$S"/pf_*.tsv | sed "s#$S/##"

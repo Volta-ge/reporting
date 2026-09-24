@@ -39,7 +39,10 @@ if (!isset($config['voltastoredb'])) {
     $cacheFile = $cacheDir . '/newdb_' . $end . '.json';
     $force = isset($_GET['refresh']);
     $cached = (!$force && is_file($cacheFile) && (time() - filemtime($cacheFile)) < CACHE_TTL) ? json_decode((string) file_get_contents($cacheFile), true) : null;
-    $complete = static fn ($c) => is_array($c) && isset($c['report'], $c['sales']) && !array_diff_key(NewDbReport::GROUPS, $c);
+    // 'funnel' (Daily Mail > Full Sales Funnel, added 2026-09-23) is part of the core build: a cache written before it
+    // existed is treated as incomplete so the first load after the deploy computes it instead of serving the
+    // committed numbers for up to an hour
+    $complete = static fn ($c) => is_array($c) && isset($c['report'], $c['sales'], $c['funnel']) && !array_diff_key(NewDbReport::GROUPS, $c);
     if (!$complete($cached)) {
         try {
             set_time_limit(120);
@@ -55,7 +58,7 @@ if (!isset($config['voltastoredb'])) {
             $flags = JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES;
             $setConst = static function (string &$html, string $name, $payload) use ($flags): bool {
                 $const = 'const ' . $name . ' = ';
-                $html = preg_replace('/^' . preg_quote($const, '/') . '.*;$/m', $const . json_encode($payload, $flags) . ';', $html, 1, $count);
+                $html = preg_replace('/^' . preg_quote($const, '/') . '.*;\r?$/m', $const . json_encode($payload, $flags) . ';', $html, 1, $count);
                 return $count === 1;
             };
             $jsFlags = JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE;
@@ -79,6 +82,7 @@ if (!isset($config['voltastoredb'])) {
                     $setConst($html, 'REPORT_JSON', $payload['report']);
                     $setConst($html, 'SALES_JSON', $payload['sales']);
                     $setConst($html, 'LOGI_JSON', $payload['logistics']);
+                    if (isset($payload['funnel'])) { $setConst($html, 'FUNNEL_JSON', $payload['funnel']); }
                     echo "<!doctype html>\n<html lang=\"ka\">\n<head>\n<meta charset=\"utf-8\">\n<meta name=\"viewport\" content=\"width=device-width,initial-scale=1\">\n</head>\n<body>\n";
                     echo $html;
                     echo '<script>window.__streamInit && window.__streamInit(5);</script>' . "\n";
@@ -139,15 +143,18 @@ if (!isset($config['voltastoredb'])) {
     }
     if (!$streamed && is_array($cached)) {
         $flags = JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES;
-        $html = preg_replace('/^const REPORT_JSON = .*;$/m', 'const REPORT_JSON = ' . json_encode($cached['report'], $flags) . ';', $html, 1, $c1);
-        $html = preg_replace('/^const SALES_JSON = .*;$/m', 'const SALES_JSON = ' . json_encode($cached['sales'], $flags) . ';', $html, 1, $c2);
+        $html = preg_replace('/^const REPORT_JSON = .*;\r?$/m', 'const REPORT_JSON = ' . json_encode($cached['report'], $flags) . ';', $html, 1, $c1);
+        $html = preg_replace('/^const SALES_JSON = .*;\r?$/m', 'const SALES_JSON = ' . json_encode($cached['sales'], $flags) . ';', $html, 1, $c2);
         if (isset($cached['logistics'])) {
-            $html = preg_replace('/^const LOGI_JSON = .*;$/m', 'const LOGI_JSON = ' . json_encode($cached['logistics'], $flags) . ';', $html, 1);
+            $html = preg_replace('/^const LOGI_JSON = .*;\r?$/m', 'const LOGI_JSON = ' . json_encode($cached['logistics'], $flags) . ';', $html, 1);
+        }
+        if (isset($cached['funnel'])) {
+            $html = preg_replace('/^const FUNNEL_JSON = .*;\r?$/m', 'const FUNNEL_JSON = ' . json_encode($cached['funnel'], $flags) . ';', $html, 1);
         }
         foreach (NewDbReport::GROUPS as $key => $class) {
             if (!isset($cached[$key])) { continue; }
             $const = 'const ' . strtoupper($key) . '_JSON = ';
-            $html = preg_replace('/^' . preg_quote($const, '/') . '.*;$/m', $const . json_encode($cached[$key], $flags) . ';', $html, 1);
+            $html = preg_replace('/^' . preg_quote($const, '/') . '.*;\r?$/m', $const . json_encode($cached[$key], $flags) . ';', $html, 1);
         }
         if ($c1 !== 1 || $c2 !== 1) {
             $html = (string) file_get_contents($page);
