@@ -41,8 +41,9 @@ if (!isset($config['voltastoredb'])) {
     $cached = (!$force && is_file($cacheFile) && (time() - filemtime($cacheFile)) < CACHE_TTL) ? json_decode((string) file_get_contents($cacheFile), true) : null;
     // 'funnel' (Daily Mail > Full Sales Funnel, added 2026-09-23) is part of the core build: a cache written before it
     // existed is treated as incomplete so the first load after the deploy computes it instead of serving the
-    // committed numbers for up to an hour
-    $complete = static fn ($c) => is_array($c) && isset($c['report'], $c['sales'], $c['funnel']) && !array_diff_key(NewDbReport::GROUPS, $c);
+    // committed numbers for up to an hour. The key may hold NULL (fullFunnelSafe() failed or timed out) — that cache
+    // is still complete: the page keeps the committed FUNNEL_JSON and does not recompute on every visit.
+    $complete = static fn ($c) => is_array($c) && isset($c['report'], $c['sales']) && array_key_exists('funnel', $c) && !array_diff_key(NewDbReport::GROUPS, $c);
     if (!$complete($cached)) {
         try {
             set_time_limit(120);

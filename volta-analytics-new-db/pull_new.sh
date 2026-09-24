@@ -611,20 +611,21 @@ wc -l "$S"/pf_*.tsv | sed "s#$S/##"
 # Statuses are ALSO as of the end of END (user 2026-09-24: "გუშინდელის ჩათვლით რა სტატუსებიც იყო"): where
 # crm_activity_log shows a status change after END 23:59:59, the `from` of the earliest such change is the status
 # the case had at that moment (rev); an approval (to=16) first logged after END does not count yet (ap). Migrated
-# Jan–Aug cases have no log before Sep 1 but any later change IS logged, so the same rule covers them. ~1 s.
+# Jan–Aug cases have no log before Sep 1 but any later change IS logged, so the same rule covers them. ~2 s.
+# NEVER write these as correlated subqueries (MIN(id) per l.entity_id / NOT EXISTS per row): the PHP twin runs the
+# same text as a server-side prepared statement, where that plan re-scanned the log per outer row (> 10 min) and
+# took reporting.volta.ge down on 2026-09-24. Keep every derived table a single non-correlated GROUP BY pass.
 FUNNEL_MSTART='2026-01-01'
 Q "SELECT DATE_FORMAT(o.created_at,'%Y-%m') m, COALESCE(rev.st_from, o.crm_order_status) st,
      (COALESCE(o.crm_underwriter_status_id,0)=16 AND ap.entity_id IS NULL) uw16,
      (o.crm_underwriter_status_id IS NOT NULL AND cm.entity_id IS NULL) cmt,
      CASE WHEN COALESCE(rev.st_from, o.crm_order_status) IN (6,12) THEN LEFT(TRIM(REPLACE(REPLACE(REPLACE(COALESCE(o.crm_reason,''), CHAR(10),' '), CHAR(13),' '), CHAR(9),' ')), 80) ELSE '' END reason, COUNT(*) n
    FROM orders o
-   LEFT JOIN (SELECT l.entity_id, CAST(JSON_EXTRACT(l.metadata,'\$.from') AS UNSIGNED) st_from FROM crm_activity_log l
-              WHERE l.action='installment.status_change' AND l.created_at > '$END 23:59:59'
-                AND l.id = (SELECT MIN(l2.id) FROM crm_activity_log l2 WHERE l2.entity_id=l.entity_id AND l2.action='installment.status_change' AND l2.created_at > '$END 23:59:59')) rev ON rev.entity_id=o.id
-   LEFT JOIN (SELECT DISTINCT a.entity_id FROM crm_activity_log a WHERE a.action='installment.status_change' AND JSON_EXTRACT(a.metadata,'\$.to')=16 AND a.created_at > '$END 23:59:59'
-                AND NOT EXISTS (SELECT 1 FROM crm_activity_log b WHERE b.entity_id=a.entity_id AND b.action='installment.status_change' AND JSON_EXTRACT(b.metadata,'\$.to')=16 AND b.created_at <= '$END 23:59:59')) ap ON ap.entity_id=o.id
-   LEFT JOIN (SELECT DISTINCT a.entity_id FROM crm_activity_log a WHERE a.action='installment.status_change' AND JSON_EXTRACT(a.metadata,'\$.to')=8 AND a.created_at > '$END 23:59:59'
-                AND NOT EXISTS (SELECT 1 FROM crm_activity_log b WHERE b.entity_id=a.entity_id AND b.action='installment.status_change' AND JSON_EXTRACT(b.metadata,'\$.to')=8 AND b.created_at <= '$END 23:59:59')) cm ON cm.entity_id=o.id
+   LEFT JOIN (SELECT f.entity_id, CAST(JSON_EXTRACT(l.metadata,'\$.from') AS UNSIGNED) st_from
+              FROM (SELECT entity_id, MIN(id) mid FROM crm_activity_log WHERE action='installment.status_change' AND created_at > '$END 23:59:59' GROUP BY entity_id) f
+              JOIN crm_activity_log l ON l.id = f.mid) rev ON rev.entity_id=o.id
+   LEFT JOIN (SELECT entity_id FROM crm_activity_log WHERE action='installment.status_change' AND JSON_EXTRACT(metadata,'\$.to')=16 GROUP BY entity_id HAVING MIN(created_at) > '$END 23:59:59') ap ON ap.entity_id=o.id
+   LEFT JOIN (SELECT entity_id FROM crm_activity_log WHERE action='installment.status_change' AND JSON_EXTRACT(metadata,'\$.to')=8 GROUP BY entity_id HAVING MIN(created_at) > '$END 23:59:59') cm ON cm.entity_id=o.id
    WHERE o.created_at >= '$FUNNEL_MSTART' AND DATE(o.created_at) <= '$END'
    GROUP BY m, st, uw16, cmt, reason ORDER BY m, st, uw16, cmt, reason;" > "$S/funnel_apps.tsv"
 # cmt = reached the committee: an underwriting decision is recorded (crm_underwriter_status_id set — the same

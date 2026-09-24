@@ -55,7 +55,7 @@ final class NewDbReport
         $logistics = $this->logistics();
         $logistics['cutover'] = self::CUTOVER;
         $logistics['generatedAt'] = $generatedAt;
-        $out = ['report' => $report, 'sales' => $sales, 'logistics' => $logistics, 'funnel' => $this->fullFunnel()];
+        $out = ['report' => $report, 'sales' => $sales, 'logistics' => $logistics, 'funnel' => $this->fullFunnelSafe()];
         // The five newer groups (Marketing, Operations, Customers, Collections, Portfolio) live in their own classes —
         // src/NewDbMkt.php … — each the PHP twin of volta-analytics-new-db/build_<prefix>.js and returning exactly the
         // structure of <prefix>_data.json. A missing class file simply leaves that tab on the committed static numbers.
@@ -105,7 +105,7 @@ final class NewDbReport
         $logistics = $this->logistics();
         $logistics['cutover'] = self::CUTOVER;
         $logistics['generatedAt'] = $generatedAt;
-        $out = ['report' => $report, 'sales' => $sales, 'logistics' => $logistics, 'funnel' => $this->fullFunnel()];
+        $out = ['report' => $report, 'sales' => $sales, 'logistics' => $logistics, 'funnel' => $this->fullFunnelSafe()];
         $onSection('core', $out, null);
 
         $groups = [
@@ -370,6 +370,20 @@ final class NewDbReport
      * plus GA4 website sessions per month read from the committed funnel_ga4_month.tsv (this server has no GA4
      * access; build_funnel.js regenerates that file from the daily GA4 extract wherever that extract exists).
      */
+    /**
+     * The funnel must never block the page: on any failure (timeout hint, DB error) the page keeps the FUNNEL_JSON
+     * baked into the committed HTML (index.php only swaps a non-null payload) and the error goes to the PHP log.
+     */
+    private function fullFunnelSafe(): ?array
+    {
+        try {
+            return $this->fullFunnel();
+        } catch (\Throwable $e) {
+            error_log('NewDbReport::fullFunnel() skipped: ' . $e->getMessage());
+            return null;
+        }
+    }
+
     private function fullFunnel(): array
     {
         // applications through YESTERDAY, like every other Daily Mail figure (statuses are still as of now)
@@ -379,21 +393,25 @@ final class NewDbReport
         // a status changed after END is taken back to the `from` of the earliest later change, an approval first
         // logged after END does not count yet
         $endTs = $through->format('Y-m-d') . ' 23:59:59';
-        $stmt = $this->pdo->prepare("SELECT DATE_FORMAT(o.created_at,'%Y-%m') m, COALESCE(rev.st_from, o.crm_order_status) st,
+        // NO correlated subqueries here (2026-09-24 incident): the first version used `l.id = (SELECT MIN(id) … WHERE
+        // entity_id = l.entity_id)` / NOT EXISTS per row — fine as a CLI literal query (1 s) but as a server-side
+        // prepared statement the optimizer re-ran them per outer row, > 10 min on the replica, every visit started
+        // another copy and reporting.volta.ge went down. Each derived table below is one GROUP BY pass over the
+        // ~10k status_change rows and is materialized once; measured 2.2 s via PREPARE/EXECUTE. The hint caps a
+        // regression at 30 s so a slow funnel can only fail, never hold a PHP worker.
+        $stmt = $this->pdo->prepare("SELECT /*+ MAX_EXECUTION_TIME(30000) */ DATE_FORMAT(o.created_at,'%Y-%m') m, COALESCE(rev.st_from, o.crm_order_status) st,
      (COALESCE(o.crm_underwriter_status_id,0)=16 AND ap.entity_id IS NULL) uw16,
      (o.crm_underwriter_status_id IS NOT NULL AND cm.entity_id IS NULL) cmt,
      CASE WHEN COALESCE(rev.st_from, o.crm_order_status) IN (6,12) THEN LEFT(TRIM(REPLACE(REPLACE(REPLACE(COALESCE(o.crm_reason,''), CHAR(10),' '), CHAR(13),' '), CHAR(9),' ')), 80) ELSE '' END reason, COUNT(*) n
    FROM orders o
-   LEFT JOIN (SELECT l.entity_id, CAST(JSON_EXTRACT(l.metadata,'$.from') AS UNSIGNED) st_from FROM crm_activity_log l
-              WHERE l.action='installment.status_change' AND l.created_at > :e1
-                AND l.id = (SELECT MIN(l2.id) FROM crm_activity_log l2 WHERE l2.entity_id=l.entity_id AND l2.action='installment.status_change' AND l2.created_at > :e2)) rev ON rev.entity_id=o.id
-   LEFT JOIN (SELECT DISTINCT a.entity_id FROM crm_activity_log a WHERE a.action='installment.status_change' AND JSON_EXTRACT(a.metadata,'$.to')=16 AND a.created_at > :e3
-                AND NOT EXISTS (SELECT 1 FROM crm_activity_log b WHERE b.entity_id=a.entity_id AND b.action='installment.status_change' AND JSON_EXTRACT(b.metadata,'$.to')=16 AND b.created_at <= :e4)) ap ON ap.entity_id=o.id
-   LEFT JOIN (SELECT DISTINCT a.entity_id FROM crm_activity_log a WHERE a.action='installment.status_change' AND JSON_EXTRACT(a.metadata,'$.to')=8 AND a.created_at > :e5
-                AND NOT EXISTS (SELECT 1 FROM crm_activity_log b WHERE b.entity_id=a.entity_id AND b.action='installment.status_change' AND JSON_EXTRACT(b.metadata,'$.to')=8 AND b.created_at <= :e6)) cm ON cm.entity_id=o.id
+   LEFT JOIN (SELECT f.entity_id, CAST(JSON_EXTRACT(l.metadata,'$.from') AS UNSIGNED) st_from
+              FROM (SELECT entity_id, MIN(id) mid FROM crm_activity_log WHERE action='installment.status_change' AND created_at > :e1 GROUP BY entity_id) f
+              JOIN crm_activity_log l ON l.id = f.mid) rev ON rev.entity_id=o.id
+   LEFT JOIN (SELECT entity_id FROM crm_activity_log WHERE action='installment.status_change' AND JSON_EXTRACT(metadata,'$.to')=16 GROUP BY entity_id HAVING MIN(created_at) > :e2) ap ON ap.entity_id=o.id
+   LEFT JOIN (SELECT entity_id FROM crm_activity_log WHERE action='installment.status_change' AND JSON_EXTRACT(metadata,'$.to')=8 GROUP BY entity_id HAVING MIN(created_at) > :e3) cm ON cm.entity_id=o.id
    WHERE o.created_at >= :mstart AND DATE(o.created_at) <= :today
    GROUP BY m, st, uw16, cmt, reason ORDER BY m, st, uw16, cmt, reason");
-        $stmt->execute(['mstart' => self::FUNNEL_MONTH_START . '-01', 'today' => $through->format('Y-m-d'), 'e1' => $endTs, 'e2' => $endTs, 'e3' => $endTs, 'e4' => $endTs, 'e5' => $endTs, 'e6' => $endTs]);
+        $stmt->execute(['mstart' => self::FUNNEL_MONTH_START . '-01', 'today' => $through->format('Y-m-d'), 'e1' => $endTs, 'e2' => $endTs, 'e3' => $endTs]);
         $rows = $stmt->fetchAll();
 
         $lastMonth = self::FUNNEL_MONTH_START;
