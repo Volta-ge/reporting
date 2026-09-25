@@ -29,6 +29,7 @@ env = dict(os.environ, PYTHONIOENCODING='utf-8')
 log('exporting TPS -> SQLite (~5 min)')
 subprocess.run([PY, os.path.join(TOOLS, 'export_sqlite.py'), volta, os.path.join(BASE, 'oris.sqlite')], check=True, env=env)
 log('aggregating'); subprocess.run([PY, os.path.join(TOOLS, 'build_data.py')], check=True, env=env)
+log('computing statements (Python engine)'); subprocess.run([PY, os.path.join(TOOLS, 'statements_engine.py')], check=True, env=env)
 # RS.ge <-> Oris waybill reconciliation moved to the RS_New DB artifact (2026-09-10) -
 # fetch_rs_waybills.py / build_waybills.py stay in this folder (their Oris-side join logic is
 # reused there) but are no longer run as part of this refresh.

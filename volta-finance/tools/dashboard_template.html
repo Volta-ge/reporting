@@ -228,6 +228,7 @@ footer{max-width:1380px;margin:0 auto;padding:0 28px 40px;color:var(--faint);fon
 const D = __DATA__;
 const BUDGET = __BUDGET__;   // 2026 P&L/BS budget, extracted from the finance team's Excel model (null if not built)
 const MAPPING = __MAPPING__; // Oris account -> CF category reference, from the finance team's own tagging (null if not built)
+const STMT = __STMT__;       // every P&L/BS/CF actual, precomputed by tools/statements_engine.py (null if not built - see PL_ACTUALS/BS_ACTUALS/LIVE_CF_ACTUALS fallback below)
 const M = D.months, NM = M.length;
 const years = [...new Set(M.map(m=>m.slice(0,4)))];
 const state = { year: years[years.length-1], month: null, tab: 'ov', lang: 'ka', open: new Set(), arLedger: '1 4 10', arQ: '', arN: 100, compactTabs: new Set(), theme: null, exOpenCell: new Map(), drillN: 40, drillSort: 'date', mpQ: '', mpN: 150, mpCat: '', mpSubcat: '', mpSubsub: '', mpInout: '', mpStatus: '', mpStmt: '', mpPl: '', mpBs: '', mpCf: '' };
@@ -1076,52 +1077,14 @@ const OPX_SAL=['7 4 10','7 4 15','7 4 50'];
 /* "Office Expenses" (95) = every other 7 4 account (general admin: household, communication, bank fees, services by
    individuals, ...) - a complement, so nothing in Opex is left without a budget line. */
 const OPX_EXPL7=[...OPX_DEL.filter(c=>c!=='7 3'),'7 4 90 49','7 4 20',...OPX_SYS,...OPX_UTIL,...OPX_MKT,'7 4 90 44','7 4 55','7 4 18',...OPX_SAL];
-const PL_ACTUALS=(()=>{
-  const incA=c=>j=>{ const v=S(stats(j,j),c); return v.c-v.d; };
-  const expA=c=>j=>{ const v=S(stats(j,j),c); return v.d-v.c; };
-  const sumA=(...fns)=>j=>fns.reduce((s,f)=>s+f(j),0);
-  const rev79=sumA(incA('6 1 10'),incA('6 1 20'));
-  const cogs81=sumA(expA('7 2'),expA('7 1'));
-  const gross82=j=>rev79(j)-cogs81(j);
-  const serv84=incA('6 1 91'), pen85=incA('8 1 25'), pbs86=incA('6 1 90 1');
-  // "Other Revenue" (87) is the SUBTOTAL of 84+85+86, exactly like the budget file.
-  const oth87=sumA(serv84,pen85,pbs86);
-  /* Oris accounts with no budget line of their own are folded INTO budget lines by meaning (2026-09-21, per the user):
-       9 1 / 9 2 "extraordinary expenses" (customer-receivable write-offs on contracts of 16.01.2026)  -> Provision (102)
-       6 1 90 2 sublease income (utility cost recharged to a tenant)                                  -> Utility Cost (99), as a reduction
-       8 1 10 interest income                                                                         -> Bank Interest (113), as a reduction
-       other 8 2 (11/15/90 excl. car sale) and other 8 1 (20/30/90 excl. car sale), net                -> Unpredictable Expenses (104)
-       8 2 10 loan interest -> Investors Interest (111) / Shareholder's Interest (112) / Bank Interest (113) by lender account. */
-  const prov102=sumA(expA('9 1'),expA('9 2'));
-  const util99=j=>sumA(...OPX_UTIL.map(expA))(j)-incA('6 1 90 2')(j);
-  const misc=j=>expA('8 2')(j)-expA('8 2 10')(j)-expA('8 2 50')(j)-expA('8 2 90 1')(j)
-              +expA('8 1')(j)-expA('8 1 10')(j)-expA('8 1 25')(j)-expA('8 1 50')(j)-expA('8 1 90 1')(j);
-  const ppe110=sumA(expA('8 2 90 1'),expA('8 1 90 1')), fxexp115=expA('8 2 50'), fxinc116=expA('8 1 50');
-  const int111=intByMonth('investors'), int112=intByMonth('sh');
-  const int113=j=>intByMonth('bank')(j)+intByMonth('other')(j)+expA('8 1 10')(j);
-  const dep109=expA('7 4 55');
-  const sal92=salByMonth('sh'), sal9x=sumA(expA('7 4 10'),expA('7 4 15'),expA('7 4 50')), sal93=j=>sal9x(j)-sal92(j);
-  const del91=sumA(...OPX_DEL.map(expA)), sys98=sumA(...OPX_SYS.map(expA)), mkt100=sumA(...OPX_MKT.map(expA));
-  const off95=j=>expA('7 4')(j)-OPX_EXPL7.reduce((s0,c)=>s0+expA(c)(j),0);
-  const opexBase=j=>expA('7 3')(j)+expA('7 4')(j)-dep109(j)+prov102(j)+misc(j);
-  const opexRaw=j=>opexBase(j)-incA('6 1 90 2')(j);
-  const nonop108=sumA(ppe110,dep109,int111,int112,int113,fxexp115,fxinc116);
-  const netRaw=j=>gross82(j)-opexRaw(j)+oth87(j)-nonop108(j);
-  // Safety net: an Oris P&L account that is not classified above would break the tie to the net profit on the other tabs.
-  // Whatever is left over (0 today, checked) is carried in Unpredictable Expenses so the statement always ties.
-  const resid=j=>netRaw(j)-plLines(stats(j,j)).net;
-  const opex90=j=>opexRaw(j)+resid(j);
-  const ebitda105=j=>gross82(j)-opex90(j)+oth87(j);
-  const net118=j=>ebitda105(j)-nonop108(j);
-  return {
-    78:j=>rev79(j)*1.18, 79:rev79, 80:j=>cogs81(j)*1.18, 81:cogs81, 82:gross82,
-    84:serv84, 85:pen85, 86:pbs86, 87:oth87, 90:opex90, 91:del91,
-    92:sal92, 93:sal93, 94:expA('7 4 90 49'), 95:off95, 96:expA('7 4 20'),
-    98:sys98,
-    99:util99, 100:mkt100, 102:prov102, 103:expA('7 4 90 44'), 104:j=>expA('7 4 18')(j)+misc(j)+resid(j), 105:ebitda105,
-    108:nonop108, 109:dep109, 110:ppe110, 111:int111, 112:int112, 113:int113, 115:fxexp115, 116:fxinc116, 118:net118,
-  };
-})();
+/* P&L/BS/CF actuals (2026-09-25): the aggregate NUMBERS now come precomputed from tools/statements_engine.py
+   (STMT.pl/bs/cf, injected server-side - see build_dashboard.py) instead of being derived here in JS. This
+   removes the second, JS-only copy of the classification/formula logic that used to live in this file
+   alongside the Python one (build_data.py's CF_CAT_CODES) - one engine, one set of numbers, validated
+   cell-for-cell (891/891) against what this block used to compute before the swap. The drill-down machinery
+   below (AVPL_SPEC/AVBS_CODES/CFS, intRows()/salRows()/byCat) is UNCHANGED and still runs client-side - it
+   only lists which postings back a number for display, it does not compute the number itself any more. */
+const PL_ACTUALS=Object.fromEntries(Object.keys(STMT.pl).map(k=>[k, j=>STMT.pl[k][j]]));
 /* P&L row layout shared by PL Budget / Profit & Loss Statement / PL Actual vs Budget: the budget file's own rows, with
    its structure applied - Revenue From Services / Penalty / Sales of Portfolio Bad Debts are the (indented) components of
    the "Other Revenue" subtotal, and the four margin rows the Excel model has (Gross Profit, Gross Revenue, EBITDA, Net
@@ -1164,26 +1127,7 @@ function renderAVPL(){
 const LOAN_BANK=['4 1 90 10611','4 1 90 3746','4 1 90 4693','4 1 90 5506','4 1 90 7426'];
 const LOAN_ZUK=['4 1 90 8018'];
 const LOAN_SH=['4 1 90 11677','4 1 90 11998','4 1 90 12284','4 1 90 1318','4 1 90 1684','4 1 90 2426','4 1 90 5959','4 1 90 8019'];
-const BS_ACTUALS=(()=>{
-  // Equity split (2026-09-21): "Profit & Loss" = this year's cumulative net profit straight from the P&L, and
-  // "Retained Earning" = total equity - that. The raw Oris split (5 3 10 vs 5 3 30) depended on when the bookkeeper
-  // happened to transfer the month's profit to retained earnings (done monthly until July, not for Aug/Sep), so the
-  // two rows jumped around while total equity was right; this way the BS ties to the P&L in every month.
-  const ytdNet=j=>{ let x=0; for(let i=0;i<=j;i++) x+=PL_ACTUALS[118](i); return x; };
-  const bv=(c,j)=>bsVal(stats(0,j),c);
-  const sumBv=(...codes)=>j=>codes.reduce((s,c)=>s+bv(c,j),0);
-  return {
-    124:j=>bsVal(stats(0,j),'1'), 125:j=>cashClose(stats(0,j)), 126:j=>bv('1 4 10',j), 128:j=>AVBS_CODES[128].reduce((s,c)=>s+bv(c,j),0),
-    129:j=>bsVal(stats(0,j),'2'), 130:j=>bv('2 1 60',j), 131:j=>bv('2 1 80',j), 132:j=>bv('2 1 90',j), 133:j=>bv('2 5',j),
-    134:sumBv('2 2','2 6'), 135:j=>bsVal(stats(0,j),'1')+bsVal(stats(0,j),'2'),
-    137:j=>bsVal(stats(0,j),'3'), 138:j=>bv('3 1 10',j), 139:j=>bv('3 1 20',j), 140:sumBv('3 1 30','3 1 32'),
-    141:j=>bv('3 3 10',j), 142:j=>bv('3 3 20',j), 143:j=>bv('3 3 30',j), 144:j=>bv('3 3 40',j),
-    146:j=>bv('3 3 80',j), 147:j=>bv('3 4 10',j), 148:j=>bsVal(stats(0,j),'4'),
-    149:sumBv(...LOAN_SH), 150:sumBv(...LOAN_BANK), 151:sumBv(...LOAN_ZUK),
-    152:j=>bsVal(stats(0,j),'3')+bsVal(stats(0,j),'4'), 154:j=>bsVal(stats(0,j),'5'),
-    155:j=>bsVal(stats(0,j),'5')-ytdNet(j), 156:ytdNet, 157:j=>bsVal(stats(0,j),'3')+bsVal(stats(0,j),'4')+bsVal(stats(0,j),'5'),
-  };
-})();
+const BS_ACTUALS=Object.fromEntries(Object.keys(STMT.bs).map(k=>[k, j=>STMT.bs[k][j]]));
 function renderAVBS(){
   const t=T(); const el=document.getElementById('p-avbs');
   if(!BUDGET){ el.innerHTML=periodHead(t.avTitleBS,'')+`<p class="note">${t.budgetMissing}</p>`; return; }
@@ -1217,53 +1161,7 @@ function renderAVBS(){
 const byCat=(()=>{ const m={}; for(const [cat,mo,i,o] of (D.cf_cat||[])) (m[cat]||(m[cat]={}))[mo]={i,o}; return m; })();
 const catIn=c=>j=>(byCat[c]&&byCat[c][j]?byCat[c][j].i:0), catOut=c=>j=>(byCat[c]&&byCat[c][j]?byCat[c][j].o:0);
 const catInSum=(...cs)=>j=>cs.reduce((s,c)=>s+catIn(c)(j),0), catOutSum=(...cs)=>j=>cs.reduce((s,c)=>s+catOut(c)(j),0);
-const LIVE_CF_ACTUALS=(()=>{
-  const cashAt=j=>cashClose(stats(0,j)); const openingCash=S(stats(0,0),'1 1').o+S(stats(0,0),'1 2').o;
-  const startAt=j=>j===0?openingCash:cashAt(j-1);
-  // Finhub (loan_to_finhub) is reported ONCE, netted (out - in) in the 'Loan to Finhub' line and inside
-  // Financing out, exactly like the finance team's model - its inflows are not a Financing inflow and
-  // not an Operating inflow either. (Until 2026-09-21 the account was also inside loan_principal_all,
-  // which double-counted it - Jul 2026 by 50,000 - see build_data.py.)
-  const finhubNet=j=>catOut('loan_to_finhub')(j)-catIn('loan_to_finhub')(j);
-  const finIn=catInSum('loan_principal_all');
-  const finOut=j=>catOut('loan_principal_all')(j)+finhubNet(j)+catOut('dividend')(j);
-  // Investing: real activity, not the zero this project assumed in earlier rounds (that assumption
-  // came from a narrower check that didn't consider capex booked through the ordinary supplier-
-  // payable ledger, which is how it turns out Oris actually records it here).
-  const invIn=catInSum('other_sales');
-  const invOut=catOutSum('capex_sysdev','capex_truck','capex_office');
-  const finNet=j=>finIn(j)-finOut(j), invNet=j=>invIn(j)-invOut(j);
-  // Operating Cash In/Out (27/33): every non-cash-to-cash D.cf flow that isn't Financing or
-  // Investing - computed as the total (all real external flows, '1 6 35' excluded same as the
-  // plain CF tab) minus the two sections above, so it's exact by construction even though most of
-  // Operating's own revenue-side detail (28-32) has no isolable per-category actual.
-  const totByMonth={};
-  for(const [,ctr,m,i,o] of D.cf){ if(isCashCtr(ctr)) continue;
-    const e=totByMonth[m]||(totByMonth[m]={i:0,o:0}); e.i+=i; e.o+=o; }
-  const totIn=j=>(totByMonth[j]?totByMonth[j].i:0);
-  const opNet=j=>(cashAt(j)-startAt(j))-finNet(j)-invNet(j);
-  const opIn=j=>totIn(j)-finIn(j)-catIn('loan_to_finhub')(j)-invIn(j);
-  // opOut derived from opIn-opNet (not summed independently) so "Cash In - Cash Out" always ties
-  // exactly to the balance-verified Operating net, the same way opNet itself does - the raw D.cf
-  // sum for opOut carries the same few-thousand-₾ FX-timing noise already disclosed for the
-  // "Transfers" column elsewhere (each transfer's two legs convert at slightly different daily
-  // rates), which would otherwise show up as a small, unexplained Cash In/Cash Out mismatch here.
-  const opOut=j=>opIn(j)-opNet(j);
-  const shRepay=catOutSum('loan_sh_repay');
-  const bankRepay=j=>catOut('loan_principal_all')(j)-shRepay(j);
-  return {
-    26:opNet, 27:opIn, 33:opOut,
-    52:invNet, 53:invIn, 55:invIn, 57:invOut, 58:catOutSum('capex_sysdev'), 59:catOutSum('capex_office'), 60:catOutSum('capex_truck'),
-    34:catOutSum('cogs'), 35:catOutSum('salary_sh'), 36:catOutSum('salary_other'),
-    37:catOutSum('management_fee'), 38:catOutSum('delivery'), 39:catOutSum('marketing'),
-    40:catOutSum('marketing_salaries'), 41:catOutSum('office_rent'), 42:catOutSum('office_exp'),
-    44:catOutSum('utility'), 46:catOutSum('interest_investors'), 47:catOutSum('interest_sh'), 48:catOutSum('interest_bank'),
-    50:catOutSum('corporate_party'),
-    61:finNet, 62:finIn, 63:catInSum('loan_bog'), 64:catInSum('loan_sh_draw'), 65:catInSum('loan_zuk_draw'),
-    67:finOut, 68:catOutSum('dividend'), 69:finhubNet, 70:shRepay, 71:bankRepay,
-    72:j=>cashAt(j)-startAt(j), 73:startAt, 74:cashAt,
-  };
-})();
+const LIVE_CF_ACTUALS=Object.fromEntries(Object.keys(STMT.cf).map(k=>[k, j=>STMT.cf[k][j]]));
 function liveCfActual(row){ const fn=LIVE_CF_ACTUALS[row]; return fn?j=>fn(j):undefined; }
 function renderAVCF(){
   const t=T(); const el=document.getElementById('p-avcf');
