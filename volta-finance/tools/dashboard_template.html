@@ -229,6 +229,7 @@ const D = __DATA__;
 const BUDGET = __BUDGET__;   // 2026 P&L/BS budget, extracted from the finance team's Excel model (null if not built)
 const MAPPING = __MAPPING__; // Oris account -> CF category reference, from the finance team's own tagging (null if not built)
 const STMT = __STMT__;       // every P&L/BS/CF actual, precomputed by tools/statements_engine.py (null if not built - see PL_ACTUALS/BS_ACTUALS/LIVE_CF_ACTUALS fallback below)
+const MPCLASS = __MPCLASS__; // per-account {pl,bs,cf} classification, precomputed by tools/build_mapping_class.py from mapping_table.py's classify()+apply_overrides() - single source of truth with the statements above, override-aware (null if not built - mpLinesOf() below falls back to its own live JS computation)
 const M = D.months, NM = M.length;
 const years = [...new Set(M.map(m=>m.slice(0,4)))];
 const state = { year: years[years.length-1], month: null, tab: 'ov', lang: 'ka', open: new Set(), arLedger: '1 4 10', arQ: '', arN: 100, compactTabs: new Set(), theme: null, exOpenCell: new Map(), drillN: 40, drillSort: 'date', mpQ: '', mpN: 150, mpCat: '', mpSubcat: '', mpSubsub: '', mpInout: '', mpStatus: '', mpStmt: '', mpPl: '', mpBs: '', mpCf: '' };
@@ -834,6 +835,7 @@ function mpIndex(){
 }
 function mpFind(map,code){ let c=code; while(c){ if(map.has(c)) return map.get(c); const i=c.lastIndexOf(' '); c=i<0?'':c.slice(0,i); } return null; }
 function mpLinesOf(r){
+  if(MPCLASS && MPCLASS[r.code]) return MPCLASS[r.code];
   const ix=mpIndex(); const cls=r.code[0]; const o={pl:[],bs:[],cf:[]};
   if('6789'.includes(cls)){ const v=mpFind(ix.pl,r.code); if(v!==null) o.pl.push(v); }
   if('12345'.includes(cls) && !isCash(r.code)){ const v=mpFind(ix.bs,r.code); if(v!==null) o.bs.push(v); }

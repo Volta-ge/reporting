@@ -1,19 +1,23 @@
 r"""Phase 2 of the mapping-consolidation project (2026-09-25 plan, see
 memory/volta_oris_financials_artifact.md): computes every P&L / Balance Sheet / Cash Flow actual
-number from mapping_table.csv + dash_data.json, in ONE Python module - a faithful port of
+number from mapping_table.py + dash_data.json, in ONE Python module - a faithful port of
 dashboard_template.html's PL_ACTUALS / BS_ACTUALS / LIVE_CF_ACTUALS (as live 2026-09-25), which
 today only exist client-side in JS. Read-only; does not touch the live dashboard or its data files.
+
+Phase 4 (same day): every line is now OVERRIDE-AWARE via mapping_table.py's apply_overrides() -
+a hand-edit on the Google Sheet (see sync_mapping_from_sheet.py) changes the actual computed number
+here, not just the Account Mapping tab's display label.
 
 Two kinds of statement line, exactly mirroring the JS:
   - DIRECT lines: sum of (debit-credit) or (credit-debit) over an account's own postings/balance -
     computed from dash_data.json's `agg` (already Python-built by build_data.py), reproducing the
     JS stats()/S()/close()/bsVal() tree-aggregation exactly.
   - ANCHOR+COUNTERPARTY lines: value = postings through a FIXED anchor account, bucketed by what the
-    OTHER leg of the posting is classified as - covers all Cash Flow categories (reuses
-    dash_data.json's `cf`/`cf_cat`, already computed by build_data.py's CF_CAT_CODES, so no
-    reimplementation needed here) plus two PL-only splits that currently exist ONLY in JS and are
-    reimplemented here from raw WIRING: salary (92/93, anchor 7 4 10/15/50) and loan interest
-    (111/112/113, anchor 8 2 10).
+    OTHER leg of the posting is classified as - covers all Cash Flow categories (recomputed here from
+    raw WIRING against the override-aware `cat_multi`, NOT reused from dash_data.json's precomputed
+    `cf_cat`, so a Sheet reclassification changes these too - see the "Cash Flow categories" section
+    below) plus two PL-only splits that currently exist ONLY in JS and are reimplemented here from raw
+    WIRING: salary (92/93, anchor 7 4 10/15/50) and loan interest (111/112/113, anchor 8 2 10).
 """
 import json
 import os
@@ -29,7 +33,6 @@ months = d['months']
 NM = len(months)
 agg = d['agg']            # leaf code -> [m,d,c, m,d,c, ...] (m=-1 = pre-YEAR opening)
 cf_rows = d['cf']         # [cash4, counter3, m, in, out]
-cf_cat_rows = d.get('cf_cat', [])  # [category, m, in, out]
 
 con = sqlite3.connect(os.path.join(BASE, 'oris.sqlite'))
 
@@ -137,10 +140,76 @@ def bv(code, j):
     return x if code[0] in ('1', '2') else -x
 
 
-# ---------- Cash Flow: reuse build_data.py's own CF_CAT_CODES computation (already Python, no reimplementation) ----------
-byCat = {}
-for cat, m, i, o in cf_cat_rows:
-    byCat.setdefault(cat, {})[m] = (i, o)
+# ---------- account universe (for the classification maps) + overrides from the Google Sheet ----------
+# Same construction as build_mapping_table.py: every account depth()-truncated code seen in a 2026
+# posting, and which of those are a cash-account's counterparty (for the CF "op" fallback / Mapping tab).
+acc = d['acc']
+posting_codes = set()
+cash_counter_accounts = set()
+CASH = ('1 1', '1 2')
+
+
+def is_cash(c):
+    return c.startswith(CASH)
+
+
+for d_, k_ in con.execute("SELECT DEBET, KREDIT FROM WIRING WHERE DATE>=? AND DATE<? AND NOT (DEBET LIKE 'B%' OR KREDIT LIKE 'B%')",
+                           (YEAR + '-01-01', str(int(YEAR) + 1) + '-01-01')):
+    dd, kk = depth(d_), depth(k_)
+    posting_codes.add(dd)
+    posting_codes.add(kk)
+    dc, kc = is_cash(dd), is_cash(kk)
+    if dc and not kc and kk != '1 6 35':
+        cash_counter_accounts.add(kk)
+    if kc and not dc and dd != '1 6 35':
+        cash_counter_accounts.add(dd)
+
+children_of = {}
+for c in acc:
+    t = c.split(' ')
+    for i in range(1, len(t)):
+        children_of.setdefault(' '.join(t[:i]), []).append(c)
+
+cat_multi = {k: list(v) for k, v in d.get('cat_multi', {}).items()}  # mutable copy - overrides applied below
+sh_payroll = list(mt.SH_PAYROLL)
+sh_consult = list(mt.SH_CONSULT)
+pl_map, bs_map = mt.build_maps(posting_codes, children_of)
+_overrides = mt.load_overrides(BASE)
+mt.apply_overrides(pl_map, bs_map, cat_multi, sh_payroll, sh_consult, _overrides)
+
+
+def pl_bucket_sums(rows_wanted, j):
+    """Sums expA(code,j) for every leaf account whose (override-aware) pl_map resolution is one of
+    `rows_wanted` - the general mechanism that replaces the old hardcoded OPX_DEL/OPX_SYS/... lists,
+    so a Sheet override that moves an account between these lines actually changes the computed
+    number, not just the Account Mapping tab's display."""
+    out = {r: 0.0 for r in rows_wanted}
+    want = set(rows_wanted)
+    for code in posting_codes:
+        if code[0] not in '789':
+            continue
+        row = mt.mp_find(pl_map, code)
+        if row in want:
+            out[row] += expA(code, j)
+    return out
+
+
+PL_BUCKET_ROWS = [91, 94, 95, 96, 98, 100, 102, 103, 104, 109, 110, 115, 116]
+
+
+# ---------- Cash Flow categories: recomputed from raw WIRING + the (override-aware) cat_multi above,
+# not from dash_data.json's precomputed cf_cat - so a Sheet reclassification changes these too. Exact
+# port of build_data.py's own cf_cat accumulation (same skip-closing / FX-conversion rules already
+# applied to this connection above for the salary/interest scan). ----------
+_cf_cat_acc = {}
+
+
+def _cf_cat_add(cat, m, dir_, money):
+    e = _cf_cat_acc.setdefault(cat, {}).setdefault(m, [0.0, 0.0])
+    e[0 if dir_ == 'in' else 1] += money
+
+
+byCat = {}  # filled after the WIRING scan below
 
 
 def catIn(cat, j):
@@ -185,7 +254,6 @@ def cash_close(j):
 
 # ---------- anchor+counterparty splits: salary (92/93) and loan interest (111/112/113) ----------
 # Rebuilt from raw WIRING (not in dash_data.json's per-account `agg`, which loses the counterparty).
-cat_multi = d.get('cat_multi', {})
 SAL_ANCHORS = mt.OPX_SAL  # ['7 4 10','7 4 15','7 4 50']
 
 sal_sh = [0.0] * NM
@@ -237,7 +305,7 @@ for date, dd_acc, kk_acc, raw_money, mon in con.execute(
     if is_sal_anchor(dp) or is_sal_anchor(kp):
         acct, ctr, sg = (dp, kp, 1) if is_sal_anchor(dp) else (kp, dp, -1)
         anchor = which_sal_anchor(acct)
-        sh = (ctr in mt.SH_PAYROLL and anchor == '7 4 10') or (ctr in mt.SH_CONSULT and anchor == '7 4 50')
+        sh = (ctr in sh_payroll and anchor == '7 4 10') or (ctr in sh_consult and anchor == '7 4 50')
         (sal_sh if sh else sal_other)[mm] += sg * money
     if starts_with(dp, '8 2 10') or starts_with(kp, '8 2 10'):
         ctr, sg = (kp, 1) if starts_with(dp, '8 2 10') else (dp, -1)
@@ -248,6 +316,19 @@ for date, dd_acc, kk_acc, raw_money, mon in con.execute(
             int_sh[mm] += sg * money
         else:
             int_bank_other[mm] += sg * money
+    # cf_cat: cash-side leg's counter-account classified by (override-aware) cat_multi - exact port of
+    # build_data.py's own cf_cat accumulation.
+    dc, kc = is_cash(dp), is_cash(kp)
+    if dc and not kc and kp != '1 6 35':
+        for cat in cat_multi.get(kp, ()):
+            _cf_cat_add(cat, mm, 'in', money)
+    if kc and not dc and dp != '1 6 35':
+        for cat in cat_multi.get(dp, ()):
+            _cf_cat_add(cat, mm, 'out', money)
+
+
+for _cat, _by_m in _cf_cat_acc.items():
+    byCat[_cat] = {_m: tuple(_v) for _m, _v in _by_m.items()}
 
 
 # ---------- assemble every row, 0..NM-1 ----------
@@ -260,24 +341,44 @@ def build():
     pen85 = [incA('8 1 25', j) for j in idx]
     pbs86 = [incA('6 1 90 1', j) for j in idx]
     oth87 = [serv84[j] + pen85[j] + pbs86[j] for j in idx]
-    prov102 = [expA('9 1', j) + expA('9 2', j) for j in idx]
+    # every leaf account bucketed once (via the override-aware pl_map) into whichever of these rows it
+    # resolves to - replaces the old hardcoded OPX_DEL/OPX_SYS/OPX_MKT/OPX_EXPL7-complement/MISC_CODES
+    # sums, so a Sheet reclassification actually moves the number, not just the Mapping tab label.
+    buckets = [pl_bucket_sums(PL_BUCKET_ROWS, j) for j in idx]
+    del91 = [buckets[j][91] for j in idx]
+    sys98 = [buckets[j][98] for j in idx]
+    mkt100 = [buckets[j][100] for j in idx]
+    off95 = [buckets[j][95] for j in idx]
+    row94 = [buckets[j][94] for j in idx]
+    row96 = [buckets[j][96] for j in idx]
+    row103 = [buckets[j][103] for j in idx]
+    row109 = [buckets[j][109] for j in idx]
+    row110 = [buckets[j][110] for j in idx]
+    row115 = [buckets[j][115] for j in idx]
+    row116 = [buckets[j][116] for j in idx]
+    row104_bucket = [buckets[j][104] for j in idx]
+    prov102 = [buckets[j][102] for j in idx]
+    # row 99 (Utility) keeps its special sign-mixed case: sublease INCOME (6 1 90 2, class 6, credit-
+    # normal) reduces this expense row - not a plain bucket member, since bucketing assumes uniform
+    # (debit-normal) sign for every account in a row.
     util99 = [sum(expA(c, j) for c in mt.OPX_UTIL) - incA('6 1 90 2', j) for j in idx]
-    misc = [expA('8 2', j) - expA('8 2 10', j) - expA('8 2 50', j) - expA('8 2 90 1', j)
-             + expA('8 1', j) - expA('8 1 10', j) - expA('8 1 25', j) - expA('8 1 50', j) - expA('8 1 90 1', j) for j in idx]
-    ppe110 = [expA('8 2 90 1', j) + expA('8 1 90 1', j) for j in idx]
-    fxexp115 = [expA('8 2 50', j) for j in idx]
-    fxinc116 = [expA('8 1 50', j) for j in idx]
-    dep109 = [expA('7 4 55', j) for j in idx]
+    ppe110 = row110
+    fxexp115 = row115
+    fxinc116 = row116
+    dep109 = row109
     int111, int112 = int_investors, int_sh
-    int113 = [int_bank_other[j] + expA('8 1 10', j) for j in idx]
+    int113 = [int_bank_other[j] + expA('8 1 10', j) for j in idx]  # '8 1 10' interest income also stays special (see mapping_table.py's PL_FALLBACK)
     sal92, sal93 = sal_sh, sal_other
-    del91 = [sum(expA(c, j) for c in mt.OPX_DEL) for j in idx]
-    sys98 = [sum(expA(c, j) for c in mt.OPX_SYS) for j in idx]
-    mkt100 = [sum(expA(c, j) for c in mt.OPX_MKT) for j in idx]
-    opx_expl7_codes = mt.OPX_EXPL7
-    off95 = [expA('7 4', j) - sum(expA(c, j) for c in opx_expl7_codes) for j in idx]
-    opex_base = [expA('7 3', j) + expA('7 4', j) - dep109[j] + prov102[j] + misc[j] for j in idx]
-    opex_raw = [opex_base[j] - incA('6 1 90 2', j) for j in idx]
+    # Opex total = sum of every Opex-member row bucket (91/94/95/96/98/99/100/102/103/104) PLUS
+    # salary (92+93) - salary is NOT a pl_map bucket at all (the whole 7 4 10/7 4 50 anchor subtrees
+    # resolve to the STRING 'sal' via PL_FALLBACK, deliberately excluded from PL_BUCKET_ROWS, since
+    # their real split between shareholder/other-staff salary comes from the counterparty anchor-scan,
+    # not from mp_find) - each account resolves to EXACTLY one of these via pl_map (or the anchor
+    # scan for salary/interest), so this reconstructs "class 7 3 + class 7 4 (minus depreciation,
+    # moved to non-op) + class 9 provision + class 8 1/8 2 leftover" with no double-count, and stays
+    # correct under ANY Sheet override since it's the same bucketing the individual rows use (util99
+    # already nets the 6 1 90 2 sublease income once, inside itself).
+    opex_raw = [del91[j] + row94[j] + off95[j] + row96[j] + sys98[j] + util99[j] + mkt100[j] + prov102[j] + row103[j] + row104_bucket[j] + sal92[j] + sal93[j] for j in idx]
     nonop108 = [ppe110[j] + dep109[j] + int111[j] + int112[j] + int113[j] + fxexp115[j] + fxinc116[j] for j in idx]
     net_raw = [gross82[j] - opex_raw[j] + oth87[j] - nonop108[j] for j in idx]
     # "true" net profit computed directly from the 6/7/8/9 classes (== JS's plLines().net), for the residual safety net
@@ -302,9 +403,9 @@ def build():
     pl = {
         78: [rev79[j] * 1.18 for j in idx], 79: rev79, 80: [cogs81[j] * 1.18 for j in idx], 81: cogs81, 82: gross82,
         84: serv84, 85: pen85, 86: pbs86, 87: oth87, 90: opex90, 91: del91,
-        92: sal92, 93: sal93, 94: [expA('7 4 90 49', j) for j in idx], 95: off95, 96: [expA('7 4 20', j) for j in idx],
-        98: sys98, 99: util99, 100: mkt100, 102: prov102, 103: [expA('7 4 90 44', j) for j in idx],
-        104: [expA('7 4 18', j) + misc[j] + resid[j] for j in idx], 105: ebitda105,
+        92: sal92, 93: sal93, 94: row94, 95: off95, 96: row96,
+        98: sys98, 99: util99, 100: mkt100, 102: prov102, 103: row103,
+        104: [row104_bucket[j] + resid[j] for j in idx], 105: ebitda105,
         108: nonop108, 109: dep109, 110: ppe110, 111: int111, 112: int112, 113: int113,
         115: fxexp115, 116: fxinc116, 118: net118,
     }

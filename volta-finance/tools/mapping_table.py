@@ -110,6 +110,83 @@ def build_maps(posting_codes, children_of):
     return pl_map, bs_map
 
 
+def load_overrides(base):
+    """Reads sheet_overrides.json (written by sync_mapping_from_sheet.py from the live Google Sheet -
+    2026-09-25 plan). Empty dict if the file doesn't exist yet (sheet never synced) - overrides are
+    always OPTIONAL, everything works with the built-in classification alone."""
+    import json
+    import os
+    p = os.path.join(base, 'sheet_overrides.json')
+    if not os.path.exists(p):
+        return {}
+    return json.load(open(p, encoding='utf-8'))
+
+
+CF_FOR_PL = {111: 'interest_investors', 112: 'interest_sh', 113: 'interest_bank'}
+
+# The 5 anchor accounts (see SAL_ANCHORS/'8 2 10'/'8 1 10') get their OWN 92/93/111-113-flavoured pl
+# value from a STATIC pl_map/PL_FALLBACK entry (e.g. '8 1 10'->113), not from cat_multi/SH_PAYROLL/
+# SH_CONSULT membership - that membership mechanism classifies the COUNTERPARTY on the other side of
+# a posting THROUGH the anchor, never the anchor's own code. An override on the anchor's own sheet
+# row must not synthesize a cat_multi tag for it (see apply_overrides()).
+ANCHOR_CODES = {'7 4 10', '7 4 15', '7 4 50', '8 2 10', '8 1 10'}
+
+# classify() derives these 3 cf markers itself, unconditionally, from is_cash()/cash_counter_accounts/
+# the literal '1 6 35' code - they are never genuine cat_multi members. build_mapping_sheet.py still
+# renders them as a cf_line label (so the sheet shows *something* for a cash/transfer account), and
+# sync_mapping_from_sheet.py parses that label straight back to one of these - apply_overrides() must
+# drop them before writing cat_multi, or classify() ends up appending the SAME marker twice.
+DERIVED_CF = {'cash', 'op', 'xfer'}
+
+
+def apply_overrides(pl_map, bs_map, cat_multi, sh_payroll, sh_consult, overrides):
+    """Mutates pl_map/bs_map/cat_multi/sh_payroll/sh_consult IN PLACE so every downstream consumer
+    (build_maps()'s own callers, statements_engine.py) sees the same, already-overridden picture -
+    single point of truth for "what does the sheet say", applied once per run.
+
+    Special PL values 92/93 (salary) and 111/112/113 (interest) are never stored in pl_map - in the
+    built-in classification they come from SH_PAYROLL/SH_CONSULT membership and cat_multi tags
+    respectively (see classify()), so an override touching those moves the account between those
+    lists/tags instead of writing a pl_map entry."""
+    for code, ov in overrides.items():
+        pl_vals = ov.get('pl', [])
+        # --- salary membership (92 = Salary of Shareholders, 93 = Salary of Other Staff/default) ---
+        if 92 in pl_vals:
+            lst = sh_payroll if code.startswith('3 1 32 ') else sh_consult
+            if code not in lst:
+                lst.append(code)
+        else:
+            if code in sh_payroll:
+                sh_payroll.remove(code)
+            if code in sh_consult:
+                sh_consult.remove(code)
+        # --- interest membership (111/112/113 -> a cat_multi tag, same mechanism as any other CF category) ---
+        # skipped for the anchor's own code - see ANCHOR_CODES.
+        want_int = {CF_FOR_PL[v] for v in pl_vals if v in CF_FOR_PL} if code not in ANCHOR_CODES else set()
+        # --- CF category override (replaces whatever categories the built-in rules gave this account) ---
+        # DERIVED_CF markers are stripped - classify() always re-derives them itself (see DERIVED_CF).
+        cf_final = (set(ov.get('cf', [])) - DERIVED_CF) | want_int
+        if cf_final or code in cat_multi:
+            cat_multi[code] = sorted(cf_final)
+        # --- plain P&L row override (everything except the salary/interest special values) ---
+        # NOTE: when pl_vals is ONLY 92/93/111-113 (no plain row), pl_map[code] is left AS-IS, never
+        # deleted - a numeric 92/93/111-113 value can be either (a) genuine membership (SH_PAYROLL/
+        # SH_CONSULT/cat_multi, for class 3/4 leaf accounts that classify() never even looks up in
+        # pl_map, since class 3/4 isn't in '6789' - deleting is a no-op there) or (b) a legitimate
+        # STATIC pl_map/PL_FALLBACK value for the anchor account itself (e.g. '8 1 10'->113, '7 4 15'
+        # ->93, used when the anchor's OWN code is the posting leg, not a counterparty) - deleting it
+        # in case (b) was a real bug: it stripped the anchor's fallback and let mp_find's prefix walk
+        # fall through to an unrelated ancestor (e.g. '8 1'->104), wrongly bucketing the whole anchor
+        # subtree's balance into that row.
+        plain_pl = [v for v in pl_vals if v not in (92, 93) and v not in CF_FOR_PL]
+        if plain_pl:
+            pl_map[code] = plain_pl[0]
+        # --- Balance Sheet row override ---
+        bs_vals = ov.get('bs', [])
+        if bs_vals:
+            bs_map[code] = bs_vals[0]
+
+
 def mp_find(m, code):
     c = code
     while c:
@@ -120,8 +197,16 @@ def mp_find(m, code):
     return None
 
 
-def classify(code, pl_map, bs_map, cash_counter_accounts, cat_multi):
-    """Faithful port of dashboard_template.html's mpLinesOf(). Returns {'pl': [...], 'bs': [...], 'cf': [...]}."""
+def classify(code, pl_map, bs_map, cash_counter_accounts, cat_multi, sh_payroll=None, sh_consult=None):
+    """Faithful port of dashboard_template.html's mpLinesOf(). Returns {'pl': [...], 'bs': [...], 'cf': [...]}.
+    sh_payroll/sh_consult default to the built-in SH_PAYROLL/SH_CONSULT constants - pass the
+    override-aware lists from apply_overrides() to make this override-aware too (used by
+    build_mapping_class.py so the Account Mapping tab's display matches statements_engine.py's
+    computation, both sourced from the same apply_overrides() call)."""
+    if sh_payroll is None:
+        sh_payroll = SH_PAYROLL
+    if sh_consult is None:
+        sh_consult = SH_CONSULT
     cls = code[0]
     pl, bs, cf = [], [], []
     if cls in '6789':
@@ -134,7 +219,7 @@ def classify(code, pl_map, bs_map, cash_counter_accounts, cat_multi):
             bs.append(v)
     if is_cash(code):
         bs.append(125)
-    if code in SH_PAYROLL or code in SH_CONSULT:
+    if code in sh_payroll or code in sh_consult:
         pl.append(92)
     elif code.startswith('3 1 32 '):
         pl.append(93)

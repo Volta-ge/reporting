@@ -12,6 +12,8 @@ mapp = os.path.join(BASE, 'mapping_data.json')
 mapping = open(mapp, encoding='utf-8').read() if os.path.exists(mapp) else 'null'
 stmtp = os.path.join(BASE, 'statements_data.json')
 stmt = open(stmtp, encoding='utf-8').read() if os.path.exists(stmtp) else 'null'
+mclsp = os.path.join(BASE, 'mapping_class.json')
+mcls = open(mclsp, encoding='utf-8').read() if os.path.exists(mclsp) else 'null'
 
 # --- Mapping tab <-> statements: the Mapping tab must show the mapping the statements really use (2026-09-21 rule) ---
 # `cat_multi` (build_data.py's CF_CAT_CODES) is what the cash-flow rows are computed from. For every account the statements use
@@ -63,7 +65,8 @@ if mapping != 'null':
 out = (tpl.replace('__DATA__', data.replace('</script', '<\\/script'))
           .replace('__BUDGET__', budget.replace('</script', '<\\/script'))
           .replace('__MAPPING__', mapping.replace('</script', '<\\/script'))
-          .replace('__STMT__', stmt.replace('</script', '<\\/script')))
+          .replace('__STMT__', stmt.replace('</script', '<\\/script'))
+          .replace('__MPCLASS__', mcls.replace('</script', '<\\/script')))
 targets = [os.path.join(REPO, 'Volta_Finance.html'), os.path.join(BASE, 'Volta_Finance.html')]
 if len(sys.argv) > 1: targets.append(sys.argv[1])
 for p in targets:
