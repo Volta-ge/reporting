@@ -2,15 +2,17 @@
 // reporting.volta.ge/for_marketing.php — "For Marketing": good-payers list, live.
 //
 // Serves for-marketing/for_marketing.html with its data consts (GOOD_PAYERS/NEVER_PURCHASED/FM_SUMMARY/
-// GENERATED_AT) recomputed from VoltaStoreDB right now (src/ForMarketingReport.php). Cached in data/ for
-// CACHE_TTL seconds, keyed by today's date, so a normal page load costs nothing; ?refresh=1 forces a
-// recompute. If config.php has no 'voltastoredb' block or the database is unreachable, the last committed
-// static build is served instead (kept fresh daily by bin/for_marketing_dump.php), with a note.
+// GENERATED_AT) recomputed from VoltaStoreDB on EVERY request (src/ForMarketingReport.php) — a plain
+// browser refresh always shows the current moment's data, per the user's 2026-09-25 standing rule (see
+// feedback_prefer_live_refresh_over_static_snapshots), not just a manual "?refresh=1". The per-day JSON
+// file in data/ is kept only as a fallback the live query can fall back to if the DB is briefly
+// unreachable — it is written every time but never trusted as "fresh enough" on its own. This computation
+// takes ~15-30s (a per-loan waterfall over the whole schedule/payments history), so every visit pays that
+// cost now — a deliberate tradeoff the user chose over caching. If config.php has no 'voltastoredb' block,
+// the last committed static build is served instead (kept fresh daily by bin/for_marketing_dump.php).
 declare(strict_types=1);
 
 namespace Volta\Funnel;
-
-const CACHE_TTL = 3600;
 
 // build() now loads the full customers table, every order (not just customer_id-linked ones),
 // order_items, addresses and volta_application_data (the 2026-09-22 PID-widening/guest-order work) —
@@ -18,6 +20,11 @@ const CACHE_TTL = 3600;
 // PHP's OOM kill happens before the try/catch can run) under this larger one. Matches bin/
 // for_marketing_dump.php's own 1024M.
 ini_set('memory_limit', '1024M');
+// The real per-loan waterfall takes ~15-30s (measured on this server) — now run on EVERY visit (no more
+// cache-serve, see the file's top comment), so PHP's default 30s max_execution_time is a real risk of
+// failing exactly the requests that take the longest, not a theoretical one (hit it once while testing
+// this change, 2026-09-25). Same 120s margin as index.php's live build.
+set_time_limit(120);
 
 require __DIR__ . '/../src/Database.php';
 require __DIR__ . '/../src/ForMarketingReport.php';
@@ -39,37 +46,34 @@ if (!isset($config['voltastoredb'])) {
     $today = (new \DateTimeImmutable('today'))->format('Y-m-d');
     $cacheDir = __DIR__ . '/../data';
     $cacheFile = $cacheDir . '/for_marketing_' . $today . '.json';
-    $force = isset($_GET['refresh']);
-    $cached = (!$force && is_file($cacheFile) && (time() - filemtime($cacheFile)) < CACHE_TTL)
-        ? json_decode((string) file_get_contents($cacheFile), true) : null;
-
-    if (!is_array($cached) || !isset($cached['rows'], $cached['summary'])) {
-        try {
-            $pdo = Database::connect($config['voltastoredb']);
-            $cached = (new ForMarketingReport($pdo))->build();
-            if (!is_dir($cacheDir)) {
-                @mkdir($cacheDir, 0775, true);
+    // Always recompute live — the cache file below is written every time only as an emergency fallback
+    // for the catch block (DB briefly unreachable), never read as if it were "fresh enough" to serve.
+    $cached = null;
+    try {
+        $pdo = Database::connect($config['voltastoredb']);
+        $cached = (new ForMarketingReport($pdo))->build();
+        if (!is_dir($cacheDir)) {
+            @mkdir($cacheDir, 0775, true);
+        }
+        @file_put_contents($cacheFile, json_encode($cached, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES), LOCK_EX);
+        foreach (glob($cacheDir . '/for_marketing_*.json') ?: [] as $old) {
+            if ($old !== $cacheFile) {
+                @unlink($old);
             }
-            @file_put_contents($cacheFile, json_encode($cached, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES), LOCK_EX);
-            foreach (glob($cacheDir . '/for_marketing_*.json') ?: [] as $old) {
-                if ($old !== $cacheFile) {
-                    @unlink($old);
-                }
-            }
-        } catch (\Throwable $e) {
-            $root = $e;
-            while ($root->getPrevious() !== null) {
-                $root = $root->getPrevious();
-            }
-            $why = $root === $e ? $e->getMessage() : ($e->getMessage() . ' Driver said: ' . $root->getMessage());
-            $stale = is_file($cacheFile) ? json_decode((string) file_get_contents($cacheFile), true) : null;
-            if (is_array($stale) && isset($stale['rows'])) {
-                $cached = $stale;
-                $fallbackNote = 'live refresh failed (' . $why . ') — showing the last cached numbers from ' . ($stale['generatedAt'] ?? '?');
-            } else {
-                $cached = null;
-                $fallbackNote = 'live refresh failed (' . $why . ') — showing the last committed build';
-            }
+        }
+    } catch (\Throwable $e) {
+        $root = $e;
+        while ($root->getPrevious() !== null) {
+            $root = $root->getPrevious();
+        }
+        $why = $root === $e ? $e->getMessage() : ($e->getMessage() . ' Driver said: ' . $root->getMessage());
+        $stale = is_file($cacheFile) ? json_decode((string) file_get_contents($cacheFile), true) : null;
+        if (is_array($stale) && isset($stale['rows'])) {
+            $cached = $stale;
+            $fallbackNote = 'live refresh failed (' . $why . ') — showing the last cached numbers from ' . ($stale['generatedAt'] ?? '?');
+        } else {
+            $cached = null;
+            $fallbackNote = 'live refresh failed (' . $why . ') — showing the last committed build';
         }
     }
 

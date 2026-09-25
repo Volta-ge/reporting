@@ -1,20 +1,21 @@
 <?php
 // reporting.volta.ge entry point — Volta_Analytics_New DB, live.
 //
-// The page is the static build volta-analytics-new-db/deals_amount_migration.html with its two embedded data
-// blocks (REPORT_JSON, SALES_JSON) replaced by numbers computed right now from VoltaStoreDB (src/NewDbReport.php;
-// pre-cutover history comes from the frozen old-DB extracts in the same folder). Results are cached in data/ for
-// CACHE_TTL seconds, keyed by "yesterday", so the day rolls over automatically and a normal page load costs
-// nothing; ?refresh=1 forces a recompute. If config.php has no 'voltastoredb' block or the database is
-// unreachable, the last committed static build is served instead, with a note.
+// The page is the static build volta-analytics-new-db/deals_amount_migration.html with its data blocks
+// replaced by numbers computed from VoltaStoreDB on EVERY request (src/NewDbReport.php; pre-cutover history
+// comes from the frozen old-DB extracts in the same folder) — a plain browser refresh always shows the
+// current moment's data, per the user's 2026-09-25 standing rule (see
+// feedback_prefer_live_refresh_over_static_snapshots), not just a manual "?refresh=1". The per-day JSON file
+// in data/ is kept only as a fallback the live build can fall back to if the DB is briefly unreachable — it
+// is written every time but never trusted as "fresh enough" on its own; the page still streams (core section
+// first, then the 5 slower groups) so a visit doesn't sit on a blank tab for the full ~15-20s. If
+// config.php has no 'voltastoredb' block, the last committed static build is served instead, with a note.
 //
 // The previous live old-DB (myvolta.info) streaming dashboard is kept, unchanged, as index_olddb.php
 // (restore point: git tag olddb-live-dashboard).
 declare(strict_types=1);
 
 namespace Volta\Funnel;
-
-const CACHE_TTL = 3600;
 
 require __DIR__ . '/../src/Database.php';
 require __DIR__ . '/../src/NewDbReport.php';
@@ -37,12 +38,9 @@ if (!isset($config['voltastoredb'])) {
     $end = (new \DateTimeImmutable('yesterday'))->format('Y-m-d');
     $cacheDir = __DIR__ . '/../data';
     $cacheFile = $cacheDir . '/newdb_' . $end . '.json';
-    $force = isset($_GET['refresh']);
-    $cached = (!$force && is_file($cacheFile) && (time() - filemtime($cacheFile)) < CACHE_TTL) ? json_decode((string) file_get_contents($cacheFile), true) : null;
-    // 'funnel' (Daily Mail > Full Sales Funnel, added 2026-09-23) is part of the core build: a cache written before it
-    // existed is treated as incomplete so the first load after the deploy computes it instead of serving the
-    // committed numbers for up to an hour. The key may hold NULL (fullFunnelSafe() failed or timed out) — that cache
-    // is still complete: the page keeps the committed FUNNEL_JSON and does not recompute on every visit.
+    // Always recompute live — the cache file below is written every time only as an emergency fallback for
+    // the catch block (DB briefly unreachable), never read as if it were "fresh enough" to serve.
+    $cached = null;
     $complete = static fn ($c) => is_array($c) && isset($c['report'], $c['sales']) && array_key_exists('funnel', $c) && !array_diff_key(NewDbReport::GROUPS, $c);
     if (!$complete($cached)) {
         try {

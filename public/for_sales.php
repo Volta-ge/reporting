@@ -2,15 +2,20 @@
 // reporting.volta.ge/for_sales.php — "For Sales": application pipeline, live.
 //
 // Serves for-sales/for_sales.html with its data consts (APPS/COMMITTEE/COMMITTEE_BY_MANAGER/
-// SALES_BY_MANAGER/GENERATED_AT) recomputed from VoltaStoreDB right now (src/ForSalesReport.php). Cached
-// in data/ for CACHE_TTL seconds, keyed by today's date, so a normal page load costs nothing; ?refresh=1
-// forces a recompute. If config.php has no 'voltastoredb' block or the database is unreachable, the last
-// committed static build is served instead (kept fresh daily by bin/for_sales_dump.php), with a note.
+// SALES_BY_MANAGER/GENERATED_AT) recomputed from VoltaStoreDB on EVERY request (src/ForSalesReport.php) —
+// a plain browser refresh always shows the current moment's data, per the user's 2026-09-25 standing rule
+// (see feedback_prefer_live_refresh_over_static_snapshots), not just a manual "?refresh=1". The per-day
+// JSON file in data/ is kept only as a fallback the live query can fall back to if the DB is briefly
+// unreachable — it is written every time but never trusted as "fresh enough" on its own. If config.php has
+// no 'voltastoredb' block, the last committed static build is served instead (kept fresh daily by
+// bin/for_sales_dump.php), with a note.
 declare(strict_types=1);
 
 namespace Volta\Funnel;
 
-const CACHE_TTL = 3600;
+// Normally ~1-2s, but this now runs on EVERY visit (no more cache-serve, see above) — a modest safety
+// margin against a slow moment on the DB connection, same reasoning as for_marketing.php/index.php.
+set_time_limit(60);
 
 require __DIR__ . '/../src/Database.php';
 require __DIR__ . '/../src/ForSalesReport.php';
@@ -32,37 +37,34 @@ if (!isset($config['voltastoredb'])) {
     $today = (new \DateTimeImmutable('today'))->format('Y-m-d');
     $cacheDir = __DIR__ . '/../data';
     $cacheFile = $cacheDir . '/for_sales_' . $today . '.json';
-    $force = isset($_GET['refresh']);
-    $cached = (!$force && is_file($cacheFile) && (time() - filemtime($cacheFile)) < CACHE_TTL)
-        ? json_decode((string) file_get_contents($cacheFile), true) : null;
-
-    if (!is_array($cached) || !isset($cached['apps'], $cached['committee'], $cached['committeeByManager'], $cached['salesByManager'])) {
-        try {
-            $pdo = Database::connect($config['voltastoredb']);
-            $cached = (new ForSalesReport($pdo))->build();
-            if (!is_dir($cacheDir)) {
-                @mkdir($cacheDir, 0775, true);
+    // Always recompute live — the cache file below is written every time only as an emergency fallback
+    // for the catch block (DB briefly unreachable), never read as if it were "fresh enough" to serve.
+    $cached = null;
+    try {
+        $pdo = Database::connect($config['voltastoredb']);
+        $cached = (new ForSalesReport($pdo))->build();
+        if (!is_dir($cacheDir)) {
+            @mkdir($cacheDir, 0775, true);
+        }
+        @file_put_contents($cacheFile, json_encode($cached, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES), LOCK_EX);
+        foreach (glob($cacheDir . '/for_sales_*.json') ?: [] as $old) {
+            if ($old !== $cacheFile) {
+                @unlink($old);
             }
-            @file_put_contents($cacheFile, json_encode($cached, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES), LOCK_EX);
-            foreach (glob($cacheDir . '/for_sales_*.json') ?: [] as $old) {
-                if ($old !== $cacheFile) {
-                    @unlink($old);
-                }
-            }
-        } catch (\Throwable $e) {
-            $root = $e;
-            while ($root->getPrevious() !== null) {
-                $root = $root->getPrevious();
-            }
-            $why = $root === $e ? $e->getMessage() : ($e->getMessage() . ' Driver said: ' . $root->getMessage());
-            $stale = is_file($cacheFile) ? json_decode((string) file_get_contents($cacheFile), true) : null;
-            if (is_array($stale) && isset($stale['apps'], $stale['committee'], $stale['committeeByManager'], $stale['salesByManager'])) {
-                $cached = $stale;
-                $fallbackNote = 'live refresh failed (' . $why . ') — showing the last cached numbers from ' . ($stale['generatedAt'] ?? '?');
-            } else {
-                $cached = null;
-                $fallbackNote = 'live refresh failed (' . $why . ') — showing the last committed build';
-            }
+        }
+    } catch (\Throwable $e) {
+        $root = $e;
+        while ($root->getPrevious() !== null) {
+            $root = $root->getPrevious();
+        }
+        $why = $root === $e ? $e->getMessage() : ($e->getMessage() . ' Driver said: ' . $root->getMessage());
+        $stale = is_file($cacheFile) ? json_decode((string) file_get_contents($cacheFile), true) : null;
+        if (is_array($stale) && isset($stale['apps'], $stale['committee'], $stale['committeeByManager'], $stale['salesByManager'])) {
+            $cached = $stale;
+            $fallbackNote = 'live refresh failed (' . $why . ') — showing the last cached numbers from ' . ($stale['generatedAt'] ?? '?');
+        } else {
+            $cached = null;
+            $fallbackNote = 'live refresh failed (' . $why . ') — showing the last committed build';
         }
     }
 
