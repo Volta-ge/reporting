@@ -22,7 +22,7 @@ GA4_PROPERTY_ID = "369140604"
 SA_JSON = os.path.join(CREDS_DIR, "volta-508613-05bed07fa6d8.json")
 
 START = "2026-01-01"
-END = sys.argv[1] if len(sys.argv) > 1 else (datetime.date.today() - datetime.timedelta(days=1)).isoformat()
+END = sys.argv[1] if len(sys.argv) > 1 else datetime.date.today().isoformat()
 
 OUT = os.path.dirname(os.path.abspath(__file__))
 

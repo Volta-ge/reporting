@@ -340,7 +340,7 @@ var CHANNELS_JSON = ${JSON.stringify(payload)};
   var C = CHANNELS_JSON;
   var dayLabelC = function (d) { var p = d.split('-').map(Number); return MONTH_NAMES[p[1] - 1] + ' ' + p[2]; };
   var monthLabelC = function (m) { return MONTH_NAMES[Number(m.slice(5, 7)) - 1] + ' ' + m.slice(0, 4); };
-  document.getElementById('chanBanner').innerHTML = '<b>Source:</b> Meta Marketing API (' + C.info.meta.account + ', ' + C.info.meta.currency + '), Google Ads API (' + C.info.gads.account + ', ' + C.info.gads.currency + ') and GA4 Data API (property ${GA4_PROPERTY_ID}). Day tables: last 30 days through ' + C.end + '; month tables: ' + monthLabelC(C.months[0]) + ' through the current month (MTD). Updated ' + C.generatedAt + '.';
+  document.getElementById('chanBanner').innerHTML = '<b>Source:</b> Meta Marketing API (' + C.info.meta.account + ', ' + C.info.meta.currency + '), Google Ads API (' + C.info.gads.account + ', ' + C.info.gads.currency + ') and GA4 Data API (property ${GA4_PROPERTY_ID}). Day tables: last 30 days through today (' + C.end + '); month tables: ' + monthLabelC(C.months[0]) + ' through the current month (MTD). Updated ' + C.generatedAt + '. Today\\'s column is still filling up over the course of the day, not a final total yet.';
 
   function fmtRow(v, kind) {
     if (v === null || v === undefined) return DASH;
