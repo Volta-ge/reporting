@@ -229,11 +229,23 @@ Q "SELECT DATE(l.created_at) d, JSON_EXTRACT(l.metadata,'\$.from') f, JSON_EXTRA
 
 # 3. Stock at the end of each day: applications whose LAST status-change event up to the end of D put them in status 8
 #    (at committee) or 15 (returned for clarification). Today's figure equals the live orders.crm_order_status count (verified 4/4, 7/7).
+#    REWRITTEN 2026-09-28: the original correlated self-join (ev e LEFT JOIN ev e2 ON e2.entity_id=e.entity_id AND
+#    e2.created_at>...) re-scans the WHOLE crm_activity_log per entity per day and degraded as the log grew - fine
+#    when this was written (2026-09-23/24, ~3 weeks of log), took 15+ min and counting by 2026-09-28 (~4 weeks),
+#    stalling this whole script and therefore every later step (funnel/committed TSVs never got built or pushed -
+#    that's why the Full Sales Funnel tab's Website traffic row went stale). LEAD() computes each event's "valid
+#    until" (the next event for that entity, or the far future if it's the latest) in one sorted pass - O(n log n),
+#    no self-join - then a plain range-join against the calendar. Verified byte-identical to the original on a
+#    5-9-day slice, and today's row cross-checked against a live `SELECT crm_order_status, COUNT(*) FROM orders
+#    WHERE crm_order_status IN (8,15) GROUP BY crm_order_status` (8:1, 15:11, matched once a timing gap closed).
 Q "WITH RECURSIVE cal AS (SELECT DATE('$CUTOVER') d UNION ALL SELECT d + INTERVAL 1 DAY FROM cal WHERE d < DATE('$TODAY')),
-   ev AS (SELECT id, entity_id, JSON_EXTRACT(metadata,'\$.to') t, created_at FROM crm_activity_log WHERE action='installment.status_change')
-   SELECT cal.d, e.t status, COUNT(*) n FROM cal JOIN ev e ON e.created_at < cal.d + INTERVAL 1 DAY
-   LEFT JOIN ev e2 ON e2.entity_id=e.entity_id AND e2.created_at < cal.d + INTERVAL 1 DAY AND (e2.created_at > e.created_at OR (e2.created_at=e.created_at AND e2.id>e.id))
-   WHERE e2.id IS NULL AND e.t IN (8,15) GROUP BY cal.d, e.t ORDER BY cal.d, e.t;" > "$S/ops_queue.tsv"
+   ev AS (SELECT entity_id, JSON_EXTRACT(metadata,'\$.to') t, created_at,
+            LEAD(created_at) OVER (PARTITION BY entity_id ORDER BY created_at, id) next_at
+          FROM crm_activity_log WHERE action='installment.status_change'),
+   spans AS (SELECT entity_id, t, created_at AS start_at, COALESCE(next_at, '9999-12-31') AS end_at FROM ev WHERE t IN (8,15))
+   SELECT cal.d, spans.t status, COUNT(*) n FROM cal JOIN spans
+   ON spans.start_at < cal.d + INTERVAL 1 DAY AND spans.end_at >= cal.d + INTERVAL 1 DAY
+   GROUP BY cal.d, spans.t ORDER BY cal.d, spans.t;" > "$S/ops_queue.tsv"
 
 # 4. Committee decisions per decider: every status change OUT of status 8 (at committee), by day, actor and outcome.
 #    Decider = the log's actor (crm_users.id; role 6 = Underwriter). orders.crm_underwriter_id is NOT used: the CRM also
