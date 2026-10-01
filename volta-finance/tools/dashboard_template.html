@@ -88,6 +88,8 @@ table.postings th.n,table.postings td.n{text-align:right}
 table.postings td{padding:3px 8px;border-bottom:1px solid var(--line2);white-space:nowrap;line-height:1.35;vertical-align:top}
 table.postings td.purpose{white-space:normal;width:240px;max-width:240px}
 @media (max-width:700px){ table.postings td.purpose{width:150px;max-width:150px} }
+table.postings tr.grp td{font-weight:600;background:var(--surface2);border-top:1px solid var(--line)}
+table.postings tr.subgrp td{font-weight:500;color:var(--muted);background:var(--surface);border-top:1px solid var(--line2);padding-left:18px}
 .card .cap{color:var(--muted);font-size:12px;margin-bottom:8px}
 .legend{display:flex;gap:14px;font-size:12px;color:var(--muted);margin:2px 0 6px}
 .legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px}
@@ -230,6 +232,7 @@ const BUDGET = __BUDGET__;   // 2026 P&L/BS budget, extracted from the finance t
 const MAPPING = __MAPPING__; // Oris account -> CF category reference, from the finance team's own tagging (null if not built)
 const STMT = __STMT__;       // every P&L/BS/CF actual, precomputed by tools/statements_engine.py (null if not built - see PL_ACTUALS/BS_ACTUALS/LIVE_CF_ACTUALS fallback below)
 const MPCLASS = __MPCLASS__; // per-account {pl,bs,cf} classification, precomputed by tools/build_mapping_class.py from mapping_table.py's classify()+apply_overrides() - single source of truth with the statements above, override-aware (null if not built - mpLinesOf() below falls back to its own live JS computation)
+const FSMAP = __FSMAP__;     // {code:{label,name,source}} - the finance team's own sub-category label per account, from tools/extract_fs_mapping.py (the TB tabs of Volta FS montly Aug'26.xlsx, Aug as base + older months as fallback); drives drillPanel()'s grouping (null if not built)
 const M = D.months, NM = M.length;
 const years = [...new Set(M.map(m=>m.slice(0,4)))];
 const state = { year: years[years.length-1], month: null, tab: 'ov', lang: 'ka', open: new Set(), arLedger: '1 4 10', arQ: '', arN: 100, compactTabs: new Set(), theme: null, exOpenCell: new Map(), drillN: 40, drillSort: 'date', mpQ: '', mpN: 150, mpCat: '', mpSubcat: '', mpSubsub: '', mpInout: '', mpStatus: '', mpStmt: '', mpPl: '', mpBs: '', mpCf: '' };
@@ -416,6 +419,13 @@ for (const p in children) children[p].sort(cmpCode);
 function parentOf(c){ const i=c.lastIndexOf(' '); return i<0?null:c.slice(0,i); }
 function cmpCode(a,b){ const x=a.split(' '),y=b.split(' '); for(let i=0;i<Math.max(x.length,y.length);i++){ if(x[i]===undefined)return -1; if(y[i]===undefined)return 1; const nx=+x[i],ny=+y[i]; if(!isNaN(nx)&&!isNaN(ny)){ if(nx!==ny)return nx-ny; } else if(x[i]!==y[i]) return x[i]<y[i]?-1:1; } return 0; }
 const name = c => (state.lang==='en' && ACC_EN[c]) ? ACC_EN[c] : (ACC[c]||[T().unknownAcc])[0];
+// the finance team's own sub-category for this account (FSMAP), falling back to its own account name
+// when FSMAP wasn't built or doesn't cover this code - drives drillPanel()'s grouping. A 2-token Oris
+// code (e.g. "7 3") has no exact FSMAP row when the source Excel pads its account number to (at
+// least) 4 digits - "7300" normalizes to "7 3 00", not "7 3" - so also try the "00"-padded form
+// before giving up and falling back to the account's own (language-dependent) name, which would
+// otherwise split what's really one finance-team category into two differently-spelled groups.
+const groupLabel = c => (FSMAP && (FSMAP[c] || (c.split(' ').length===2 && FSMAP[c+' 00']))?.label) || name(c);
 const level = c => c.split(' ').length;
 
 /* ---------- Drill-down: the journal postings behind any number ----------
@@ -430,8 +440,13 @@ const POSTINGS = (()=>{ const idx={}; for(const [md,si,di,ki,amt] of JR.r){ cons
   (idx[d]||(idx[d]=[])).push([date,story,k,amt]); (idx[k]||(idx[k]=[])).push([date,story,d,-amt]); } return idx; })();
 const _postingsCache = new Map();
 function collectPostings(code){
+  // each posting is tagged with its OWN originating leaf code (5th element) - 2026-10-01: a parent
+  // code like '7 4 90 39' in an e.list entry often has no DIRECT postings of its own at all, every
+  // posting actually lands on a specific child (7 4 90 39 1/2/3/9); without this tag they'd all get
+  // attributed to the parent and collapse into one drillPanel sub-group, hiding the real per-account
+  // breakdown the finance team's own TB file shows (one row per child account).
   if(_postingsCache.has(code)) return _postingsCache.get(code);
-  let arr=(POSTINGS[code]||[]).slice();
+  let arr=(POSTINGS[code]||[]).map(p=>[...p,code]);
   for(const c of (children[code]||[])) arr=arr.concat(collectPostings(c));
   _postingsCache.set(code,arr);
   return arr;
@@ -1057,7 +1072,11 @@ const intByMonth=(()=>{ let c=null; return key=>{ if(!c){ c={}; const r=intRows(
    1 7 91 dividend advances) and the consultancy 3 1 10 1684 (user-confirmed shareholder compensation) are "Salary of
    Shareholders"; everything else is "Salary of Other Staff". Jan-Feb accruals were booked against the generic '3 1 30'
    (salary payable), which cannot be attributed to a person, so those months are entirely "Other Staff". */
-const SH_PAYROLL=['3 1 32 0109','3 1 32 0011','3 1 32 0004','3 1 32 0012'], SH_CONSULT=['3 1 10 1684'];
+// '3 1 10 10293' (ეს.ჯი.მენეჯმენტი) / '3 1 10 10828' (შპს გლობალ მენჯმენტ სერვისი) added 2026-10-01,
+// per the user - both invoice consulting fees against the 7 4 50 anchor on behalf of a shareholder,
+// so their postings belong in Salary of Shareholders (92) rather than the Other Personnel (93)
+// fallback. Kept in lockstep with the Sheet override (sheet_overrides.json).
+const SH_PAYROLL=['3 1 32 0109','3 1 32 0011','3 1 32 0004','3 1 32 0012'], SH_CONSULT=['3 1 10 1684','3 1 10 10293','3 1 10 10828'];
 let _SAL=null;
 function salRows(){
   if(_SAL) return _SAL; const o={sh:[],other:[]};
@@ -1071,14 +1090,27 @@ function salRows(){
 const salByMonth=(()=>{ let c=null; return key=>{ if(!c){ c={}; const r=salRows(); for(const k in r){ c[k]={}; for(const x of r[k]){ const mm=+x[0].slice(5,7); c[k][mm]=(c[k][mm]||0)+x[3]; } } } return j=>(c[key][+M[j].slice(5,7)]||0); }; })();
 /* Opex accounts -> budget lines, by the account's meaning (validated against the Excel actuals Jan-Jul 2026: Management Fee,
    Office Rent and Corporate Party match to the cent; Salaries match exactly in Jan/Apr/May; Depreciation Feb-Jul). */
-const OPX_DEL=['7 3','7 4 90 12','7 4 90 47','7 4 27','7 4 16','7 4 90 18','7 4 90 24','7 4 90 25','7 4 90 40','7 4 29'];
-const OPX_SYS=['7 4 22','7 4 90 32','7 4 90 34','7 4 90 42','7 4 90 48','7 4 90 52','7 4 45'];
-const OPX_UTIL=['7 4 90 11','7 4 90 27','7 4 90 28','7 4 90 50'];
-const OPX_MKT=['7 4 90 39','7 4 90 10','7 4 56']; // advertising services and other consulting are Marketing (user decision 2026-09-21; the cash-flow tab already has them there)
+// '7 4 90 7' (security service) / '7 4 90 22' (technical inspection) added to OPX_DEL, '7 4 31' (cleaning) to
+// OPX_UTIL, '7 4 90 53' (business-trip expense) to OPX_MKT - 2026-10-01, user-reported: these were falling into
+// row 95's leftover bucket even though the finance team's own TB Mapping column already names their real category
+// (fs_mapping.json) - kept in lockstep with the same change in tools/mapping_table.py.
+const OPX_DEL=['7 3','7 4 90 12','7 4 90 47','7 4 27','7 4 16','7 4 90 18','7 4 90 24','7 4 90 25','7 4 90 40','7 4 29','7 4 90 7','7 4 90 22'];
+// '7 4 22'/'7 4 90 48'/'7 4 90 52' moved to Office Expenses (95) - 2026-10-01, per the user. Removing
+// them here lets them fall through into row 95's own leafCodes('7 4',OPX_EXPL7) leftover computation
+// (same mechanism as '7 4 18' earlier) - kept in lockstep with the Sheet override.
+// '7 4 90 32' moved to Marketing Expenses (100) - 2026-10-01, per the user (matches the TB file's own
+// Mapping, which already called it "მარკეტინგის ხარჯი").
+const OPX_SYS=['7 4 90 34','7 4 90 42','7 4 45'];
+const OPX_UTIL=['7 4 90 11','7 4 90 27','7 4 90 28','7 4 90 50','7 4 31'];
+const OPX_MKT=['7 4 90 39','7 4 90 10','7 4 56','7 4 90 53','7 4 90 32']; // advertising services and other consulting are Marketing (user decision 2026-09-21; the cash-flow tab already has them there)
 const OPX_SAL=['7 4 10','7 4 15','7 4 50'];
 /* "Office Expenses" (95) = every other 7 4 account (general admin: household, communication, bank fees, services by
    individuals, ...) - a complement, so nothing in Opex is left without a budget line. */
-const OPX_EXPL7=[...OPX_DEL.filter(c=>c!=='7 3'),'7 4 90 49','7 4 20',...OPX_SYS,...OPX_UTIL,...OPX_MKT,'7 4 90 44','7 4 55','7 4 18',...OPX_SAL];
+// '7 4 18' removed from this exclusion list (2026-10-01, per the user - "move it to Office Expenses,
+// the same way [as 8 2 90 2]") so it now falls through into row 95's own leafCodes('7 4',...)
+// leftover computation instead of row 104's hardcoded list below - kept in lockstep with the Sheet
+// override (sheet_overrides.json).
+const OPX_EXPL7=[...OPX_DEL.filter(c=>c!=='7 3'),'7 4 90 49','7 4 20',...OPX_SYS,...OPX_UTIL,...OPX_MKT,'7 4 90 44','7 4 55',...OPX_SAL];
 /* P&L/BS/CF actuals (2026-09-25): the aggregate NUMBERS now come precomputed from tools/statements_engine.py
    (STMT.pl/bs/cf, injected server-side - see build_dashboard.py) instead of being derived here in JS. This
    removes the second, JS-only copy of the classification/formula logic that used to live in this file
@@ -1247,9 +1279,16 @@ const PLGRP={
   NET:{f:'net',list:PLI('6',...PL_COGS,'7 3','7 4','8 1','8 2','9 1','9 2')},
 };
 const leafCodes=(root,excl=[])=>Object.keys(POSTINGS).filter(c=>(c===root||c.startsWith(root+' '))&&!excl.some(e=>c===e||c.startsWith(e+' ')));
-const MISC_CODES=[...leafCodes('8 2',['8 2 10','8 2 50','8 2 90 1']),...leafCodes('8 1',['8 1 10','8 1 25','8 1 50','8 1 90 1'])];
+// '8 2 90 2' moved to Office Expenses (95), 2026-10-01, per the user - keep in lockstep with the
+// Sheet override (sheet_overrides.json) and mapping_table.py's MISC_EXCL, or the drill-down's posting
+// list (built from these static JS lists, not override-aware) would disagree with the official total.
+const MISC_CODES=[...leafCodes('8 2',['8 2 10','8 2 50','8 2 90 1','8 2 90 2']),...leafCodes('8 1',['8 1 10','8 1 25','8 1 50','8 1 90 1'])];
 const NINE_CODES=[...leafCodes('9 1'),...leafCodes('9 2')];
-const opexE=['7 3',...leafCodes('7 4',['7 4 55']),...NINE_CODES,...MISC_CODES,'6 1 90 2'];
+// '6 1 90 2' (sublease income): briefly moved to Other Revenue (87), reverted same day - the user then
+// asked for it to net against Office Rent (96) instead, out of revenue entirely. Back in this Opex
+// list (so row 90's total still ties out), out of the "other income" lists in opexEBITDA/105/118.
+// Mirrors statements_engine.py's oth87/row96.
+const opexE=['7 3',...leafCodes('7 4',['7 4 55']),...NINE_CODES,...MISC_CODES,'6 1 90 2','8 2 90 2'];
 const opexEBITDA=[...PL_REV,...PL_COGS,'6 1 91','8 1 25','6 1 90 1',...opexE];
 const inRows=k=>(f,t)=>intRows()[k].filter(r=>{ const mm=+r[0].slice(5,7); return mm>=f&&mm<=t; });
 const allInt=(f,t)=>['investors','sh','bank','other'].flatMap(k=>inRows(k)(f,t));
@@ -1257,9 +1296,9 @@ const AVPL_SPEC={
   79:PLI(...PL_REV), 81:PLE(...PL_COGS), 82:PLI(...PL_REV,...PL_COGS), 84:PLI('6 1 91'), 85:PLI('8 1 25'), 86:PLI('6 1 90 1'),
   87:PLI('6 1 91','8 1 25','6 1 90 1'), 90:PLE(...opexE), 91:PLE(...OPX_DEL), 92:{rows:(f,t)=>salRows().sh.filter(r=>{ const mm=+r[0].slice(5,7); return mm>=f&&mm<=t; })},
   93:{rows:(f,t)=>salRows().other.filter(r=>{ const mm=+r[0].slice(5,7); return mm>=f&&mm<=t; })}, 94:PLE('7 4 90 49'),
-  95:PLE(...leafCodes('7 4',OPX_EXPL7)), 96:PLE('7 4 20'), 98:PLE(...OPX_SYS),
-  99:PLE(...OPX_UTIL,'6 1 90 2'), 100:PLE(...OPX_MKT), 102:PLE(...NINE_CODES), 103:PLE('7 4 90 44'), 109:PLE('7 4 55'),
-  104:PLE('7 4 18',...MISC_CODES),
+  95:PLE(...leafCodes('7 4',OPX_EXPL7),'8 2 90 2'), 96:PLE('7 4 20','6 1 90 2'), 98:PLE(...OPX_SYS),
+  99:PLE(...OPX_UTIL), 100:PLE(...OPX_MKT), 102:PLE(...NINE_CODES), 103:PLE('7 4 90 44'), 109:PLE('7 4 55'),
+  104:PLE(...MISC_CODES),
   105:[...PLI(...PL_REV,...PL_COGS,'6 1 91','8 1 25','6 1 90 1'),...PLE(...opexE).map(([c])=>[c,-1])],
   108:{list:PLE('7 4 55','8 2 90 1','8 1 90 1','8 2 50','8 1 50','8 1 10'),rows:allInt},
   110:PLE('8 2 90 1','8 1 90 1'), 111:{rows:inRows('investors')}, 112:{rows:inRows('sh')},
@@ -1335,7 +1374,7 @@ function drillData(scope,key,f,t){
   const e=RESOLVE[scope](key); if(!e) return null;
   const idx=mm=>M.indexOf(`${YEAR0}-${p2(mm)}`);
   let rows=[];
-  if(e.list){ for(const [c,sg] of e.list) for(const p of collectPostings(c)){ const mm=+p[0].slice(5,7); if(mm>=f&&mm<=t) rows.push([p[0],p[1],p[2],p[3]*sg]); } }
+  if(e.list){ for(const [c,sg] of e.list) for(const p of collectPostings(c)){ const mm=+p[0].slice(5,7); if(mm>=f&&mm<=t) rows.push([p[0],p[1],p[2],p[3]*sg,p[4]]); } }
   if(e.rows) rows=rows.concat(e.rows(f,t));
   let sum=0; for(const r of rows) sum+=r[3];
   let jf=-1,jt=-1; for(let m=f;m<=t;m++){ const i=idx(m); if(i>=0){ if(jf<0) jf=i; jt=i; } }
@@ -1351,16 +1390,51 @@ function drillPanel(scope,key,colspan){
   const [f,tt]=cur.split('|').map(Number); const r=drillData(scope,String(key),f,tt); if(!r) return '';
   const t=T(); const N=state.drillN;
   const byAmt=state.drillSort==='amt';
-  const rows=r.rows.slice().sort(byAmt?(a,b)=>Math.abs(b[3])-Math.abs(a[3]):(a,b)=>a[0]<b[0]?1:a[0]>b[0]?-1:0);
-  const body=rows.slice(0,N).map(([date,story,ctr,amt])=>
-    `<tr><td>${esc(date.slice(8,10))}.${esc(date.slice(5,7))}</td><td class="purpose">${story&&story.trim()?esc(story):'<span style="color:var(--faint)">–</span>'}</td><td class="purpose">${esc(name(ctr))}</td>${cell(amt)}</tr>`).join('')
-    || `<tr><td colspan="4" style="color:var(--faint)">${t.pNone}</td></tr>`;
+  const hasCode=r.rows.some(x=>x[4]);
+  const rowCmp=byAmt?(a,b)=>Math.abs(b[3])-Math.abs(a[3]):(a,b)=>a[0]<b[0]?1:a[0]>b[0]?-1:0;
+  const rowHtml=([date,story,ctr,amt])=>`<tr><td>${esc(date.slice(8,10))}.${esc(date.slice(5,7))}</td><td class="purpose">${story&&story.trim()?esc(story):'<span style="color:var(--faint)">–</span>'}</td><td class="purpose">${esc(name(ctr))}</td>${cell(amt)}</tr>`;
+  let body, shownN;
+  if(hasCode){
+    // two-level grouping (2026-10-01, per the user's own TB file screenshot: the Mapping column is
+    // itself made up of several Account Name rows, shown under it, not flattened away) - OUTER group
+    // = the finance team's Mapping label (FSMAP, from the TB tabs of Volta FS montly Aug'26.xlsx,
+    // e.g. "Office expenses" folding ~13 small leaf codes together), INNER sub-group = the individual
+    // account code+name underneath it (the same per-code breakdown drillPanel used before Mapping
+    // outer (Mapping label) groups sorted by |total| desc; inner (account code) sub-groups sorted by
+    // account code ascending (2026-10-01, per user request - e.g. 7414 before 7417), not by amount.
+    // Both levels shown whole (never cut off mid-group/mid-subgroup) even if that runs a little past N.
+    const g=new Map();
+    for(const x of r.rows){ const c=x[4]||''; const lbl=c?groupLabel(c):''; (g.get(lbl)||g.set(lbl,[]).get(lbl)).push(x); }
+    const groups=[...g.entries()].map(([lbl,list])=>{
+      const sg=new Map();
+      for(const x of list){ const c=x[4]||''; (sg.get(c)||sg.set(c,[]).get(c)).push(x); }
+      const subgroups=[...sg.entries()].map(([c,sl])=>({c,list:sl.slice().sort(rowCmp),sum:sl.reduce((s,x)=>s+x[3],0)}))
+        .sort((a,b)=>cmpCode(a.c,b.c));
+      return {lbl,subgroups,sum:list.reduce((s,x)=>s+x[3],0)};
+    }).sort((a,b)=>Math.abs(b.sum)-Math.abs(a.sum));
+    let n=0; const out=[];
+    for(const grp of groups){
+      if(n>=N) break;
+      out.push(`<tr class="grp"><td colspan="3">${esc(grp.lbl)}</td>${cell(grp.sum)}</tr>`);
+      for(const sub of grp.subgroups){
+        out.push(`<tr class="subgrp"><td colspan="3">${esc(sub.c)} · ${esc(name(sub.c))}</td>${cell(sub.sum)}</tr>`);
+        for(const x of sub.list) out.push(rowHtml(x));
+        n+=sub.list.length;
+      }
+    }
+    body=out.join('') || `<tr><td colspan="4" style="color:var(--faint)">${t.pNone}</td></tr>`;
+    shownN=n;
+  } else {
+    const rows=r.rows.slice().sort(rowCmp);
+    body=rows.slice(0,N).map(rowHtml).join('') || `<tr><td colspan="4" style="color:var(--faint)">${t.pNone}</td></tr>`;
+    shownN=Math.min(N,rows.length);
+  }
   let foot=`<div class="more">${t.pSum(r.rows.length,fmt(r.sum))}`;
   if(r.kind==='bal' && r.open!==undefined){ const dif=r.close-(r.open+r.sum); foot+=` · ${t.pBal(fmt(r.open),fmt(r.sum),fmt(r.close))}`+(Math.abs(dif)>0.5?` · <span style="color:var(--neg)">${t.pDiff(fmt(dif))}</span>`:` ✓`); }
   else if(r.expected!==undefined){ const dif=r.expected-r.sum; foot+=Math.abs(dif)>0.5?` · <span style="color:var(--neg)">${t.pDiff(fmt(dif))}</span>`:` ✓`; }
   foot+=`</div>`;
-  const shown=r.rows.length>N?`<div class="more">${t.pShown(N,r.rows.length,byAmt)}</div>`:'';
-  const ctl=`<div class="more" style="display:flex;gap:6px;align-items:center;flex-wrap:wrap"><button class="compact-btn" data-drillsort="date" aria-pressed="${!byAmt}">${t.pSortDate}</button><button class="compact-btn" data-drillsort="amt" aria-pressed="${byAmt}">${t.pSortAmt}</button>${r.rows.length>N?`<button class="compact-btn" data-drillmore="1">${t.pMore}</button>`:''}</div>`;
+  const shown=r.rows.length>shownN?`<div class="more">${t.pShown(shownN,r.rows.length,byAmt)}</div>`:'';
+  const ctl=`<div class="more" style="display:flex;gap:6px;align-items:center;flex-wrap:wrap"><button class="compact-btn" data-drillsort="date" aria-pressed="${!byAmt}">${t.pSortDate}</button><button class="compact-btn" data-drillsort="amt" aria-pressed="${byAmt}">${t.pSortAmt}</button>${r.rows.length>shownN?`<button class="compact-btn" data-drillmore="1">${t.pMore}</button>`:''}</div>`;
   return `<tr><td colspan="${colspan}" style="padding:0;background:var(--surface2)"><div class="postings-wrap"><table class="postings"><thead><tr><th>${t.pDate}</th><th>${t.pPurpose}</th><th>${scope==='ex'?t.pSupplier:t.pCounter}</th><th class="n">${t.pAmount}</th></tr></thead><tbody>${body}</tbody></table>${shown}${foot}${ctl}</div></td></tr>`;
 }
 

@@ -19,10 +19,15 @@ mapping (same as editing dashboard_template.html today), until the sheet-driven 
 PL_REV = ['6 1 10', '6 1 20']
 PL_COGS = ['7 2', '7 1']
 
-OPX_DEL = ['7 3', '7 4 90 12', '7 4 90 47', '7 4 27', '7 4 16', '7 4 90 18', '7 4 90 24', '7 4 90 25', '7 4 90 40', '7 4 29']
+OPX_DEL = ['7 3', '7 4 90 12', '7 4 90 47', '7 4 27', '7 4 16', '7 4 90 18', '7 4 90 24', '7 4 90 25', '7 4 90 40', '7 4 29',
+           '7 4 90 7', '7 4 90 22']  # security service / technical inspection - were falling into the row-95 leftover
+           # bucket instead of Delivery, even though the finance team's own TB Mapping column already calls both
+           # "ტრანსპორტირებისა და შენახვის ხარჯი" (2026-10-01, user-reported + cross-checked against fs_mapping.json)
 OPX_SYS = ['7 4 22', '7 4 90 32', '7 4 90 34', '7 4 90 42', '7 4 90 48', '7 4 90 52', '7 4 45']
-OPX_UTIL = ['7 4 90 11', '7 4 90 27', '7 4 90 28', '7 4 90 50']
-OPX_MKT = ['7 4 90 39', '7 4 90 10', '7 4 56']
+OPX_UTIL = ['7 4 90 11', '7 4 90 27', '7 4 90 28', '7 4 90 50',
+            '7 4 31']  # cleaning - same leftover-bucket issue, finance team's own Mapping calls it "კომუნალური ხარჯი"
+OPX_MKT = ['7 4 90 39', '7 4 90 10', '7 4 56',
+           '7 4 90 53']  # business-trip expense - same leftover-bucket issue, finance team's own Mapping calls it "მარკეტინგის ხარჯი"
 OPX_SAL = ['7 4 10', '7 4 15', '7 4 50']
 OPX_EXPL7 = [c for c in OPX_DEL if c != '7 3'] + ['7 4 90 49', '7 4 20'] + OPX_SYS + OPX_UTIL + OPX_MKT + ['7 4 90 44', '7 4 55', '7 4 18'] + OPX_SAL
 

@@ -4,3 +4,4 @@ extract/
 *.sqlite
 dash_data.json
 __pycache__/
+tools/*.log

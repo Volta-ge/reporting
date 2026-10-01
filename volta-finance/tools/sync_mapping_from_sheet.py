@@ -106,9 +106,19 @@ def parse_cf(text):
     return out
 
 
-def main():
+def open_sheet():
+    """A fresh gspread client + worksheet handle. Callers that poll frequently (sync_and_publish.py's
+    watch loop) should create this ONCE and reuse it across calls to sync(ws) below - gspread caches
+    the OAuth access token on the client and only re-authenticates when it expires (~1h), so reusing
+    the handle turns each poll into a single Sheets API call instead of an auth handshake + a call."""
     gc = gspread.service_account(filename=KEY_FILE)
-    ws = gc.open_by_key(SHEET_ID).sheet1
+    return gc.open_by_key(SHEET_ID).sheet1
+
+
+def sync(ws):
+    """Reads `ws` (a worksheet handle from open_sheet()) and writes sheet_overrides.json. Returns
+    (overrides_dict, errors_list) - errors is non-empty iff nothing was written (previous overrides
+    file, if any, is left untouched)."""
     rows = ws.get_all_records()  # list of dicts keyed by header row
 
     overrides = {}
@@ -127,14 +137,22 @@ def main():
         overrides[code] = {'pl': pl, 'bs': bs, 'cf': cf}
 
     if errors:
+        return overrides, errors
+
+    out = os.path.join(BASE, 'sheet_overrides.json')
+    json.dump(overrides, open(out, 'w', encoding='utf-8'), ensure_ascii=False, indent=0)
+    return overrides, errors
+
+
+def main():
+    ws = open_sheet()
+    overrides, errors = sync(ws)
+    if errors:
         print(f'{len(errors)} row(s) could not be parsed - NOT written, previous overrides file (if any) is untouched:', file=sys.stderr)
         for e in errors:
             print('  ' + e, file=sys.stderr)
         sys.exit(1)
-
-    out = os.path.join(BASE, 'sheet_overrides.json')
-    json.dump(overrides, open(out, 'w', encoding='utf-8'), ensure_ascii=False, indent=0)
-    print('wrote', out, len(overrides), 'account overrides (from', len(rows), 'sheet rows)')
+    print('wrote', os.path.join(BASE, 'sheet_overrides.json'), len(overrides), 'account overrides')
 
 
 if __name__ == '__main__':

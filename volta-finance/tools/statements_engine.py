@@ -350,7 +350,11 @@ def build():
     mkt100 = [buckets[j][100] for j in idx]
     off95 = [buckets[j][95] for j in idx]
     row94 = [buckets[j][94] for j in idx]
-    row96 = [buckets[j][96] for j in idx]
+    # 2026-10-01: sublease income (6 1 90 2) nets against Office Rent here (briefly tried Other Revenue
+    # (87) and Utility Cost (99) first, both reverted - the user settled on Office Rent) - like util99
+    # before it, this is a direct formula rather than a pl_bucket_sums() member since bucketing only
+    # scans class 7/8/9 leaf accounts and 6 1 90 2 is class 6 (credit-normal, so it SUBTRACTS here).
+    row96 = [buckets[j][96] - incA('6 1 90 2', j) for j in idx]
     row103 = [buckets[j][103] for j in idx]
     row109 = [buckets[j][109] for j in idx]
     row110 = [buckets[j][110] for j in idx]
@@ -358,10 +362,12 @@ def build():
     row116 = [buckets[j][116] for j in idx]
     row104_bucket = [buckets[j][104] for j in idx]
     prov102 = [buckets[j][102] for j in idx]
-    # row 99 (Utility) keeps its special sign-mixed case: sublease INCOME (6 1 90 2, class 6, credit-
-    # normal) reduces this expense row - not a plain bucket member, since bucketing assumes uniform
-    # (debit-normal) sign for every account in a row.
-    util99 = [sum(expA(c, j) for c in mt.OPX_UTIL) - incA('6 1 90 2', j) for j in idx]
+    # 2026-10-01: sublease income (6 1 90 2) moved to Other Revenue (87, see sub87 above) per the user
+    # - no longer netted against Utility here. util99 stays a direct sum over mt.OPX_UTIL rather than
+    # the general pl_bucket_sums() mechanism (row 99 is deliberately not in PL_BUCKET_ROWS) so a
+    # reclassification into/out of Utility is a plain edit to mt.OPX_UTIL (mapping_table.py), mirrored
+    # in dashboard_template.html's OPX_UTIL - same pattern as every other OPX_* edit this session.
+    util99 = [sum(expA(c, j) for c in mt.OPX_UTIL) for j in idx]
     ppe110 = row110
     fxexp115 = row115
     fxinc116 = row116
