@@ -161,6 +161,29 @@ Q "WITH RECURSIVE cal AS (SELECT DATE('$LOGI_START') d UNION ALL SELECT d + INTE
    LEFT JOIN (SELECT entity_id, MIN(created_at) activated_at FROM crm_activity_log WHERE action='installment.status_change' AND JSON_EXTRACT(metadata,'\$.to')=1 GROUP BY entity_id) act ON act.entity_id=o.id
    WHERE act.activated_at IS NULL OR act.activated_at >= cal.d + INTERVAL 1 DAY GROUP BY cal.d ORDER BY cal.d;" > "$S/logi_not_activated.tsv"
 
+# Logistics Time Management — per-order timeline (user, 2026-10-02): every order that entered the logistics module
+# from 2026-09-01 00:00 Tbilisi time (= 2026-08-31 20:00 UTC; user moved the start from Oct 1 the same day; the DB stores UTC), whatever happened to it since
+# (cancelled orders included, so their stays still show). One meta row per order + every order-level status event
+# (entity_type=4) with the time of the order's NEXT event (NULL = the status it is in right now); build_logistics.js
+# sums the stays per status. signed_at = first CRM status change to 11 (Signed) — the logistics row is usually
+# created at that moment but not always, so "Signed -> logistics start" is its own stage. now_at = DB clock, the
+# snapshot moment open stays are measured up to.
+LOGI_ORDERS_START='2026-08-31 20:00:00'
+Q "SELECT o.id order_id, l.created_at logi_at, sg.signed_at, l.logistics_status cur, o.crm_order_status ost, l.is_multi_vendor mv,
+          COALESCE(a.city,'') city,
+          COALESCE((SELECT GROUP_CONCAT(DISTINCT v.name ORDER BY v.name SEPARATOR '||') FROM crm_line_fulfillment f JOIN crm_vendors v ON v.id=f.vendor_id WHERE f.order_id=o.id),'') vendors,
+          COALESCE((SELECT GROUP_CONCAT(REPLACE(REPLACE(oi.name,'\t',' '),'\n',' ') ORDER BY oi.id SEPARATOR ' | ') FROM order_items oi WHERE oi.order_id=o.id AND oi.parent_id IS NULL),'') items,
+          UTC_TIMESTAMP() now_at
+   FROM crm_order_logistics l JOIN orders o ON o.id=l.order_id
+   LEFT JOIN addresses a ON a.order_id=o.id AND a.address_type='order_shipping'
+   LEFT JOIN (SELECT entity_id, MIN(created_at) signed_at FROM crm_activity_log
+              WHERE action='installment.status_change' AND JSON_EXTRACT(metadata,'\$.to')=11 GROUP BY entity_id) sg ON sg.entity_id=o.id
+   WHERE l.created_at >= '$LOGI_ORDERS_START' ORDER BY l.created_at;" > "$S/logi_time_orders.tsv"
+Q "SELECT h.order_id, h.to_status, h.created_at at,
+          LEAD(h.created_at) OVER (PARTITION BY h.order_id ORDER BY h.created_at, h.id) next_at
+   FROM crm_shipment_status_history h JOIN crm_order_logistics l ON l.order_id=h.order_id AND l.created_at >= '$LOGI_ORDERS_START'
+   WHERE h.entity_type=4 ORDER BY h.order_id, h.created_at, h.id;" > "$S/logi_time_events.tsv"
+
 # ================ Marketing — Leads ================
 # Lead status/step/city by day, lead-to-application conversion. No PII (see build_mkt.js). Runs through today.
 LEADS_START='2026-03-19'   # first row in volta_leads (the lead-capture form went live that day)
