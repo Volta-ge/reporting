@@ -147,6 +147,27 @@ const ga4 = pack(
   ga4Map, ga4Ov
 );
 
+// GA4 settles engagement ~2 days late (newest days' engagedSessions are far too low), so Engaged Sessions /
+// Engagement rate use only SETTLED days: the newest 2 days show a dash; the current month, "Last 7 days" and
+// "Total" cells are computed over the settled part of their window (pull_channels.py fetches those windows).
+{
+  const settledThrough = info.ga4SettledThrough;
+  const row = (g, label) => g.find(r => r.label === label);
+  const eng = row(ga4.day, 'Engaged Sessions'), rate = row(ga4.day, 'Engagement rate');
+  days.forEach((d, i) => { if (d > settledThrough) { eng.vals[i] = null; rate.vals[i] = null; } });
+  const w = Object.fromEntries(parseTsv('channels_ga4_windows.tsv').map(r => [r.window, r]));
+  const setEx = (rEng, rRate, win) => {
+    const sess = num(win.sessions), e = num(win.engaged_sessions);
+    rEng.ex.v = sess ? e : null; rRate.ex.v = sess ? e / sess : null;
+  };
+  setEx(eng, rate, w.last7_settled);
+  const mEng = row(ga4.month, 'Engaged Sessions'), mRate = row(ga4.month, 'Engagement rate');
+  setEx(mEng, mRate, w.total_settled);
+  const last = months.length - 1, mtd = w.mtd_settled, mtdSess = num(mtd.sessions);
+  mEng.vals[last] = mtdSess ? num(mtd.engaged_sessions) : null;
+  mRate.vals[last] = mtdSess ? num(mtd.engaged_sessions) / mtdSess : null;
+}
+
 const payload = { info, dayStart: days[0], days, months, end: END, meta, metaCampaigns, gads, gadsCampaigns, ga4, generatedAt: new Date().toISOString().slice(0, 16).replace('T', ' ') + ' UTC' };
 fs.writeFileSync(path.join(__dirname, 'channels_data.json'), JSON.stringify(payload));
 console.log('meta MTD spend:', meta.month.find(r => r.label === 'Spend').vals.at(-1), '| gads MTD cost:', gads.month.find(r => r.label === 'Cost').vals.at(-1), '| ga4 MTD sessions:', ga4.month.find(r => r.label === 'Sessions').vals.at(-1));
@@ -288,7 +309,7 @@ table.logi-table td.logi-extra-first{border-left:3px solid #1a1a34}
       <div class="report-card"><div class="report-scroll-top" id="chanGa4DayScrollTop"><div></div></div><div class="report-scroll" id="chanGa4DayScrollBody"><table class="logi-table" id="chanGa4DayTable"><tbody></tbody></table></div></div>
       <div class="report-card"><div class="report-scroll-top" id="chanGa4MonthScrollTop"><div></div></div><div class="report-scroll" id="chanGa4MonthScrollBody"><table class="logi-table" id="chanGa4MonthTable"><tbody></tbody></table></div></div>
     </div>
-    <p class="note">Sessions/Users/Conversions cover all traffic to the site (every channel, not only paid), from GA4 property ${GA4_PROPERTY_ID}. Engaged Sessions = sessions lasting 10s+, with 2+ pageviews, or with a conversion (GA4's own "real visit" filter, comparable to Meta's Outbound Clicks / Google Ads' Interactions above). Conversions = GA4 key events. <b>Month columns and the "Last 7 days" / "Total" column are asked of GA4 as one aggregate each, exactly like GA4's own reports</b> &mdash; so Users counts a person once per period (not once per day) and Sessions can differ slightly from the sum of the daily cells (a session that straddles midnight shows up on both days). <b>The newest 1&ndash;2 days of Engaged Sessions / Engagement rate are not final yet</b>: GA4 keeps processing engagement after the day ends, so yesterday can look far too low until it settles.</p>
+    <p class="note">Sessions/Users/Conversions cover all traffic to the site (every channel, not only paid), from GA4 property ${GA4_PROPERTY_ID}. Engaged Sessions = sessions lasting 10s+, with 2+ pageviews, or with a conversion (GA4's own "real visit" filter, comparable to Meta's Outbound Clicks / Google Ads' Interactions above). Conversions = GA4 key events. <b>Month columns and the "Last 7 days" / "Total" column are asked of GA4 as one aggregate each, exactly like GA4's own reports</b> &mdash; so Users counts a person once per period (not once per day) and Sessions can differ slightly from the sum of the daily cells (a session that straddles midnight shows up on both days). <b>Engaged Sessions / Engagement rate:</b> GA4 finalizes engagement about 2 days late (a just-ended day can show a tenth of its real value), so the newest 2 days are shown as &ndash; and the current month, "Last 7 days" and "Total" cells count only the fully processed days (through ${info.ga4SettledThrough}).</p>
   </div>
 
   <div class="chan-glossary">

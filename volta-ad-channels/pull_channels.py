@@ -189,13 +189,30 @@ def pull_ga4():
             property=f"properties/{GA4_PROPERTY_ID}", metrics=mets, date_ranges=[DateRange(start_date=s, end_date=END)],
         ))
         wrows.append((label, *[v.value for v in wresp.rows[0].metric_values]))
+    # GA4 finalizes engagement ~2 days late: engagedSessions for the newest 1-2 days is far too low (verified
+    # 2026-10-06: Oct 5 = 100 of 3,084 sessions, vs ~1,700 on every settled day), which dragged every
+    # "Engagement rate" cell and aggregate down. So also fetch sessions+engagedSessions over the SETTLED part of each
+    # window (everything up to END-2); the page shows the newest 2 days as a dash and computes the rate on settled days.
+    end_d = datetime.date.fromisoformat(END)
+    settled = end_d - datetime.timedelta(days=2)
+    month_start = end_d.replace(day=1)
+    pair = [Metric(name="sessions"), Metric(name="engagedSessions")]
+    for label, s0 in (("last7_settled", end_d - datetime.timedelta(days=6)), ("mtd_settled", month_start), ("total_settled", datetime.date.fromisoformat(START))):
+        if s0 > settled:
+            wrows.append((label, 0, 0, "", ""))
+            continue
+        r = client.run_report(RunReportRequest(
+            property=f"properties/{GA4_PROPERTY_ID}", metrics=pair, date_ranges=[DateRange(start_date=s0.isoformat(), end_date=settled.isoformat())],
+        ))
+        wrows.append((label, *[v.value for v in r.rows[0].metric_values], "", ""))
     write_tsv("channels_ga4_windows.tsv", ["window", "sessions", "engaged_sessions", "users", "conversions"], wrows)
+    return settled.isoformat()
 
 
 if __name__ == "__main__":
     meta_info = pull_meta()
     gads_info = pull_gads()
-    pull_ga4()
+    ga4_settled = pull_ga4()
     with open(os.path.join(OUT, "channels_info.json"), "w", encoding="utf-8") as f:
-        json.dump({"meta": meta_info, "gads": gads_info, "start": START, "end": END}, f)
+        json.dump({"meta": meta_info, "gads": gads_info, "start": START, "end": END, "ga4SettledThrough": ga4_settled}, f)
     print("channels_info.json written:", meta_info, gads_info)
