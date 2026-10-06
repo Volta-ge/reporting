@@ -5,3 +5,5 @@ channels_meta_campaigns.tsv
 channels_gads_daily.tsv
 channels_gads_campaigns.tsv
 channels_ga4_daily.tsv
+channels_ga4_monthly.tsv
+channels_ga4_windows.tsv
