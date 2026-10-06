@@ -45,21 +45,33 @@ function monthSums(map, col, allDays) {
 function fullDaySpan(start, end) { const out = []; let d = start; while (d <= end) { out.push(d); d = addDays(d, 1); } return out; }
 const fullDays = fullDaySpan('2026-01-01', END);
 
-function pack(baseDefs, deriveDefs, map) {
-  function build(colsFn) {
+// ov (optional) replaces additive-looking sums with figures the source computed as ONE aggregate, for metrics
+// that are not additive across days (GA4 Users, and sessions that straddle midnight):
+//   ov.month[col] = array aligned with `months`, ov.exDay[col] / ov.exMonth[col] = the "Last 7 days" / "Total" value.
+// Derived rows (CTR, CPC, per-$1 ...) get their "Last 7 days" / "Total" value by applying the same formula to the
+// aggregated base values -- NOT by summing the daily ratios, which is meaningless.
+function pack(baseDefs, deriveDefs, map, ov) {
+  ov = ov || {};
+  function build(colsFn, isDay) {
     const baseVals = {}; baseDefs.forEach(b => baseVals[b.key] = colsFn(b.col));
-    const rows = baseDefs.map(b => ({ label: b.label, fmt: b.fmt, vals: baseVals[b.key] }));
+    const exOf = (b) => {
+      const o = isDay ? ov.exDay : ov.exMonth;
+      if (o && o[b.col] !== undefined) return o[b.col];
+      return isDay ? last7(baseVals[b.key]) : total(baseVals[b.key]);
+    };
+    const baseEx = {}; baseDefs.forEach(b => baseEx[b.key] = exOf(b));
+    const label = isDay ? 'Last 7 days' : 'Total';
+    const rows = baseDefs.map(b => ({ label: b.label, fmt: b.fmt, vals: baseVals[b.key], ex: { label, v: baseEx[b.key] } }));
     const n = baseVals[baseDefs[0].key].length;
     deriveDefs.forEach(d => {
       const vals = Array.from({ length: n }, (_, i) => { const o = {}; baseDefs.forEach(b => o[b.key] = baseVals[b.key][i]); return d.fn(o); });
-      rows.push({ label: d.label, fmt: d.fmt, vals });
+      rows.push({ label: d.label, fmt: d.fmt, vals, ex: { label, v: d.fn(baseEx) } });
     });
     return rows;
   }
-  const dayRows = build(col => seriesFromMap(map, col, days));
-  const monthRows = build(col => monthSums(map, col, fullDays));
-  const withEx = (rows, isDay) => rows.map(r => ({ ...r, ex: isDay ? { label: 'Last 7 days', v: last7(r.vals) } : { label: 'Total', v: total(r.vals) } }));
-  return { day: withEx(dayRows, true), month: withEx(monthRows, false) };
+  const dayRows = build(col => seriesFromMap(map, col, days), true);
+  const monthRows = build(col => (ov.month && ov.month[col]) ? ov.month[col] : monthSums(map, col, fullDays), false);
+  return { day: dayRows, month: monthRows };
 }
 
 // Each channel shows a "raw platform metric" alongside its "qualified/outbound" counterpart, so the three
@@ -114,6 +126,15 @@ for (const d of Object.keys(gadsMap)) combinedSpendByDay[d] = (combinedSpendByDa
 
 const ga4Map = toMap(parseTsv('channels_ga4_daily.tsv'), ['sessions', 'engaged_sessions', 'users', 'conversions']);
 for (const d of Object.keys(ga4Map)) ga4Map[d].adSpend = combinedSpendByDay[d] || 0;
+// month columns + "Last 7 days"/"Total" come straight from GA4 as single aggregates (see pull_channels.py)
+const ga4Monthly = {}; for (const r of parseTsv('channels_ga4_monthly.tsv')) ga4Monthly[r.ym.slice(0, 4) + '-' + r.ym.slice(4, 6)] = r;
+const ga4Win = {}; for (const r of parseTsv('channels_ga4_windows.tsv')) ga4Win[r.window] = r;
+const ga4Cols = ['sessions', 'engaged_sessions', 'users', 'conversions'];
+const ga4Ov = { month: {}, exDay: {}, exMonth: {} };
+for (const c of ga4Cols) {
+  ga4Ov.month[c] = months.map(m => ga4Monthly[m] ? num(ga4Monthly[m][c]) : 0);
+  ga4Ov.exDay[c] = num(ga4Win.last7[c]); ga4Ov.exMonth[c] = num(ga4Win.total[c]);
+}
 const ga4 = pack(
   [{ key: 'sessions', col: 'sessions', label: 'Sessions', fmt: 'int' },
    { key: 'engaged', col: 'engaged_sessions', label: 'Engaged Sessions', fmt: 'int' },
@@ -123,7 +144,7 @@ const ga4 = pack(
   [{ key: 'engrate', label: 'Engagement rate', fmt: 'pct', fn: o => o.sessions ? o.engaged / o.sessions : 0 },
    { key: 'convrate', label: 'Conversion rate', fmt: 'pct', fn: o => o.sessions ? o.conversions / o.sessions : 0 },
    { key: 'sessPerDollar', label: 'Sessions per $1 (blended, all traffic)', fmt: 'dec2', fn: o => o.adSpend ? o.sessions / o.adSpend : 0 }],
-  ga4Map
+  ga4Map, ga4Ov
 );
 
 const payload = { info, dayStart: days[0], days, months, end: END, meta, metaCampaigns, gads, gadsCampaigns, ga4, generatedAt: new Date().toISOString().slice(0, 16).replace('T', ' ') + ' UTC' };
@@ -267,7 +288,7 @@ table.logi-table td.logi-extra-first{border-left:3px solid #1a1a34}
       <div class="report-card"><div class="report-scroll-top" id="chanGa4DayScrollTop"><div></div></div><div class="report-scroll" id="chanGa4DayScrollBody"><table class="logi-table" id="chanGa4DayTable"><tbody></tbody></table></div></div>
       <div class="report-card"><div class="report-scroll-top" id="chanGa4MonthScrollTop"><div></div></div><div class="report-scroll" id="chanGa4MonthScrollBody"><table class="logi-table" id="chanGa4MonthTable"><tbody></tbody></table></div></div>
     </div>
-    <p class="note">Sessions/Users/Conversions cover all traffic to the site (every channel, not only paid), from GA4 property ${GA4_PROPERTY_ID}. Engaged Sessions = sessions lasting 10s+, with 2+ pageviews, or with a conversion (GA4's own "real visit" filter, comparable to Meta's Outbound Clicks / Google Ads' Interactions above). Conversions = GA4 key events.</p>
+    <p class="note">Sessions/Users/Conversions cover all traffic to the site (every channel, not only paid), from GA4 property ${GA4_PROPERTY_ID}. Engaged Sessions = sessions lasting 10s+, with 2+ pageviews, or with a conversion (GA4's own "real visit" filter, comparable to Meta's Outbound Clicks / Google Ads' Interactions above). Conversions = GA4 key events. <b>Month columns and the "Last 7 days" / "Total" column are asked of GA4 as one aggregate each, exactly like GA4's own reports</b> &mdash; so Users counts a person once per period (not once per day) and Sessions can differ slightly from the sum of the daily cells (a session that straddles midnight shows up on both days). <b>The newest 1&ndash;2 days of Engaged Sessions / Engagement rate are not final yet</b>: GA4 keeps processing engagement after the day ends, so yesterday can look far too low until it settles.</p>
   </div>
 
   <div class="chan-glossary">
@@ -351,7 +372,7 @@ var CHANNELS_JSON = ${JSON.stringify(payload)};
     return fmt(v);
   }
   function rowHtml(cls, r) {
-    var exCell = r.fmt === 'pct' ? DASH : fmtRow(r.ex.v, r.fmt);
+    var exCell = fmtRow(r.ex.v, r.fmt);
     return '<tr class="' + cls + '"><td>' + r.label + '</td>' + r.vals.map(function (v) { return '<td>' + fmtRow(v, r.fmt) + '</td>'; }).join('')
       + '<td class="logi-extra logi-extra-first">' + exCell + '</td></tr>';
   }

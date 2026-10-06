@@ -169,6 +169,28 @@ def pull_ga4():
     rows.sort(key=lambda x: x[0])
     write_tsv("channels_ga4_daily.tsv", ["d", "sessions", "engaged_sessions", "users", "conversions"], rows)
 
+    # Month / window figures must be asked of GA4 as ONE aggregate each, not summed from the daily rows:
+    # Users is not additive (a person active on 5 days is 5 daily users but 1 monthly user -- Sep 2026: daily
+    # sum 72,098 vs GA4's own 60,990) and sessions that straddle midnight are counted on both days of the daily
+    # report (Sep: 98,403 summed vs 98,202 aggregate). Verified 2026-10-06 when the user compared the dashboard
+    # with GA4's own numbers.
+    mets = [Metric(name="sessions"), Metric(name="engagedSessions"), Metric(name="activeUsers"), Metric(name="conversions")]
+    mresp = client.run_report(RunReportRequest(
+        property=f"properties/{GA4_PROPERTY_ID}", dimensions=[Dimension(name="yearMonth")], metrics=mets,
+        date_ranges=[DateRange(start_date=START, end_date=END)],
+    ))
+    mrows = sorted(((r.dimension_values[0].value, *[v.value for v in r.metric_values]) for r in mresp.rows), key=lambda x: x[0])
+    write_tsv("channels_ga4_monthly.tsv", ["ym", "sessions", "engaged_sessions", "users", "conversions"], mrows)
+
+    last7_start = (datetime.date.fromisoformat(END) - datetime.timedelta(days=6)).isoformat()
+    wrows = []
+    for label, s in (("last7", last7_start), ("total", START)):
+        wresp = client.run_report(RunReportRequest(
+            property=f"properties/{GA4_PROPERTY_ID}", metrics=mets, date_ranges=[DateRange(start_date=s, end_date=END)],
+        ))
+        wrows.append((label, *[v.value for v in wresp.rows[0].metric_values]))
+    write_tsv("channels_ga4_windows.tsv", ["window", "sessions", "engaged_sessions", "users", "conversions"], wrows)
+
 
 if __name__ == "__main__":
     meta_info = pull_meta()
