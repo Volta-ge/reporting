@@ -1,84 +1,84 @@
 dim	val	all_c	active_c	loan_c
-age	NULL	1781	221	551
-age	1:< 18	6	2	2
-age	2:18 - 24	2794	299	401
-age	3:25 - 34	12799	1925	2733
-age	4:35 - 44	10310	1945	2971
-age	5:45 - 59	5901	1172	2141
-age	6:60+	1772	232	528
-city	NULL	514	16	352
-city	Other cities	5336	785	952
-city	ბათუმი	2419	360	427
-city	გარდაბანი	326	47	76
-city	გორი	854	117	136
-city	გურჯაანი	280	37	55
-city	ზუგდიდი	902	121	149
-city	თბილისი	19427	3515	6123
-city	მცხეთა	511	79	162
-city	ოზურგეთი	376	50	59
-city	რუსთავი	1394	240	315
-city	სამტრედია	289	37	49
-city	სენაკი	267	42	49
-city	ფოთი	488	77	88
-city	ქობულეთი	398	53	64
-city	ქუთაისი	1248	169	203
-city	ხაშური	334	51	68
-emp	NULL	22457	2636	5977
+age	NULL	1854	230	559
+age	1:< 18	8	2	2
+age	2:18 - 24	2819	301	405
+age	3:25 - 34	12990	1941	2752
+age	4:35 - 44	10462	1972	3004
+age	5:45 - 59	5975	1182	2156
+age	6:60+	1780	230	528
+city	NULL	547	24	359
+city	Other cities	5397	793	960
+city	ბათუმი	2468	366	435
+city	გარდაბანი	329	49	78
+city	გორი	862	117	137
+city	გურჯაანი	283	38	56
+city	ზუგდიდი	910	122	150
+city	თბილისი	19700	3554	6172
+city	მცხეთა	518	76	161
+city	ოზურგეთი	384	49	59
+city	რუსთავი	1416	243	318
+city	სამტრედია	298	37	49
+city	სენაკი	266	40	48
+city	ფოთი	495	77	88
+city	ქობულეთი	405	53	64
+city	ქუთაისი	1275	169	204
+city	ხაშური	335	51	68
+emp	NULL	22968	2692	6045
 emp	Not specified	4	0	0
-emp	Private sector	5666	1532	1632
-emp	Public sector	2385	732	778
-emp	Self-employed	4249	752	790
-emp	Unemployed	602	144	150
-gender	NULL	625	39	161
-gender	Female	19925	4026	6630
-gender	Male	14813	1731	2536
-pos	NULL	9845	1051	3155
-pos	Other	18531	3535	4621
-pos	ადმინისტრატორი	294	79	95
-pos	გამყიდველი	252	38	46
+emp	Private sector	5675	1534	1640
+emp	Public sector	2386	736	780
+emp	Self-employed	4253	753	791
+emp	Unemployed	602	143	150
+gender	NULL	658	43	165
+gender	Female	20160	4066	6676
+gender	Male	15070	1749	2565
+pos	NULL	10356	1117	3222
+pos	Other	18540	3534	4631
+pos	ადმინისტრატორი	294	78	95
+pos	გამყიდველი	253	38	46
 pos	დამლაგებელი	252	38	45
-pos	დიასახლისი	657	125	178
+pos	დიასახლისი	657	124	178
 pos	დირექტორი	214	56	81
 pos	კონსულტანტი	294	69	87
 pos	კურიერი	292	31	39
-pos	მენეჯერი	793	211	258
-pos	მზარეული	413	81	111
-pos	მოლარე	713	151	185
-pos	მუშა	336	17	20
-pos	მძღოლი	635	70	95
+pos	მენეჯერი	794	212	259
+pos	მზარეული	413	80	111
+pos	მოლარე	714	151	185
+pos	მუშა	336	16	20
+pos	მძღოლი	637	69	95
 pos	ოპერატორი	413	77	95
-pos	ძიძა	592	97	132
+pos	ძიძა	592	98	133
 pos	ხელოსანი	837	70	84
-rating	NULL	31382	4672	5430
+rating	NULL	31907	4732	5509
 rating	1	258	3	248
 rating	2	130	13	130
 rating	3	198	29	168
-rating	4	1283	421	1263
-rating	5	2112	658	2088
-risk	NULL	27830	24	1918
-risk	High	658	245	653
-risk	Low	467	165	465
-risk	Medium	6408	5362	6291
-sal	NULL	22465	2644	5985
+rating	4	1283	420	1263
+rating	5	2112	661	2088
+risk	NULL	28276	27	1918
+risk	High	652	237	647
+risk	Low	500	197	498
+risk	Medium	6460	5397	6343
+sal	NULL	22974	2700	6053
 sal	0:0 (no salary)	17	4	4
 sal	1:< 500	124	14	17
-sal	2:500 - 999	1061	260	282
-sal	3:1,000 - 1,999	5099	1323	1405
-sal	4:2,000 - 2,999	3446	797	834
-sal	5:3,000 - 4,999	2302	514	550
-sal	6:5,000+	842	239	249
+sal	2:500 - 999	1062	259	282
+sal	3:1,000 - 1,999	5103	1325	1409
+sal	4:2,000 - 2,999	3450	797	836
+sal	5:3,000 - 4,999	2307	516	552
+sal	6:5,000+	844	242	252
 sal	7:Not specified	7	1	1
-soc	NULL	23941	3013	6381
-soc	Housewife	4128	1125	1190
-soc	None of these	5370	1329	1403
+soc	NULL	24466	3073	6455
+soc	Housewife	4128	1128	1192
+soc	None of these	5370	1328	1406
 soc	Pensioner	457	86	95
 soc	Student	1467	243	258
-src	NULL	22323	2590	5930
-src	Facebook	7489	1432	1474
-src	Friend / family recommendation	2524	565	585
+src	NULL	22778	2624	5975
+src	Facebook	7532	1438	1485
+src	Friend / family recommendation	2529	569	588
 src	Google	109	23	24
-src	Instagram	995	167	172
-src	Other	374	83	89
+src	Instagram	997	168	172
+src	Other	374	81	89
 src	Outdoor banner	12	1	1
-src	TikTok	522	121	125
-src	Used Volta before	1015	814	927
+src	TikTok	521	121	124
+src	Used Volta before	1036	833	948

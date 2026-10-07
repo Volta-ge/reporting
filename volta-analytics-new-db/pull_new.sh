@@ -161,28 +161,39 @@ Q "WITH RECURSIVE cal AS (SELECT DATE('$LOGI_START') d UNION ALL SELECT d + INTE
    LEFT JOIN (SELECT entity_id, MIN(created_at) activated_at FROM crm_activity_log WHERE action='installment.status_change' AND JSON_EXTRACT(metadata,'\$.to')=1 GROUP BY entity_id) act ON act.entity_id=o.id
    WHERE act.activated_at IS NULL OR act.activated_at >= cal.d + INTERVAL 1 DAY GROUP BY cal.d ORDER BY cal.d;" > "$S/logi_not_activated.tsv"
 
-# Logistics Time Management — per-order timeline (user, 2026-10-02): every order that entered the logistics module
-# from 2026-09-01 00:00 Tbilisi time (= 2026-08-31 20:00 UTC; user moved the start from Oct 1 the same day; the DB stores UTC), whatever happened to it since
-# (cancelled orders included, so their stays still show). One meta row per order + every order-level status event
-# (entity_type=4) with the time of the order's NEXT event (NULL = the status it is in right now); build_logistics.js
-# sums the stays per status. signed_at = first CRM status change to 11 (Signed) — the logistics row is usually
-# created at that moment but not always, so "Signed -> logistics start" is its own stage. now_at = DB clock, the
-# snapshot moment open stays are measured up to.
-LOGI_ORDERS_START='2026-08-31 20:00:00'
-Q "SELECT o.id order_id, l.created_at logi_at, sg.signed_at, l.logistics_status cur, o.crm_order_status ost, l.is_multi_vendor mv,
-          COALESCE(a.city,'') city,
-          COALESCE((SELECT GROUP_CONCAT(DISTINCT v.name ORDER BY v.name SEPARATOR '||') FROM crm_line_fulfillment f JOIN crm_vendors v ON v.id=f.vendor_id WHERE f.order_id=o.id),'') vendors,
-          COALESCE((SELECT GROUP_CONCAT(REPLACE(REPLACE(oi.name,'\t',' '),'\n',' ') ORDER BY oi.id SEPARATOR ' | ') FROM order_items oi WHERE oi.order_id=o.id AND oi.parent_id IS NULL),'') items,
-          UTC_TIMESTAMP() now_at
-   FROM crm_order_logistics l JOIN orders o ON o.id=l.order_id
-   LEFT JOIN addresses a ON a.order_id=o.id AND a.address_type='order_shipping'
-   LEFT JOIN (SELECT entity_id, MIN(created_at) signed_at FROM crm_activity_log
-              WHERE action='installment.status_change' AND JSON_EXTRACT(metadata,'\$.to')=11 GROUP BY entity_id) sg ON sg.entity_id=o.id
-   WHERE l.created_at >= '$LOGI_ORDERS_START' ORDER BY l.created_at;" > "$S/logi_time_orders.tsv"
-Q "SELECT h.order_id, h.to_status, h.created_at at,
-          LEAD(h.created_at) OVER (PARTITION BY h.order_id ORDER BY h.created_at, h.id) next_at
-   FROM crm_shipment_status_history h JOIN crm_order_logistics l ON l.order_id=h.order_id AND l.created_at >= '$LOGI_ORDERS_START'
-   WHERE h.entity_type=4 ORDER BY h.order_id, h.created_at, h.id;" > "$S/logi_time_events.tsv"
+# Logistics Time Management: how long an order sits in each logistics status (order-level, entity_type=4), and the
+# total time from entering the module to final delivery/pickup. "Time in status X" = the gap between an order's
+# entry into status X (crm_shipment_status_history.created_at) and its NEXT status-history event for that same
+# order (LEAD() window function — the self-join used for logi_status.tsv above takes 20-30s+ per calendar day on
+# RDS, LEAD() runs this in well under a second); only completed transitions are counted (an order still sitting in
+# a status right now has no "time spent" yet, same convention as avgDeliveryTime above). Status 80/81 (Delivered/
+# Picked up) are the terminal state, not a stage orders sit "in" — excluded from the per-status table. Median = the
+# middle ranked value (MySQL has no PERCENTILE_CONT); p90 = value at the 90th ranked position, both via ROW_NUMBER().
+Q "WITH ev AS (
+     SELECT h.order_id, h.to_status,
+            TIMESTAMPDIFF(SECOND, h.created_at, LEAD(h.created_at) OVER (PARTITION BY h.order_id ORDER BY h.created_at, h.id)) dur
+     FROM crm_shipment_status_history h JOIN orders o ON o.id=h.order_id AND (o.crm_active=1 OR o.crm_order_status=11)
+     WHERE h.entity_type=4 AND h.created_at >= '$LOGI_START'
+   ), ranked AS (
+     SELECT to_status, dur, ROW_NUMBER() OVER (PARTITION BY to_status ORDER BY dur) rn, COUNT(*) OVER (PARTITION BY to_status) cnt
+     FROM ev WHERE dur IS NOT NULL
+   )
+   SELECT to_status, COUNT(*) n, AVG(dur) avgSec, MIN(dur) minSec, MAX(dur) maxSec,
+          AVG(CASE WHEN rn IN (FLOOR((cnt+1)/2), CEIL((cnt+1)/2)) THEN dur END) medianSec,
+          AVG(CASE WHEN rn=CEIL(cnt*0.9) THEN dur END) p90Sec
+   FROM ranked GROUP BY to_status ORDER BY to_status;" > "$S/logi_status_durations.tsv"
+# total transit time: entered (sale date, or the day the module picked the order up, if later) to first delivered/
+# picked-up event — same "entered"/"delivered" definitions as logi_delivery.tsv, delivered orders only.
+Q "WITH pop AS (
+     SELECT o.id, GREATEST(COALESCE(o.crm_creator_date, o.created_at), l.created_at) entered, dl.delivered_at
+     FROM orders o JOIN crm_order_logistics l ON l.order_id=o.id
+     LEFT JOIN (SELECT order_id, MIN(created_at) delivered_at FROM crm_shipment_status_history WHERE entity_type=4 AND to_status IN (80,81) GROUP BY order_id) dl ON dl.order_id=o.id
+     WHERE (o.crm_active=1 OR o.crm_order_status=11) AND l.created_at >= '$LOGI_START'
+   ), durs AS (SELECT TIMESTAMPDIFF(SECOND, entered, delivered_at) dur FROM pop WHERE delivered_at IS NOT NULL),
+   ranked AS (SELECT dur, ROW_NUMBER() OVER (ORDER BY dur) rn, COUNT(*) OVER () cnt FROM durs)
+   SELECT COUNT(*) n, AVG(dur) avgSec, MIN(dur) minSec, MAX(dur) maxSec,
+          AVG(CASE WHEN rn IN (FLOOR((cnt+1)/2), CEIL((cnt+1)/2)) THEN dur END) medianSec
+   FROM ranked;" > "$S/logi_transit_time.tsv"
 
 # ================ Marketing — Leads ================
 # Lead status/step/city by day, lead-to-application conversion. No PII (see build_mkt.js). Runs through today.

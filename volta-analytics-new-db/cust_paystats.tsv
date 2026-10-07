@@ -1,27 +1,27 @@
 metric	val	n
-worst	0	819
-worst	1	408
-worst	6	434
-worst	4	138
-worst	2	272
-worst	3	309
-worst	5	95
-overdue	0	1356
-overdue	1	1119
-dpd	0:Not overdue	1356
-dpd	5:90+ days	429
-dpd	1:1 - 7 days	162
-dpd	3:31 - 60 days	128
-dpd	2:8 - 30 days	311
-dpd	4:61 - 90 days	89
-ontime	1:90%+	949
-ontime	9:No settled instalment yet	1291
-ontime	3:50 - 69%	24
-ontime	5:< 25%	205
-ontime	4:25 - 49%	4
-ontime	2:70 - 89%	2
-coverage	stats_rows	2475
-coverage	active_customers_by_account	3646
-coverage	active_customers_with_stats	2350
+worst	0	1068
+worst	1	528
+worst	6	448
+worst	4	176
+worst	2	255
+worst	3	337
+worst	5	93
+overdue	0	1824
+overdue	1	1081
+dpd	0:Not overdue	1824
+dpd	1:1 - 7 days	118
+dpd	5:90+ days	437
+dpd	3:31 - 60 days	163
+dpd	2:8 - 30 days	278
+dpd	4:61 - 90 days	85
+ontime	1:90%+	1288
+ontime	9:No settled instalment yet	1296
+ontime	3:50 - 69%	38
+ontime	5:< 25%	274
+ontime	4:25 - 49%	5
+ontime	2:70 - 89%	4
+coverage	stats_rows	2905
+coverage	active_customers_by_account	3654
+coverage	active_customers_with_stats	2743
 coverage	computed_from	2026-09-01
-coverage	computed_to	2026-09-16
+coverage	computed_to	2026-09-21

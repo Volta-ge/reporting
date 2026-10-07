@@ -140,18 +140,13 @@ final class NewDbReport
         80 => 'მიტანილი / Delivered', 81 => 'გატანილი / Picked up',
     ];
 
-    /** Logistics Time Management (per-order timeline) — same columns / labels / terminal codes as build_logistics.js's
-     * TIME_COLS / TIME_END. Labels for 22/47/70/86 are inferred (the CRM stores no wording for them), marked "?". */
-    private const LOGI_TIME_COLS = [
-        [20, 'Started', 'until ordered from vendor'], [22, 'Status 22 (out of stock?)', 'vendor problem'], [25, 'Ordered from vendor', 'until vendor confirms'],
-        [30, 'Ready at vendor', 'until collection is booked'], [35, 'Collection scheduled', 'until collected'], [86, 'Status 86 (collection failed?)', ''],
-        [47, 'Status 47 (partly at warehouse?)', ''], [40, 'Collected', 'until at warehouse'], [45, 'At warehouse', 'until ready to ship'],
-        [48, 'Partially ready', 'lines at mixed stages'], [50, 'Ready to ship', 'until out for delivery'], [60, 'Out for delivery', 'until delivered'],
-        [70, 'Status 70 (handed over?)', 'until delivered'],
+    /** Same map as build_logistics.js's STATUS_LABEL (English only, unlike LOGI_STATUS_LABEL above) — kept
+     * byte-identical to the static build for the Logistics Time Management sub-tab. */
+    private const LOGI_TIME_STATUS_LABEL = [
+        20 => 'Started', 25 => 'Procuring', 30 => 'Ready at vendor', 35 => 'Collected', 40 => 'To warehouse',
+        45 => 'Warehouse', 48 => 'Partially ready', 50 => 'Ready to ship', 60 => 'Out for delivery',
+        80 => 'Delivered', 81 => 'Picked up',
     ];
-    private const LOGI_TIME_END = [80 => 'Delivered', 81 => 'Picked up', 90 => 'Returned', 99 => 'Cancelled'];
-    /** 2026-09-01 00:00 Tbilisi time (the DB stores UTC) — same as pull_new.sh's LOGI_ORDERS_START. */
-    private const LOGI_TIME_ORDERS_START = '2026-08-31 20:00:00';
 
     /** Same series/snapshots as volta-analytics-new-db/build_logistics.js (SQL identical to pull_new.sh); through today. */
     private function logistics(): array
@@ -352,93 +347,53 @@ final class NewDbReport
             $statusByDay[$key] = ['title' => $sec['title'], 'rows' => $rows, 'total' => $total];
         }
 
-        $timeManagement = ['orders' => $this->logisticsTimeOrders()];
-
-        return ['pending' => $pending, 'delivery' => $delivery, 'byCity' => $byCity, 'byGoods' => $byGoods, 'openCases' => $openCases, 'statusByDay' => $statusByDay, 'timeManagement' => $timeManagement];
-    }
-
-    /**
-     * Logistics Time Management — per-order timeline. Same SQL as pull_new.sh's logi_time_orders.tsv /
-     * logi_time_events.tsv and same aggregation as build_logistics.js (timeManagement.orders): every order that entered
-     * the module from 2026-09-01 Tbilisi time, seconds spent in each order-level status (repeat visits summed, the
-     * current stay measured up to the DB clock and flagged open), Signed -> logistics start, end = first
-     * delivered / picked up / cancelled event. Clock times are Tbilisi time (UTC+4).
-     */
-    private function logisticsTimeOrders(): array
-    {
-        $stmt = $this->pdo->prepare("SELECT o.id order_id, l.created_at logi_at, sg.signed_at, l.logistics_status cur, o.crm_order_status ost, l.is_multi_vendor mv,
-                   COALESCE(a.city,'') city,
-                   COALESCE((SELECT GROUP_CONCAT(DISTINCT v.name ORDER BY v.name SEPARATOR '||') FROM crm_line_fulfillment f JOIN crm_vendors v ON v.id=f.vendor_id WHERE f.order_id=o.id),'') vendors,
-                   COALESCE((SELECT GROUP_CONCAT(REPLACE(REPLACE(oi.name,'\t',' '),'\n',' ') ORDER BY oi.id SEPARATOR ' | ') FROM order_items oi WHERE oi.order_id=o.id AND oi.parent_id IS NULL),'') items,
-                   UTC_TIMESTAMP() now_at
-            FROM crm_order_logistics l JOIN orders o ON o.id=l.order_id
-            LEFT JOIN addresses a ON a.order_id=o.id AND a.address_type='order_shipping'
-            LEFT JOIN (SELECT entity_id, MIN(created_at) signed_at FROM crm_activity_log
-                       WHERE action='installment.status_change' AND JSON_EXTRACT(metadata,'$.to')=11 GROUP BY entity_id) sg ON sg.entity_id=o.id
-            WHERE l.created_at >= :start ORDER BY l.created_at");
-        $stmt->execute(['start' => self::LOGI_TIME_ORDERS_START]);
-        $meta = $stmt->fetchAll();
-        $stmt = $this->pdo->prepare("SELECT h.order_id, h.to_status, h.created_at at,
-                   LEAD(h.created_at) OVER (PARTITION BY h.order_id ORDER BY h.created_at, h.id) next_at
-            FROM crm_shipment_status_history h JOIN crm_order_logistics l ON l.order_id=h.order_id AND l.created_at >= :start
-            WHERE h.entity_type=4 ORDER BY h.order_id, h.created_at, h.id");
-        $stmt->execute(['start' => self::LOGI_TIME_ORDERS_START]);
-        $byOrder = [];
-        foreach ($stmt->fetchAll() as $e) { $byOrder[$e['order_id']][] = $e; }
-
-        $utc = new \DateTimeZone('UTC');
-        $ms = static fn (?string $v): ?float => ($v === null || $v === '') ? null : (float) (new \DateTimeImmutable($v, $utc))->format('U.u') * 1000;
-        $tbs = static fn (float $m): string => gmdate('d.m H:i', (int) floor($m / 1000) + 4 * 3600);
-        $dash = "\u{2013}";
-        $nowMs = $meta ? $ms($meta[0]['now_at']) : microtime(true) * 1000;
-        $labelOf = static function (int $code): string {
-            if (isset(self::LOGI_TIME_END[$code])) { return self::LOGI_TIME_END[$code]; }
-            foreach (self::LOGI_TIME_COLS as $c) { if ($c[0] === $code) { return $c[1]; } }
-            return 'Status ' . $code;
-        };
-
-        $seen = [];
-        $orders = [];
-        foreach ($meta as $m) {
-            $stays = [];
-            $endMs = null; $endCode = null;
-            foreach ($byOrder[$m['order_id']] ?? [] as $e) {
-                $code = (int) $e['to_status']; $at = $ms($e['at']); $nx = $ms($e['next_at']);
-                if (isset(self::LOGI_TIME_END[$code])) { if ($endMs === null && $code !== 90) { $endMs = $at; $endCode = $code; } continue; }
-                if ($endMs !== null) { continue; }   // events after delivery/cancel don't extend the journey
-                $seen[$code] = true;
-                $stays[$code] ??= ['sec' => 0.0, 'open' => false, 'visits' => []];
-                $to = $nx ?? $nowMs;
-                $stays[$code]['sec'] += max(0, ($to - $at) / 1000);
-                if ($nx === null) { $stays[$code]['open'] = true; }
-                $stays[$code]['visits'][] = $tbs($at) . " \u{2192} " . ($nx === null ? 'now' : $tbs($nx));
-            }
-            $logiMs = $ms($m['logi_at']); $signedMs = $ms($m['signed_at']);
-            $early = $signedMs !== null && $signedMs < $logiMs;
-            $startMs = $early ? $signedMs : $logiMs;
-            $vend = array_values(array_filter(array_map('trim', explode('||', (string) $m['vendors'])), static fn ($v) => $v !== ''));
-            $cur = (int) $m['cur'];
-            $orders[] = [
-                'k' => $logiMs, 'id' => (int) $m['order_id'], 'signed' => $signedMs === null ? null : $tbs($signedMs), 'entered' => $tbs($logiMs),
-                'month' => gmdate('Y-m', (int) floor($logiMs / 1000) + 4 * 3600), 'city' => $m['city'] !== '' ? $m['city'] : $dash,
-                'vendors' => $vend ? implode(', ', $vend) : $dash, 'vendorList' => $vend,
-                'items' => $m['items'] !== '' ? $m['items'] : $dash, 'multi' => (string) $m['mv'] === '1', 'cur' => $cur, 'curLabel' => $labelOf($cur),
-                'pre' => $early ? ($logiMs - $signedMs) / 1000 : 0,
-                'stays' => (object) array_map(static fn ($v) => ['sec' => (int) round($v['sec']), 'open' => $v['open'], 'visits' => $v['visits']], $stays),
-                'end' => $endMs === null ? null : ['code' => $endCode, 'at' => $tbs($endMs)],
-                'totalSec' => (int) round((($endMs ?? $nowMs) - $startMs) / 1000), 'totalOpen' => $endMs === null,
+        // Logistics Time Management: same SQL as pull_new.sh's logi_status_durations.tsv / logi_transit_time.tsv
+        // (LEAD()-window per-status durations + entered->delivered total); see that file's comment for why LEAD()
+        // replaces the self-join used above for statusByDay (20-30s+ per day there vs. well under a second here).
+        $stmt = $this->pdo->prepare("WITH ev AS (
+                SELECT h.order_id, h.to_status,
+                       TIMESTAMPDIFF(SECOND, h.created_at, LEAD(h.created_at) OVER (PARTITION BY h.order_id ORDER BY h.created_at, h.id)) dur
+                FROM crm_shipment_status_history h JOIN orders o ON o.id=h.order_id AND (o.crm_active=1 OR o.crm_order_status=11)
+                WHERE h.entity_type=4 AND h.created_at >= :logiStart
+            ), ranked AS (
+                SELECT to_status, dur, ROW_NUMBER() OVER (PARTITION BY to_status ORDER BY dur) rn, COUNT(*) OVER (PARTITION BY to_status) cnt
+                FROM ev WHERE dur IS NOT NULL
+            )
+            SELECT to_status, COUNT(*) n, AVG(dur) avgSec, MIN(dur) minSec, MAX(dur) maxSec,
+                   AVG(CASE WHEN rn IN (FLOOR((cnt+1)/2), CEIL((cnt+1)/2)) THEN dur END) medianSec,
+                   AVG(CASE WHEN rn=CEIL(cnt*0.9) THEN dur END) p90Sec
+            FROM ranked GROUP BY to_status ORDER BY to_status");
+        $stmt->execute(['logiStart' => $logiStart]);
+        $byStatus = [];
+        foreach ($stmt->fetchAll() as $r) {
+            $code = (int) $r['to_status'];
+            if ($code === 80 || $code === 81) { continue; } // terminal state, not a stage orders sit "in"
+            $byStatus[] = [
+                'code' => $code, 'label' => self::LOGI_TIME_STATUS_LABEL[$code] ?? ('Status ' . $code), 'n' => (int) $r['n'],
+                'avgHours' => (float) $r['avgSec'] / 3600, 'medianHours' => (float) $r['medianSec'] / 3600,
+                'p90Hours' => $r['p90Sec'] !== null ? (float) $r['p90Sec'] / 3600 : null,
+                'minHours' => (float) $r['minSec'] / 3600, 'maxHours' => (float) $r['maxSec'] / 3600,
             ];
         }
-        usort($orders, static fn ($a, $b) => $b['k'] <=> $a['k']);
-        foreach ($orders as &$o) { unset($o['k']); }
-        unset($o);
 
-        $core = [20, 25, 30, 35, 40, 45, 50, 60];
-        $cols = array_values(array_filter(self::LOGI_TIME_COLS, static fn ($c) => in_array($c[0], $core, true) || isset($seen[$c[0]])));
-        $known = array_column(self::LOGI_TIME_COLS, 0);
-        foreach (array_keys($seen) as $c) { if (!in_array($c, $known, true)) { $cols[] = [$c, 'Status ' . $c, '']; } }
+        $stmt = $this->pdo->prepare("WITH pop AS (
+                SELECT o.id, GREATEST(COALESCE(o.crm_creator_date, o.created_at), l.created_at) entered, dl.delivered_at
+                FROM orders o JOIN crm_order_logistics l ON l.order_id=o.id
+                LEFT JOIN (SELECT order_id, MIN(created_at) delivered_at FROM crm_shipment_status_history WHERE entity_type=4 AND to_status IN (80,81) GROUP BY order_id) dl ON dl.order_id=o.id
+                WHERE (o.crm_active=1 OR o.crm_order_status=11) AND l.created_at >= :logiStart
+            ), durs AS (SELECT TIMESTAMPDIFF(SECOND, entered, delivered_at) dur FROM pop WHERE delivered_at IS NOT NULL),
+            ranked AS (SELECT dur, ROW_NUMBER() OVER (ORDER BY dur) rn, COUNT(*) OVER () cnt FROM durs)
+            SELECT COUNT(*) n, AVG(dur) avgSec, MIN(dur) minSec, MAX(dur) maxSec,
+                   AVG(CASE WHEN rn IN (FLOOR((cnt+1)/2), CEIL((cnt+1)/2)) THEN dur END) medianSec
+            FROM ranked");
+        $stmt->execute(['logiStart' => $logiStart]);
+        $t = $stmt->fetch();
+        $total = ($t !== false && (int) $t['n'] > 0)
+            ? ['n' => (int) $t['n'], 'avgDays' => (float) $t['avgSec'] / 86400, 'medianDays' => (float) $t['medianSec'] / 86400, 'minDays' => (float) $t['minSec'] / 86400, 'maxDays' => (float) $t['maxSec'] / 86400]
+            : ['n' => 0, 'avgDays' => null, 'medianDays' => null, 'minDays' => null, 'maxDays' => null];
+        $timeManagement = ['byStatus' => $byStatus, 'total' => $total];
 
-        return ['from' => '2026-09-01', 'asOf' => $tbs($nowMs), 'cols' => $cols, 'rows' => $orders];
+        return ['pending' => $pending, 'delivery' => $delivery, 'byCity' => $byCity, 'byGoods' => $byGoods, 'openCases' => $openCases, 'statusByDay' => $statusByDay, 'timeManagement' => $timeManagement];
     }
 
     // ------------------------------------------------------------------ Daily Mail > Full Sales Funnel

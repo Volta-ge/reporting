@@ -119,62 +119,21 @@ const openCases = parseTsv('logi_open.tsv').map(r => ({
   city: r.city || '–', orderNum: +r.order_id,
 }));
 
-// Logistics Time Management (filled below): the per-order timeline is the tab's only report — the summary tables
-// (time-in-status stats, total transit time) were removed at the user's request 2026-10-02.
-const timeManagement = {};
-
-// Per-order timeline (user, 2026-10-02): every order that entered the module from 2026-09-01 (Tbilisi; first asked from Oct 1, moved to Sep 1 the same day), seconds spent
-// in each order-level status (a status visited twice = both stays summed), the stay it is in right now measured up
-// to the snapshot moment (marked open), plus Signed -> logistics start. Times shown in Tbilisi time (UTC+4; the DB
-// stores UTC). 80/81 = delivered/picked up and 99 = cancelled end the timeline; 90 only ever follows 80.
-// Labels for 22/47/70/86 are inferred from where orders go next / the reasons written on them, not from the CRM's
-// own wording (none is stored) — marked "?" until confirmed.
-const TIME_COLS = [[20, 'Started', 'until ordered from vendor'], [22, 'Status 22 (out of stock?)', 'vendor problem'], [25, 'Ordered from vendor', 'until vendor confirms'],
-  [30, 'Ready at vendor', 'until collection is booked'], [35, 'Collection scheduled', 'until collected'], [86, 'Status 86 (collection failed?)', ''],
-  [47, 'Status 47 (partly at warehouse?)', ''], [40, 'Collected', 'until at warehouse'], [45, 'At warehouse', 'until ready to ship'],
-  [48, 'Partially ready', 'lines at mixed stages'], [50, 'Ready to ship', 'until out for delivery'], [60, 'Out for delivery', 'until delivered'],
-  [70, 'Status 70 (handed over?)', 'until delivered']];
-const TIME_END = { 80: 'Delivered', 81: 'Picked up', 90: 'Returned', 99: 'Cancelled' };
-const utcMs = s => (!s || s === 'NULL') ? null : Date.parse(s.replace(' ', 'T') + 'Z');
-const tbs = ms => { const d = new Date(ms + 4 * 3600e3).toISOString(); return d.slice(8, 10) + '.' + d.slice(5, 7) + ' ' + d.slice(11, 16); };
-{
-  const meta = parseTsv('logi_time_orders.tsv');
-  const evs = parseTsv('logi_time_events.tsv');
-  const nowMs = meta.length ? utcMs(meta[0].now_at) : Date.now();
-  const byOrder = {};
-  for (const e of evs) (byOrder[e.order_id] ||= []).push(e);
-  const seen = new Set();
-  const orders = meta.map(m => {
-    const list = byOrder[m.order_id] || [];
-    const stays = {};
-    let endMs = null, endCode = null;
-    for (const e of list) {
-      const code = +e.to_status, at = utcMs(e.at), nx = utcMs(e.next_at);
-      if (TIME_END[code]) { if (endMs === null && code !== 90) { endMs = at; endCode = code; } continue; }
-      if (endMs !== null) continue;   // events after delivery/cancel don't extend the journey
-      seen.add(code);
-      const s = (stays[code] ||= { sec: 0, open: false, visits: [] });
-      const to = nx === null ? nowMs : nx;
-      s.sec += Math.max(0, (to - at) / 1000); if (nx === null) s.open = true;
-      s.visits.push(tbs(at) + ' → ' + (nx === null ? 'now' : tbs(nx)));
-    }
-    const logiMs = utcMs(m.logi_at), signedMs = utcMs(m.signed_at);
-    const startMs = signedMs !== null && signedMs < logiMs ? signedMs : logiMs;
-    const pre = signedMs !== null && signedMs < logiMs ? (logiMs - signedMs) / 1000 : 0;
-    const cur = +m.cur;
-    const vend = (m.vendors || '').split('||').map(v => v.trim()).filter(Boolean);
-    return { k: logiMs, id: +m.order_id, signed: signedMs === null ? null : tbs(signedMs), entered: tbs(logiMs),
-      month: new Date(logiMs + 4 * 3600e3).toISOString().slice(0, 7), city: m.city || '–', vendors: vend.length ? vend.join(', ') : '–', vendorList: vend,
-      items: m.items || '–', multi: m.mv === '1', cur, curLabel: TIME_END[cur] || (TIME_COLS.find(c => c[0] === cur) || [0, 'Status ' + cur])[1],
-      pre, stays: Object.fromEntries(Object.entries(stays).map(([k, v]) => [k, { sec: Math.round(v.sec), open: v.open, visits: v.visits }])),
-      end: endMs === null ? null : { code: endCode, at: tbs(endMs) },
-      totalSec: Math.round(((endMs === null ? nowMs : endMs) - startMs) / 1000), totalOpen: endMs === null };
-  }).sort((a, b) => b.k - a.k);
-  orders.forEach(o => delete o.k);
-  const cols = TIME_COLS.filter(c => [20, 25, 30, 35, 40, 45, 50, 60].includes(c[0]) || seen.has(c[0]));
-  for (const c of seen) if (!cols.some(x => x[0] === c)) cols.push([c, 'Status ' + c, '']);
-  timeManagement.orders = { from: '2026-09-01', asOf: tbs(nowMs), cols, rows: orders };
-}
+// Logistics Time Management: average/median/p90 time an order spends in each logistics status (order level,
+// entity_type=4), and the total time from entering the module to final delivery/pickup — see pull_new.sh's
+// logi_status_durations.tsv / logi_transit_time.tsv comment for the LEAD()-window technique and population.
+// 80/81 (Delivered/Picked up) are the terminal state, not a stage orders sit "in" — left out of the per-status table.
+const durRows = parseTsv('logi_status_durations.tsv').filter(r => +r.to_status !== 80 && +r.to_status !== 81);
+const byStatus = durRows.map(r => ({
+  code: +r.to_status, label: STATUS_LABEL[r.to_status] || ('Status ' + r.to_status), n: num(r.n),
+  avgHours: num(r.avgSec) / 3600, medianHours: num(r.medianSec) / 3600, p90Hours: num(r.p90Sec) / 3600,
+  minHours: num(r.minSec) / 3600, maxHours: num(r.maxSec) / 3600,
+})).sort((a, b) => a.code - b.code);
+const [transitRow] = parseTsv('logi_transit_time.tsv');
+const timeManagement = { byStatus, total: transitRow ? {
+  n: num(transitRow.n), avgDays: num(transitRow.avgSec) / 86400, medianDays: num(transitRow.medianSec) / 86400,
+  minDays: num(transitRow.minSec) / 86400, maxDays: num(transitRow.maxSec) / 86400,
+} : { n: 0, avgDays: null, medianDays: null, minDays: null, maxDays: null } };
 
 const payload = { pending, delivery, byCity, byGoods, openCases, statusByDay, timeManagement, cutover: CUTOVER, generatedAt: new Date().toISOString().slice(0, 16).replace('T', ' ') + ' UTC' };
 fs.writeFileSync(path.join(__dirname, 'logistics_data.json'), JSON.stringify(payload));
@@ -206,18 +165,6 @@ table.logi-table tr.logi-today td:first-child { font-style: italic; }
 table.logi-table tr.logi-sub td { background: #e9e9f1; color: #1a1a34; font-weight: 700; text-align: left; }
 table.logi-table td.logi-extra-first { border-left: 3px solid #1a1a34; }
 table.logi-table td.logi-extra { font-style: italic; }
-table.logi-time-orders tr.logi-head td { white-space: normal; vertical-align: bottom; min-width: 74px; line-height: 1.25; }
-table.logi-time-orders tr.logi-head td small { display: block; font-weight: 400; color: #c9c9dd; font-size: 10px; }
-table.logi-time-orders td.lt-txt { text-align: left; max-width: 220px; overflow: hidden; text-overflow: ellipsis; }
-table.logi-table.logi-time-orders tr td.lt-run, .logi-run-key { background: #fff1b8; color: #1a1a34; font-weight: 700; }
-table.logi-table.logi-time-orders tr td.lt-end { background: #e9e9f1; color: #1a1a34; }
-.logi-run-key { padding: 0 4px; border-radius: 3px; }
-.lt-filters { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 10px 14px; margin: 4px 0 12px; }
-.lt-filters label { display: flex; flex-direction: column; gap: 4px; font-size: 11.5px; font-weight: 600; color: var(--text-secondary); }
-.lt-filters select, .lt-filters input { font: inherit; font-size: 12.5px; font-weight: 400; padding: 6px 8px; border: 1px solid var(--border); border-radius: 6px; background: var(--surface-1); color: var(--text-primary); min-width: 150px; max-width: 240px; }
-.lt-filters button { font: inherit; font-size: 12.5px; font-weight: 600; padding: 6px 14px; border: 1px solid #1a1a34; border-radius: 6px; background: #1a1a34; color: #c2ff00; cursor: pointer; }
-.lt-switches { display: flex; flex-wrap: wrap; gap: 10px; margin: 0 0 10px; }
-.lt-filter-count { font-size: 12px; color: var(--text-secondary); padding-bottom: 7px; }
 .logi-group { border: 2px solid #1a1a34; border-radius: 12px; padding: 10px; display: flex; flex-direction: column; gap: 12px; background: var(--surface-1); margin: 6px 0 14px; }
 .logi-group-title { background: #1a1a34; color: #c2ff00; font-weight: 700; font-size: 13px; padding: 7px 12px; border-radius: 8px; }
 .logi-group .report-card, .logi-group .table-card { margin: 0; }
@@ -394,39 +341,21 @@ if (!html.includes('id="page-logistics"')) {
   const page2 = `
 <div class="page" data-page="logisticstime" id="page-logisticstime">
 <div class="wrap">
-  <p class="section-title">Procurement &amp; Logistics &mdash; Time in Each Status</p>
-  <div class="banner" id="logiTimeOrdersBanner"></div>
-  <div class="lt-filters" id="logiTimeFilters">
-    <label>Month entered<select id="ltfMonth"></select></label>
-    <label>Current status<select id="ltfStatus"></select></label>
-    <label>City<select id="ltfCity"></select></label>
-    <label>Vendor<select id="ltfVendor"></select></label>
-    <label>Order # / product<input type="search" id="ltfSearch" placeholder="e.g. 60200 or Samsung"></label>
-    <button type="button" id="ltfReset">Reset</button>
-    <span class="lt-filter-count" id="ltfCount"></span>
-  </div>
+  <p class="section-title">Logistics Time Management &mdash; Time in Each Status</p>
+  <div class="banner" id="logiTimeBanner"></div>
 
-  <p class="section-title">Status Statistics &mdash; by Month, City and Vendor</p>
-  <div class="lt-switches">
-    <div class="page-nav" id="ltsGroup"><button type="button" data-v="month" class="active">By month</button><button type="button" data-v="city">By city</button><button type="button" data-v="vendor">By vendor</button></div>
-    <div class="page-nav" id="ltsMeasure"><button type="button" data-v="avg" class="active">Average time</button><button type="button" data-v="median">Median time</button><button type="button" data-v="count">Orders by current status</button></div>
+  <div class="table-card">
+    <table class="logi-mini" id="logiTimeTotalTable"><colgroup><col style="width:36%"></colgroup><tbody></tbody></table>
   </div>
+  <p class="note">Entering logistics = the later of the sale date and the day the CRM logistics module picked the order up. Final delivery = the order's first delivered or picked-up event (CRM logistics status 80/81). Only orders that have actually reached delivery/pickup are counted here.</p>
+
   <div class="report-card">
-    <div class="report-scroll-top" id="logiTimeStatsScrollTop"><div></div></div>
-    <div class="report-scroll" id="logiTimeStatsScrollBody">
-      <table class="logi-table logi-time-orders" id="logiTimeStatsTable"><tbody></tbody></table>
+    <div class="report-scroll-top" id="logiTimeScrollTop"><div></div></div>
+    <div class="report-scroll" id="logiTimeScrollBody">
+      <table class="logi-table" id="logiTimeTable"><tbody></tbody></table>
     </div>
   </div>
-  <p class="note">Same orders as the table below, after the filters above. <b>Average / Median time</b>: how long orders stayed in each status (completed stays only, as in the Average row below; hover a cell for how many orders it is based on); Total = signed to delivered / picked up, delivered orders only. <b>Orders by current status</b>: where those orders stand right now (hover a cell for its share of the row). Month = the month the order entered logistics. By vendor: an order with items from several vendors is counted under each of them (its times are order-level, so it adds the same times to every vendor it has).</p>
-
-  <p class="section-title">Order by Order</p>
-  <div class="report-card">
-    <div class="report-scroll-top" id="logiTimeOrdersScrollTop"><div></div></div>
-    <div class="report-scroll" id="logiTimeOrdersScrollBody">
-      <table class="logi-table logi-time-orders" id="logiTimeOrdersTable"><tbody></tbody></table>
-    </div>
-  </div>
-  <p class="note">One row per order that entered the logistics module from September 1 (newest first; the module went live on September 2). Each status column = how long the order stayed in that status before moving to the next one, i.e. how long that step took: <b>Started</b> = until the order was sent to the vendor, <b>Ordered from vendor</b> = until the vendor confirmed it was ready, <b>Ready at vendor</b> = until a collection was booked, <b>Collection scheduled</b> = until it was picked up from the vendor, <b>Collected</b> = until it arrived at the warehouse, <b>At warehouse</b> = until it was ready to ship, <b>Ready to ship</b> = until it went out to the customer, <b>Out for delivery</b> = until the customer received it. <b>Signed &rarr; logistics start</b> = from the contract being signed (CRM status Signed) to the logistics module picking the order up. A status visited more than once is summed (hover a cell for every visit with its start and end). <span class="logi-run-key">Highlighted</span> cells are the status the order is in <b>right now</b>, counted up to the snapshot time and still growing. Total = signed (or logistics start) to delivered / picked up / cancelled, or to the snapshot time if still open. Times are calendar time (nights and weekends included), clock times are Tbilisi time. Average row = completed stays only. Statuses marked "?" have no name in the CRM's data; the label is our reading of where those orders go next. * after the order number = items from several vendors.</p>
+  <p class="note">Time an order spends in each logistics status before moving to the next one, order level (one row per order in the module, not per line item). Only completed stays are counted (an order still sitting in a status right now has not finished that stay yet, so it is left out until it moves on &mdash; the same rule "Average Delivery Time" uses on the Logistics Daily tab). "Delivered" / "Picked up" are the finish line, not a stage orders wait in, so they are not shown as rows here. Share of avg = this status's average time as a share of the sum of every status's average time shown &mdash; the quickest way to see which stage eats the most of the journey. p90 = 9 orders out of 10 moved on faster than this.</p>
 </div>
 </div>
 `;
@@ -530,144 +459,36 @@ ${JS_MARK_END}
 
 ${JS_MARK2}
 window.__registerPage(['logisticstime'], function () {
-  const T = LOGI_JSON.timeManagement || {};
-  const O = T.orders || { cols: [], rows: [] };
-  const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-  const dur = sec => {
-    if (sec === null || sec === undefined) return '';
-    if (sec < 60) return '&lt;1m';
-    const m = Math.round(sec / 60); if (m < 60) return m + 'm';
-    const h = Math.floor(m / 60); if (h < 24) return h + 'h ' + (m % 60) + 'm';
-    return Math.floor(h / 24) + 'd ' + (h % 24) + 'h';
-  };
-  function renderOrders(rows) {
-    const nCols = 9 + O.cols.length;
-    let html = '<tr class="logi-title"><td colspan="' + nCols + '">Time in Each Status, Order by Order (from September 1)</td></tr>';
-    html += '<tr class="logi-head"><td>Order #</td><td>Signed</td><td>City</td><td>Vendor(s)</td><td>Products</td><td>Current status</td><td>Signed &rarr; logistics start</td>'
-      + O.cols.map(c => '<td>' + esc(c[1]) + (c[2] ? '<small>' + esc(c[2]) + '</small>' : '') + '</td>').join('')
-      + '<td>Delivered / picked up</td><td>Total</td></tr>';
-    // average of completed stays per column, and how many orders have one
-    const avgCell = vals => vals.length ? dur(vals.reduce((s, v) => s + v, 0) / vals.length) : '&ndash;';
-    const preVals = rows.filter(r => r.signed).map(r => r.pre);
-    const colVals = O.cols.map(c => rows.map(r => r.stays[c[0]]).filter(s => s && !s.open).map(s => s.sec));
-    const doneTotals = rows.filter(r => !r.totalOpen && r.end && r.end.code !== 99).map(r => r.totalSec);
-    html += '<tr class="logi-total"><td>Average</td><td colspan="5">completed stays only</td><td>' + avgCell(preVals) + '</td>' + colVals.map(v => '<td>' + avgCell(v) + '</td>').join('') + '<td></td><td>' + avgCell(doneTotals) + '</td></tr>';
-    html += '<tr class="logi-sub"><td>Orders</td><td colspan="5">with a completed stay in the status</td><td>' + fmt(preVals.length) + '</td>' + colVals.map(v => '<td>' + fmt(v.length) + '</td>').join('') + '<td>' + fmt(rows.filter(r => r.end && r.end.code !== 99).length) + '</td><td>' + fmt(doneTotals.length) + '</td></tr>';
-    if (!rows.length) html += '<tr><td colspan="' + nCols + '">No orders match the filters.</td></tr>';
+  const T = LOGI_JSON.timeManagement || { byStatus: [], total: {} };
+  document.getElementById('logiTimeBanner').innerHTML = '<b>Source:</b> the same CRM shipment-status history as Logistics Daily (<code>crm_shipment_status_history</code>), order level (<code>entity_type=4</code>). Each order\\'s stay in a status runs from that status\\'s own event to the order\\'s NEXT status event; only orders that have actually moved on to a new status count. Same population as Logistics Daily: orders in the module in the CRM statuses Signed or Active, from September 2 2026 on.';
+
+  const fmtH = v => (v === null || v === undefined) ? '&ndash;' : Number(v).toFixed(1);
+  const fmtD = v => (v === null || v === undefined) ? '&ndash;' : Number(v).toFixed(1);
+
+  function renderTotal() {
+    const t = T.total || {};
+    let html = '<tr class="logi-mini-title"><td colspan="2">Total Transit Time &mdash; Entering Logistics to Final Delivery</td></tr>';
+    html += '<tr class="logi-mini-head"><td>Metric</td><td>Days</td></tr>';
+    html += '<tr class="logi-mini-data"><td>Average</td><td>' + fmtD(t.avgDays) + '</td></tr>';
+    html += '<tr class="logi-mini-data logi-mini-alt"><td>Median</td><td>' + fmtD(t.medianDays) + '</td></tr>';
+    html += '<tr class="logi-mini-data"><td>Fastest</td><td>' + fmtD(t.minDays) + '</td></tr>';
+    html += '<tr class="logi-mini-data logi-mini-alt"><td>Slowest</td><td>' + fmtD(t.maxDays) + '</td></tr>';
+    html += '<tr class="logi-mini-total"><td>Delivered orders in this sample</td><td>' + fmt(t.n || 0) + '</td></tr>';
+    document.getElementById('logiTimeTotalTable').querySelector('tbody').innerHTML = html;
+  }
+  function renderByStatus() {
+    const rows = T.byStatus || [];
+    const avgSum = rows.reduce((s, r) => s + (r.avgHours || 0), 0);
+    let html = '<tr class="logi-title"><td colspan="8">Time Spent in Each Logistics Status (hours)</td></tr>';
+    html += '<tr class="logi-head"><td>Status</td><td>Orders</td><td>Avg</td><td>Median</td><td>p90</td><td>Fastest</td><td>Slowest</td><td class="logi-extra-first">Share of avg</td></tr>';
+    if (!rows.length) { html += '<tr><td colspan="8">No completed status transitions yet.</td></tr>'; }
     rows.forEach((r, i) => {
-      const cls = i % 2 ? 'logi-light' : 'logi-white';
-      let row = '<td>' + r.id + (r.multi ? ' *' : '') + '</td><td>' + (r.signed || '&ndash;') + '</td><td class="lt-txt">' + esc(r.city) + '</td>'
-        + '<td class="lt-txt" title="' + esc(r.vendors) + '">' + esc(r.vendors) + '</td><td class="lt-txt" title="' + esc(r.items) + '">' + esc(r.items) + '</td>'
-        + '<td class="lt-txt">' + esc(r.curLabel) + '</td>'
-        + '<td title="Signed ' + (r.signed || '?') + ', logistics start ' + r.entered + '">' + (r.signed ? dur(r.pre) : '&ndash;') + '</td>';
-      O.cols.forEach(c => {
-        const s = r.stays[c[0]];
-        if (!s) { row += '<td></td>'; return; }
-        row += '<td' + (s.open ? ' class="lt-run"' : '') + ' title="' + esc(s.visits.join('; ')) + '">' + dur(s.sec) + (s.open ? ' &#9656;' : '') + '</td>';
-      });
-      const endTxt = r.end ? (r.end.code === 99 ? 'Cancelled ' : '') + r.end.at : '';
-      row += '<td class="' + (r.end ? 'lt-end' : '') + '">' + endTxt + '</td><td' + (r.totalOpen ? ' class="lt-run"' : '') + '>' + dur(r.totalSec) + (r.totalOpen ? ' &#9656;' : '') + '</td>';
-      html += '<tr class="' + cls + '">' + row + '</tr>';
+      html += '<tr class="' + (i % 2 ? 'logi-light' : 'logi-white') + '"><td>' + r.label + '</td><td>' + fmt(r.n) + '</td><td>' + fmtH(r.avgHours) + '</td><td>' + fmtH(r.medianHours) + '</td><td>' + fmtH(r.p90Hours) + '</td><td>' + fmtH(r.minHours) + '</td><td>' + fmtH(r.maxHours) + '</td><td class="logi-extra logi-extra-first">' + pct(avgSum ? r.avgHours / avgSum : 0) + '</td></tr>';
     });
-    document.getElementById('logiTimeOrdersTable').querySelector('tbody').innerHTML = html;
-    document.getElementById('ltfCount').textContent = fmt(rows.length) + ' of ' + fmt(O.rows.length) + ' orders';
-    (window.logiTimeScrollUpdaters || []).forEach(f => f());
+    document.getElementById('logiTimeTable').querySelector('tbody').innerHTML = html;
   }
-  // ---- filters: month entered, current status, city, vendor, order # / product text. Averages follow the filter,
-  // and so does the Excel download (it reads the table as rendered).
-  const MONTHS_FULL = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-  const TBS = 'თბილისი';
-  const countBy = f => { const m = {}; O.rows.forEach(r => [].concat(f(r)).forEach(k => { m[k] = (m[k] || 0) + 1; })); return m; };
-  const opt = (v, label) => '<option value="' + esc(v) + '">' + esc(label) + '</option>';
-  const months = Object.keys(countBy(r => r.month)).sort().reverse();
-  document.getElementById('ltfMonth').innerHTML = opt('all', 'All months') + months.map(m => opt(m, MONTHS_FULL[+m.slice(5, 7) - 1] + ' ' + m.slice(0, 4))).join('');
-  const curCounts = countBy(r => r.curLabel);
-  document.getElementById('ltfStatus').innerHTML = opt('all', 'All') + opt('g:open', 'In progress (not delivered)') + opt('g:done', 'Delivered / picked up') + opt('g:cancel', 'Cancelled')
-    + '<option disabled>&#8212; exact status &#8212;</option>' + Object.keys(curCounts).sort((a, b) => curCounts[b] - curCounts[a]).map(k => opt('c:' + k, k + ' (' + curCounts[k] + ')')).join('');
-  const cityCounts = countBy(r => r.city);
-  document.getElementById('ltfCity').innerHTML = opt('all', 'All') + opt('g:tbs', 'Tbilisi') + opt('g:other', 'Other cities') + opt('g:none', 'No city recorded')
-    + '<option disabled>&#8212; city &#8212;</option>' + Object.keys(cityCounts).filter(k => k !== TBS && k !== '–').sort((a, b) => cityCounts[b] - cityCounts[a]).map(k => opt('c:' + k, k + ' (' + cityCounts[k] + ')')).join('');
-  const vendCounts = countBy(r => r.vendorList.length ? r.vendorList : ['(no vendor yet)']);
-  document.getElementById('ltfVendor').innerHTML = opt('all', 'All') + Object.keys(vendCounts).sort((a, b) => a.localeCompare(b)).map(k => opt(k, k + ' (' + vendCounts[k] + ')')).join('');
-  const F = ['ltfMonth', 'ltfStatus', 'ltfCity', 'ltfVendor', 'ltfSearch'].map(id => document.getElementById(id));
-  // ---- status statistics: group the filtered orders by month / city / vendor
-  let ltsGroup = 'month', ltsMeasure = 'avg', lastRows = O.rows;
-  const median = vals => { const a = vals.slice().sort((x, y) => x - y), n = a.length; return n % 2 ? a[(n - 1) / 2] : (a[n / 2 - 1] + a[n / 2]) / 2; };
-  const END_LABELS = ['Delivered', 'Picked up', 'Returned', 'Cancelled'];
-  function renderStats(rows) {
-    const keysOf = r => ltsGroup === 'month' ? [r.month] : ltsGroup === 'city' ? [r.city === '–' ? 'No city recorded' : r.city] : (r.vendorList.length ? r.vendorList : ['(no vendor yet)']);
-    const labelOf = k => ltsGroup === 'month' ? MONTHS_FULL[+k.slice(5, 7) - 1] + ' ' + k.slice(0, 4) : k;
-    const groups = {};
-    rows.forEach(r => keysOf(r).forEach(k => (groups[k] ||= []).push(r)));
-    const keys = Object.keys(groups).sort((a, b) => ltsGroup === 'month' ? (a < b ? 1 : -1) : (groups[b].length - groups[a].length || a.localeCompare(b)));
-    const glabel = { month: 'Month', city: 'City', vendor: 'Vendor' }[ltsGroup];
-    let head, cellsFor;
-    if (ltsMeasure === 'count') {
-      const curOrder = O.cols.map(c => c[1]).concat(END_LABELS);
-      const seen = new Set(rows.map(r => r.curLabel));
-      const curCols = curOrder.filter(l => seen.has(l)).concat([...seen].filter(l => curOrder.indexOf(l) < 0));
-      head = '<td>Orders</td><td>In progress</td>' + curCols.map(l => '<td>' + esc(l) + '</td>').join('');
-      cellsFor = list => {
-        const c = {}; list.forEach(r => { c[r.curLabel] = (c[r.curLabel] || 0) + 1; });
-        const share = n => list.length ? Math.round(100 * n / list.length) + '% of the row' : '';
-        const open = list.filter(r => !r.end).length;
-        return '<td>' + fmt(list.length) + '</td><td title="' + share(open) + '">' + fmt(open) + '</td>'
-          + curCols.map(l => '<td title="' + share(c[l] || 0) + '">' + (c[l] ? fmt(c[l]) : '') + '</td>').join('');
-      };
-    } else {
-      const agg = ltsMeasure === 'median' ? median : (vals => vals.reduce((s, v) => s + v, 0) / vals.length);
-      const cell = vals => '<td title="' + vals.length + ' orders">' + (vals.length ? dur(agg(vals)) : '') + '</td>';
-      head = '<td>Orders</td><td>Delivered</td><td>Signed &rarr; logistics start</td>' + O.cols.map(c => '<td>' + esc(c[1]) + (c[2] ? '<small>' + esc(c[2]) + '</small>' : '') + '</td>').join('') + '<td>Total</td>';
-      cellsFor = list => {
-        const done = list.filter(r => r.end && r.end.code !== 99);
-        return '<td>' + fmt(list.length) + '</td><td>' + fmt(done.length) + '</td>' + cell(list.filter(r => r.signed).map(r => r.pre))
-          + O.cols.map(c => cell(list.map(r => r.stays[c[0]]).filter(s => s && !s.open).map(s => s.sec))).join('')
-          + cell(done.map(r => r.totalSec));
-      };
-    }
-    const nCols = head.split('<td>').length;
-    const mName = { avg: 'Average Time in Each Status', median: 'Median Time in Each Status', count: 'Orders by Current Status' }[ltsMeasure];
-    let html = '<tr class="logi-title"><td colspan="' + nCols + '">' + mName + ' &mdash; by ' + glabel + '</td></tr>';
-    html += '<tr class="logi-head"><td>' + glabel + '</td>' + head + '</tr>';
-    html += '<tr class="logi-total"><td>All' + (rows.length < O.rows.length ? ' (filtered)' : '') + '</td>' + cellsFor(rows) + '</tr>';
-    keys.forEach((k, i) => { html += '<tr class="' + (i % 2 ? 'logi-light' : 'logi-white') + '"><td>' + esc(labelOf(k)) + '</td>' + cellsFor(groups[k]) + '</tr>'; });
-    if (!keys.length) html += '<tr><td colspan="' + nCols + '">No orders match the filters.</td></tr>';
-    document.getElementById('logiTimeStatsTable').querySelector('tbody').innerHTML = html;
-  }
-  [['ltsGroup', v => { ltsGroup = v; }], ['ltsMeasure', v => { ltsMeasure = v; }]].forEach(([id, set]) => {
-    const nav = document.getElementById(id);
-    nav.addEventListener('click', e => {
-      const b = e.target.closest('button[data-v]'); if (!b) return;
-      set(b.getAttribute('data-v'));
-      nav.querySelectorAll('button[data-v]').forEach(x => x.classList.toggle('active', x === b));
-      renderStats(lastRows); (window.logiTimeScrollUpdaters || []).forEach(f => f());
-    });
-  });
-  function applyFilters() {
-    const [mo, st, ci, ve, q] = F.map(el => el.value);
-    const qq = q.trim().toLowerCase();
-    lastRows = O.rows.filter(r => {
-      if (mo !== 'all' && r.month !== mo) return false;
-      if (st === 'g:open' && r.end) return false;
-      if (st === 'g:done' && !(r.end && r.end.code !== 99)) return false;
-      if (st === 'g:cancel' && !(r.end && r.end.code === 99)) return false;
-      if (st.indexOf('c:') === 0 && r.curLabel !== st.slice(2)) return false;
-      if (ci === 'g:tbs' && r.city !== TBS) return false;
-      if (ci === 'g:other' && (r.city === TBS || r.city === '–')) return false;
-      if (ci === 'g:none' && r.city !== '–') return false;
-      if (ci.indexOf('c:') === 0 && r.city !== ci.slice(2)) return false;
-      if (ve !== 'all' && !(ve === '(no vendor yet)' ? !r.vendorList.length : r.vendorList.indexOf(ve) >= 0)) return false;
-      if (qq && String(r.id).indexOf(qq) < 0 && r.items.toLowerCase().indexOf(qq) < 0) return false;
-      return true;
-    });
-    renderStats(lastRows);
-    renderOrders(lastRows);
-  }
-  F.forEach(el => el.addEventListener(el.tagName === 'INPUT' ? 'input' : 'change', applyFilters));
-  document.getElementById('ltfReset').addEventListener('click', () => { F.forEach(el => { el.value = el.tagName === 'INPUT' ? '' : 'all'; }); applyFilters(); });
-  document.getElementById('logiTimeOrdersBanner').innerHTML = '<b>Snapshot:</b> ' + (O.asOf || '&ndash;') + ' Tbilisi time &middot; <b>' + fmt(O.rows.length) + '</b> orders entered logistics since September 1. Source: <code>crm_shipment_status_history</code> (order level), signing time from the CRM status log, vendors from <code>crm_line_fulfillment</code>.';
-  window.logiTimeScrollUpdaters = [setupTopScrollSync('logiTimeStatsScrollTop', 'logiTimeStatsScrollBody'), setupTopScrollSync('logiTimeOrdersScrollTop', 'logiTimeOrdersScrollBody')];
-  applyFilters();
+  renderTotal(); renderByStatus();
+  window.logiTimeScrollUpdaters = [setupTopScrollSync('logiTimeScrollTop', 'logiTimeScrollBody')];
 });
 ${JS_MARK2_END}
 `;
@@ -675,9 +496,6 @@ ${JS_MARK2_END}
   html = html.replace('// ---- top-level page nav (grows as more reports get added) ----', js + '// ---- top-level page nav (grows as more reports get added) ----');
   must("  if (btn.dataset.page === 'subcategoryanalyze') subcategoryScrollUpdate();", 'nav updaters');
   if (!html.includes("btn.dataset.page === 'logistics'")) html = html.replace("  if (btn.dataset.page === 'subcategoryanalyze') subcategoryScrollUpdate();", "  if (btn.dataset.page === 'subcategoryanalyze') subcategoryScrollUpdate();\n  if (btn.dataset.page === 'logistics' && window.logisticsScrollUpdaters) window.logisticsScrollUpdaters.forEach(f => f());\n  if (btn.dataset.page === 'logisticstime' && window.logiTimeScrollUpdaters) window.logiTimeScrollUpdaters.forEach(f => f());");
-  // separate check: an HTML that already had the Logistics Daily updater line would otherwise never get this one
-  const LOGI_UPD = "  if (btn.dataset.page === 'logistics' && window.logisticsScrollUpdaters) window.logisticsScrollUpdaters.forEach(f => f());";
-  if (!html.includes("btn.dataset.page === 'logisticstime'")) { must(LOGI_UPD, 'logistics nav updater'); html = html.replace(LOGI_UPD, LOGI_UPD + "\n  if (btn.dataset.page === 'logisticstime' && window.logiTimeScrollUpdaters) window.logiTimeScrollUpdaters.forEach(f => f());"); }
 }
 
 if (__hadCRLF) html = html.replace(/\n/g, '\r\n');
