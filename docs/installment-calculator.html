@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+<html lang="ka">
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta charset="utf-8">
+<title>Volta &mdash; Sales: Installment Calculator</title>
+<style>
+  /* layout: two-column form (inputs | live results), full-width payment schedule below, stacks to one column under 760px */
+  :root{
+    --bg:#f5f6f1;
+    --surface:#ffffff;
+    --surface-2:#edf0e6;
+    --border:#d7dbcd;
+    --fg:#1a1a34;
+    --fg-muted:#62657a;
+    --accent:#7a9900;
+    --accent-ink:#ffffff;
+    --accent-soft:#eef5d6;
+    --warn-bg:#fff2dd;
+    --warn-fg:#8a5a00;
+    --warn-border:#f0cf94;
+    --danger-bg:#fde8e8;
+    --danger-fg:#9c2b2b;
+    --focus:#4d6b00;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#14142a;
+      --surface:#1e1e3a;
+      --surface-2:#262648;
+      --border:#36365e;
+      --fg:#f1f2ea;
+      --fg-muted:#b3b6cc;
+      --accent:#c2ff00;
+      --accent-ink:#15152b;
+      --accent-soft:#2c3a12;
+      --warn-bg:#3a2c12;
+      --warn-fg:#ffcf7a;
+      --warn-border:#5c4518;
+      --danger-bg:#3a1a1a;
+      --danger-fg:#ff9a9a;
+      --focus:#c2ff00;
+      color-scheme:dark;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#14142a;
+    --surface:#1e1e3a;
+    --surface-2:#262648;
+    --border:#36365e;
+    --fg:#f1f2ea;
+    --fg-muted:#b3b6cc;
+    --accent:#c2ff00;
+    --accent-ink:#15152b;
+    --accent-soft:#2c3a12;
+    --warn-bg:#3a2c12;
+    --warn-fg:#ffcf7a;
+    --warn-border:#5c4518;
+    --danger-bg:#3a1a1a;
+    --danger-fg:#ff9a9a;
+    --focus:#c2ff00;
+    color-scheme:dark;
+  }
+  :root[data-theme="light"]{
+    --bg:#f5f6f1;
+    --surface:#ffffff;
+    --surface-2:#edf0e6;
+    --border:#d7dbcd;
+    --fg:#1a1a34;
+    --fg-muted:#62657a;
+    --accent:#7a9900;
+    --accent-ink:#ffffff;
+    --accent-soft:#eef5d6;
+    --warn-bg:#fff2dd;
+    --warn-fg:#8a5a00;
+    --warn-border:#f0cf94;
+    --danger-bg:#fde8e8;
+    --danger-fg:#9c2b2b;
+    --focus:#4d6b00;
+    color-scheme:light;
+  }
+
+  *{box-sizing:border-box;}
+  body{
+    background:var(--bg);
+    color:var(--fg);
+    font-family:'Inter',system-ui,-apple-system,"Segoe UI",sans-serif;
+    padding-inline:16px;
+    padding-block:28px;
+    display:flex;
+    justify-content:center;
+  }
+  .page{
+    width:100%;
+    max-width:980px;
+    display:flex;
+    flex-direction:column;
+    gap:24px;
+  }
+  header{
+    display:flex;
+    flex-wrap:wrap;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap:16px;
+  }
+  header .titles{
+    flex:1 1 240px;
+    min-width:0;
+  }
+  header h1{
+    font-family:'Manrope',system-ui,sans-serif;
+    font-size:clamp(1.5rem,1.1rem + 1.4vw,2.1rem);
+    font-weight:800;
+    margin:0 0 4px;
+    text-wrap:balance;
+  }
+  header p{
+    margin:0;
+    color:var(--fg-muted);
+    font-size:0.95rem;
+  }
+  .toolbar{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+    flex:none;
+  }
+  .toolbar .segmented{gap:4px;}
+  .toolbar .segmented button{
+    padding:7px 11px;
+    font-size:0.78rem;
+  }
+  .grid{
+    display:grid;
+    grid-template-columns:1.1fr 1fr;
+    gap:20px;
+    align-items:start;
+  }
+  @media (max-width:760px){
+    .grid{grid-template-columns:1fr;}
+  }
+  .card{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:14px;
+    padding:20px;
+    min-width:0;
+  }
+  .card h2{
+    font-family:'Manrope',system-ui,sans-serif;
+    font-size:1rem;
+    font-weight:700;
+    margin:0 0 16px;
+    letter-spacing:0.01em;
+  }
+  .field{
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+    margin-bottom:18px;
+  }
+  .field:last-child{margin-bottom:0;}
+  label{
+    font-size:0.82rem;
+    font-weight:600;
+    color:var(--fg-muted);
+  }
+  input[type="number"]{
+    font:inherit;
+    font-size:1.05rem;
+    font-variant-numeric:tabular-nums;
+    padding:10px 12px;
+    border:1px solid var(--border);
+    border-radius:10px;
+    background:var(--surface-2);
+    color:var(--fg);
+    width:100%;
+  }
+  input[type="number"]:focus-visible{
+    outline:2px solid var(--focus);
+    outline-offset:1px;
+  }
+  select{
+    font:inherit;
+    font-size:0.95rem;
+    padding:10px 12px;
+    border:1px solid var(--border);
+    border-radius:10px;
+    background:var(--surface-2);
+    color:var(--fg);
+    width:100%;
+  }
+  select:focus-visible{
+    outline:2px solid var(--focus);
+    outline-offset:1px;
+  }
+  .segmented{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+  }
+  .segmented button{
+    flex:1 1 auto;
+    min-width:max-content;
+    font:inherit;
+    font-size:0.88rem;
+    font-weight:600;
+    padding:10px 14px;
+    border:1px solid var(--border);
+    border-radius:10px;
+    background:var(--surface-2);
+    color:var(--fg);
+    cursor:pointer;
+  }
+  .segmented button[aria-pressed="true"]{
+    background:var(--accent);
+    color:var(--accent-ink);
+    border-color:var(--accent);
+  }
+  .segmented button:focus-visible{
+    outline:2px solid var(--focus);
+    outline-offset:2px;
+  }
+  .toggle-row{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    padding:12px 14px;
+    border:1px solid var(--border);
+    border-radius:10px;
+    background:var(--surface-2);
+  }
+  .toggle-text{display:block;font-size:0.88rem;font-weight:600;}
+  .toggle-text small{display:block;color:var(--fg-muted);font-weight:400;font-size:0.78rem;margin-top:2px;}
+  .switch{
+    position:relative;
+    width:42px;
+    height:24px;
+    flex:none;
+  }
+  .switch input{
+    position:absolute;
+    inset:0;
+    opacity:0;
+    margin:0;
+    cursor:pointer;
+  }
+  .switch .track{
+    position:absolute;
+    inset:0;
+    background:var(--border);
+    border-radius:999px;
+    transition:background .15s ease;
+  }
+  .switch .knob{
+    position:absolute;
+    top:3px;left:3px;
+    width:18px;height:18px;
+    border-radius:50%;
+    background:var(--surface);
+    transition:transform .15s ease;
+  }
+  .switch input:checked + .track{background:var(--accent);}
+  .switch input:checked ~ .knob{transform:translateX(18px);background:var(--accent-ink);}
+  .switch input:focus-visible ~ .track{outline:2px solid var(--focus);outline-offset:2px;}
+
+  .headline{
+    display:flex;
+    flex-direction:column;
+    gap:2px;
+    padding-bottom:16px;
+    border-bottom:1px solid var(--border);
+    margin-bottom:16px;
+  }
+  .headline .label{
+    font-size:0.82rem;
+    font-weight:600;
+    color:var(--fg-muted);
+  }
+  .headline .value{
+    font-family:'Manrope',system-ui,sans-serif;
+    font-size:clamp(1.8rem,1.3rem + 1.6vw,2.4rem);
+    font-weight:800;
+    font-variant-numeric:tabular-nums;
+    line-height:1.1;
+  }
+  .stats{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:12px;
+  }
+  @media (max-width:420px){
+    .stats{grid-template-columns:1fr;}
+  }
+  .stat{
+    background:var(--surface-2);
+    border:1px solid var(--border);
+    border-radius:10px;
+    padding:12px 14px;
+    min-width:0;
+  }
+  .stat .label{
+    font-size:0.76rem;
+    color:var(--fg-muted);
+    font-weight:600;
+  }
+  .stat .value{
+    font-size:1.05rem;
+    font-weight:700;
+    font-variant-numeric:tabular-nums;
+    margin-top:2px;
+  }
+  .info-note{
+    margin-top:16px;
+    padding:10px 12px;
+    background:var(--surface-2);
+    border:1px solid var(--border);
+    border-radius:10px;
+    font-size:0.78rem;
+    color:var(--fg-muted);
+    line-height:1.6;
+  }
+  .info-note b{color:var(--fg);}
+  .breakdown{
+    margin-top:16px;
+    padding-top:14px;
+    border-top:1px solid var(--border);
+    font-size:0.82rem;
+    color:var(--fg-muted);
+    font-variant-numeric:tabular-nums;
+    line-height:1.6;
+  }
+  .breakdown strong{color:var(--fg);font-weight:600;}
+  .banner{
+    display:flex;
+    gap:10px;
+    align-items:flex-start;
+    padding:12px 14px;
+    border-radius:10px;
+    font-size:0.86rem;
+    margin-top:16px;
+    border:1px solid var(--warn-border);
+    background:var(--warn-bg);
+    color:var(--warn-fg);
+  }
+  .banner .icon{flex:none;font-size:1.1rem;line-height:1;}
+  .table-wrap{
+    overflow-x:auto;
+  }
+  table{
+    width:100%;
+    border-collapse:collapse;
+    font-variant-numeric:tabular-nums;
+  }
+  th,td{
+    padding:9px 12px;
+    text-align:left;
+    border-bottom:1px solid var(--border);
+    font-size:0.86rem;
+    white-space:nowrap;
+  }
+  th{
+    color:var(--fg-muted);
+    font-weight:600;
+    background:var(--surface-2);
+    position:sticky;
+    top:0;
+  }
+  th:nth-child(2), td:nth-child(2),
+  th:nth-child(3), td:nth-child(3){
+    text-align:right;
+  }
+  tr.schedule-down-row td{
+    font-weight:700;
+    background:var(--accent-soft);
+  }
+  footer{
+    color:var(--fg-muted);
+    font-size:0.78rem;
+    text-align:center;
+  }
+</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@700;800&family=Inter:wght@400;500;600;700&display=swap">
+</head>
+<body>
+<div class="page">
+  <header>
+    <div class="titles">
+      <h1 data-i18n="title"></h1>
+      <p data-i18n="subtitle"></p>
+    </div>
+    <div class="toolbar">
+      <div class="segmented" id="langToggle" aria-label="Language">
+        <button type="button" data-value="ka" aria-pressed="true" data-i18n="langToggleKa"></button>
+        <button type="button" data-value="en" aria-pressed="false" data-i18n="langToggleEn"></button>
+      </div>
+      <div class="segmented" id="themeToggle" aria-label="Theme">
+        <button type="button" data-value="light" aria-pressed="true" data-i18n="themeToggleLight"></button>
+        <button type="button" data-value="dark" aria-pressed="false" data-i18n="themeToggleDark"></button>
+      </div>
+    </div>
+  </header>
+
+  <div class="grid">
+    <section class="card" id="paramsCard">
+      <h2 data-i18n="paramsHeading"></h2>
+
+      <div class="field">
+        <label for="price" data-i18n="priceLabel"></label>
+        <input type="number" id="price" min="0" step="0.01" value="2500" inputmode="decimal">
+      </div>
+
+      <div class="field">
+        <label data-i18n="productTypeLabel"></label>
+        <div class="segmented" id="productType">
+          <button type="button" data-value="standard" aria-pressed="true" data-i18n="productStandard"></button>
+          <button type="button" data-value="karcher" aria-pressed="false" data-i18n="productKarcher"></button>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="riskCategory" data-i18n="riskLabel"></label>
+        <select id="riskCategory"></select>
+      </div>
+
+      <div class="field">
+        <label for="term" data-i18n="termLabel"></label>
+        <select id="term"></select>
+      </div>
+
+      <div class="field">
+        <div class="toggle-row">
+          <span class="toggle-text"><span data-i18n="goodPayerLabel"></span><small data-i18n="goodPayerSub"></small></span>
+          <label class="switch">
+            <input type="checkbox" id="goodPayer">
+            <span class="track"></span>
+            <span class="knob"></span>
+          </label>
+        </div>
+      </div>
+
+      <div class="field">
+        <div class="toggle-row">
+          <span class="toggle-text"><span data-i18n="riskyRegionLabel"></span><small data-i18n="riskyRegionSub"></small></span>
+          <label class="switch">
+            <input type="checkbox" id="riskyRegion">
+            <span class="track"></span>
+            <span class="knob"></span>
+          </label>
+        </div>
+      </div>
+    </section>
+
+    <section class="card" id="resultsCard">
+      <h2 data-i18n="resultsHeading"></h2>
+
+      <div class="headline">
+        <span class="label" data-i18n="monthlyLabel"></span>
+        <span class="value" id="outMonthly">—</span>
+      </div>
+
+      <div class="stats">
+        <div class="stat">
+          <div class="label" data-i18n="totalLabel"></div>
+          <div class="value" id="outTotal">—</div>
+        </div>
+        <div class="stat">
+          <div class="label" data-i18n="downLabel"></div>
+          <div class="value" id="outDown">—</div>
+        </div>
+        <div class="stat">
+          <div class="label" data-i18n="financedLabel"></div>
+          <div class="value" id="outFinanced">—</div>
+        </div>
+        <div class="stat">
+          <div class="label" data-i18n="termResultLabel"></div>
+          <div class="value" id="outTerm">—</div>
+        </div>
+      </div>
+
+      <div class="breakdown" id="outBreakdown"></div>
+
+      <div class="banner" id="incomeWarning" hidden>
+        <span class="icon">⚠</span>
+        <span id="incomeWarningText"></span>
+      </div>
+
+      <div class="info-note" id="riskInfo"></div>
+    </section>
+  </div>
+
+  <section class="card" id="scheduleCard">
+    <h2 data-i18n="scheduleHeading"></h2>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th data-i18n="colIndex"></th>
+            <th data-i18n="colPayment"></th>
+            <th data-i18n="colRemaining"></th>
+          </tr>
+        </thead>
+        <tbody id="scheduleBody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <footer data-i18n="footer"></footer>
+</div>
+
+<script>
+(function(){
+  'use strict';
+
+  var RISK = [
+    { key: 'high', pct: 0.10 },
+    { key: 'medium', pct: 0.15 },
+    { key: 'low', pct: 0.20 }
+  ];
+  var RISK_DOWNPAYMENT = { high: 0.10, medium: 0.15, low: 0.20 };
+  var RISK_NAMES = { high: 'High', medium: 'Medium', low: 'Low' };
+
+  var TERMS = [1,2,3,4,5,6,7,8,9,10,12,14,16];
+  var TERM_MARKUP = {
+    '1': 0.26, '2': 0.26, '3': 0.26, '4': 0.26, '5': 0.26,
+    '6': 0.26, '7': 0.26, '8': 0.26, '9': 0.26, '10': 0.26,
+    '12': 0.33, '14': 0.40, '16': 0.48
+  };
+
+  var TR = {
+    ka: {
+      title: 'განვადების კალკულატორი',
+      subtitle: 'პროდუქტის ფასი, ავანსი და ყოველთვიური გადასახადი — რისკისა და ვადის მიხედვით',
+      paramsHeading: 'პარამეტრები',
+      priceLabel: 'საიტის ფასი (₾)',
+      productTypeLabel: 'პროდუქტის ტიპი',
+      productStandard: 'სტანდარტული',
+      productKarcher: 'Kärcher',
+      riskLabel: 'პროდუქტის რისკის კატეგორია',
+      termLabel: 'განვადების ვადა',
+      goodPayerLabel: 'არსებული კარგი გადამხდელი',
+      goodPayerSub: 'ავანსის გარეშე, რისკის კატეგორიის მიუხედავად',
+      riskyRegionLabel: 'რისკიანი რეგიონი',
+      riskyRegionSub: 'საჭიროებს შემოსავლის დადასტურებას',
+      resultsHeading: 'შედეგი',
+      monthlyLabel: 'ყოველთვიური გადასახადი',
+      totalLabel: 'განვადების ჯამური ფასი',
+      downLabel: 'ავანსი',
+      financedLabel: 'დასაფინანსებელი თანხა',
+      termResultLabel: 'ვადა',
+      calcPrefix: 'გამოთვლა:',
+      downPrefix: 'ავანსი:',
+      monthlyPrefix: 'ყოველთვიური:',
+      goodPayerNote: ' (კარგი გადამხდელი)',
+      warningText: 'რისკიანი რეგიონია — გარიგებისთვის საჭირო იქნება ',
+      warningStrong: 'შემოსავლის დადასტურება',
+      footer: 'ავანსის %: High 10% · Medium 15% · Low 20% (კარგი გადამხდელისთვის — 0%). ვადის %: 1–10 თვე 26%, 12 თვე 33%, 14 თვე 40%, 16 თვე 48%.',
+      scheduleHeading: 'გადახდების გრაფიკი',
+      colIndex: '#',
+      colPayment: 'გადასახდელი თანხა',
+      colRemaining: 'დარჩენილი დასაფინანსებელი თანხა',
+      downRow: 'ავანსი',
+      monthUnit: 'თვე',
+      themeToggleLight: 'ღია',
+      themeToggleDark: 'მუქი',
+      langToggleKa: 'ქარ',
+      langToggleEn: 'ENG',
+      riskInfoTitle: 'რისკის კატეგორიების განმარტება:',
+      riskInfoHigh: 'მობილური ტელეფონი 1500₾+, ტელევიზორი 1000₾+, PlayStation, ლეპტოპი',
+      riskInfoMedium: 'სხვა ყველა პროდუქტი ან პროდუქტების ჯგუფი',
+      riskInfoLow: 'პროდუქტი ან პროდუქტების ჯგუფი 1000₾-ზე ნაკლები ღირებულებით'
+    },
+    en: {
+      title: 'Installment Calculator',
+      subtitle: 'Product price, down payment and monthly payment — by risk and term',
+      paramsHeading: 'Parameters',
+      priceLabel: 'Website price (₾)',
+      productTypeLabel: 'Product type',
+      productStandard: 'Standard',
+      productKarcher: 'Kärcher',
+      riskLabel: 'Product risk category',
+      termLabel: 'Loan term',
+      goodPayerLabel: 'Existing good payer',
+      goodPayerSub: 'No down payment, regardless of risk category',
+      riskyRegionLabel: 'Risky region',
+      riskyRegionSub: 'Requires income confirmation',
+      resultsHeading: 'Results',
+      monthlyLabel: 'Monthly payment',
+      totalLabel: 'Total installment price',
+      downLabel: 'Down payment',
+      financedLabel: 'Financed amount',
+      termResultLabel: 'Term',
+      calcPrefix: 'Calculation:',
+      downPrefix: 'Down payment:',
+      monthlyPrefix: 'Monthly:',
+      goodPayerNote: ' (good payer)',
+      warningText: 'Risky region — this deal will require ',
+      warningStrong: 'income confirmation',
+      footer: 'Down payment %: High 10% · Medium 15% · Low 20% (0% for good payers). Term %: 1–10 months 26%, 12 months 33%, 14 months 40%, 16 months 48%.',
+      scheduleHeading: 'Payment schedule',
+      colIndex: '#',
+      colPayment: 'Payment amount',
+      colRemaining: 'Remaining balance',
+      downRow: 'Down payment',
+      monthUnit: 'month',
+      themeToggleLight: 'Light',
+      themeToggleDark: 'Dark',
+      langToggleKa: 'KA',
+      langToggleEn: 'EN',
+      riskInfoTitle: 'Risk category definitions:',
+      riskInfoHigh: 'Mobile phone 1500+ GEL, TV 1000+ GEL, PlayStation, laptop',
+      riskInfoMedium: 'All other products or product groups',
+      riskInfoLow: 'Product or product group priced under 1000 GEL'
+    }
+  };
+
+  var LANG_KEY = 'voltaCalcLang';
+  var THEME_KEY = 'voltaCalcTheme';
+
+  function storageGet(key){
+    try { return localStorage.getItem(key); } catch (e) { return null; }
+  }
+  function storageSet(key, value){
+    try { localStorage.setItem(key, value); } catch (e) { /* ignore */ }
+  }
+
+  var lang = storageGet(LANG_KEY) === 'en' ? 'en' : 'ka';
+
+  var state = { productType: 'standard' };
+
+  var priceEl = document.getElementById('price');
+  var riskEl = document.getElementById('riskCategory');
+  var goodPayerEl = document.getElementById('goodPayer');
+  var riskyRegionEl = document.getElementById('riskyRegion');
+  var productTypeGroup = document.getElementById('productType');
+  var termEl = document.getElementById('term');
+  var incomeWarning = document.getElementById('incomeWarning');
+  var incomeWarningText = document.getElementById('incomeWarningText');
+  var langToggle = document.getElementById('langToggle');
+  var themeToggle = document.getElementById('themeToggle');
+  var scheduleBody = document.getElementById('scheduleBody');
+  var riskInfoEl = document.getElementById('riskInfo');
+
+  function t(key){ return TR[lang][key]; }
+
+  function formatMoney(n){
+    if (!isFinite(n)) return '—';
+    var sign = n < 0 ? '-' : '';
+    var abs = Math.abs(n);
+    var parts = abs.toFixed(2).split('.');
+    parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+    return sign + parts.join('.') + ' ₾';
+  }
+
+  function formatPct(n){
+    return Math.round(n * 100) + '%';
+  }
+
+  function monthsText(n){
+    if (lang === 'ka') return n + ' ' + t('monthUnit');
+    return n + ' ' + (n === 1 ? t('monthUnit') : t('monthUnit') + 's');
+  }
+
+  /* ---- segmented control (product type) ---- */
+  function setSegmented(group, value){
+    var buttons = group.querySelectorAll('button');
+    for (var i = 0; i < buttons.length; i++){
+      var b = buttons[i];
+      b.setAttribute('aria-pressed', b.getAttribute('data-value') === value ? 'true' : 'false');
+    }
+  }
+  function wireSegmented(group, key){
+    group.addEventListener('click', function(e){
+      var btn = e.target.closest('button');
+      if (!btn) return;
+      state[key] = btn.getAttribute('data-value');
+      setSegmented(group, state[key]);
+      calculate();
+    });
+  }
+  wireSegmented(productTypeGroup, 'productType');
+
+  /* ---- static text (data-i18n) ---- */
+  function applyStaticI18n(){
+    var nodes = document.querySelectorAll('[data-i18n]');
+    for (var i = 0; i < nodes.length; i++){
+      var key = nodes[i].getAttribute('data-i18n');
+      if (TR[lang][key] !== undefined) nodes[i].textContent = TR[lang][key];
+    }
+    document.title = t('title');
+    document.documentElement.lang = lang;
+  }
+
+  /* ---- dynamic select options ---- */
+  function buildRiskOptions(){
+    var current = riskEl.value || 'medium';
+    riskEl.innerHTML = '';
+    RISK.forEach(function(r){
+      var opt = document.createElement('option');
+      opt.value = r.key;
+      opt.textContent = RISK_NAMES[r.key] + ' — ' + t('downLabel') + ' ' + formatPct(r.pct);
+      riskEl.appendChild(opt);
+    });
+    if (RISK.some(function(r){ return r.key === current; })) riskEl.value = current;
+  }
+  function buildTermOptions(){
+    var current = termEl.value || '12';
+    termEl.innerHTML = '';
+    TERMS.forEach(function(m){
+      var pct = TERM_MARKUP[String(m)];
+      var opt = document.createElement('option');
+      opt.value = String(m);
+      opt.textContent = monthsText(m) + ' · ' + formatPct(pct);
+      termEl.appendChild(opt);
+    });
+    if (TERMS.indexOf(parseInt(current, 10)) !== -1) termEl.value = current;
+  }
+  function renderRiskInfo(){
+    riskInfoEl.innerHTML =
+      '<strong>' + t('riskInfoTitle') + '</strong><br>' +
+      '<b>High</b> — ' + t('riskInfoHigh') + '<br>' +
+      '<b>Medium</b> — ' + t('riskInfoMedium') + '<br>' +
+      '<b>Low</b> — ' + t('riskInfoLow');
+  }
+
+  /* ---- language toggle ---- */
+  langToggle.addEventListener('click', function(e){
+    var btn = e.target.closest('button');
+    if (!btn) return;
+    lang = btn.getAttribute('data-value');
+    storageSet(LANG_KEY, lang);
+    setSegmented(langToggle, lang);
+    applyStaticI18n();
+    buildRiskOptions();
+    buildTermOptions();
+    renderRiskInfo();
+    calculate();
+  });
+  setSegmented(langToggle, lang);
+
+  /* ---- theme toggle ---- */
+  function effectiveTheme(){
+    var stored = storageGet(THEME_KEY);
+    if (stored === 'light' || stored === 'dark') return stored;
+    return (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light';
+  }
+  function applyTheme(theme){
+    document.documentElement.setAttribute('data-theme', theme);
+    setSegmented(themeToggle, theme);
+  }
+  themeToggle.addEventListener('click', function(e){
+    var btn = e.target.closest('button');
+    if (!btn) return;
+    var theme = btn.getAttribute('data-value');
+    storageSet(THEME_KEY, theme);
+    applyTheme(theme);
+  });
+  applyTheme(effectiveTheme());
+
+  /* ---- inputs ---- */
+  [priceEl, riskEl, goodPayerEl, riskyRegionEl, termEl].forEach(function(el){
+    el.addEventListener('input', calculate);
+    el.addEventListener('change', calculate);
+  });
+
+  /* ---- payment schedule ---- */
+  function renderSchedule(downAmount, financed, termMonths, monthly){
+    scheduleBody.innerHTML = '';
+
+    var downRow = document.createElement('tr');
+    downRow.className = 'schedule-down-row';
+    downRow.innerHTML =
+      '<td>' + t('downRow') + '</td>' +
+      '<td>' + formatMoney(downAmount) + '</td>' +
+      '<td>' + formatMoney(financed) + '</td>';
+    scheduleBody.appendChild(downRow);
+
+    var remaining = financed;
+    for (var i = 1; i <= termMonths; i++){
+      var payment = (i === termMonths) ? remaining : monthly;
+      remaining = Math.max(0, remaining - payment);
+      var row = document.createElement('tr');
+      row.innerHTML =
+        '<td>' + i + '</td>' +
+        '<td>' + formatMoney(payment) + '</td>' +
+        '<td>' + formatMoney(remaining) + '</td>';
+      scheduleBody.appendChild(row);
+    }
+  }
+
+  /* ---- main calculation ---- */
+  function calculate(){
+    var price = parseFloat(priceEl.value);
+    if (!isFinite(price) || price < 0) price = 0;
+
+    var isKarcher = state.productType === 'karcher';
+    var termMarkup = TERM_MARKUP[termEl.value];
+    var termMultiplier = 1 + termMarkup;
+    var baseMultiplier = isKarcher ? (1.15 * 1.05) : 1.05;
+
+    var totalPrice = price * baseMultiplier * termMultiplier;
+
+    var goodPayer = goodPayerEl.checked;
+    var riskKey = riskEl.value;
+    var downPct = goodPayer ? 0 : RISK_DOWNPAYMENT[riskKey];
+    var downAmount = totalPrice * downPct;
+    var financed = totalPrice - downAmount;
+    var termMonths = parseInt(termEl.value, 10);
+    var monthly = termMonths > 0 ? financed / termMonths : 0;
+
+    document.getElementById('outMonthly').textContent = formatMoney(monthly);
+    document.getElementById('outTotal').textContent = formatMoney(totalPrice);
+    document.getElementById('outDown').textContent = formatMoney(downAmount) + ' (' + formatPct(downPct) + ')';
+    document.getElementById('outFinanced').textContent = formatMoney(financed);
+    document.getElementById('outTerm').textContent = monthsText(termMonths);
+
+    var formulaParts = isKarcher
+      ? [formatMoney(price), '1.15', '1.05', termMultiplier.toFixed(2)]
+      : [formatMoney(price), '1.05', termMultiplier.toFixed(2)];
+    document.getElementById('outBreakdown').innerHTML =
+      '<strong>' + t('calcPrefix') + '</strong> ' + formulaParts.join(' × ') + ' = ' + formatMoney(totalPrice) +
+      '<br><strong>' + t('downPrefix') + '</strong> ' + formatMoney(totalPrice) + ' × ' + formatPct(downPct) + ' = ' + formatMoney(downAmount) +
+      (goodPayer ? t('goodPayerNote') : '') +
+      '<br><strong>' + t('monthlyPrefix') + '</strong> ' + formatMoney(financed) + ' ÷ ' + termMonths + ' = ' + formatMoney(monthly);
+
+    incomeWarningText.innerHTML = t('warningText') + '<strong>' + t('warningStrong') + '</strong>.';
+    incomeWarning.hidden = !riskyRegionEl.checked;
+
+    renderSchedule(downAmount, financed, termMonths, monthly);
+  }
+
+  applyStaticI18n();
+  buildRiskOptions();
+  buildTermOptions();
+  renderRiskInfo();
+  calculate();
+})();
+</script>
+</body>
+</html>
