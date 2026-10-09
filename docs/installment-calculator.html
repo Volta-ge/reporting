@@ -517,11 +517,11 @@
   'use strict';
 
   var RISK = [
-    { key: 'high', pct: 0.10 },
+    { key: 'high', pct: 0.20 },
     { key: 'medium', pct: 0.15 },
-    { key: 'low', pct: 0.20 }
+    { key: 'low', pct: 0.10 }
   ];
-  var RISK_DOWNPAYMENT = { high: 0.10, medium: 0.15, low: 0.20 };
+  var RISK_DOWNPAYMENT = { high: 0.20, medium: 0.15, low: 0.10 };
   var RISK_NAMES = { high: 'High', medium: 'Medium', low: 'Low' };
 
   var TERMS = [1,2,3,4,5,6,7,8,9,10,12,14,16];
@@ -558,7 +558,7 @@
       goodPayerNote: ' (კარგი გადამხდელი)',
       warningText: 'რისკიანი რეგიონია — გარიგებისთვის საჭირო იქნება ',
       warningStrong: 'შემოსავლის დადასტურება',
-      footer: 'ავანსის %: High 10% · Medium 15% · Low 20% (კარგი გადამხდელისთვის — 0%). ვადის %: 1–10 თვე 26%, 12 თვე 33%, 14 თვე 40%, 16 თვე 48%.',
+      footer: 'ავანსის %: High 20% · Medium 15% · Low 10% (კარგი გადამხდელისთვის — 0%). ვადის %: 1–10 თვე 26%, 12 თვე 33%, 14 თვე 40%, 16 თვე 48%.',
       scheduleHeading: 'გადახდების გრაფიკი',
       colIndex: '#',
       colPayment: 'გადასახდელი თანხა',
@@ -600,7 +600,7 @@
       goodPayerNote: ' (good payer)',
       warningText: 'Risky region — this deal will require ',
       warningStrong: 'income confirmation',
-      footer: 'Down payment %: High 10% · Medium 15% · Low 20% (0% for good payers). Term %: 1–10 months 26%, 12 months 33%, 14 months 40%, 16 months 48%.',
+      footer: 'Down payment %: High 20% · Medium 15% · Low 10% (0% for good payers). Term %: 1–10 months 26%, 12 months 33%, 14 months 40%, 16 months 48%.',
       scheduleHeading: 'Payment schedule',
       colIndex: '#',
       colPayment: 'Payment amount',
