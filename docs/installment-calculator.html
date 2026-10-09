@@ -800,9 +800,10 @@
     var isKarcher = state.productType === 'karcher';
     var termMarkup = TERM_MARKUP[termEl.value];
     var termMultiplier = 1 + termMarkup;
-    var baseMultiplier = isKarcher ? (1.15 * 1.05) : 1.05;
+    var KARCHER_FACTOR = 1.15;
+    var combinedMultiplier = 1.05 * termMultiplier;
 
-    var totalPrice = price * baseMultiplier * termMultiplier;
+    var totalPrice = price * (isKarcher ? KARCHER_FACTOR : 1) * combinedMultiplier;
 
     var goodPayer = goodPayerEl.checked;
     var riskKey = riskEl.value;
@@ -818,9 +819,10 @@
     document.getElementById('outFinanced').textContent = formatMoney(financed);
     document.getElementById('outTerm').textContent = monthsText(termMonths);
 
+    var combinedMultiplierText = String(parseFloat(combinedMultiplier.toFixed(4)));
     var formulaParts = isKarcher
-      ? [formatMoney(price), '1.15', '1.05', termMultiplier.toFixed(2)]
-      : [formatMoney(price), '1.05', termMultiplier.toFixed(2)];
+      ? [formatMoney(price), String(KARCHER_FACTOR), combinedMultiplierText]
+      : [formatMoney(price), combinedMultiplierText];
     document.getElementById('outBreakdown').innerHTML =
       '<strong>' + t('calcPrefix') + '</strong> ' + formulaParts.join(' × ') + ' = ' + formatMoney(totalPrice) +
       '<br><strong>' + t('downPrefix') + '</strong> ' + formatMoney(totalPrice) + ' × ' + formatPct(downPct) + ' = ' + formatMoney(downAmount) +
