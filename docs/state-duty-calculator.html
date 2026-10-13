@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="ka">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>სახელმწიფო ბაჟის კალკულატორი</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Source+Sans+3:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<style>
+html, body{ height: 100%; margin: 0; }
+/*
+  Layout: a single ledger card centered on a paper ground — input line above
+  a ruled divider, result line below, the way a filing clerk would total a page.
+*/
+:root{
+  --bg: #efe8d8;
+  --paper: #fbf7ec;
+  --ink: #2b2318;
+  --muted: #7d7360;
+  --accent: #9a6b2c;
+  --accent-ink: #5f430f;
+  --border: #ddd1b2;
+  --border-strong: #c9b98c;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg: #171310;
+    --paper: #211b14;
+    --ink: #ece2cd;
+    --muted: #a8977a;
+    --accent: #d8a24f;
+    --accent-ink: #f1c479;
+    --border: #3c3222;
+    --border-strong: #574a30;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg: #171310;
+  --paper: #211b14;
+  --ink: #ece2cd;
+  --muted: #a8977a;
+  --accent: #d8a24f;
+  --accent-ink: #f1c479;
+  --border: #3c3222;
+  --border-strong: #574a30;
+  color-scheme: dark;
+}
+
+*{ box-sizing: border-box; }
+body{
+  background: var(--bg);
+  color: var(--ink);
+  font-family: "Source Sans 3", system-ui, sans-serif;
+  padding: 48px 16px;
+  min-height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.sheet{
+  width: 100%;
+  max-width: 480px;
+  background: var(--paper);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.06), 0 12px 32px -16px rgba(0,0,0,0.25);
+  padding: 40px clamp(24px, 6vw, 44px) 36px;
+}
+.header-row{
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+.eyebrow{
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent-ink);
+  margin: 0;
+  padding-top: 3px;
+}
+.toolbar{
+  display: flex;
+  gap: 8px;
+  flex: none;
+}
+.segmented{
+  display: flex;
+  border: 1px solid var(--border-strong);
+  border-radius: 100px;
+  overflow: hidden;
+}
+.seg-btn{
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1;
+  padding: 5px 10px;
+  background: transparent;
+  border: none;
+  color: var(--muted);
+  cursor: pointer;
+}
+.seg-btn + .seg-btn{
+  border-left: 1px solid var(--border-strong);
+}
+.seg-btn[aria-pressed="true"]{
+  background: var(--accent);
+  color: var(--paper);
+}
+.seg-btn:focus-visible{
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+h1{
+  font-family: "Fraunces", serif;
+  font-weight: 600;
+  font-size: clamp(24px, 5vw, 29px);
+  line-height: 1.25;
+  margin: 0 0 6px;
+  text-wrap: balance;
+}
+.sub{
+  margin: 0 0 32px;
+  color: var(--muted);
+  font-size: 14.5px;
+  line-height: 1.55;
+  max-width: 34em;
+}
+label{
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+.field{
+  position: relative;
+  display: flex;
+  align-items: center;
+  border-bottom: 2px solid var(--border-strong);
+  padding-bottom: 10px;
+  transition: border-color 0.15s ease;
+}
+.field:focus-within{
+  border-color: var(--accent);
+}
+.currency{
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 22px;
+  color: var(--muted);
+  margin-right: 8px;
+  flex: none;
+}
+#amount{
+  flex: 1;
+  min-width: 0;
+  width: 100%;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: var(--ink);
+  font-family: "IBM Plex Mono", monospace;
+  font-variant-numeric: tabular-nums;
+  font-size: 26px;
+  font-weight: 500;
+  padding: 0;
+}
+#amount::placeholder{ color: var(--border-strong); }
+
+.divider{
+  margin: 30px 0 24px;
+  border: none;
+  border-top: 1px dashed var(--border-strong);
+}
+
+.result-row{
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+}
+.result-label{
+  min-width: 0;
+}
+.result-label .name{
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+  display: block;
+  margin-bottom: 4px;
+}
+.result-label .rate{
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 12px;
+  color: var(--accent-ink);
+  background: color-mix(in srgb, var(--accent) 16%, transparent);
+  padding: 2px 7px;
+  border-radius: 100px;
+  display: inline-block;
+}
+.result-value{
+  font-family: "IBM Plex Mono", monospace;
+  font-size: clamp(28px, 7vw, 34px);
+  font-weight: 600;
+  color: var(--accent-ink);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.actions{
+  margin-top: 22px;
+  display: flex;
+  justify-content: flex-end;
+}
+#copyBtn{
+  font-family: "Source Sans 3", sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+  background: transparent;
+  border: 1px solid var(--border-strong);
+  border-radius: 6px;
+  padding: 7px 14px;
+  cursor: pointer;
+  transition: border-color 0.15s ease, color 0.15s ease;
+}
+#copyBtn:hover{ border-color: var(--accent); color: var(--accent-ink); }
+#copyBtn:focus-visible{ outline: 2px solid var(--accent); outline-offset: 2px; }
+#copyBtn[data-copied="true"]{ border-color: var(--accent); color: var(--accent-ink); }
+
+@media (prefers-reduced-motion: reduce){
+  .field, #copyBtn{ transition: none; }
+}
+</style>
+</head>
+<body>
+
+<div class="sheet">
+  <div class="header-row">
+    <p class="eyebrow" data-i18n="eyebrow">იურიდიული გამოთვლა</p>
+    <div class="toolbar">
+      <div class="segmented" id="themeToggle" role="group" aria-label="Theme">
+        <button type="button" class="seg-btn" data-value="light" aria-pressed="false">☀</button>
+        <button type="button" class="seg-btn" data-value="dark" aria-pressed="false">🌙</button>
+      </div>
+      <div class="segmented" id="langToggle" role="group" aria-label="Language">
+        <button type="button" class="seg-btn" data-value="ka" aria-pressed="false">ქა</button>
+        <button type="button" class="seg-btn" data-value="en" aria-pressed="false">EN</button>
+      </div>
+    </div>
+  </div>
+  <h1 data-i18n="title">სახელმწიფო ბაჟის კალკულატორი</h1>
+  <p class="sub" data-i18n="sub">შეიყვანეთ სადავო თანხის ოდენობა — ქვემოთ ავტომატურად გამოითვლება მისი 3%.</p>
+
+  <label for="amount" data-i18n="label">სადავო თანხა</label>
+  <div class="field">
+    <span class="currency">₾</span>
+    <input id="amount" inputmode="decimal" autocomplete="off" placeholder="0.00" value="10 000" />
+  </div>
+
+  <hr class="divider">
+
+  <div class="result-row">
+    <div class="result-label">
+      <span class="name" data-i18n="resultName">სახელმწიფო ბაჟი</span>
+      <span class="rate">3%</span>
+    </div>
+    <div class="result-value" id="result">₾ 300.00</div>
+  </div>
+
+  <div class="actions">
+    <button id="copyBtn" type="button">ბაჟის კოპირება</button>
+  </div>
+</div>
+
+<script>
+const amountInput = document.getElementById('amount');
+const resultEl = document.getElementById('result');
+const copyBtn = document.getElementById('copyBtn');
+const themeButtons = Array.from(document.querySelectorAll('#themeToggle .seg-btn'));
+const langButtons = Array.from(document.querySelectorAll('#langToggle .seg-btn'));
+
+const STR = {
+  ka: {
+    eyebrow: 'იურიდიული გამოთვლა',
+    title: 'სახელმწიფო ბაჟის კალკულატორი',
+    sub: 'შეიყვანეთ სადავო თანხის ოდენობა — ქვემოთ ავტომატურად გამოითვლება მისი 3%.',
+    label: 'სადავო თანხა',
+    resultName: 'სახელმწიფო ბაჟი',
+    copy: 'ბაჟის კოპირება',
+    copied: 'დაკოპირდა ✓'
+  },
+  en: {
+    eyebrow: 'Legal calculation',
+    title: 'State Duty Calculator',
+    sub: 'Enter the disputed amount — its 3% duty is calculated automatically below.',
+    label: 'Disputed amount',
+    resultName: 'State duty',
+    copy: 'Copy duty',
+    copied: 'Copied ✓'
+  }
+};
+
+let lang = 'ka';
+try{
+  const storedLang = localStorage.getItem('bazhi-lang');
+  if (storedLang === 'ka' || storedLang === 'en') lang = storedLang;
+}catch(e){}
+
+let theme = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+try{
+  const storedTheme = localStorage.getItem('bazhi-theme');
+  if (storedTheme === 'light' || storedTheme === 'dark'){
+    theme = storedTheme;
+    document.documentElement.dataset.theme = theme;
+  }
+}catch(e){}
+
+function updateThemeButtons(){
+  themeButtons.forEach(b => b.setAttribute('aria-pressed', b.dataset.value === theme ? 'true' : 'false'));
+}
+
+function applyTheme(value){
+  theme = value;
+  document.documentElement.dataset.theme = value;
+  updateThemeButtons();
+  try{ localStorage.setItem('bazhi-theme', value); }catch(e){}
+}
+
+themeButtons.forEach(btn => {
+  btn.addEventListener('click', () => applyTheme(btn.dataset.value));
+});
+updateThemeButtons();
+
+function updateLangButtons(){
+  langButtons.forEach(b => b.setAttribute('aria-pressed', b.dataset.value === lang ? 'true' : 'false'));
+}
+
+function applyLang(value){
+  lang = value;
+  document.documentElement.lang = value === 'ka' ? 'ka' : 'en';
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    el.textContent = STR[lang][el.dataset.i18n];
+  });
+  copyBtn.textContent = copyBtn.dataset.copied === 'true' ? STR[lang].copied : STR[lang].copy;
+  updateLangButtons();
+  try{ localStorage.setItem('bazhi-lang', value); }catch(e){}
+}
+
+langButtons.forEach(btn => {
+  btn.addEventListener('click', () => applyLang(btn.dataset.value));
+});
+applyLang(lang);
+
+function parseAmount(raw){
+  const cleaned = raw.replace(/[^\d.,]/g, '').replace(/\s/g, '');
+  const normalized = cleaned.replace(/,/g, '');
+  const value = parseFloat(normalized);
+  return isNaN(value) ? 0 : value;
+}
+
+function formatGEL(value){
+  return '₾ ' + value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function formatInputDisplay(value){
+  if (value === 0) return '';
+  return value.toLocaleString('en-US', { maximumFractionDigits: 2 });
+}
+
+let lastDuty = 300;
+
+function recalc(){
+  const amount = parseAmount(amountInput.value);
+  const duty = amount * 0.03;
+  lastDuty = duty;
+  resultEl.textContent = formatGEL(duty);
+}
+
+amountInput.addEventListener('input', recalc);
+
+amountInput.addEventListener('blur', () => {
+  const amount = parseAmount(amountInput.value);
+  amountInput.value = formatInputDisplay(amount);
+  recalc();
+});
+
+amountInput.addEventListener('focus', () => {
+  amountInput.select();
+});
+
+copyBtn.addEventListener('click', async () => {
+  const text = lastDuty.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  try{
+    await navigator.clipboard.writeText(text);
+  }catch(e){
+    amountInput.focus();
+  }
+  copyBtn.dataset.copied = 'true';
+  copyBtn.textContent = STR[lang].copied;
+  setTimeout(() => {
+    copyBtn.dataset.copied = 'false';
+    copyBtn.textContent = STR[lang].copy;
+  }, 1500);
+});
+
+amountInput.value = formatInputDisplay(10000);
+recalc();
+</script>
+</body>
+</html>
