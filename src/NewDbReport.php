@@ -3079,42 +3079,68 @@ final class NewDbPf
         $dayDates = $stockDay['dates'];
         $months = $stockMonth['months'];
 
-        // ---- flows: day extracts (MSTART .. END) rolled up to the day series (cutover .. END) and the month series
-        $disbRows = $pick('disb');     // d, n, amount, price, term_sum (c1), adv_n (c2), adv_sum (c3), seg_a (c4)
-        $closeRows = $pick('close');   // d, kind (k), n, amount, price, rem
-        $singleRows = $pick('single'); // d, n, price
-        $flowsFor = static function (array $keys, callable $keyOf) use ($disbRows, $closeRows, $singleRows): array {
+        // ---- frozen closed periods: same rule and same committed file as build_logistics.js (pf_frozen.json). Every
+        // figure here is reconstructed from today's database state, so CRM edits, schedule repairs and new payments kept
+        // moving past days and months (user, 2026-10-16: 31 May's portfolio must not change when pulled again today).
+        // Every date up to frozenThrough is served from the file, never recomputed; later dates (normally only today,
+        // i.e. the current month's MTD point) stay live. Read-only here — the daily static build freezes each closed day.
+        $fzPath = $this->dir . '/pf_frozen.json';
+        $fz = is_file($fzPath) ? json_decode((string) file_get_contents($fzPath), true) : null;
+        $fzThrough = is_array($fz) ? ($fz['frozenThrough'] ?? null) : null;
+        $isFrozen = static fn (string $d): bool => $fzThrough !== null && $d <= $fzThrough;
+        $applyStock = static function (array &$s) use ($fz, $isFrozen): void {
+            foreach ($s['dates'] as $i => $d) {
+                $f = $fz['stock'][$d] ?? null;
+                if ($f === null || !$isFrozen($d)) { continue; }
+                [$s['active'][$i], $s['balance'][$i], $s['contract'][$i], $s['price'][$i]] = [(int) $f[0], $f[1], $f[2], $f[3]];
+            }
+        };
+        $applyStock($stockDay);
+        $applyStock($stockMonth);
+
+        // ---- flows: day extracts (MSTART .. END) as one record per calendar day — d = disbursed [n, amount, price, adv,
+        // termSum, advN, segA], s = single-payment [n, price], c = closed by kind ([n, amount], wo also rem) — frozen days
+        // replaced by the file's records (absent there = no flows that day), then rolled up to the day and month series
+        $recs = [];
+        $zero = ['d' => [0, 0, 0, 0, 0, 0, 0], 's' => [0, 0], 'c' => ['paid' => [0, 0], 'norec' => [0, 0], 'wo' => [0, 0, 0]]];
+        foreach ($pick('disb') as $r) {     // d, n, amount, price, term_sum (c1), adv_n (c2), adv_sum (c3), seg_a (c4)
+            $d = (string) $r['d']; $recs[$d] ??= $zero;
+            foreach ([(int) $r['n'], (float) $r['amount'], (float) $r['price'], (float) $r['c3'], (int) $r['c1'], (int) $r['c2'], (int) $r['c4']] as $k => $v) { $recs[$d]['d'][$k] += $v; }
+        }
+        foreach ($pick('single') as $r) {   // d, n, price
+            $d = (string) $r['d']; $recs[$d] ??= $zero;
+            $recs[$d]['s'][0] += (int) $r['n']; $recs[$d]['s'][1] += (float) $r['price'];
+        }
+        foreach ($pick('close') as $r) {    // d, kind (k), n, amount, price, rem
+            $d = (string) $r['d']; $kind = (string) $r['k'];
+            if (!isset($zero['c'][$kind])) { continue; }
+            $recs[$d] ??= $zero;
+            $recs[$d]['c'][$kind][0] += (int) $r['n']; $recs[$d]['c'][$kind][1] += (float) $r['amount'];
+            if ($kind === 'wo') { $recs[$d]['c'][$kind][2] += (float) $r['rem']; }
+        }
+        if ($fzThrough !== null) {
+            foreach (array_keys($recs) as $d) { if ($isFrozen((string) $d)) { unset($recs[$d]); } }
+            foreach ($fz['flow'] ?? [] as $d => $x) { if ($isFrozen((string) $d)) { $recs[(string) $d] = $x; } }
+        }
+        $flowsFor = static function (array $keys, callable $keyOf) use ($recs): array {
             $z = array_fill(0, count($keys), 0);
             $idx = array_flip($keys);
             $f = ['keys' => $keys,
                 'disb' => ['n' => $z, 'amount' => $z, 'price' => $z, 'adv' => $z, 'termSum' => $z, 'advN' => $z, 'segA' => $z],
                 'single' => ['n' => $z, 'price' => $z],
                 'close' => ['paid' => ['n' => $z, 'amount' => $z], 'norec' => ['n' => $z, 'amount' => $z], 'wo' => ['n' => $z, 'amount' => $z, 'rem' => $z]]];
-            foreach ($disbRows as $r) {
-                $i = $idx[$keyOf((string) $r['d'])] ?? null;
+            $dk = ['n', 'amount', 'price', 'adv', 'termSum', 'advN', 'segA'];
+            foreach ($recs as $d => $x) {
+                $i = $idx[$keyOf((string) $d)] ?? null;
                 if ($i === null) { continue; }
-                $f['disb']['n'][$i] += (int) $r['n'];
-                $f['disb']['amount'][$i] += (float) $r['amount'];
-                $f['disb']['price'][$i] += (float) $r['price'];
-                $f['disb']['adv'][$i] += (float) $r['c3'];
-                $f['disb']['termSum'][$i] += (int) $r['c1'];
-                $f['disb']['advN'][$i] += (int) $r['c2'];
-                $f['disb']['segA'][$i] += (int) $r['c4'];
-            }
-            foreach ($singleRows as $r) {
-                $i = $idx[$keyOf((string) $r['d'])] ?? null;
-                if ($i === null) { continue; }
-                $f['single']['n'][$i] += (int) $r['n'];
-                $f['single']['price'][$i] += (float) $r['price'];
-            }
-            foreach ($closeRows as $r) {
-                $i = $idx[$keyOf((string) $r['d'])] ?? null;
-                if ($i === null || !isset($f['close'][$r['k']])) { continue; }
-                $c = &$f['close'][$r['k']];
-                $c['n'][$i] += (int) $r['n'];
-                $c['amount'][$i] += (float) $r['amount'];
-                if (isset($c['rem'])) { $c['rem'][$i] += (float) $r['rem']; }
-                unset($c);
+                foreach ($dk as $j => $k) { $f['disb'][$k][$i] += $x['d'][$j]; }
+                $f['single']['n'][$i] += $x['s'][0];
+                $f['single']['price'][$i] += $x['s'][1];
+                foreach (['paid', 'norec', 'wo'] as $kind) {
+                    $f['close'][$kind]['n'][$i] += $x['c'][$kind][0];
+                    $f['close'][$kind]['amount'][$i] += $x['c'][$kind][1];
+                    if ($kind === 'wo') { $f['close'][$kind]['rem'][$i] += $x['c'][$kind][2]; }
+                }
             }
             $r2 = static fn (array $a): array => array_map([self::class, 'r2'], $a);
             foreach (['disb', 'single'] as $g) { foreach ($f[$g] as $k => $a) { $f[$g][$k] = $r2($a); } }

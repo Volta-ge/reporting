@@ -2183,15 +2183,50 @@ const END = stockDay.dates.at(-1);
 const MSTART = stockMonth.months[0];
 const dayDates = stockDay.dates, months = stockMonth.months;
 
+// ---- frozen closed periods (user, 2026-10-16: "31 May's portfolio must not change when I pull it again today").
+// Every figure here is reconstructed from TODAY's database state (today's balance + principal paid after the date,
+// today's statuses, today's schedules), so CRM edits, schedule repairs and new payments kept moving past days and
+// months. pf_frozen.json (committed, also read by NewDbReport.php) pins every closed day: the first build after a day
+// ends writes its stock and flows once, and from then on that day is served from the file, never recomputed. Only
+// today (and so the current month: its last point is today = MTD) stays live. Baseline = the 2026-10-16 recomputation.
+const FROZEN_PATH = path.join(__dirname, 'pf_frozen.json');
+const FZ = fs.existsSync(FROZEN_PATH) ? JSON.parse(fs.readFileSync(FROZEN_PATH, 'utf8')) : { frozenThrough: null, stock: {}, flow: {} };
+const addDays = (d, n) => { const t = new Date(d + 'T00:00:00Z'); t.setUTCDate(t.getUTCDate() + n); return t.toISOString().slice(0, 10); };
+const YESTERDAY = addDays(END, -1);
+const isFrozen = d => FZ.frozenThrough !== null && d <= FZ.frozenThrough;
+for (const s of [stockDay, stockMonth]) s.dates.forEach((d, i) => {
+  if (d >= END) return;   // today (and the current month's MTD point) stay live
+  const f = FZ.stock[d];
+  if (f) { [s.active[i], s.balance[i], s.contract[i], s.price[i]] = f; return; }
+  FZ.stock[d] = [s.active[i], s.balance[i], s.contract[i], s.price[i]];
+});
+
 // ---- flows: day extracts (MSTART..END) rolled up to the day series (cutover..END) and the month series
 const disbRows = parseTsv('pf_disb_day.tsv'), closeRows = parseTsv('pf_close_day.tsv'), singleRows = parseTsv('pf_single_day.tsv');
+// one record per calendar day: d = disbursed [n, amount, price, adv, termSum, advN, segA], s = single-payment [n, price],
+// c = closed by kind ([n, amount], wo also [.., rem]); frozen days come from pf_frozen.json (absent there = no flows that day)
+const flowRec = {};
+const rec = d => flowRec[d] ||= { d: [0, 0, 0, 0, 0, 0, 0], s: [0, 0], c: { paid: [0, 0], norec: [0, 0], wo: [0, 0, 0] } };
+for (const r of disbRows) { const x = rec(r.d).d; [num(r.n), num(r.amount), num(r.price), num(r.adv_sum), num(r.term_sum), num(r.adv_n), num(r.seg_a)].forEach((v, k) => x[k] += v); }
+for (const r of singleRows) { const x = rec(r.d).s; x[0] += num(r.n); x[1] += num(r.price); }
+for (const r of closeRows) { const x = rec(r.d).c[r.kind]; if (!x) continue; x[0] += num(r.n); x[1] += num(r.amount); if (x.length > 2) x[2] += num(r.rem); }
+for (let d = MSTART + '-01'; d < END; d = addDays(d, 1)) {
+  if (isFrozen(d)) { if (FZ.flow[d]) flowRec[d] = FZ.flow[d]; else delete flowRec[d]; continue; }
+  if (flowRec[d]) FZ.flow[d] = JSON.parse(JSON.stringify(flowRec[d], (k, v) => typeof v === 'number' ? r2(v) : v));
+}
+if (END > (MSTART + '-01')) FZ.frozenThrough = YESTERDAY;
+fs.writeFileSync(FROZEN_PATH, JSON.stringify(FZ));
 function flowsFor(keys, keyOf) {
   const z = () => keys.map(() => 0), idx = {}; keys.forEach((k, i) => idx[k] = i);
   const f = { keys, disb: { n: z(), amount: z(), price: z(), adv: z(), termSum: z(), advN: z(), segA: z() }, single: { n: z(), price: z() },
     close: { paid: { n: z(), amount: z() }, norec: { n: z(), amount: z() }, wo: { n: z(), amount: z(), rem: z() } } };
-  for (const r of disbRows) { const i = idx[keyOf(r.d)]; if (i === undefined) continue; f.disb.n[i] += num(r.n); f.disb.amount[i] += num(r.amount); f.disb.price[i] += num(r.price); f.disb.adv[i] += num(r.adv_sum); f.disb.termSum[i] += num(r.term_sum); f.disb.advN[i] += num(r.adv_n); f.disb.segA[i] += num(r.seg_a); }
-  for (const r of singleRows) { const i = idx[keyOf(r.d)]; if (i === undefined) continue; f.single.n[i] += num(r.n); f.single.price[i] += num(r.price); }
-  for (const r of closeRows) { const i = idx[keyOf(r.d)]; if (i === undefined) continue; const c = f.close[r.kind]; if (!c) continue; c.n[i] += num(r.n); c.amount[i] += num(r.amount); if (c.rem) c.rem[i] += num(r.rem); }
+  const DK = ['n', 'amount', 'price', 'adv', 'termSum', 'advN', 'segA'];
+  for (const [d, x] of Object.entries(flowRec)) {
+    const i = idx[keyOf(d)]; if (i === undefined) continue;
+    DK.forEach((k, j) => f.disb[k][i] += x.d[j]);
+    f.single.n[i] += x.s[0]; f.single.price[i] += x.s[1];
+    for (const kind of ['paid', 'norec', 'wo']) { const c = f.close[kind], v = x.c[kind]; c.n[i] += v[0]; c.amount[i] += v[1]; if (c.rem) c.rem[i] += v[2]; }
+  }
   for (const g of [f.disb, f.single, f.close.paid, f.close.norec, f.close.wo]) for (const k of Object.keys(g)) g[k] = g[k].map(r2);
   return f;
 }
@@ -2326,7 +2361,7 @@ cutBetween(PAGE_START, PAGE_END + NL, 'pf page');
 
   <p class="pf-title">Portfolio size &mdash; end-of-day stock</p>
 ${card('pfStockDay')}
-  <p class="note">Stock at the end of each day (last column = today as of the last refresh). Active loans = installment loans disbursed by the end of that day and not closed by then (<code>orders</code> with <code>crm_order_status</code> 5, or 1 on rows migrated from the old CRM; disbursement date = <code>crm_creator_date</code>; closure = <code>crm_close_date</code>, or the last payment date when the close was never recorded or its date is a placeholder). Outstanding balance = what those loans still owe: today it is exactly the schedule balance (<code>crm_installment_schedules</code>: schedule &minus; paid, which equals <code>orders.grand_total</code>); for earlier days it is today's balance plus the principal the loans paid after that day (<code>crm_payments</code>, reversed payments and one 99,999,999.99 placeholder excluded) &mdash; a reconstruction, exact to the extent the payment ledger is. Contract amount = the full installment amount (schedule total + advance, the Daily Mail "Amount Sold" rule); product price = <code>base_grand_total</code>.</p>
+  <p class="note">Stock at the end of each day (last column = today as of the last refresh). Active loans = installment loans disbursed by the end of that day and not closed by then (<code>orders</code> with <code>crm_order_status</code> 5, or 1 on rows migrated from the old CRM; disbursement date = <code>crm_creator_date</code>; closure = <code>crm_close_date</code>, or the last payment date when the close was never recorded or its date is a placeholder). Outstanding balance = what those loans still owe: today it is exactly the schedule balance (<code>crm_installment_schedules</code>: schedule &minus; paid, which equals <code>orders.grand_total</code>); for earlier days it is today's balance plus the principal the loans paid after that day (<code>crm_payments</code>, reversed payments and one 99,999,999.99 placeholder excluded) &mdash; a reconstruction, exact to the extent the payment ledger is. Contract amount = the full installment amount (schedule total + advance, the Daily Mail "Amount Sold" rule); product price = <code>base_grand_total</code>. <b>Closed days are frozen:</b> every figure for a day that has ended (and so every finished month) is written once, by the first refresh after that day, and never recomputed &mdash; later CRM edits, schedule repairs and payments no longer move past columns. Only today (and the current month to date) is live. The figures frozen on 2026-10-16 for all earlier dates are that day&rsquo;s reconstruction.</p>
 
   <p class="pf-title">Portfolio size &mdash; month-end stock</p>
 ${card('pfStockMonth')}
@@ -2408,7 +2443,7 @@ window.__registerPage(['portfolio'], function () {
   const n1 = v => (v === null || v === undefined) ? DASH : Number(v).toLocaleString('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
   const p1 = v => (v === null || v === undefined) ? DASH : pct(v);
   const div = (a, b) => b ? a / b : null;
-  document.getElementById('pfBanner').innerHTML = '<b>Source:</b> the new CRM loan book (VoltaStoreDB: <code>orders</code> status 5 = installment, <code>crm_installment_schedules</code>, <code>crm_payments</code>). Day series exact from the cutover ' + P.cutover + '; month series from ' + monthLabel(P.mstart) + ' reconstructed from migrated rows before the cutover (disbursement dates drift by days; closes without a record are dated to the last payment). Balance is exact today, reconstructed from the payment ledger for earlier dates. Refreshed ' + P.generatedAt + '.';
+  document.getElementById('pfBanner').innerHTML = '<b>Source:</b> the new CRM loan book (VoltaStoreDB: <code>orders</code> status 5 = installment, <code>crm_installment_schedules</code>, <code>crm_payments</code>). Day series exact from the cutover ' + P.cutover + '; month series from ' + monthLabel(P.mstart) + ' reconstructed from migrated rows before the cutover (disbursement dates drift by days; closes without a record are dated to the last payment). Balance is exact today, reconstructed from the payment ledger for earlier dates. <b>Closed days and months are frozen</b> (written once after they end, never recomputed); only today and the current month to date are live. Refreshed ' + P.generatedAt + '.';
 
   const cell = (v, cls) => '<td' + (cls ? ' class="' + cls + '"' : '') + '>' + v + '</td>';
   const exCell = (v, i) => cell(v, 'logi-extra' + (i === 0 ? ' logi-extra-first' : ''));
