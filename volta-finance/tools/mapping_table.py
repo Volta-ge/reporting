@@ -26,9 +26,53 @@ OPX_DEL = ['7 3', '7 4 90 12', '7 4 90 47', '7 4 27', '7 4 16', '7 4 90 18', '7 
 OPX_SYS = ['7 4 22', '7 4 90 32', '7 4 90 34', '7 4 90 42', '7 4 90 48', '7 4 90 52', '7 4 45']
 OPX_UTIL = ['7 4 90 11', '7 4 90 27', '7 4 90 28', '7 4 90 50',
             '7 4 31']  # cleaning - same leftover-bucket issue, finance team's own Mapping calls it "კომუნალური ხარჯი"
-OPX_MKT = ['7 4 90 39', '7 4 90 10', '7 4 56',
+OPX_MKT = ['7 4 90 39', '7 4 90 10',
            '7 4 90 53']  # business-trip expense - same leftover-bucket issue, finance team's own Mapping calls it "მარკეტინგის ხარჯი"
-OPX_SAL = ['7 4 10', '7 4 15', '7 4 50']
+# '7 4 56' moved here from OPX_MKT (2026-09-xx mapping-consolidation project, items 2-6) - it's the
+# director-salary-top-up account (only 3 postings all of 2026, all director payroll), reclassified as
+# salary not marketing; PL_FALLBACK below gives it the 'sal' resolution for any leaf not otherwise mapped.
+OPX_SAL = ['7 4 10', '7 4 15', '7 4 50', '7 4 56']
+
+# ---------- formula-driven PL lines (System Development, Marketing Salaries, Provision, Securing-a-
+# Loan-with-Giorgi's-Property) - restored 2026-10-20 after being lost from a shared-clone overwrite
+# (see memory/volta_oris_financials_artifact.md's 2026-10-20 entry), re-derived from the same source
+# this was built from originally: D:\all\volta\Finance\Badget VS Acctual Aug'2026.xlsx. ----------
+# System Development (PL row 98) = the Claret Horizon Trading vendor invoice (one invoice covers both
+# system-dev and marketing services) MINUS Vera Tokhadze's salary, which is bundled inside that same
+# invoice but belongs on the Marketing Salaries line (101) instead - see the "Marketing Jan-Aug'26"
+# sheet, section E (rows 34-38): "Claret-ის ერთი ინვოისი ორ ნაწილად იყოფა — სისტემა და მარკეტინგი".
+SYSDEV_VENDOR = '3 1 10 8376'
+# Marketing Salaries (PL row 101) = Vera (above) + Razvan Costa (WEB EXPERT SERVICES S.R.L., Oris
+# vendor code below) + Guram Gurgenidze (SEO) - "Marketing Jan-Aug'26" sheet, section B (rows 12-16).
+MKTSAL_VENDORS = ['3 1 10 8992', '3 1 31 0064']
+# Vera's salary isn't its own Oris posting (it's bundled inside the Claret invoice), so it has to be
+# hand-tracked by month from the same sheet's row 13: 0 in Jan (not yet invoiced this way), 2,946.30
+# flat Feb-Jul, and 0 again in Aug per the sheet's own open question #7 ("ვერას ხელფასი (2,946.30 ₾)
+# აგვისტოში Marketing AvsB-ში არ არის შევსებული") - that month's whole Claret invoice fell into System
+# Development instead. Sep/Oct have no source sheet yet (it only covers Jan-Aug) - continuing the
+# established 2,946.30 flat rate is an ASSUMPTION, not a verified figure; flag to the user if wrong.
+VERA_SALARY_BY_MONTH = {
+    '2026-01': 0.0, '2026-02': 2946.30, '2026-03': 2946.30, '2026-04': 2946.30,
+    '2026-05': 2946.30, '2026-06': 2946.30, '2026-07': 2946.30, '2026-08': 0.0,
+    '2026-09': 2946.30, '2026-10': 2946.30, '2026-11': 2946.30, '2026-12': 2946.30,
+}
+# Provision (PL row 102) = live portfolio balance (account '1 4 10') x RATE, as a CUMULATIVE TARGET,
+# expensed as the month-over-month change in that target (not a flat %-of-portfolio charge) - see the
+# "Provision" sheet: RATE = SUM(Original Principal GEL) for lenders Volta/Vivo/Volta2/Vivo2 (excludes
+# "Volta 3", explicitly marked "exclude because sold after 2025") / Total Portfolio at end of Dec'25 =
+# 147,718 / 1,981,347.61 = 0.07455430801463454. PROVISION_OFFSET (147,718, the same SUM above) is the
+# Dec'25 opening target, so January's provision = Jan'26 portfolio x RATE - 147,718.
+PROVISION_RATE = 0.07455430801463454
+PROVISION_OFFSET = 147718.0
+# Securing-a-Loan-with-Giorgi's-Property fee (PL row 114, netted out of Salary of Shareholders/row 92
+# every month) = the IPMT (interest portion of the amortized payment) column on the "Loan Guarantee
+# Giorgi's Fee" sheet, Jan-Dec 2026 rows.
+SECURING_LOAN_FEE_BY_MONTH = {
+    '2026-01': 1281.6645695303014, '2026-02': 1124.8559055823562, '2026-03': 1204.4690443952052,
+    '2026-04': 1140.9050898542466, '2026-05': 1134.8677244252053, '2026-06': 1060.084526989315,
+    '2026-07': 1058.10391857, '2026-08': 1020.5233747619179, '2026-09': 951.0343292884933,
+    '2026-10': 944.4407698107946, '2026-11': 876.649528839452, '2026-12': 866.908731039863,
+}
 OPX_EXPL7 = [c for c in OPX_DEL if c != '7 3'] + ['7 4 90 49', '7 4 20'] + OPX_SYS + OPX_UTIL + OPX_MKT + ['7 4 90 44', '7 4 55', '7 4 18'] + OPX_SAL
 
 LOAN_BANK = ['4 1 90 10611', '4 1 90 3746', '4 1 90 4693', '4 1 90 5506', '4 1 90 7426']
@@ -64,7 +108,7 @@ MP_BS_DETAIL_ORDER = [125, 126, 128, 130, 131, 132, 133, 134, 138, 139, 140, 141
 
 PL_FALLBACK = [
     ('8 1 10', 113), ('8 2 10', 'int'), ('8 2', 104), ('8 1', 104), ('9 1', 102), ('9 2', 102),
-    ('7 4 10', 'sal'), ('7 4 50', 'sal'), ('7 4 15', 93), ('7 4', 95), ('7 3', 91),
+    ('7 4 10', 'sal'), ('7 4 50', 'sal'), ('7 4 56', 'sal'), ('7 4 15', 93), ('7 4', 95), ('7 3', 91),
     ('6', 'none'), ('7', 'none'), ('8', 'none'), ('9', 'none'),
 ]
 BS_FALLBACK = [('1', 't124'), ('2', 't129'), ('3', 't137'), ('4', 't148'), ('5', 't154')]

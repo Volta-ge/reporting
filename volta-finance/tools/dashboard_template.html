@@ -898,7 +898,11 @@ let _mpIdx=null;
 function mpIndex(){
   if(_mpIdx) return _mpIdx;
   const pl=new Map(), bs=new Map(), cash=new Set();
-  for(const r of MP_PL_DETAIL) for(const [c] of AVPL_SPEC[r]) if(!pl.has(c)) pl.set(c,r);
+  // Rows 98/100/102/103/108 are partly or wholly synthetic/vendor-scanned now (restored 2026-10-20) -
+  // Array.isArray guards against AVPL_SPEC[r] being an {rows:fn}-shaped object with no static account
+  // list to show here (this index is just the Account Mapping tab's own code->row reference listing,
+  // unrelated to the live PL/BS/CF totals, which come from STMT regardless).
+  for(const r of MP_PL_DETAIL){ const sp=AVPL_SPEC[r]; const list=Array.isArray(sp)?sp:(sp&&sp.list)||[]; for(const [c] of list) if(!pl.has(c)) pl.set(c,r); }
   for(const [c,r] of [['8 1 10',113],['8 2 10','int'],['8 2',104],['8 1',104],['9 1',102],['9 2',102],['7 4 10','sal'],['7 4 50','sal'],['7 4 15',93],['7 4',95],['7 3',91],['6','none'],['7','none'],['8','none'],['9','none']]) if(!pl.has(c)) pl.set(c,r);
   for(const r of MP_BS_DETAIL) for(const c of AVBS_CODES[r]) if(!bs.has(c)) bs.set(c,r);
   bs.set('5 3 10',155); bs.set('5 3 30',156); bs.set('1 6 35','t124');
@@ -1112,6 +1116,15 @@ function avItemRow(b,actFn,withYTD,ytdOk,n,ytdN,scope){
    accounts (6 1 10/6 1 20, 7 1+7 2, 7 3+7 4); every remaining class-6/class-8-1 sub-account not
    individually named by the budget gets folded into "Other Revenue" (87) as a catch-all, so nothing
    from class 6-9 is silently dropped. See avNotePL for what's approximate/unavailable and why. */
+// D.cat_multi (dash_data.json) is build_data.py's RAW classification, baked in before any Google
+// Sheet override is applied - unlike statements_engine.py's own cat_multi (server-side, override-
+// aware, feeds the live totals), this client-side copy never sees Sheet reclassifications, so the
+// drill-down panel would silently disagree with the number it's supposed to explain. Only one
+// override actually changes a cat_multi membership today (Tamar Abrahamia's account, reclassed
+// investor->shareholder interest - restored 2026-10-20, see the Google Sheet's Account Mapping row
+// for '3 4 10 1318'); hardcoded here rather than re-deriving the whole override mechanism client-side.
+const INTEREST_SH_OVERRIDE=['3 4 10 1318'];
+const catsFor=(CM,ctr)=>INTEREST_SH_OVERRIDE.includes(ctr)?['interest_sh']:(CM[ctr]||[]);
 /* Loan-interest postings (Oris 8 2 10) split by LENDER through the counter account (3 4 10 <lender>) using the same
    account->category map as the cash-flow tab (interest_investors / interest_sh / interest_bank): the accrual
    entries are booked against the very lender accounts the finance team tagged. Built lazily from the journal. */
@@ -1120,7 +1133,7 @@ function intRows(){
   if(_INT) return _INT; const CM=D.cat_multi||{}; const o={investors:[],sh:[],bank:[],other:[]};
   for(const [md,si,di,ki,amt] of JR.r){ const d=JR.c[di], k=JR.c[ki]; let ctr,sg;
     if(d.startsWith('8 2 10')){ ctr=k; sg=1; } else if(k.startsWith('8 2 10')){ ctr=d; sg=-1; } else continue;
-    const cs=CM[ctr]||[]; const key=cs.includes('interest_investors')?'investors':cs.includes('interest_sh')?'sh':cs.includes('interest_bank')?'bank':'other';
+    const cs=catsFor(CM,ctr); const key=cs.includes('interest_investors')?'investors':cs.includes('interest_sh')?'sh':cs.includes('interest_bank')?'bank':'other';
     o[key].push([jdate(md),JR.s[si],ctr,sg*amt]); }
   return _INT=o;
 }
@@ -1160,8 +1173,8 @@ const OPX_DEL=['7 3','7 4 90 12','7 4 90 47','7 4 27','7 4 16','7 4 90 18','7 4 
 // Mapping, which already called it "მარკეტინგის ხარჯი").
 const OPX_SYS=['7 4 90 34','7 4 90 42','7 4 45'];
 const OPX_UTIL=['7 4 90 11','7 4 90 27','7 4 90 28','7 4 90 50','7 4 31'];
-const OPX_MKT=['7 4 90 39','7 4 90 10','7 4 56','7 4 90 53','7 4 90 32']; // advertising services and other consulting are Marketing (user decision 2026-09-21; the cash-flow tab already has them there)
-const OPX_SAL=['7 4 10','7 4 15','7 4 50'];
+const OPX_MKT=['7 4 90 39','7 4 90 10','7 4 90 53','7 4 90 32']; // advertising services and other consulting are Marketing (user decision 2026-09-21; the cash-flow tab already has them there)
+const OPX_SAL=['7 4 10','7 4 15','7 4 50','7 4 56']; // '7 4 56' moved here 2026-10-20, mirrors mapping_table.py OPX_SAL (director-salary-top-up, not marketing)
 /* "Office Expenses" (95) = every other 7 4 account (general admin: household, communication, bank fees, services by
    individuals, ...) - a complement, so nothing in Opex is left without a budget line. */
 // '7 4 18' removed from this exclusion list (2026-10-01, per the user - "move it to Office Expenses,
@@ -1169,6 +1182,32 @@ const OPX_SAL=['7 4 10','7 4 15','7 4 50'];
 // leftover computation instead of row 104's hardcoded list below - kept in lockstep with the Sheet
 // override (sheet_overrides.json).
 const OPX_EXPL7=[...OPX_DEL.filter(c=>c!=='7 3'),'7 4 90 49','7 4 20',...OPX_SYS,...OPX_UTIL,...OPX_MKT,'7 4 90 44','7 4 55',...OPX_SAL];
+/* Drill-down mirrors for the formula-driven PL lines (System Dev/Marketing Salaries/Provision/
+   Securing-a-Loan, restored 2026-10-20 - see mapping_table.py's matching constants for the source).
+   sysMktRows() replicates statements_engine.py's SYSDEV_MKT_ANCHORS scan client-side (real postings,
+   vendor-account-anchored); veraLines()/loanFeeLines()/provisionRows() render the hand-tracked/
+   formula amounts that have no real posting at all, as clearly-labelled synthetic rows so the
+   drill-down panel explains itself instead of just going silent. */
+const SYSDEV_VENDOR='3 1 10 8376', MKTSAL_VENDORS=['3 1 10 8992','3 1 31 0064'];
+const VERA_SALARY_BY_MONTH={'2026-01':0,'2026-02':2946.30,'2026-03':2946.30,'2026-04':2946.30,'2026-05':2946.30,'2026-06':2946.30,'2026-07':2946.30,'2026-08':0,'2026-09':2946.30,'2026-10':2946.30,'2026-11':2946.30,'2026-12':2946.30};
+const SECURING_LOAN_FEE_BY_MONTH={'2026-01':1281.6645695303014,'2026-02':1124.8559055823562,'2026-03':1204.4690443952052,'2026-04':1140.9050898542466,'2026-05':1134.8677244252053,'2026-06':1060.084526989315,'2026-07':1058.10391857,'2026-08':1020.5233747619179,'2026-09':951.0343292884933,'2026-10':944.4407698107946,'2026-11':876.649528839452,'2026-12':866.908731039863};
+const PROVISION_RATE=0.07455430801463454;
+let _SYSMKT=null;
+function sysMktRows(){
+  if(_SYSMKT) return _SYSMKT;
+  const targets={}; targets[SYSDEV_VENDOR]='claret'; targets[MKTSAL_VENDORS[0]]='razvan'; targets[MKTSAL_VENDORS[1]]='guram';
+  const o={claret:[],razvan:[],guram:[]};
+  for(const [md,si,di,ki,amt] of JR.r){ const d=JR.c[di], k=JR.c[ki]; const who=targets[k];
+    if(who && d[0]==='7') o[who].push([jdate(md),JR.s[si],k,amt]); }
+  return _SYSMKT=o;
+}
+const byMonth=(list,f,t)=>list.filter(r=>{ const mm=+r[0].slice(5,7); return mm>=f&&mm<=t; });
+const veraLines=sg=>(f,t)=>byMonth(Object.entries(VERA_SALARY_BY_MONTH).filter(([mo,v])=>v&&M.includes(mo)).map(([mo,v])=>[mo+'-01','ვერას ხელფასი (ხელით გატარებული, Claret-ის ინვოისიდან)','',sg*v]),f,t);
+const loanFeeLines=sg=>(f,t)=>byMonth(Object.entries(SECURING_LOAN_FEE_BY_MONTH).filter(([mo])=>M.includes(mo)).map(([mo,v])=>[mo+'-01','სესხის უზრუნველყოფის საკომისიო (Giorgi’s Property, გრაფიკით)','',sg*v]),f,t);
+function provisionRows(f,t){ const out=[]; for(let j=0;j<M.length;j++){ const mm=+M[j].slice(5,7); if(mm<f||mm>t) continue; const v=PL_ACTUALS[102](j); if(Math.abs(v)<0.005) continue;
+  out.push([M[j]+'-01','პროვიზია (ფორმულა: პორტფელის ნაშთი × '+(PROVISION_RATE*100).toFixed(2)+'%, კუმულაციური სამიზნის თვიური ცვლილება)','',v]); } return out; }
+function zazaJuneLine(f,t){ return (6>=f&&6<=t)?[['2026-06-01','ზაზას ხელფასის კორექცია (გადატანილია ხელფასის ანგარიშიდან)','',4027.30]]:[]; }
+const excludeCtr=(codes,exclSet)=>(f,t)=>{ const out=[]; for(const c of codes) for(const p of collectPostings(c)){ if(exclSet.has(p[2])) continue; const mm=+p[0].slice(5,7); if(mm>=f&&mm<=t) out.push(p); } return out; };
 /* P&L/BS/CF actuals (2026-09-25): the aggregate NUMBERS now come precomputed from tools/statements_engine.py
    (STMT.pl/bs/cf, injected server-side - see build_dashboard.py) instead of being derived here in JS. This
    removes the second, JS-only copy of the classification/formula logic that used to live in this file
@@ -1352,13 +1391,46 @@ const inRows=k=>(f,t)=>intRows()[k].filter(r=>{ const mm=+r[0].slice(5,7); retur
 const allInt=(f,t)=>['investors','sh','bank','other'].flatMap(k=>inRows(k)(f,t));
 const AVPL_SPEC={
   79:PLI(...PL_REV), 81:PLE(...PL_COGS), 82:PLI(...PL_REV,...PL_COGS), 84:PLI('6 1 91'), 85:PLI('8 1 25'), 86:PLI('6 1 90 1'),
-  87:PLI('6 1 91','8 1 25','6 1 90 1'), 90:PLE(...opexE), 91:PLE(...OPX_DEL), 92:{rows:(f,t)=>salRows().sh.filter(r=>{ const mm=+r[0].slice(5,7); return mm>=f&&mm<=t; })},
+  87:PLI('6 1 91','8 1 25','6 1 90 1'),
+  // 90: Opex total needs the Securing-a-Loan fee excluded too (restored 2026-10-20) - it's netted out
+  // of Salary of Shareholders (inside Opex) and shown under Non-Operating Expenses (108) instead, so
+  // Opex itself is smaller by that amount even though raw salary postings don't reflect it.
+  90:{list:PLE(...opexE),rows:loanFeeLines(-1)},
+  91:PLE(...OPX_DEL),
+  // 92: Salary of Shareholders nets out the June Zaza reclass and the Securing-a-Loan fee every month
+  // (restored 2026-10-20, see mapping_table.py) - both synthetic, no real posting behind either.
+  92:{rows:(f,t)=>[...salRows().sh.filter(r=>{ const mm=+r[0].slice(5,7); return mm>=f&&mm<=t; }),...zazaJuneLine(f,t).map(r=>[r[0],r[1],r[2],-r[3]]),...loanFeeLines(-1)(f,t)]},
   93:{rows:(f,t)=>salRows().other.filter(r=>{ const mm=+r[0].slice(5,7); return mm>=f&&mm<=t; })}, 94:PLE('7 4 90 49'),
-  95:PLE(...leafCodes('7 4',OPX_EXPL7),'8 2 90 2'), 96:PLE('7 4 20','6 1 90 2'), 98:PLE(...OPX_SYS),
-  99:PLE(...OPX_UTIL), 100:PLE(...OPX_MKT), 102:PLE(...NINE_CODES), 103:PLE('7 4 90 44'), 109:PLE('7 4 55'),
+  95:PLE(...leafCodes('7 4',OPX_EXPL7),'8 2 90 2'), 96:PLE('7 4 20','6 1 90 2'),
+  // 98/100/101: System Dev / Marketing Expenses / Marketing Salaries re-slice (restored 2026-10-20) -
+  // Claret's invoice (vendor-anchored, real postings) moves from whatever GL code it was booked under
+  // (originally counted in 100 via OPX_MKT) into 98, net of Vera's hand-tracked salary (synthetic,
+  // shown on both 98 as a reduction and 101 as the actual salary line); Razvan/Guram's real postings
+  // (same vendor-anchor mechanism) move from 100 into 101 too - excludeCtr() keeps 100 from double-
+  // counting any of the three.
+  98:{list:PLE(...OPX_SYS),rows:(f,t)=>[...byMonth(sysMktRows().claret,f,t),...veraLines(-1)(f,t)]},
+  100:{rows:excludeCtr(OPX_MKT,new Set([SYSDEV_VENDOR,...MKTSAL_VENDORS]))},
+  101:{rows:(f,t)=>[...veraLines(1)(f,t),...byMonth(sysMktRows().razvan,f,t),...byMonth(sysMktRows().guram,f,t)]},
+  99:PLE(...OPX_UTIL),
+  // 102: Provision has no real postings at all (it's a cumulative-target formula over the live
+  // portfolio balance) - provisionRows() shows the computed monthly amount as a clearly-labelled
+  // synthetic line instead of a (nonexistent) postings list.
+  102:{rows:provisionRows},
+  // 103: Corporate Party plus the one-off June Zaza reclass (restored 2026-10-20, see mapping_table.py).
+  103:{list:PLE('7 4 90 44'),rows:zazaJuneLine}, 109:PLE('7 4 55'),
+  // 104: catch-all residual line (row104_bucket + the Python "safety net" resid term, see
+  // statements_engine.py) - tried adding NINE_CODES' real postings back here when Provision (102)
+  // stopped drawing on them, but that double-counts against resid (verified live: off by exactly
+  // January's provision formula amount) rather than explaining it, so left as MISC_CODES only, same
+  // as before 2026-10-20. Any gap between this list's sum and the displayed total is resid itself -
+  // the drill-down panel's own tie-out footer already surfaces that honestly instead of hiding it.
   104:PLE(...MISC_CODES),
-  105:[...PLI(...PL_REV,...PL_COGS,'6 1 91','8 1 25','6 1 90 1'),...PLE(...opexE).map(([c])=>[c,-1])],
-  108:{list:PLE('7 4 55','8 2 90 1','8 1 90 1','8 2 50','8 1 50','8 1 10'),rows:allInt},
+  // 105: EBITDA - same Securing-a-Loan exclusion as row 90 (smaller Opex -> larger EBITDA by that amount).
+  105:{list:[...PLI(...PL_REV,...PL_COGS,'6 1 91','8 1 25','6 1 90 1'),...PLE(...opexE).map(([c])=>[c,-1])],rows:loanFeeLines(1)},
+  // 108: Securing-a-Loan fee (restored 2026-10-20) added alongside the existing interest rows - also
+  // has no real posting, same synthetic-line treatment as Provision.
+  108:{list:PLE('7 4 55','8 2 90 1','8 1 90 1','8 2 50','8 1 50','8 1 10'),rows:(f,t)=>[...allInt(f,t),...loanFeeLines(1)(f,t)]},
+  114:{rows:loanFeeLines(1)},
   110:PLE('8 2 90 1','8 1 90 1'), 111:{rows:inRows('investors')}, 112:{rows:inRows('sh')},
   113:{list:PLE('8 1 10'),rows:(f,t)=>[...inRows('bank')(f,t),...inRows('other')(f,t)]},
   115:PLE('8 2 50'), 116:PLE('8 1 50'),
@@ -1391,7 +1463,7 @@ function cfj(){
   if(_CFJ) return _CFJ;
   const CM=D.cat_multi||{}; const finInv=new Set([...FIN_CATS,...INV_IN,...INV_OUT]);
   const cat={}, op={in:[],out:[]};
-  const push=(dir,date,story,ctr,amt)=>{ const cs=CM[ctr]||[]; for(const c of cs) ((cat[c]||(cat[c]={in:[],out:[]}))[dir]).push([date,story,ctr,amt]);
+  const push=(dir,date,story,ctr,amt)=>{ const cs=catsFor(CM,ctr); for(const c of cs) ((cat[c]||(cat[c]={in:[],out:[]}))[dir]).push([date,story,ctr,amt]);
     if(!cs.some(c=>finInv.has(c))) op[dir].push([date,story,ctr,amt]); };
   for(const [md,si,di,ki,amt] of JR.r){ const d=JR.c[di], k=JR.c[ki]; const dc=d.startsWith('1 1 ')||d.startsWith('1 2 '), kc=k.startsWith('1 1 ')||k.startsWith('1 2 ');
     if(dc && !isCashCtr(k)) push('in',jdate(md),JR.s[si],k,amt);

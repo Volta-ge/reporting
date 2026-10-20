@@ -262,6 +262,22 @@ int_investors = [0.0] * NM
 int_sh = [0.0] * NM
 int_bank_other = [0.0] * NM
 
+# ---------- System Development / Marketing Salaries vendor-anchor scan (restored 2026-10-20, see
+# mapping_table.py's SYSDEV_VENDOR/MKTSAL_VENDORS/VERA_SALARY_BY_MONTH comments for the source) -----
+# Claret/Razvan/Guram's invoices land on whatever class-7 expense code the bookkeeper used that month
+# (not always the same one), so - exactly like the salary/interest anchor scans above - this has to be
+# a raw WIRING scan keyed on the VENDOR'S OWN payable account (the credit side of the accrual entry),
+# not a pl_map leaf-account lookup. `sysmkt_excl` records which (bucket row, month) amount to subtract
+# from the normal pl_bucket_sums() result so that money isn't double-counted in its original bucket
+# (System Dev/OPX_SYS or Marketing/OPX_MKT, whichever GL code happened to be used) once it's re-added
+# via sys98/mktsal101 below.
+SYSDEV_MKT_ANCHORS = {mt.SYSDEV_VENDOR: 'claret', mt.MKTSAL_VENDORS[0]: 'razvan', mt.MKTSAL_VENDORS[1]: 'guram'}
+claret_m = [0.0] * NM
+razvan_m = [0.0] * NM
+guram_m = [0.0] * NM
+_SYSMKT_TARGETS = {'claret': claret_m, 'razvan': razvan_m, 'guram': guram_m}
+sysmkt_excl = {}
+
 def starts_with(code, prefix):
     """Same as JS's `x===p||x.startsWith(p+' ')` (salary anchor) - and, since every Oris account
     extension is a new space-separated token, an equivalent safe stand-in for JS's bare
@@ -305,8 +321,16 @@ for date, dd_acc, kk_acc, raw_money, mon in con.execute(
     if is_sal_anchor(dp) or is_sal_anchor(kp):
         acct, ctr, sg = (dp, kp, 1) if is_sal_anchor(dp) else (kp, dp, -1)
         anchor = which_sal_anchor(acct)
-        sh = (ctr in sh_payroll and anchor == '7 4 10') or (ctr in sh_consult and anchor == '7 4 50')
+        # '7 4 56' (director-salary-top-up, see mapping_table.py) is unconditionally shareholder
+        # salary - every posting through it is director payroll, no counterparty check needed.
+        sh = (ctr in sh_payroll and anchor == '7 4 10') or (ctr in sh_consult and anchor == '7 4 50') or anchor == '7 4 56'
         (sal_sh if sh else sal_other)[mm] += sg * money
+    sysmkt_anchor = SYSDEV_MKT_ANCHORS.get(kp)
+    if sysmkt_anchor and dp[0] == '7':
+        _SYSMKT_TARGETS[sysmkt_anchor][mm] += money
+        excl_row = mt.mp_find(pl_map, dp)
+        if excl_row in PL_BUCKET_ROWS:
+            sysmkt_excl.setdefault(excl_row, [0.0] * NM)[mm] += money
     if starts_with(dp, '8 2 10') or starts_with(kp, '8 2 10'):
         ctr, sg = (kp, 1) if starts_with(dp, '8 2 10') else (dp, -1)
         cats = cat_multi.get(ctr, [])
@@ -345,8 +369,17 @@ def build():
     # resolves to - replaces the old hardcoded OPX_DEL/OPX_SYS/OPX_MKT/OPX_EXPL7-complement/MISC_CODES
     # sums, so a Sheet reclassification actually moves the number, not just the Mapping tab label.
     buckets = [pl_bucket_sums(PL_BUCKET_ROWS, j) for j in idx]
+    # pull the Claret/Razvan/Guram invoice amounts (see SYSDEV_MKT_ANCHORS scan above) back out of
+    # whichever bucket row they naturally landed in via pl_map, before re-adding them via sys98/
+    # mktsal101 below - otherwise they'd be double-counted (once in their original GL-code bucket,
+    # once in the vendor-anchored one).
+    for _row, _arr in sysmkt_excl.items():
+        for _j in idx:
+            buckets[_j][_row] -= _arr[_j]
+    vera_m = [mt.VERA_SALARY_BY_MONTH.get(months[j], 0.0) for j in idx]
     del91 = [buckets[j][91] for j in idx]
-    sys98 = [buckets[j][98] for j in idx]
+    sys98 = [buckets[j][98] + claret_m[j] - vera_m[j] for j in idx]
+    mktsal101 = [vera_m[j] + razvan_m[j] + guram_m[j] for j in idx]
     mkt100 = [buckets[j][100] for j in idx]
     off95 = [buckets[j][95] for j in idx]
     row94 = [buckets[j][94] for j in idx]
@@ -361,7 +394,13 @@ def build():
     row115 = [buckets[j][115] for j in idx]
     row116 = [buckets[j][116] for j in idx]
     row104_bucket = [buckets[j][104] for j in idx]
-    prov102 = [buckets[j][102] for j in idx]
+    # Provision (restored 2026-10-20, see mapping_table.py's PROVISION_RATE/PROVISION_OFFSET comment):
+    # a cumulative target (live portfolio balance x RATE) expensed as its own month-over-month change,
+    # not the raw class-9 bucket sum - January's charge nets against the Dec'25 opening target
+    # (PROVISION_OFFSET).
+    _portfolio_m = [bv('1 4 10', j) for j in idx]
+    _prov_target = [_portfolio_m[j] * mt.PROVISION_RATE for j in idx]
+    prov102 = [_prov_target[j] - (_prov_target[j - 1] if j > 0 else mt.PROVISION_OFFSET) for j in idx]
     # 2026-10-01: sublease income (6 1 90 2) moved to Other Revenue (87, see sub87 above) per the user
     # - no longer netted against Utility here. util99 stays a direct sum over mt.OPX_UTIL rather than
     # the general pl_bucket_sums() mechanism (row 99 is deliberately not in PL_BUCKET_ROWS) so a
@@ -374,8 +413,23 @@ def build():
     dep109 = row109
     int111, int112 = int_investors, int_sh
     int113 = [int_bank_other[j] + expA('8 1 10', j) for j in idx]  # '8 1 10' interest income also stays special (see mapping_table.py's PL_FALLBACK)
-    sal92, sal93 = sal_sh, sal_other
-    # Opex total = sum of every Opex-member row bucket (91/94/95/96/98/99/100/102/103/104) PLUS
+    sal92, sal93 = list(sal_sh), sal_other
+    # One-off manual correction (restored 2026-10-20): June 2026 Zaza's salary was booked 4,027.30 GEL
+    # too high against the shareholder-salary anchor - reclassed to Corporate Party (103), the account
+    # the user identified it actually belonged to. Zero-sum, Net Profit unaffected.
+    try:
+        _june = months.index('2026-06')
+        sal92[_june] -= 4027.30
+        row103[_june] += 4027.30
+    except ValueError:
+        pass
+    # Securing-a-Loan-with-Giorgi's-Property fee (restored 2026-10-20, see mapping_table.py's
+    # SECURING_LOAN_FEE_BY_MONTH comment) - not a real Oris posting, netted out of Salary of
+    # Shareholders and shown as its own non-operating line instead; zero-sum, Net Profit unaffected.
+    row114 = [mt.SECURING_LOAN_FEE_BY_MONTH.get(months[j], 0.0) for j in idx]
+    for _j in idx:
+        sal92[_j] -= row114[_j]
+    # Opex total = sum of every Opex-member row bucket (91/94/95/96/98/99/100/101/102/103/104) PLUS
     # salary (92+93) - salary is NOT a pl_map bucket at all (the whole 7 4 10/7 4 50 anchor subtrees
     # resolve to the STRING 'sal' via PL_FALLBACK, deliberately excluded from PL_BUCKET_ROWS, since
     # their real split between shareholder/other-staff salary comes from the counterparty anchor-scan,
@@ -384,8 +438,8 @@ def build():
     # moved to non-op) + class 9 provision + class 8 1/8 2 leftover" with no double-count, and stays
     # correct under ANY Sheet override since it's the same bucketing the individual rows use (util99
     # already nets the 6 1 90 2 sublease income once, inside itself).
-    opex_raw = [del91[j] + row94[j] + off95[j] + row96[j] + sys98[j] + util99[j] + mkt100[j] + prov102[j] + row103[j] + row104_bucket[j] + sal92[j] + sal93[j] for j in idx]
-    nonop108 = [ppe110[j] + dep109[j] + int111[j] + int112[j] + int113[j] + fxexp115[j] + fxinc116[j] for j in idx]
+    opex_raw = [del91[j] + row94[j] + off95[j] + row96[j] + sys98[j] + util99[j] + mkt100[j] + mktsal101[j] + prov102[j] + row103[j] + row104_bucket[j] + sal92[j] + sal93[j] for j in idx]
+    nonop108 = [ppe110[j] + dep109[j] + int111[j] + int112[j] + int113[j] + fxexp115[j] + fxinc116[j] + row114[j] for j in idx]
     net_raw = [gross82[j] - opex_raw[j] + oth87[j] - nonop108[j] for j in idx]
     # "true" net profit computed directly from the 6/7/8/9 classes (== JS's plLines().net), for the residual safety net
     net_direct = []
@@ -410,9 +464,10 @@ def build():
         78: [rev79[j] * 1.18 for j in idx], 79: rev79, 80: [cogs81[j] * 1.18 for j in idx], 81: cogs81, 82: gross82,
         84: serv84, 85: pen85, 86: pbs86, 87: oth87, 90: opex90, 91: del91,
         92: sal92, 93: sal93, 94: row94, 95: off95, 96: row96,
-        98: sys98, 99: util99, 100: mkt100, 102: prov102, 103: row103,
+        98: sys98, 99: util99, 100: mkt100, 101: mktsal101, 102: prov102, 103: row103,
         104: [row104_bucket[j] + resid[j] for j in idx], 105: ebitda105,
         108: nonop108, 109: dep109, 110: ppe110, 111: int111, 112: int112, 113: int113,
+        114: row114,
         115: fxexp115, 116: fxinc116, 118: net118,
     }
 
