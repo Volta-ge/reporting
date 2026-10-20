@@ -173,6 +173,7 @@ footer{max-width:1380px;margin:0 auto;padding:0 28px 40px;color:var(--faint);fon
       <div class="tab-row">
         <button role="tab" data-p="ov"></button>
         <button role="tab" data-p="mp"></button>
+        <button role="tab" data-p="ratios"></button>
       </div>
     </div>
     <div class="tab-row-wrap" data-budget-group="1">
@@ -209,6 +210,7 @@ footer{max-width:1380px;margin:0 auto;padding:0 28px 40px;color:var(--faint);fon
 <main>
   <section class="panel" id="p-ov"></section>
   <section class="panel" id="p-mp"></section>
+  <section class="panel" id="p-ratios"></section>
   <section class="panel" id="p-pb"></section>
   <section class="panel" id="p-bb"></section>
   <section class="panel" id="p-cfb"></section>
@@ -235,7 +237,7 @@ const MPCLASS = __MPCLASS__; // per-account {pl,bs,cf} classification, precomput
 const FSMAP = __FSMAP__;     // {code:{label,name,source}} - the finance team's own sub-category label per account, from tools/extract_fs_mapping.py (the TB tabs of Volta FS montly Aug'26.xlsx, Aug as base + older months as fallback); drives drillPanel()'s grouping (null if not built)
 const M = D.months, NM = M.length;
 const years = [...new Set(M.map(m=>m.slice(0,4)))];
-const state = { year: years[years.length-1], month: null, tab: 'ov', lang: 'ka', open: new Set(), arLedger: '1 4 10', arQ: '', arN: 100, compactTabs: new Set(), theme: null, exOpenCell: new Map(), drillN: 40, drillSort: 'date', mpQ: '', mpN: 150, mpCat: '', mpSubcat: '', mpSubsub: '', mpInout: '', mpStatus: '', mpStmt: '', mpPl: '', mpBs: '', mpCf: '' };
+const state = { year: years[years.length-1], month: null, tab: 'ov', lang: 'ka', ratiosView: 'table', open: new Set(), arLedger: '1 4 10', arQ: '', arN: 100, compactTabs: new Set(), theme: null, exOpenCell: new Map(), drillN: 40, drillSort: 'date', mpQ: '', mpN: 150, mpCat: '', mpSubcat: '', mpSubsub: '', mpInout: '', mpStatus: '', mpStmt: '', mpPl: '', mpBs: '', mpCf: '' };
 try{ const l=localStorage.getItem('volta-fin-lang'); if(l==='en'||l==='ka') state.lang=l; }catch(_){}
 try{ const th=localStorage.getItem('volta-fin-theme'); if(th==='light'||th==='dark'){ state.theme=th; document.documentElement.dataset.theme=th; } }catch(_){}
 
@@ -244,7 +246,7 @@ const L = {
 ka:{
   title:'შპს ვოლტა · ფინანსური ანგარიშგება', src:'წყარო: ორისი, ბაზის ასლი', journal:'ჟურნალი', allGel:'ყველა თანხა ლარში (₾)',
   year:'წელი', month:'თვე', wholeYear:'მთელი წელი',
-  tabs:{ov:'მიმოხილვა',bs:'ბალანსი',pl:'მოგება-ზარალი',tb:'ბრუნვითი უწყისი',cf:'ფულადი ნაკადები',ar:'დებიტორები · კრედიტორები',ex:'ხარჯების ანალიზი',mp:'ანგარიშთა მეფინგი',pb:'PL Budget',bb:'BS Budget',cfb:'CF Budget',pob:'Portfolio Budget',asb:'Assumptions Budget',avpl:'PL Actual vs Budget',avbs:'BS Actual vs Budget',avcf:'CF Actual vs Budget',avpf:'Portfolio Actual vs Budget',avas:'Assumptions Actual vs Budget'},
+  tabs:{ov:'მიმოხილვა',bs:'ბალანსი',pl:'მოგება-ზარალი',tb:'ბრუნვითი უწყისი',cf:'ფულადი ნაკადები',ar:'დებიტორები · კრედიტორები',ex:'ხარჯების ანალიზი',mp:'ანგარიშთა მეფინგი',ratios:'ფინანსური რეშიოები',pb:'PL Budget',bb:'BS Budget',cfb:'CF Budget',pob:'Portfolio Budget',asb:'Assumptions Budget',avpl:'PL Actual vs Budget',avbs:'BS Actual vs Budget',avcf:'CF Actual vs Budget',avpf:'Portfolio Actual vs Budget',avas:'Assumptions Actual vs Budget'},
   tabGroups:{general:'ზოგადი',budgets:'ბიუჯეტები',statements:'ანგარიშგებები',avb:'ფაქტი vs ბიუჯეტი'},
   compactAll:'მხოლოდ მთავარი მუხლები', expandAll:'ყველა მუხლი',
   actual:'ფაქტი', budget:'ბიუჯეტი', diff:'სხვაობა', ytd:'დაგროვილი',
@@ -307,7 +309,7 @@ ka:{
   oppA:'კრედიტული ნაშთით (ავანსი/ზედმეტობა)', oppL:'დებეტური ნაშთით (ავანსი/ზედმეტობა)', code:'კოდი', contragent:'კონტრაგენტი',
   showMore:(n,t)=>`მეტის ჩვენება (კიდევ ${n} · სულ ${t})`,
   arNoteA:'დებეტური ნაშთი = მოთხოვნა კონტრაგენტის მიმართ, კრედიტული = ავანსი ან ზედმეტად გადახდილი.', arNoteL:'კრედიტული ნაშთი = ჩვენი დავალიანება, დებეტური = ჩვენს მიერ გადახდილი ავანსი.', negRed:'ნაშთი უარყოფითი ნიშნით წითლადაა.',
-  exTitle:'ხარჯების ანალიზი', exSub:'ხარჯები თვეების მიხედვით, ₾', selMonth:'არჩეული თვე', ga:'საერთო და ადმინისტრაციული (7 4)', dist:'მიწოდების ხარჯები (7 3)', nonOpEx:'არასაოპერაციო ხარჯები (8 2)', totEx:'სულ საოპერაციო + სხვა ხარჯები', avgMonth:'თვეში საშუალოდ', exItem:'ხარჯის მუხლი', avgCol:'საშ. თვე',
+  exTitle:'ხარჯების ანალიზი', exSub:'ხარჯები თვეების მიხედვით, ₾', selMonth:'არჩეული თვე', ga:'საერთო და ადმინისტრაციული (7 4)', dist:'მიწოდების ხარჯები (7 3)', nonOpEx:'არასაოპერაციო ხარჯები (8 2)', totEx:'სულ საოპერაციო + სხვა ხარჯები', avgMonth:'თვეში საშუალოდ', exItem:'ხარჯის მუხლი', avgCol:'საშ. თვე', ratiosTableView:'ცხრილი', ratiosRecView:'ანალიზი და რეკომენდაციები', ratiosStaleTitle:'ანალიზი შეიძლება მოძველებული იყოს', ratiosStaleBody:'ციფრები მნიშვნელოვნად შეიცვალა 2026-10-20-ში დაწერილი ტექსტის შემდეგ — სთხოვეთ Claude-ს განახლება. შეცვლილი რეშიოები:',
   exNote:'თვითღირებულება (7 2) აქ არ შედის, ის მოგება-ზარალის ჩანართშია. ფონის ინტენსივობა თითოეული სტრიქონის საკუთარ მაქსიმუმთანაა შედარებული.',
   pDate:'თარიღი', pDoc:'დოკუმენტი', pCounter:'კორ. ანგარიში', pAmount:'თანხა', pNone:'ამ თვეს გატარება არ ჰქონია', pShowPostings:'გატარებების ნახვა',
   pPurpose:'დანიშნულება', pSupplier:'მომწოდებელი', pClickHint:'დააჭირეთ ცხრილში ნებისმიერ არანულოვან ციფრს, რომ ნახოთ იმ თვის გატარებები.',
@@ -317,7 +319,7 @@ ka:{
 en:{
   title:'Volta LLC · Financial Statements', src:'Source: Oris accounting, database copy of', journal:'journal', allGel:'all amounts in Georgian lari (₾)',
   year:'Year', month:'Month', wholeYear:'Whole year',
-  tabs:{ov:'Overview',bs:'Balance Sheet',pl:'Profit & Loss',tb:'Trial Balance',cf:'Cash Flow',ar:'Receivables · Payables',ex:'Expense Analysis',mp:'Account Mapping',pb:'PL Budget',bb:'BS Budget',cfb:'CF Budget',pob:'Portfolio Budget',asb:'Assumptions Budget',avpl:'PL Actual vs Budget',avbs:'BS Actual vs Budget',avcf:'CF Actual vs Budget',avpf:'Portfolio Actual vs Budget',avas:'Assumptions Actual vs Budget'},
+  tabs:{ov:'Overview',bs:'Balance Sheet',pl:'Profit & Loss',tb:'Trial Balance',cf:'Cash Flow',ar:'Receivables · Payables',ex:'Expense Analysis',mp:'Account Mapping',ratios:'Financial Ratios',pb:'PL Budget',bb:'BS Budget',cfb:'CF Budget',pob:'Portfolio Budget',asb:'Assumptions Budget',avpl:'PL Actual vs Budget',avbs:'BS Actual vs Budget',avcf:'CF Actual vs Budget',avpf:'Portfolio Actual vs Budget',avas:'Assumptions Actual vs Budget'},
   tabGroups:{general:'General',budgets:'Budgets',statements:'Statements',avb:'Actual vs Budget'},
   compactAll:'Main items only', expandAll:'All items',
   actual:'Actual', budget:'Budget', diff:'Diff', ytd:'YTD',
@@ -380,7 +382,7 @@ en:{
   oppA:'With credit balance (advance / overpayment)', oppL:'With debit balance (advance / overpayment)', code:'Code', contragent:'Counterparty',
   showMore:(n,t)=>`Show more (${n} more · ${t} total)`,
   arNoteA:'Debit balance = amount owed by the counterparty, credit = advance or overpayment.', arNoteL:'Credit balance = amount we owe, debit = advance we have paid.', negRed:'Negative balances are shown in red.',
-  exTitle:'Expense Analysis', exSub:'expenses by month, ₾', selMonth:'selected month', ga:'General and administrative (7 4)', dist:'Distribution expenses (7 3)', nonOpEx:'Non-operating expenses (8 2)', totEx:'Total operating + other expenses', avgMonth:'monthly average', exItem:'Expense item', avgCol:'Avg / month',
+  exTitle:'Expense Analysis', exSub:'expenses by month, ₾', selMonth:'selected month', ga:'General and administrative (7 4)', dist:'Distribution expenses (7 3)', nonOpEx:'Non-operating expenses (8 2)', totEx:'Total operating + other expenses', avgMonth:'monthly average', exItem:'Expense item', avgCol:'Avg / month', ratiosTableView:'Table', ratiosRecView:'Analysis & Recommendations', ratiosStaleTitle:'This analysis may be out of date', ratiosStaleBody:'Figures have moved meaningfully since this text was written on 2026-10-20 — ask Claude to refresh it. Changed ratios:',
   exNote:'Cost of sales (7 2) is not included here; see the Profit & Loss tab. Background intensity is relative to each row\'s own maximum.',
   pDate:'Date', pDoc:'Document', pCounter:'Counter-account', pAmount:'Amount', pNone:'No postings that month', pShowPostings:'Show postings',
   pPurpose:'Purpose', pSupplier:'Supplier', pClickHint:'Click any non-zero number in the table to see that month\'s individual postings.',
@@ -607,6 +609,90 @@ function renderOV(){
   const el=document.getElementById('p-ov'); el.innerHTML=h;
   barChart(el.querySelector('#c-rev'),labels,[{name:t.revenue,color:cssVar('--accent'),vals:revV}],{name:t.net,color:cssVar('--amber'),vals:netV});
   lineChart(el.querySelector('#c-cash'),labels,[{name:t.cashLeg,color:cssVar('--accent'),vals:cashV},{name:t.arLeg,color:cssVar('--amber'),vals:arV}]);
+}
+
+/* ---------- FINANCIAL RATIOS (2026-10-20) ---------- standard definitions over the live PL/BS
+   actuals, precomputed monthly by tools/statements_engine.py's ratios() into STMT.ratios (one
+   entry per month, same 0-based index as PL_ACTUALS/BS_ACTUALS - so x.idx from yearMonths()
+   indexes it directly, same as every other statement table on this page). null means "undefined
+   this month" (e.g. a near-zero or negative denominator), shown as "-", never a misleading number. */
+function fmtRatio(v,kind){ if(v===null||v===undefined||isNaN(v)) return '–'; if(kind==='pct') return (v*100).toFixed(1)+'%'; if(kind==='days') return Math.round(v)+''; return v.toFixed(2)+'x'; }
+function ratioCell(v,kind){ const cls=['n']; if(v===null||v===undefined||isNaN(v)) cls.push('zero'); else if(v<0) cls.push('neg'); return `<td class="${cls.join(' ')}">${fmtRatio(v,kind)}</td>`; }
+/* Written analysis (2026-10-20): a one-time read of the ratios above by the analyst, not a formula -
+   re-write by hand (ask for a refresh) whenever the underlying numbers move enough to change the
+   read, rather than expecting this text to update itself the way the tables do. */
+const RATIOS_NOTE={
+ka:`
+<div class="card mt"><h3>მომგებიანობა</h3>
+<p>2026 წლის 10 თვეში ვოლტას საშუალო წმინდა მარჟა 6.8%-ია, მაგრამ თვეების მიხედვით ძალიან არათანაბარია — აგვისტო (20.5%) და ოქტომბერი (33.7%) ყველაზე ძლიერი თვეებია, ივნისი (−4.2%) და განსაკუთრებით სექტემბერი (−15.0%) კი ზარალიანი. საერთო მოგების მარჟა ამის საპირისპიროდ სტაბილურია (41–46% ყოველთვის) — ანუ ცვალებადობის წყარო საოპერაციო ხარჯებშია ან ერთჯერად პუნქტებშია (პროვიზია, FX), არა გაყიდვებსა თუ COGS-ში. ROE საშუალოდ მხოლოდ 4.2%-ია, 20.7%-დან (აგვისტო) −6.7%-მდე (სექტემბერი) მერყეობით.</p></div>
+<div class="card mt"><h3>ეფექტურობა</h3>
+<p>მარაგების ბრუნვა მკვეთრად დაეცა — იანვრის 12.5x-დან ოქტომბრის 0.89x-მდე, ანუ მარაგის საშუალო "დგომის" ხანგრძლივობა 29 დღიდან 411 დღემდე გაიზარდა. ეს ყველაზე თვალსაჩინო და საგანგაშო ტენდენციაა მთელ ცხრილში და ღირს პროდუქტის/კატეგორიის დონეზე გადამოწმება — ზოგადი შენელებაა, თუ კონკრეტული ნელა მოძრავი მარაგის დაგროვება.</p>
+<p>მოთხოვნების ბრუნვა და მისგან გამოყვანილი DSO ამ ბიზნესისთვის ნაკლებად ინფორმატიულია: "მოთხოვნები" აქ რეალურად განვადების პორტფელია, არა ჩვეულებრივი სავაჭრო დავალიანება, ამიტომ 1,300–5,900-დღიანი DSO არ უნდა წაიკითხოთ როგორც რეალური ამოღების სისწრაფე.</p></div>
+<div class="card mt"><h3>ლევერიჯი და ვალის მომსახურება</h3>
+<p>კომპანია სულ უფრო მეტად ვალით ფინანსდება — ვალი/აქტივები იანვრის 54%-დან ოქტომბრის 77%-მდე გაიზარდა, ვალი/კაპიტალი კი 1.3x-დან 3.1x-მდე (მაისში 4.1x-საც მიაღწია). ეს ზრდადი ტენდენციაა მთელი წლის განმავლობაში, არა ერთჯერადი ნახტომი. ამასთანავე, DSCR-იც და პროცენტის დაფარვის კოეფიციენტიც ორჯერ (ივნისი, სექტემბერი) 1-ზე დაბლა ჩავარდა — ანუ ამ თვეებში EBITDA საკმარისი არ იყო პროცენტისა და ძირის დასაფარად. ეს ზუსტად ემთხვევა უარყოფითი მომგებიანობის იმავე თვეებს — სავარაუდოდ, ერთი და იმავე მიზეზით.</p></div>
+<div class="card mt"><h3>ლიკვიდურობა</h3>
+<p>მიმდინარე და სასწრაფო რეშიო არარეალურად მაღალია (ხშირად 30–400x) — ეს არ ნიშნავს განსაკუთრებულ ლიკვიდურობას, უბრალოდ თითქმის მთელი ვალი გრძელვადიან სესხებშია, არა მოკლევადიან ვალდებულებებში, ამიტომ ეს ორი რეშიო აქ პრაქტიკულად არაფერს გვეუბნება. ფულადი რეშიო (0.3x–13.9x) უფრო საინტერესოა, თუმცა მისი რყევაც სესხის ათვისება-დაფარვის დროულობაზე მეტყველებს, ვიდრე რეალურ ლიკვიდურობის რისკზე.</p></div>
+<div class="card mt"><h3>რეკომენდაციები</h3><ul>
+<li>დააზუსტეთ ივნისისა და სექტემბრის ზარალიანობის ზუსტი მიზეზი (პროვიზია, FX თუ სხვა ერთჯერადი პუნქტი) — თუ განმეორებადი რისკია და არა ერთჯერადი ფაქტორი, საჭიროა ბუფერული რეზერვის დაგეგმვა.</li>
+<li>გამოიძიეთ მარაგების ბრუნვის ვარდნა კატეგორია/ბრენდის დონეზე და გადაწყვიტეთ, საჭიროა თუ არა ნელა მოძრავი მარაგის ჩამოწერა ან ფასდაკლება.</li>
+<li>ვალის მზარდი წილის გათვალისწინებით (77% აქტივებში, 3x+ კაპიტალთან), აკონტროლეთ DSCR ყოველთვიურად — თუ ზედიზედ 1-ზე დაბლა ჩავარდება, საჭირო გახდება სესხის პირობების გადახედვა ან დამატებითი კაპიტალის მოზიდვა.</li>
+<li>მოთხოვნების ბრუნვის/DSO-ს მაგივრად პორტფელის ზომა შეადარეთ ახალ გაცემულ მოცულობას — ეს უფრო რეალურად აჩვენებს ამოღების სისწრაფეს ამ ბიზნეს-მოდელისთვის.</li>
+<li>გააგრძელეთ ფულადი რეშიოს და აბსოლუტური ფულადი ნაშთის ყოველთვიური მონიტორინგი, რადგან მიმდინარე/სასწრაფო რეშიო აქ რეალურ სურათს არ იძლევა.</li>
+</ul></div>
+<p class="note">ეს არის ერთჯერადი, ხელით დაწერილი ანალიზი 2026-10-20-ის მონაცემებზე დაყრდნობით — ცხრილისგან განსხვავებით, თვითონ არ განახლდება ბაზის ყოველ განახლებაზე. თუ ციფრები მნიშვნელოვნად შეიცვალა, მთხოვეთ ხელახლა დავწერო.</p>`,
+en:`
+<div class="card mt"><h3>Profitability</h3>
+<p>Over the first 10 months of 2026, Volta's average net margin is 6.8%, but it swings widely month to month — August (20.5%) and October (33.7%) are the strongest months, while June (−4.2%) and especially September (−15.0%) were loss-making. Gross margin, by contrast, is stable (41–46% every month) — so the volatility is coming from operating expenses or one-off items (provisions, FX), not from sales or COGS. ROE averages only 4.2%, ranging from 20.7% (August) down to −6.7% (September).</p></div>
+<div class="card mt"><h3>Efficiency</h3>
+<p>Inventory turnover has fallen sharply — from 12.5x in January to 0.89x in October, meaning average days-inventory grew from 29 to 411 days. This is the most visible and concerning trend in the whole table, and is worth checking at the product/category level — is it a broad slowdown, or a build-up of specific slow-moving stock?</p>
+<p>Receivables turnover and the DSO derived from it are not very informative for this business: "Receivables" here is really the installment loan portfolio, not ordinary trade debt, so a 1,300–5,900 day DSO should not be read as a real collection-speed signal.</p></div>
+<div class="card mt"><h3>Leverage &amp; debt service</h3>
+<p>The company is increasingly debt-financed — Debt-to-Assets rose from 54% in January to 77% in October, and Debt-to-Equity from 1.3x to 3.1x (peaking at 4.1x in May). This is a steady trend across the year, not a one-off jump. At the same time, both DSCR and Interest Coverage dipped below 1x twice (June, September) — EBITDA wasn't enough to cover interest and principal those months. That lines up exactly with the months profitability was negative too, likely the same underlying cause.</p></div>
+<div class="card mt"><h3>Liquidity</h3>
+<p>Current and Quick Ratios are unrealistically high (often 30–400x) — this doesn't signal unusual liquidity, it just means almost all of Volta's debt sits in long-term loans rather than short-term liabilities, so these two ratios carry little real information here. The Cash Ratio (0.3x–13.9x) is more telling, though its swings say more about loan-draw/repayment timing than genuine liquidity risk.</p></div>
+<div class="card mt"><h3>Recommendations</h3><ul>
+<li>Pin down the exact cause of June's and September's losses (provision, FX, or another one-off item) — if it's a recurring risk rather than one-off, plan for a cash buffer.</li>
+<li>Investigate the inventory turnover decline at the category/brand level and decide whether write-downs or markdowns are warranted on slow-moving stock.</li>
+<li>Given the rising debt share (77% of assets, 3x+ of equity), track DSCR monthly — if it falls below 1x again for consecutive months, loan terms may need renegotiating or additional equity may be needed.</li>
+<li>In place of Receivables Turnover/DSO, compare portfolio size to new loan originations — a more realistic read on collection speed for this business model.</li>
+<li>Keep monitoring the Cash Ratio alongside the absolute cash balance trend, since Current/Quick Ratio don't give a real liquidity picture here.</li>
+</ul></div>
+<p class="note">This is a one-time, hand-written read of the 2026-10-20 data — unlike the table, it does not update itself when the database refreshes. Ask for a rewrite if the numbers move enough to change the read.</p>`};
+// Staleness check (2026-10-20): the averages baked into RATIOS_NOTE above, snapshotted the day the
+// text was written, in the exact order STMT.ratios flattens to (group -> subgroup -> row). Purely a
+// passive on-page banner when someone opens this view - never a push notification (no email/Slack),
+// matching every other Volta report in this project, none of which page the user either.
+const RATIOS_BASELINE={asOf:'2026-10-20', avgs:[0.012,0.042,0.011,0.435,0.104,0.068,82.517,77.827,4.455,6.796,0.208,0.175,16.625,147.908,2162.6,30.26,0.704,2.755,1.647,2.829]};
+function flattenRatioRows(RS){ const out=[]; for(const g of (RS||[])) for(const sg of g.subgroups) for(const r of sg.rows) out.push(r); return out; }
+function ratiosStaleList(){
+  const rows=flattenRatioRows(STMT.ratios); const dev=[];
+  rows.forEach((r,i)=>{ const base=RATIOS_BASELINE.avgs[i]; if(base===undefined||r.avg===null||r.avg===undefined) return;
+    const big = r.fmt==='pct' ? Math.abs(r.avg-base)>0.05 : Math.abs(r.avg-base) > Math.abs(base)*0.2+1e-9;
+    if(big) dev.push(state.lang==='en'?r.en:r.ka); });
+  return dev;
+}
+function renderRatios(){
+  const t=T(); const RS=STMT.ratios||[]; const YM=yearMonths(state.year);
+  let h=periodHead(t.tabs.ratios, String(state.year));
+  h+=`<div class="seg" style="margin-bottom:10px"><button data-rv="table" aria-pressed="${state.ratiosView==='table'}">${t.ratiosTableView}</button><button data-rv="analysis" aria-pressed="${state.ratiosView==='analysis'}">${t.ratiosRecView}</button></div>`;
+  if(state.ratiosView==='analysis'){
+    const dev=ratiosStaleList();
+    if(dev.length) h+=`<div class="card mt" style="border-color:var(--amber)"><h3>⚠ ${t.ratiosStaleTitle}</h3><p class="note">${t.ratiosStaleBody} ${esc(dev.join(', '))}</p></div>`;
+    h+=RATIOS_NOTE[state.lang]; document.getElementById('p-ratios').innerHTML=h; return;
+  }
+  for(const g of RS){
+    h+=`<div class="card mt"><h3>${state.lang==='en'?g.en:g.ka}</h3>`;
+    for(const sg of g.subgroups){
+      h+=`<div class="tablewrap" style="box-shadow:none;border:0;margin-top:10px"><table class="ledger"><thead><tr><th>${state.lang==='en'?sg.en:sg.ka}</th>${YM.map(x=>`<th class="n" ${!x.real?'style="color:var(--faint)"':''}>${ymLabel(x)}</th>`).join('')}<th class="n">${t.avgCol}</th></tr></thead><tbody>`;
+      for(const r of sg.rows){
+        const tds=YM.map(x=>ratioCell(x.real?r.vals[x.idx]:null,r.fmt)).join('');
+        h+=`<tr><td class="num">${state.lang==='en'?r.en:r.ka}</td>${tds}${ratioCell(r.avg,r.fmt)}</tr>`;
+      }
+      h+=`</tbody></table></div>`;
+    }
+    h+=`</div>`;
+  }
+  document.getElementById('p-ratios').innerHTML=h;
 }
 
 /* ---------- BALANCE SHEET ---------- */
@@ -1439,7 +1525,7 @@ function drillPanel(scope,key,colspan){
 }
 
 /* ---------- wiring ---------- */
-const R={ov:renderOV,bs:renderBS,pl:renderPL,cf:renderCF,mp:renderMapping,pb:renderPB,bb:renderBB,cfb:renderCFB,pob:renderPOB,asb:renderASB,avpl:renderAVPL,avbs:renderAVBS,avcf:renderAVCF,avpf:renderAVPF,avas:renderAVAS};
+const R={ov:renderOV,bs:renderBS,pl:renderPL,cf:renderCF,mp:renderMapping,ratios:renderRatios,pb:renderPB,bb:renderBB,cfb:renderCFB,pob:renderPOB,asb:renderASB,avpl:renderAVPL,avbs:renderAVBS,avcf:renderAVCF,avpf:renderAVPF,avas:renderAVAS};
 const BUDGET_TABS=['pb','bb','cfb','pob','asb','avpl','avbs','avcf','avpf','avas'];
 function render(){ document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('on',p.id==='p-'+state.tab)); document.querySelectorAll('#tabs button').forEach(b=>b.setAttribute('aria-selected',b.dataset.p===state.tab));
   const noMonth=BUDGET_TABS.includes(state.tab); document.getElementById('l-month').hidden=noMonth; document.getElementById('month').hidden=noMonth;
@@ -1479,6 +1565,7 @@ document.getElementById('theme').addEventListener('click',e=>{ const b=e.target.
 document.getElementById('tabs').addEventListener('click',e=>{ const b=e.target.closest('button[data-p]'); if(!b) return; state.tab=b.dataset.p; try{localStorage.setItem('volta-fin-tab',state.tab);}catch(_){} render(); });
 document.querySelector('main').addEventListener('click',e=>{
   const c=e.target.closest('[data-compact]'); if(c){ const id=c.dataset.compact; if(state.compactTabs.has(id)) state.compactTabs.delete(id); else state.compactTabs.add(id); render(); return; }
+  const rv=e.target.closest('[data-rv]'); if(rv){ state.ratiosView=rv.dataset.rv; render(); return; }
   const p=e.target.closest('[data-cellpost]'); if(p){ const [sc,key,f,tt]=p.dataset.cellpost.split('|'); const k=sc+'|'+key, v=f+'|'+tt;
     if(state.exOpenCell.get(k)===v) state.exOpenCell.delete(k); else { state.exOpenCell.set(k,v); state.drillN=40; } render(); return; }
   const ds=e.target.closest('[data-drillsort]'); if(ds){ state.drillSort=ds.dataset.drillsort; render(); return; }

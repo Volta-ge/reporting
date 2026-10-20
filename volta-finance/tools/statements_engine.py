@@ -477,6 +477,129 @@ def build():
     return pl, bs, cf
 
 
+# ---------- Financial ratios (2026-10-20, per the user's "Volta FS montly Aug'26.xlsx" Ratios'26 tab) ----------
+# Same groups/ratios as that sheet, but with STANDARD formulas rather than copying it byte-for-byte -
+# the user confirmed (after a review) that sheet has real formula bugs: Gross Profit Margin references
+# the wrong row for 8 of 12 months, DSCR adds Services Revenue instead of a debt-service item, Jan'26
+# DSCR/Interest-Coverage point at a blank spacer column, and Debt-to-Equity's numerator nets ST against
+# LT liabilities instead of just using LT (financial) debt. "Quick Ratio"/"Cash Ratio" were also swapped
+# against standard terminology - this engine uses the conventional names/definitions throughout.
+def ratios(pl, bs):
+    idx = range(NM)
+
+    def avg2(lst, open_val, j):
+        prev = open_val if j == 0 else lst[j - 1]
+        return (prev + lst[j]) / 2
+
+    def delta(lst, open_val, j):
+        prev = open_val if j == 0 else lst[j - 1]
+        return lst[j] - prev
+
+    def safe_div(num, den, positive_only=False):
+        if den is None or den == 0 or (positive_only and den < 0):
+            return None
+        return num / den
+
+    # bv()'s sign convention already flips classes 3/4/5 (liabilities/equity) to a POSITIVE
+    # display magnitude (verified against statements_data.json: bs[148]/bs[154] are positive
+    # throughout, bs[137]/bs[138] mostly positive but can dip negative in a month where advances/
+    # VAT-input exceed payables) - no extra negation needed here, unlike the source Excel's own
+    # convention where those rows are stored negative.
+    open_assets = bv('1', -1) + bv('2', -1)
+    open_cl = bv('3', -1)
+    open_equity = bv('5', -1)
+    open_inventory = sum(bv(c, -1) for c in mt._AVBS_128)
+    open_ar = bv('1 4 10', -1)
+    open_ap = bv('3 1 10', -1)
+    open_ltbank = sum(bv(c, -1) for c in mt.LOAN_BANK)
+
+    cap_employed = [bs[135][j] - bs[137][j] for j in idx]           # Total Assets minus ST Liabilities
+    ltbank_mag = [sum(bv(c, j) for c in mt.LOAN_BANK) for j in idx]
+    interest_exp = [pl[111][j] + pl[112][j] + pl[113][j] for j in idx]
+
+    roce = [safe_div(pl[118][j], avg2(cap_employed, open_assets - open_cl, j)) for j in idx]
+    roe = [safe_div(pl[118][j], avg2(bs[154], open_equity, j)) for j in idx]
+    roa = [safe_div(pl[118][j], avg2(bs[135], open_assets, j)) for j in idx]
+    gross_margin = [safe_div(pl[82][j], pl[79][j]) for j in idx]
+    op_margin = [safe_div(pl[105][j], pl[79][j]) for j in idx]
+    net_margin = [safe_div(pl[118][j], pl[79][j]) for j in idx]
+
+    current_ratio = [safe_div(bs[124][j], bs[137][j], True) for j in idx]
+    quick_ratio = [safe_div(bs[124][j] - bs[128][j], bs[137][j], True) for j in idx]
+    cash_ratio = [safe_div(bs[125][j], bs[137][j], True) for j in idx]
+
+    inv_turns = [safe_div(pl[81][j], avg2(bs[128], open_inventory, j), True) for j in idx]
+    # Receivables Turnover uses the plain Revenue/AvgAR form (not the Revenue-minus-ΔAR "cash
+    # collections" proxy the source sheet used) - Volta's "AR" here is the installment PORTFOLIO
+    # balance, which grows faster than monthly revenue while the book is expanding, so the ΔAR
+    # adjustment produced a near-zero/negative numerator and a nonsensical multi-year DSO.
+    ar_turns = [safe_div(pl[79][j], avg2(bs[126], open_ar, j), True) for j in idx]
+    asset_turns = [safe_div(pl[79][j], avg2(bs[135], open_assets, j), True) for j in idx]
+    ap_turns = [safe_div(pl[81][j], avg2(bs[138], open_ap, j), True) for j in idx]
+
+    dsi = [safe_div(365, inv_turns[j], True) for j in idx]
+    dso = [safe_div(365, ar_turns[j], True) for j in idx]
+    dpo = [safe_div(365, ap_turns[j], True) for j in idx]
+
+    debt_to_assets = [safe_div(bs[148][j], bs[135][j], True) for j in idx]
+    debt_to_equity = [safe_div(bs[148][j], bs[154][j], True) for j in idx]
+
+    debt_service = [delta(ltbank_mag, open_ltbank, j) * -1 + interest_exp[j] for j in idx]
+    dscr = [safe_div(pl[105][j], debt_service[j], True) for j in idx]
+    interest_cov = [safe_div(pl[105][j], interest_exp[j], True) for j in idx]
+
+    def avg_defined(vals):
+        got = [v for v in vals if v is not None]
+        return sum(got) / len(got) if got else None
+
+    def row(ka, en, vals, fmt):
+        return {'ka': ka, 'en': en, 'fmt': fmt, 'vals': vals, 'avg': avg_defined(vals)}
+
+    groups = [
+        {'ka': 'მომგებიანობის რეშიოები', 'en': 'Profitability Ratios', 'subgroups': [
+            {'ka': 'უკუგების რეშიოები', 'en': 'Return Ratios', 'rows': [
+                row('კაპიტალის უკუგება (ROCE)', 'Return on Capital Employed', roce, 'pct'),
+                row('საკუთარი კაპიტალის უკუგება (ROE)', 'Return on Equity', roe, 'pct'),
+                row('აქტივების უკუგება (ROA)', 'Return on Assets', roa, 'pct'),
+            ]},
+            {'ka': 'მარჟის რეშიოები', 'en': 'Margin Ratios', 'rows': [
+                row('საერთო მოგების მარჟა', 'Gross Profit Margin', gross_margin, 'pct'),
+                row('საოპერაციო მოგების მარჟა (EBITDA)', 'Operating Profit Margin', op_margin, 'pct'),
+                row('წმინდა მოგების მარჟა', 'Net Profit Margin', net_margin, 'pct'),
+            ]},
+        ]},
+        {'ka': 'ეფექტურობის რეშიოები', 'en': 'Efficiency Ratios', 'subgroups': [
+            {'ka': 'ლიკვიდურობის რეშიოები', 'en': 'Liquidity Ratios', 'rows': [
+                row('მიმდინარე რეშიო', 'Current Ratio', current_ratio, 'x'),
+                row('სასწრაფო რეშიო (Quick/Acid-test)', 'Quick Ratio', quick_ratio, 'x'),
+                row('ფულადი რეშიო', 'Cash Ratio', cash_ratio, 'x'),
+            ]},
+            {'ka': 'ბრუნვის რეშიოები', 'en': 'Turnover Ratios', 'rows': [
+                row('მარაგების ბრუნვა', 'Inventory Turnover Ratio', inv_turns, 'x'),
+                row('მოთხოვნების ბრუნვა', 'Receivables Turnover Ratio', ar_turns, 'x'),
+                row('აქტივების ბრუნვა', 'Asset Turnover Ratio', asset_turns, 'x'),
+                row('გადასახდელების ბრუნვა', 'Payables Turnover Ratio', ap_turns, 'x'),
+            ]},
+            {'ka': 'ფულადი ციკლი', 'en': 'Cash Conversion Cycle', 'rows': [
+                row('მარაგების გაყიდვის დღეები (DSI)', 'Days Sales of Inventory', dsi, 'days'),
+                row('მოთხოვნების ამოღების დღეები (DSO)', 'Days Sales Outstanding', dso, 'days'),
+                row('გადასახდელების დღეები (DPO)', 'Days Payable Outstanding', dpo, 'days'),
+            ]},
+        ]},
+        {'ka': 'ლევერიჯის რეშიოები', 'en': 'Leverage Ratios', 'subgroups': [
+            {'ka': 'ბალანსის რეშიოები', 'en': 'Balance Sheet Ratios', 'rows': [
+                row('ვალი აქტივებთან', 'Debt to Assets Ratio', debt_to_assets, 'pct'),
+                row('ვალი კაპიტალთან', 'Debt to Equity Ratio', debt_to_equity, 'x'),
+            ]},
+            {'ka': 'საშემოსავლო რეშიოები', 'en': 'Income Statement Ratio', 'rows': [
+                row('ვალის მომსახურების კოეფიციენტი (DSCR)', 'Debt Service Coverage Ratio', dscr, 'x'),
+                row('პროცენტის დაფარვის კოეფიციენტი', 'Interest Coverage Ratio', interest_cov, 'x'),
+            ]},
+        ]},
+    ]
+    return groups
+
+
 def bv_open_cash():
     """JS: S(stats(0,0),'1 1').o + S(stats(0,0),'1 2').o - opening cash as of the very start of the year."""
     return opening0.get('1 1', 0.0) + opening0.get('1 2', 0.0)
@@ -495,10 +618,12 @@ mt._AVBS_128 = [c for c in _children_of('1 6', d['acc']) if c != '1 6 35']
 
 if __name__ == '__main__':
     pl, bs, cf = build()
+    ratio_groups = ratios(pl, bs)
     # string keys (JSON requires it) - dashboard_template.html's STMT lookup accesses these the
     # same way PL_ACTUALS[105] etc. already worked (JS coerces the numeric literal key to a string).
     out = {'months': months, 'pl': {str(k): v for k, v in pl.items()}, 'bs': {str(k): v for k, v in bs.items()},
-           'cf': {str(k): v for k, v in cf.items()}}
+           'cf': {str(k): v for k, v in cf.items()}, 'ratios': ratio_groups}
     op = os.path.join(BASE, 'statements_data.json')
     json.dump(out, open(op, 'w', encoding='utf-8'), ensure_ascii=False, separators=(',', ':'))
-    print('wrote', op, 'months', NM, 'pl', len(pl), 'bs', len(bs), 'cf', len(cf))
+    print('wrote', op, 'months', NM, 'pl', len(pl), 'bs', len(bs), 'cf', len(cf), 'ratio rows',
+          sum(len(sg['rows']) for g in ratio_groups for sg in g['subgroups']))
