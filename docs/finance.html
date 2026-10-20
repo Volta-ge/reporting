@@ -833,8 +833,9 @@ function renderCF(){
   h+=`<div class="card"><h3>${t.cfChart}</h3><div class="cap">${yLbl(state.year)}, ${t.cfChartCap}</div><div class="legend"><span><i style="background:${cssVar('--accent')}"></i>${t.inflow}</span><span><i style="background:${cssVar('--amber')}"></i>${t.outflow}</span></div><div class="chart" id="c-cf"></div></div>`;
   if(BUDGET && BUDGET.cf){
     const actN=D.months.length;
-    let hm=`<div class="card mt"><h3>${t.cfTitle} · ${t.byMonth} · ${state.year}</h3><div class="cap">${t.cfByMonthCap}</div><p class="note">${t.pClickHint}</p><div class="tablewrap" style="box-shadow:none;border:0"><table class="ledger"><thead><tr><th>${t.item}</th>${YM.map((x,pos)=>`<th class="n" ${pos>=actN?'style="color:var(--faint)"':''}>${ymLabel(x)}</th>`).join('')}<th class="n">${t.total}</th></tr></thead><tbody>`;
+    let hm=`<div class="card mt"><h3><span>${t.cfTitle} · ${t.byMonth} · ${state.year}</span>${compactBtn('cf')}</h3><div class="cap">${t.cfByMonthCap}</div><p class="note">${t.pClickHint}</p><div class="tablewrap" style="box-shadow:none;border:0"><table class="ledger"><thead><tr><th>${t.item}</th>${YM.map((x,pos)=>`<th class="n" ${pos>=actN?'style="color:var(--faint)"':''}>${ymLabel(x)}</th>`).join('')}<th class="n">${t.total}</th></tr></thead><tbody>`;
     for(const b of BUDGET.cf){
+      if(state.compactTabs.has('cf') && b.level===2) continue;
       const label=state.lang==='en'?(b.en||b.ka):b.ka; const cls=b.level===1?(b.bold?'total':'lvl1'):''; const ind=b.level===2?'ind1':'';
       const fn=LIVE_CF_ACTUALS[b.row];
       const vals=YM.map((x,pos)=>(fn&&pos<actN)?fn(pos):undefined);
