@@ -424,11 +424,13 @@ def build():
     except ValueError:
         pass
     # Securing-a-Loan-with-Giorgi's-Property fee (restored 2026-10-20, see mapping_table.py's
-    # SECURING_LOAN_FEE_BY_MONTH comment) - not a real Oris posting, netted out of Salary of
-    # Shareholders and shown as its own non-operating line instead; zero-sum, Net Profit unaffected.
+    # SECURING_LOAN_FEE_BY_MONTH comment) - not a real Oris posting, shown as its own non-operating
+    # line, a genuine ADDITIONAL cost that reduces Net Profit (2026-10-20, per the user: "გადააწყე
+    # რომ ამცირებდეს წმინდა მოგებას"). Deliberately NOT also subtracted from Salary of Shareholders
+    # (92) - unlike Provision, netting it out of sal92 while also adding it to nonop108 would cancel
+    # inside net_raw (one term up, one term down, same total), silently keeping it zero-sum again
+    # despite the net_direct subtraction below, which is exactly the bug this fix is for.
     row114 = [mt.SECURING_LOAN_FEE_BY_MONTH.get(months[j], 0.0) for j in idx]
-    for _j in idx:
-        sal92[_j] -= row114[_j]
     # Opex total = sum of every Opex-member row bucket (91/94/95/96/98/99/100/101/102/103/104) PLUS
     # salary (92+93) - salary is NOT a pl_map bucket at all (the whole 7 4 10/7 4 50 anchor subtrees
     # resolve to the STRING 'sal' via PL_FALLBACK, deliberately excluded from PL_BUCKET_ROWS, since
@@ -441,7 +443,15 @@ def build():
     opex_raw = [del91[j] + row94[j] + off95[j] + row96[j] + sys98[j] + util99[j] + mkt100[j] + mktsal101[j] + prov102[j] + row103[j] + row104_bucket[j] + sal92[j] + sal93[j] for j in idx]
     nonop108 = [ppe110[j] + dep109[j] + int111[j] + int112[j] + int113[j] + fxexp115[j] + fxinc116[j] + row114[j] for j in idx]
     net_raw = [gross82[j] - opex_raw[j] + oth87[j] - nonop108[j] for j in idx]
-    # "true" net profit computed directly from the 6/7/8/9 classes (== JS's plLines().net), for the residual safety net
+    # "true" net profit computed directly from the 6/7/8/9 classes (== JS's plLines().net), for the residual safety net.
+    # Provision (102) and the Securing-a-Loan fee (114) are subtracted here too (2026-10-20, per the
+    # user: "გადააწყე რომ ამცირებდეს წმინდა მოგებას" - make them actually reduce Net Profit) - neither
+    # has a real Oris posting behind it, so without this they'd be fully absorbed back out by `resid`
+    # below (a zero-sum re-slice with no bottom-line effect, which is what made row 104's "Unpredictable
+    # Expenses" swing by the exact negative of Provision every month - confusing, not a real number).
+    # The System Dev/Marketing Salaries re-slice and the June Zaza correction stay zero-sum on purpose:
+    # that money IS a real posting already fully counted somewhere in the raw ledger, only WHICH LINE
+    # it displays under changes, so net_direct must not touch it.
     net_direct = []
     for j in idx:
         rev = incA('6', j)
@@ -454,7 +464,7 @@ def build():
         noe = expA('8 2', j)
         ext = incA('9 1', j)
         oth = expA('9 2', j)
-        net_direct.append(op + noi - noe + ext - oth)
+        net_direct.append(op + noi - noe + ext - oth - prov102[j] - row114[j])
     resid = [net_raw[j] - net_direct[j] for j in idx]
     opex90 = [opex_raw[j] + resid[j] for j in idx]
     ebitda105 = [gross82[j] - opex90[j] + oth87[j] for j in idx]

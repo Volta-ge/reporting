@@ -1392,14 +1392,15 @@ const allInt=(f,t)=>['investors','sh','bank','other'].flatMap(k=>inRows(k)(f,t))
 const AVPL_SPEC={
   79:PLI(...PL_REV), 81:PLE(...PL_COGS), 82:PLI(...PL_REV,...PL_COGS), 84:PLI('6 1 91'), 85:PLI('8 1 25'), 86:PLI('6 1 90 1'),
   87:PLI('6 1 91','8 1 25','6 1 90 1'),
-  // 90: Opex total needs the Securing-a-Loan fee excluded too (restored 2026-10-20) - it's netted out
-  // of Salary of Shareholders (inside Opex) and shown under Non-Operating Expenses (108) instead, so
-  // Opex itself is smaller by that amount even though raw salary postings don't reflect it.
-  90:{list:PLE(...opexE),rows:loanFeeLines(-1)},
+  // 90: Opex total now genuinely includes the Provision formula amount (2026-10-20 - it reduces Net
+  // Profit for real, see statements_engine.py), so the drill-down needs provisionRows() added to
+  // explain that part of the total; it was never part of Opex via sal92, so no loan-fee line here.
+  90:{list:PLE(...opexE),rows:provisionRows},
   91:PLE(...OPX_DEL),
-  // 92: Salary of Shareholders nets out the June Zaza reclass and the Securing-a-Loan fee every month
-  // (restored 2026-10-20, see mapping_table.py) - both synthetic, no real posting behind either.
-  92:{rows:(f,t)=>[...salRows().sh.filter(r=>{ const mm=+r[0].slice(5,7); return mm>=f&&mm<=t; }),...zazaJuneLine(f,t).map(r=>[r[0],r[1],r[2],-r[3]]),...loanFeeLines(-1)(f,t)]},
+  // 92: Salary of Shareholders nets out the June Zaza reclass (a real-money reclassification, so it
+  // belongs here) - the Securing-a-Loan fee (114) is NOT subtracted from this line (2026-10-20: it's a
+  // genuine additional cost now, not netted out of salary - see statements_engine.py's matching note).
+  92:{rows:(f,t)=>[...salRows().sh.filter(r=>{ const mm=+r[0].slice(5,7); return mm>=f&&mm<=t; }),...zazaJuneLine(f,t).map(r=>[r[0],r[1],r[2],-r[3]])]},
   93:{rows:(f,t)=>salRows().other.filter(r=>{ const mm=+r[0].slice(5,7); return mm>=f&&mm<=t; })}, 94:PLE('7 4 90 49'),
   95:PLE(...leafCodes('7 4',OPX_EXPL7),'8 2 90 2'), 96:PLE('7 4 20','6 1 90 2'),
   // 98/100/101: System Dev / Marketing Expenses / Marketing Salaries re-slice (restored 2026-10-20) -
@@ -1424,9 +1425,13 @@ const AVPL_SPEC={
   // January's provision formula amount) rather than explaining it, so left as MISC_CODES only, same
   // as before 2026-10-20. Any gap between this list's sum and the displayed total is resid itself -
   // the drill-down panel's own tie-out footer already surfaces that honestly instead of hiding it.
-  104:PLE(...MISC_CODES),
-  // 105: EBITDA - same Securing-a-Loan exclusion as row 90 (smaller Opex -> larger EBITDA by that amount).
-  105:{list:[...PLI(...PL_REV,...PL_COGS,'6 1 91','8 1 25','6 1 90 1'),...PLE(...opexE).map(([c])=>[c,-1])],rows:loanFeeLines(1)},
+  // 104: NINE_CODES added back (2026-10-20) - now that Provision (102) is correctly subtracted inside
+  // net_direct too, the real class-9 activity (e.g. a 65k GEL portfolio write-off batch found live on
+  // 2026-01-16) is the ONLY thing left in resid, so it should tie out this time (the first attempt at
+  // this, before the net_direct fix, double-counted against Provision's own formula-vs-real gap).
+  104:PLE(...MISC_CODES,...NINE_CODES),
+  // 105: EBITDA - same Provision addition as row 90, negated (it's a cost, reduces EBITDA).
+  105:{list:[...PLI(...PL_REV,...PL_COGS,'6 1 91','8 1 25','6 1 90 1'),...PLE(...opexE).map(([c])=>[c,-1])],rows:(f,t)=>provisionRows(f,t).map(r=>[r[0],r[1],r[2],-r[3]])},
   // 108: Securing-a-Loan fee (restored 2026-10-20) added alongside the existing interest rows - also
   // has no real posting, same synthetic-line treatment as Provision.
   108:{list:PLE('7 4 55','8 2 90 1','8 1 90 1','8 2 50','8 1 50','8 1 10'),rows:(f,t)=>[...allInt(f,t),...loanFeeLines(1)(f,t)]},
@@ -1434,7 +1439,9 @@ const AVPL_SPEC={
   110:PLE('8 2 90 1','8 1 90 1'), 111:{rows:inRows('investors')}, 112:{rows:inRows('sh')},
   113:{list:PLE('8 1 10'),rows:(f,t)=>[...inRows('bank')(f,t),...inRows('other')(f,t)]},
   115:PLE('8 2 50'), 116:PLE('8 1 50'),
-  118:{list:[...PLI(...PL_REV,...PL_COGS,'6 1 91','8 1 25','6 1 90 1'),...PLE(...opexE,'7 4 55','8 2 90 1','8 1 90 1','8 2 50','8 1 50','8 1 10').map(([c])=>[c,-1])],rows:(f,t)=>allInt(f,t).map(r=>[r[0],r[1],r[2],-r[3]])},
+  // 118: Net Profit - Provision and the Securing-a-Loan fee both genuinely reduce it now (2026-10-20),
+  // added here alongside the existing interest rows, all negated to match this row's sign convention.
+  118:{list:[...PLI(...PL_REV,...PL_COGS,'6 1 91','8 1 25','6 1 90 1'),...PLE(...opexE,'7 4 55','8 2 90 1','8 1 90 1','8 2 50','8 1 50','8 1 10').map(([c])=>[c,-1])],rows:(f,t)=>[...allInt(f,t).map(r=>[r[0],r[1],r[2],-r[3]]),...provisionRows(f,t).map(r=>[r[0],r[1],r[2],-r[3]]),...loanFeeLines(-1)(f,t)]},
 };
 const AVBS_CODES={124:['1'],125:['1 1','1 2'],126:['1 4 10'],128:(children['1 6']||[]).filter(c=>c!=='1 6 35'),129:['2'],130:['2 1 60'],131:['2 1 80'],132:['2 1 90'],133:['2 5'],134:['2 2','2 6'],135:['1','2'],
   137:['3'],138:['3 1 10'],139:['3 1 20'],140:['3 1 30','3 1 32'],141:['3 3 10'],142:['3 3 20'],143:['3 3 30'],144:['3 3 40'],146:['3 3 80'],147:['3 4 10'],148:['4'],
