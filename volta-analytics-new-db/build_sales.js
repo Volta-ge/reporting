@@ -1,7 +1,9 @@
 // Sales Analyze group (Sales Monthly / Brand Analyze / Subcategory Analyze / Category-Brand) — hybrid build.
 //   old DB  (Jan 1 .. Aug 30):  old_sales_grouped.tsv  (period x Category_Name x Brand_Name x deal_type -> sales/cogs/qty)
 //                               old_sales_lines.tsv    (line items for the COGS garbage stats)
-//   new DB  (Aug 31 .. yesterday): new_sales_lines.tsv (one row per order_items line; cogs is NOT available on the new DB)
+//   new DB  (Aug 31 .. yesterday): new_sales_lines.tsv (one row per order_items line; cogs = crm_line_fulfillment.vendor_price,
+//                               the CRM's own "ასაღები ფასი" per-line pickup price — added 2026-10-15, ~84% coverage and
+//                               growing as staff price each delivery; uncovered lines fall into cogsUnknownSales as usual)
 //                               new_categories.tsv + new_product_categories.tsv (category tree, for the mapping-sheet classifier)
 // Output: sales_data.json with the exact shapes the original artifact's render functions expect.
 const fs = require('fs');
@@ -77,13 +79,23 @@ for (const r of oldGrouped) { const b = String(r.brand || '').trim(); if (b && !
 
 const newLinesRaw = parseTsv('new_sales_lines.tsv');
 if (newLinesRaw.some(r => r.d < CUTOVER)) throw new Error('new-DB line before cutover');
+// cost (2026-10-15, per the user): crm_line_fulfillment.vendor_price, the CRM's own per-line "ასაღები ფასი"
+// (vendor pickup price, per unit — verified against qty>1 rows, e.g. vendor_price 18.90 x qty 32 = 604.80
+// while base_price 29.00 x 32 = base_total 928.00 exactly, confirming both are per-unit on the same basis).
+// NULL/empty where the line hasn't been picked up/priced yet — falls into cogsUnknownSales exactly like an
+// old-DB line with a missing Start_Price always has, so the existing "garbage"/coverage reporting already
+// handles it with no further change needed.
 const newGrouped = newLinesRaw.map(r => {
   const sales = +r.sales;
+  const qty = +r.qty || 1;
+  const unitCost = r.cost !== undefined && r.cost !== '' && r.cost !== 'NULL' ? +r.cost : null;
+  const hasCost = unitCost !== null && unitCost > 0;
+  const cogs = hasCost ? unitCost * qty : 0;
   const markupEligible = r.deal_type === 'installment' && r.creator_date && r.creator_date >= MARKUP_CUTOVER;
   const rate = r.is_karcher === '1' ? MARKUP_RATE_KAR : MARKUP_RATE_STD;
   return {
     period: r.period, category: newProductRawCategory(r.product_id), brand: r.brand, deal_type: r.deal_type,
-    sales, cogs: 0, qty: +r.qty, cogsUnknownSales: sales,
+    sales, cogs, qty: +r.qty, cogsUnknownSales: hasCost ? 0 : sales,
     markupGel: markupEligible ? sales * (rate - 1) : 0,
     markupEligibleSales: markupEligible ? sales : 0,
     source: 'new',
@@ -155,9 +167,12 @@ function garbageFor(lines) {
   return { count, salesAffected: r2(salesAffected), total: lines.length };
 }
 const garbage = { all: garbageFor(oldLines), installment: garbageFor(oldLines.filter(l => l.deal_type === 'installment')), single: garbageFor(oldLines.filter(l => l.deal_type === 'single')) };
+// cogsUnknown (2026-10-15 fix): used to blindly treat EVERY new-DB row as unknown-cost regardless of
+// r.cogsUnknownSales, left over from before crm_line_fulfillment.vendor_price existed - now filters to the
+// rows that are actually still unpriced, same as every other cogsUnknownSales consumer in this file.
 const cogsUnknown = {};
 for (const dt of ['all', 'installment', 'single']) {
-  const rows = newGrouped.filter(r => dt === 'all' || r.deal_type === dt);
+  const rows = newGrouped.filter(r => (dt === 'all' || r.deal_type === dt) && r.cogsUnknownSales > 0);
   cogsUnknown[dt] = { count: rows.reduce((s, r) => s + r.qty, 0), sales: r2(rows.reduce((s, r) => s + r.sales, 0)) };
 }
 

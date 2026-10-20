@@ -85,18 +85,32 @@ Q "SELECT DATE(p.payment_date) d, $SEG seg, ROUND(SUM(p.amount),2) dp
      AND DATE(p.payment_date) BETWEEN '$CUTOVER' AND '$END'
    GROUP BY d, seg ORDER BY d, seg;" > "$S/new_daily_dp.tsv"
 
-# Sales Analyze line items — real sales only (crm_order_status 5 = installment, 99 = single payment); the new DB has no cost data.
+# Sales Analyze line items — real sales only (crm_order_status 5 = installment, 99 = single payment).
 # creator_date + is_karcher (added 2026-09-16, for the Finance/Profit Margins tab) let a Node-side build compute each
 # line's financing-markup share with the same rule as the Daily Mail Amount Sold formula (site price * 1.05*1.20, or
 # *1.15*1.05*1.20 for Karcher, from crm_creator_date >= 2026-09-01) without a second SQL pass.
+# cost (added 2026-10-15, per the user): the new DB's real per-line cost lives in the CRM's own Logistics >
+# Deliveries page ("ასაღები ფასი" / vendor pickup price) — crm_line_fulfillment.vendor_price, one row per
+# order_item_id, filled in by staff as each line is picked up from the vendor. NOT the generic per-product
+# `product_attribute_values` cost attribute (id 12) this tab used to read (via new_product_costs.tsv, still
+# pulled below for the separate Profit-Margins tab) — that one only covered ~53% of September's sold
+# products; crm_line_fulfillment.vendor_price covers ~84%, and every Sept/Oct order_item already has a
+# fulfillment row (the gap is purely "not yet picked up/priced", not a missing join). NULL where not yet
+# filled — build_sales.js's existing cogsUnknownSales mechanism already handles partial coverage correctly.
+# data-entry glitch guard (found 2026-10-15): two Sept rows had vendor_price typed in as the order's own
+# id (e.g. order 56106 -> vendor_price 56106.00 on a 629 GEL sale) instead of a real price, inflating COGS
+# by ~112,638 GEL for that one month alone. Treat vendor_price as unset whenever it equals the order id or
+# order_item id (the CASE below) rather than as a real, if absurd, cost.
 Q "SELECT DATE_FORMAT(COALESCE(o.crm_creator_date,o.created_at),'%Y-%m') period, DATE(COALESCE(o.crm_creator_date,o.created_at)) d, o.id order_id, oi.product_id, oi.qty_ordered qty, oi.base_total sales,
    CASE WHEN o.crm_order_status=99 THEN 'single' ELSE 'installment' END deal_type, COALESCE(ao.admin_name,'') brand, pf.sku, pf.name product_name,
    o.crm_creator_date creator_date,
-   (EXISTS (SELECT 1 FROM order_items oi2 JOIN product_attribute_values pb2 ON pb2.product_id=oi2.product_id AND pb2.attribute_id=25 JOIN attribute_options ao2 ON ao2.id=pb2.integer_value AND ao2.admin_name='KARCHER GEORGIA' WHERE oi2.order_id=o.id)) is_karcher
+   (EXISTS (SELECT 1 FROM order_items oi2 JOIN product_attribute_values pb2 ON pb2.product_id=oi2.product_id AND pb2.attribute_id=25 JOIN attribute_options ao2 ON ao2.id=pb2.integer_value AND ao2.admin_name='KARCHER GEORGIA' WHERE oi2.order_id=o.id)) is_karcher,
+   CASE WHEN lf.vendor_price=o.id OR lf.vendor_price=oi.id THEN NULL ELSE lf.vendor_price END cost
    FROM orders o JOIN order_items oi ON oi.order_id=o.id
    LEFT JOIN product_flat pf ON pf.product_id=oi.product_id AND pf.locale='ka_GE'
    LEFT JOIN product_attribute_values pb ON pb.product_id=oi.product_id AND pb.attribute_id=25
    LEFT JOIN attribute_options ao ON ao.id=pb.integer_value
+   LEFT JOIN crm_line_fulfillment lf ON lf.order_item_id=oi.id
    WHERE o.crm_order_status IN (5,99) AND COALESCE(o.crm_creator_date,o.created_at) >= '$CUTOVER' AND DATE(COALESCE(o.crm_creator_date,o.created_at)) <= '$END'
    ORDER BY d, o.id;" > "$S/new_sales_lines.tsv"
 

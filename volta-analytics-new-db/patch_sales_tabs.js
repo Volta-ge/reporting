@@ -153,6 +153,18 @@ else {
   html = html.replace('const generatedAt = REPORT_JSON.generatedAt;', 'const generatedAt = REPORT_JSON.generatedAt;\n' + dataLine);
 }
 
+// ---------- 4b. Banner text (idempotent, independent of JS_MARK below) ----------
+// This one line gets hand-edited far more often than the rest of the Sales Analyze render code (it's
+// the only part describing the current Cogs/cost-source caveat in prose), so - unlike the JS_MARK block
+// right after it, which is a true one-time insert - it gets its own always-replace regex here, the same
+// pattern as SALES_JSON above. Without this, editing the banner text in this file (as on 2026-10-15, to
+// describe crm_line_fulfillment.vendor_price replacing the old "no cost data" wording) would silently
+// never reach deals_amount_migration.html on any future run, since JS_MARK is already present from the
+// very first build and its whole block - banner included - is skipped from then on.
+const bannerRe = /^document\.getElementById\('salesHybridBanner'\)\.innerHTML = '.*';$/m;
+const bannerLine = `document.getElementById('salesHybridBanner').innerHTML = '<b>Source:</b> before ' + SALES_CUTOVER + ', the old database (myvolta.info: <code>instalment_products</code>); from ' + SALES_CUTOVER + ' on, the new database (VoltaStoreDB: <code>order_items</code>, category via the new catalog\\'s category tree, same mapping sheet). <b>Cogs from ' + SALES_CUTOVER + ' on</b> is the CRM\\'s own per-line vendor pickup price (<code>crm_line_fulfillment.vendor_price</code>, "ასაღები ფასი" on the Logistics → Deliveries page), filled in by staff as each line is collected from the vendor &mdash; still partial for recent months (growing daily), so months with unpriced lines show Mrg marked * computed only over the Cogs-known part of that cell\\'s sales, same convention as a mixed month like August. The brand attribute is also only partially filled in the new catalog &mdash; &ldquo;No Brand&rdquo; grows from ' + SALES_CUTOVER + ' on.';`;
+if (bannerRe.test(html)) html = html.replace(bannerRe, bannerLine);
+
 // ---------- 5. Render code (once), inserted before the page-nav handler ----------
 const JS_MARK = '/* ---------- Sales Analyze (ported from Volta_Analytics) ---------- */';
 if (!html.includes(JS_MARK)) {
@@ -160,7 +172,7 @@ if (!html.includes(JS_MARK)) {
 ${JS_MARK}
 const salesMonthlyStats = SALES_JSON.salesMonthlyStats, brandStats = SALES_JSON.brandStats, subcategoryStats = SALES_JSON.subcategoryStats, categoryBrandBreakdown = SALES_JSON.categoryBrandBreakdown;
 const SALES_CUTOVER = SALES_JSON.cutover;
-document.getElementById('salesHybridBanner').innerHTML = '<b>Source:</b> before ' + SALES_CUTOVER + ', the old database (myvolta.info: <code>instalment_products</code>); from ' + SALES_CUTOVER + ' on, the new database (VoltaStoreDB: <code>order_items</code>, category via the new catalog\'s category tree, same mapping sheet). <b>Cogs does not exist in the new database</b> (the cost field is empty for every product) &mdash; so Cogs/Mrg cannot be computed from ' + SALES_CUTOVER + ' on: September shows &ldquo;&ndash;&rdquo;, and August\'s Mrg is only computed for the sales that do have Cogs. The brand attribute is also only partially filled in the new catalog &mdash; &ldquo;No Brand&rdquo; grows from ' + SALES_CUTOVER + ' on.';
+document.getElementById('salesHybridBanner').innerHTML = '<b>Source:</b> before ' + SALES_CUTOVER + ', the old database (myvolta.info: <code>instalment_products</code>); from ' + SALES_CUTOVER + ' on, the new database (VoltaStoreDB: <code>order_items</code>, category via the new catalog\'s category tree, same mapping sheet). <b>Cogs from ' + SALES_CUTOVER + ' on</b> is the CRM\'s own per-line vendor pickup price (<code>crm_line_fulfillment.vendor_price</code>, "ასაღები ფასი" on the Logistics → Deliveries page), filled in by staff as each line is collected from the vendor &mdash; still partial for recent months (growing daily), so months with unpriced lines show Mrg marked * computed only over the Cogs-known part of that cell\'s sales, same convention as a mixed month like August. The brand attribute is also only partially filled in the new catalog &mdash; &ldquo;No Brand&rdquo; grows from ' + SALES_CUTOVER + ' on.';
 
 function bucketedColHead(rowLabel, periods, q1Periods, q2Periods) {
   const cells = [];
