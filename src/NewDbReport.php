@@ -1097,29 +1097,37 @@ final class NewDbReport
             }
         }
 
-        // new-DB line items from the cutover
+        // new-DB line items from the cutover. cost = crm_line_fulfillment.vendor_price, the CRM's own per-line, per-unit
+        // "ასაღები ფასი" (Logistics > Deliveries) — same SQL as pull_new.sh's new_sales_lines.tsv since 2a5ac52 (2026-10-20);
+        // NULL until staff price the line (falls into cogsUnknownSales), and treated as unset when it was typed in as the
+        // order id / order_item id (a data-entry glitch that had inflated September COGS by ~112,638 GEL).
         $stmt = $this->pdo->prepare("SELECT DATE_FORMAT(COALESCE(o.crm_creator_date,o.created_at),'%Y-%m') period, DATE(COALESCE(o.crm_creator_date,o.created_at)) d, oi.product_id, oi.qty_ordered qty, oi.base_total sales,
-              CASE WHEN o.crm_order_status=99 THEN 'single' ELSE 'installment' END deal_type, COALESCE(ao.admin_name,'') brand
+              CASE WHEN o.crm_order_status=99 THEN 'single' ELSE 'installment' END deal_type, COALESCE(ao.admin_name,'') brand,
+              CASE WHEN lf.vendor_price=o.id OR lf.vendor_price=oi.id THEN NULL ELSE lf.vendor_price END cost
             FROM orders o JOIN order_items oi ON oi.order_id=o.id
             LEFT JOIN product_attribute_values pb ON pb.product_id=oi.product_id AND pb.attribute_id=25
             LEFT JOIN attribute_options ao ON ao.id=pb.integer_value
+            LEFT JOIN crm_line_fulfillment lf ON lf.order_item_id=oi.id
             WHERE o.crm_order_status IN (5,99) AND COALESCE(o.crm_creator_date,o.created_at) >= :cutover AND DATE(COALESCE(o.crm_creator_date,o.created_at)) <= :end
             ORDER BY d, o.id, oi.id");
         $stmt->execute(['cutover' => self::CUTOVER, 'end' => $end]);
         $newGrouped = [];
         foreach ($stmt->fetchAll() as $r) {
+            $qty = (int) $r['qty'] ?: 1;
+            $unitCost = ($r['cost'] !== null && $r['cost'] !== '') ? (float) $r['cost'] : null;
+            $hasCost = $unitCost !== null && $unitCost > 0;
             $newGrouped[] = ['period' => $r['period'], 'category' => $rawCategory((string) $r['product_id']), 'brand' => (string) $r['brand'], 'deal_type' => $r['deal_type'],
-                'sales' => (float) $r['sales'], 'cogs' => 0.0, 'qty' => (int) $r['qty'], 'cogsUnknownSales' => (float) $r['sales']];
+                'sales' => (float) $r['sales'], 'cogs' => $hasCost ? $unitCost * $qty : 0.0, 'qty' => (int) $r['qty'], 'cogsUnknownSales' => $hasCost ? 0.0 : (float) $r['sales']];
         }
         $rawRows = array_merge($oldGrouped, $newGrouped);
 
-        // COGS data-quality stats — old lines only (the new DB has no cost data at all)
+        // COGS data-quality stats — garbage: old lines only; cogsUnknown: the new-DB lines still without a vendor price
         $oldLines = array_map(static fn ($r) => ['product_id' => $r['product_id'], 'start_price' => (float) $r['start_price'], 'final_price' => (float) $r['final_price'], 'deal_type' => $r['deal_type']], $this->tsv('old_sales_lines.tsv'));
         $garbage = [];
         $cogsUnknown = [];
         foreach (['all', 'installment', 'single'] as $dt) {
             $garbage[$dt] = self::garbageFor($dt === 'all' ? $oldLines : array_values(array_filter($oldLines, static fn ($l) => $l['deal_type'] === $dt)));
-            $rows = $dt === 'all' ? $newGrouped : array_values(array_filter($newGrouped, static fn ($r) => $r['deal_type'] === $dt));
+            $rows = array_values(array_filter($newGrouped, static fn ($r) => ($dt === 'all' || $r['deal_type'] === $dt) && $r['cogsUnknownSales'] > 0));
             $cogsUnknown[$dt] = ['count' => array_sum(array_column($rows, 'qty')), 'sales' => self::r2(array_sum(array_column($rows, 'sales')))];
         }
 
