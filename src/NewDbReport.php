@@ -1104,6 +1104,8 @@ final class NewDbReport
         // COGS rule confirmed by the developer (2026-10-22): first source > 0 of vendor_price (line) → crm_product_vendors.price
         // (product + the line's vendor) → product attribute 'cost' (Bagisto); × qty_ordered; none → cost-unknown. Same SQL as pull_new.sh.
         $stmt = $this->pdo->prepare("SELECT DATE_FORMAT(COALESCE(o.crm_creator_date,o.created_at),'%Y-%m') period, DATE(COALESCE(o.crm_creator_date,o.created_at)) d, o.id order_id, oi.name product_name, oi.product_id, oi.qty_ordered qty, oi.base_total sales,
+              o.crm_creator_date creator_date, (SELECT MAX(sp.float_value) FROM product_attribute_values sp WHERE sp.product_id=oi.product_id AND sp.attribute_id=(SELECT id FROM attributes WHERE code='special_price') AND sp.float_value>0) special,
+              (EXISTS (SELECT 1 FROM product_attribute_values pk JOIN attribute_options aok ON aok.id=pk.integer_value AND aok.admin_name='KARCHER GEORGIA' WHERE pk.product_id=oi.product_id AND pk.attribute_id=25)) is_karcher,
               CASE WHEN o.crm_order_status=99 THEN 'single' ELSE 'installment' END deal_type, COALESCE(ao.admin_name,'') brand,
               COALESCE(CASE WHEN lf.vendor_price>0 AND lf.vendor_price<>o.id AND lf.vendor_price<>oi.id THEN lf.vendor_price END, (SELECT MAX(pv.price) FROM crm_product_vendors pv WHERE pv.product_id=oi.product_id AND pv.vendor_id=lf.vendor_id AND pv.price>0), (SELECT MAX(pa.float_value) FROM product_attribute_values pa WHERE pa.product_id=oi.product_id AND pa.attribute_id=(SELECT id FROM attributes WHERE code='cost') AND pa.float_value>0)) cost
             FROM orders o JOIN order_items oi ON oi.order_id=o.id
@@ -1118,8 +1120,17 @@ final class NewDbReport
             $qty = (int) $r['qty'] ?: 1;
             $unitCost = ($r['cost'] !== null && $r['cost'] !== '') ? (float) $r['cost'] : null;
             $hasCost = $unitCost !== null && $unitCost > 0;
+            // Sales = installment total price (user, 2026-10-22), same rule as build_sales.js: unit price (special_price when
+            // set and below the site price) x markup, rounded up to 10 GEL, x qty; single payment / pre-2026-09-01 = site price
+            $site = (float) $r['sales'];
+            $eligible = $r['deal_type'] === 'installment' && $r['creator_date'] !== null && substr((string) $r['creator_date'], 0, 10) >= '2026-09-01';
+            $rate = (int) $r['is_karcher'] === 1 ? 1.15 * 1.05 * 1.20 : 1.05 * 1.20;
+            $unitSite = $site / $qty;
+            $special = ($r['special'] !== null && $r['special'] !== '') ? (float) $r['special'] : 0.0;
+            $unitEff = ($special > 0 && $special < $unitSite) ? $special : $unitSite;
+            $instTotal = $eligible ? ceil(round($unitEff * $rate, 6) / 10) * 10 * $qty : $site;
             $newGrouped[] = ['period' => $r['period'], 'category' => $rawCategory((string) $r['product_id']), 'brand' => (string) $r['brand'], 'deal_type' => $r['deal_type'],
-                'sales' => (float) $r['sales'], 'cogs' => $hasCost ? $unitCost * $qty : 0.0, 'qty' => (int) $r['qty'], 'cogsUnknownSales' => $hasCost ? 0.0 : (float) $r['sales'],
+                'sales' => $instTotal, 'cogs' => $hasCost ? $unitCost * $qty : 0.0, 'qty' => (int) $r['qty'], 'cogsUnknownSales' => $hasCost ? 0.0 : $instTotal,
                 'order_id' => (int) $r['order_id'], 'product_name' => (string) $r['product_name']];
         }
         $rawRows = array_merge($oldGrouped, $newGrouped);

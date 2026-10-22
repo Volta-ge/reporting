@@ -93,9 +93,20 @@ const newGrouped = newLinesRaw.map(r => {
   const cogs = hasCost ? unitCost * qty : 0;
   const markupEligible = r.deal_type === 'installment' && r.creator_date && r.creator_date >= MARKUP_CUTOVER;
   const rate = r.is_karcher === '1' ? MARKUP_RATE_KAR : MARKUP_RATE_STD;
+  // Sales = installment total price (user, 2026-10-22) — the CRM's own "განვადების ჯამური ფასი" per line: the unit price
+  // (the catalog's special_price when it is set and below the site price, else the site price) x the markup, rounded UP
+  // to 10 GEL, x qty; single-payment sales and pre-markup (before 2026-09-01) installments = the site price. Reproduces
+  // the CRM's September shipments export on 98.7% of lines (the rest: discounts added to the catalog after the sale).
+  // Karcher markup is per PRODUCT in the CRM's installment total (a non-Karcher line in an order that also holds a Karcher
+  // product still gets x1.26) — unlike the order-level is_karcher above, which stays as is for the Profit Margins markup.
+  const instRate = r.is_karcher_item === '1' ? MARKUP_RATE_KAR : MARKUP_RATE_STD;
+  const unitSite = sales / qty;
+  const special = r.special !== undefined && r.special !== '' && r.special !== 'NULL' ? +r.special : 0;
+  const unitEff = special > 0 && special < unitSite ? special : unitSite;
+  const instTotal = markupEligible ? Math.ceil(Math.round(unitEff * instRate * 1e6) / 1e6 / 10) * 10 * qty : sales;
   return {
     period: r.period, category: newProductRawCategory(r.product_id), brand: r.brand, deal_type: r.deal_type,
-    sales, cogs, qty: +r.qty, cogsUnknownSales: hasCost ? 0 : sales,
+    sales: instTotal, siteSales: sales, cogs, qty: +r.qty, cogsUnknownSales: hasCost ? 0 : instTotal,
     markupGel: markupEligible ? sales * (rate - 1) : 0,
     markupEligibleSales: markupEligible ? sales : 0,
     source: 'new',
