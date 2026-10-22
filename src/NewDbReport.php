@@ -1101,9 +1101,11 @@ final class NewDbReport
         // "ასაღები ფასი" (Logistics > Deliveries) — same SQL as pull_new.sh's new_sales_lines.tsv since 2a5ac52 (2026-10-20);
         // NULL until staff price the line (falls into cogsUnknownSales), and treated as unset when it was typed in as the
         // order id / order_item id (a data-entry glitch that had inflated September COGS by ~112,638 GEL).
+        // COGS rule confirmed by the developer (2026-10-22): first source > 0 of vendor_price (line) → crm_product_vendors.price
+        // (product + the line's vendor) → product attribute 'cost' (Bagisto); × qty_ordered; none → cost-unknown. Same SQL as pull_new.sh.
         $stmt = $this->pdo->prepare("SELECT DATE_FORMAT(COALESCE(o.crm_creator_date,o.created_at),'%Y-%m') period, DATE(COALESCE(o.crm_creator_date,o.created_at)) d, oi.product_id, oi.qty_ordered qty, oi.base_total sales,
               CASE WHEN o.crm_order_status=99 THEN 'single' ELSE 'installment' END deal_type, COALESCE(ao.admin_name,'') brand,
-              CASE WHEN lf.vendor_price=o.id OR lf.vendor_price=oi.id THEN NULL ELSE lf.vendor_price END cost
+              COALESCE(CASE WHEN lf.vendor_price>0 AND lf.vendor_price<>o.id AND lf.vendor_price<>oi.id THEN lf.vendor_price END, (SELECT MAX(pv.price) FROM crm_product_vendors pv WHERE pv.product_id=oi.product_id AND pv.vendor_id=lf.vendor_id AND pv.price>0), (SELECT MAX(pa.float_value) FROM product_attribute_values pa WHERE pa.product_id=oi.product_id AND pa.attribute_id=(SELECT id FROM attributes WHERE code='cost') AND pa.float_value>0)) cost
             FROM orders o JOIN order_items oi ON oi.order_id=o.id
             LEFT JOIN product_attribute_values pb ON pb.product_id=oi.product_id AND pb.attribute_id=25
             LEFT JOIN attribute_options ao ON ao.id=pb.integer_value
