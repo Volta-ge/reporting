@@ -351,8 +351,15 @@ const drillJs = String.raw`${DRILL_MARK}
     + 'table.sm-table tr.sm-drill td{background:var(--surface-1);color:var(--rpt-ink);font-size:12px}'
     + 'table.sm-table tr.sm-drill-1 td:first-child{padding-left:22px;cursor:pointer;white-space:normal;min-width:260px}'
     + 'table.sm-table tr.sm-drill-2 td{background:var(--rpt-plain-bg);color:var(--rpt-ink)}'
-    + 'table.sm-table tr.sm-drill-2 td:first-child{padding-left:44px}';
+    + 'table.sm-table tr.sm-drill-2 td:first-child{padding-left:44px}'
+    + 'table.sm-table tr.rpt-colhead td.sm-sortable{cursor:pointer}'
+    + 'table.sm-table tr.rpt-colhead td.sm-sortable:hover{text-decoration:underline}';
   document.head.appendChild(css);
+  // ---- sorting (user, 2026-10-22): click a month / Q1 / Q2 / Total header to sort by that column's Sales, largest first;
+  // categories, their products and their cases all follow it; Uncategorized stays at the bottom; click again = back to Total.
+  let sortKey = 'total';
+  const valOf = (row, key) => !row ? 0 : key === 'total' ? row.total.sales : key === 'q1' ? row.q1.sales : key === 'q2' ? row.q2.sales : (row.byPeriod[key] ? row.byPeriod[key].sales : 0);
+  const byVal = (a, b) => (valOf(b, sortKey) - valOf(a, sortKey)) || (b.total.sales - a.total.sales);
   const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
   const dealType = () => { const b = document.querySelector('#salesMonthlyDealTypeNav button.active'); return b ? b.getAttribute('data-deal') : 'all'; };
   const zero = () => ({ sales: 0, cogs: 0, qty: 0, cogsUnknownSales: 0 });
@@ -386,7 +393,7 @@ const drillJs = String.raw`${DRILL_MARK}
     const parent = rowOf(lines, st, null);
     const byProduct = new Map();
     for (const l of lines) { const k = l[2]; if (!byProduct.has(k)) byProduct.set(k, []); byProduct.get(k).push(l); }
-    const rows = [...byProduct.entries()].map(([k, ls]) => ({ k, ls, row: rowOf(ls, st, parent) })).sort((a, b) => b.row.total.sales - a.row.total.sales);
+    const rows = [...byProduct.entries()].map(([k, ls]) => ({ k, ls, row: rowOf(ls, st, parent) })).sort((a, b) => byVal(a.row, b.row));
     let html = '';
     for (const r of rows) {
       html += '<tr class="sm-drill sm-drill-1" data-level="1" data-bucket="' + esc(bucket) + '" data-product="' + r.k + '"><td><span class="sm-caret">▸</span>'
@@ -403,7 +410,7 @@ const drillJs = String.raw`${DRILL_MARK}
     const byCase = new Map();
     for (const l of lines) { const k = l[3] + '|' + l[4]; if (!byCase.has(k)) byCase.set(k, []); byCase.get(k).push(l); }
     const rows = [...byCase.values()].map(ls => ({ ls, row: rowOf(ls, st, parent) }))
-      .sort((a, b) => (a.ls[0][0] - b.ls[0][0]) || ((a.ls[0][3] || a.ls[0][4]) - (b.ls[0][3] || b.ls[0][4])));
+      .sort((a, b) => (valOf(b.row, sortKey) - valOf(a.row, sortKey)) || (a.ls[0][0] - b.ls[0][0]) || ((a.ls[0][3] || a.ls[0][4]) - (b.ls[0][3] || b.ls[0][4])));
     let html = '';
     for (const r of rows) {
       const l = r.ls[0], label = l[3] ? 'Case #' + l[3] : 'Old CRM #' + l[4];
@@ -414,18 +421,61 @@ const drillJs = String.raw`${DRILL_MARK}
     tr.insertAdjacentHTML('afterend', html);
     setCaret(tr, true);
   }
-  // after every (re)render of the table: make each category row expandable
+  // header cells (row 1 of the column head: one per month, Q1 / Q2 Total, Total) -> sort keys, in render order
+  function labelHeaders() {
+    const st = statsNow(), head = table.querySelector('tbody tr.rpt-colhead');
+    if (!st || !head) return;
+    const keys = [];
+    st.periods.forEach(p => {
+      keys.push(p);
+      if (st.q1Periods.length && p === st.q1Periods[st.q1Periods.length - 1]) keys.push('q1');
+      if (st.q2Periods.length && p === st.q2Periods[st.q2Periods.length - 1]) keys.push('q2');
+    });
+    keys.push('total');
+    [...head.cells].slice(1).forEach((td, i) => {
+      if (!keys[i]) return;
+      if (!td.dataset.label) td.dataset.label = td.textContent.trim();
+      td.dataset.sortKey = keys[i]; td.classList.add('sm-sortable');
+      td.title = 'Sort by this column\'s Sales, largest first (click again: back to Total)';
+      td.textContent = td.dataset.label + (keys[i] === sortKey ? ' ▼' : '');
+    });
+  }
+  function sortCategories() {
+    const st = statsNow(), tbody = table.querySelector('tbody');
+    tbody.querySelectorAll('tr.sm-drill').forEach(r => r.remove());
+    tbody.querySelectorAll('tr.sm-row').forEach(r => setCaret(r, false));
+    const by = {}; st.rows.forEach(r => { by[r.bucket] = r; });
+    const rows = [...tbody.querySelectorAll('tr.sm-row')];
+    rows.sort((a, b) => (a.classList.contains('sm-uncategorized') - b.classList.contains('sm-uncategorized'))
+      || (valOf(by[b.dataset.bucket], sortKey) - valOf(by[a.dataset.bucket], sortKey))
+      || ((by[b.dataset.bucket] ? by[b.dataset.bucket].total.sales : 0) - (by[a.dataset.bucket] ? by[a.dataset.bucket].total.sales : 0)));
+    rows.forEach(r => tbody.appendChild(r));
+  }
+  // after every (re)render of the table: make each category row expandable, label the headers, re-apply the sort
+  let busy = false;
   function decorate() {
+    if (busy) return;
+    busy = true;
+    const fresh = !!table.querySelector('tbody tr.sm-row:not([data-bucket])');
     table.querySelectorAll('tbody tr.sm-row').forEach(tr => {
       if (tr.dataset.bucket) return;
       const td = tr.cells[0]; tr.dataset.bucket = td.textContent.trim();
       tr.classList.add('sm-drillable');
       td.insertAdjacentHTML('afterbegin', '<span class="sm-caret">▸</span>');
     });
+    if (fresh) { labelHeaders(); if (sortKey !== 'total') sortCategories(); }
+    busy = false;
   }
   new MutationObserver(decorate).observe(table.querySelector('tbody'), { childList: true });
   decorate();
   table.addEventListener('click', e => {
+    const hd = e.target.closest('td.sm-sortable');
+    if (hd) {
+      sortKey = (hd.dataset.sortKey === sortKey) ? 'total' : hd.dataset.sortKey;
+      busy = true; sortCategories(); labelHeaders(); busy = false;
+      if (typeof salesMonthlyScrollUpdate === 'function') salesMonthlyScrollUpdate();
+      return;
+    }
     const tr = e.target.closest('tr'); if (!tr || !e.target.closest('td') || e.target.closest('td') !== tr.cells[0]) return;
     if (tr.classList.contains('sm-row') && tr.dataset.bucket) {
       if (tr.dataset.open) { removeChildren(tr, 0); setCaret(tr, false); } else openCategory(tr);
