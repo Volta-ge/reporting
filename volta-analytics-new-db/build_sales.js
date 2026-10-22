@@ -187,6 +187,38 @@ function threeWay(classify, fallback) {
   return result;
 }
 const salesMonthlyStats = threeWay(r => classifyProduct(r.category), 'Uncategorized');
+
+// ---------- Sales Monthly drill-down: Product Category -> Product -> Case ID (user, 2026-10-22) ----------
+// One entry per order line, classified with the very same classifyProduct(raw category) as the table, so every drill
+// level adds up to its category row. Case = the new CRM application number (orders.id); old-DB lines (Jan 1..Aug 30,
+// old_sales_cases.tsv — the line-level twin of old_sales_grouped.tsv, same query, frozen 2026-10-22) carry their
+// migrated orders.id plus the old Instalment_ID. Line = [periodIdx, bucketIdx, productIdx, caseId, oldCaseId,
+// single?1:0, sales, cogs, qty, cogsUnknownSales].
+const drill = (() => {
+  const periods = salesMonthlyStats.all.periods, pIdx = Object.fromEntries(periods.map((p, i) => [p, i]));
+  const buckets = [], bIdx = {}, products = [], prIdx = {}, lines = [];
+  const idx = (arr, map, v) => (map[v] ??= arr.push(v) - 1);
+  const add = (period, raw, product, caseId, oldId, dt, sales, cogs, qty, unknown) => {
+    if (pIdx[period] === undefined) throw new Error('drill: period ' + period + ' not in the table');
+    lines.push([pIdx[period], idx(buckets, bIdx, classifyProduct(raw) || 'Uncategorized'), idx(products, prIdx, String(product || '(no name)').trim()),
+                caseId, oldId, dt === 'single' ? 1 : 0, r2(sales), r2(cogs), qty, r2(unknown)]);
+  };
+  if (fs.existsSync(path.join(__dirname, 'old_sales_cases.tsv')))
+    for (const r of parseTsv('old_sales_cases.tsv')) add(r.period, r.category, r.product_name, +r.new_case_id || 0, +r.case_id, r.deal_type, +r.sales, +r.cogs, 1, 0);
+  newLinesRaw.forEach((r, i) => { const g = newGrouped[i]; add(g.period, g.category, (r.item_name && r.item_name !== 'NULL') ? r.item_name : r.product_name, +r.order_id, 0, g.deal_type, g.sales, g.cogs, g.qty, g.cogsUnknownSales); });
+  // the drill must add up to the table, cell by cell
+  const sums = {};
+  for (const l of lines) for (const dt of ['all', l[5] ? 'single' : 'installment']) {
+    const s = (sums[dt + '|' + l[1] + '|' + l[0]] ||= [0, 0, 0]); s[0] += l[6]; s[1] += l[7]; s[2] += l[8];
+  }
+  for (const dt of ['all', 'installment', 'single']) for (const row of salesMonthlyStats[dt].rows) for (const p of salesMonthlyStats[dt].periods) {
+    const s = sums[dt + '|' + bIdx[row.bucket] + '|' + pIdx[p]] || [0, 0, 0];
+    const c = row.byPeriod[p];
+    if (Math.abs(s[0] - c.sales) > 0.05 || Math.abs(s[1] - c.cogs) > 0.05 || s[2] !== c.qty) throw new Error(`drill mismatch ${dt} ${row.bucket} ${p}: ${s} vs ${c.sales}/${c.cogs}/${c.qty}`);
+  }
+  return { periods, buckets, products, lines };
+})();
+console.log('drill: lines', drill.lines.length, '| products', drill.products.length, '| buckets', drill.buckets.length, '| adds up to the table: yes');
 const subcategoryStats = threeWay(r => classifySubcategory(r.category), 'Uncategorized');
 const brandStats = threeWay(r => classifyBrand(r.brand), 'No Brand');
 
@@ -316,7 +348,7 @@ const marginCoverage = {
 };
 console.log('Profit Margins (September, VoltaStoreDB only): Site-vs-Purchase', margin1LinesMatched + '/' + margin1LinesTotal, 'lines have a cost value | Installment-vs-Site', margin2OrdersMatched + '/' + margin2OrdersTotal, 'orders have posted schedule data');
 
-const payload = { salesMonthlyStats, brandStats, subcategoryStats, categoryBrandBreakdown, productStats, margin1, margin2, marginCoverage, cutover: CUTOVER, generatedAt: new Date().toISOString().slice(0, 16).replace('T', ' ') + ' UTC' };
+const payload = { salesMonthlyStats, drill, brandStats, subcategoryStats, categoryBrandBreakdown, productStats, margin1, margin2, marginCoverage, cutover: CUTOVER, generatedAt: new Date().toISOString().slice(0, 16).replace('T', ' ') + ' UTC' };
 fs.writeFileSync(path.join(__dirname, 'sales_data.json'), JSON.stringify(payload));
 
 // ---------- checks ----------

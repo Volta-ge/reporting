@@ -108,7 +108,7 @@ Q "SELECT DATE(p.payment_date) d, $SEG seg, ROUND(SUM(p.amount),2) dp
 # by ~112,638 GEL for that one month alone. Treat vendor_price as unset whenever it equals the order id or
 # order_item id (the CASE below) rather than as a real, if absurd, cost.
 Q "SELECT DATE_FORMAT(COALESCE(o.crm_creator_date,o.created_at),'%Y-%m') period, DATE(COALESCE(o.crm_creator_date,o.created_at)) d, o.id order_id, oi.product_id, oi.qty_ordered qty, oi.base_total sales,
-   CASE WHEN o.crm_order_status=99 THEN 'single' ELSE 'installment' END deal_type, COALESCE(ao.admin_name,'') brand, pf.sku, pf.name product_name,
+   CASE WHEN o.crm_order_status=99 THEN 'single' ELSE 'installment' END deal_type, COALESCE(ao.admin_name,'') brand, pf.sku, pf.name product_name, REPLACE(REPLACE(oi.name,'\t',' '),'\n',' ') item_name,
    o.crm_creator_date creator_date,
    (EXISTS (SELECT 1 FROM order_items oi2 JOIN product_attribute_values pb2 ON pb2.product_id=oi2.product_id AND pb2.attribute_id=25 JOIN attribute_options ao2 ON ao2.id=pb2.integer_value AND ao2.admin_name='KARCHER GEORGIA' WHERE oi2.order_id=o.id)) is_karcher,
    COALESCE(CASE WHEN lf.vendor_price>0 AND lf.vendor_price<>o.id AND lf.vendor_price<>oi.id THEN lf.vendor_price END, (SELECT MAX(pv.price) FROM crm_product_vendors pv WHERE pv.product_id=oi.product_id AND pv.vendor_id=lf.vendor_id AND pv.price>0), (SELECT MAX(pa.float_value) FROM product_attribute_values pa WHERE pa.product_id=oi.product_id AND pa.attribute_id=(SELECT id FROM attributes WHERE code='cost') AND pa.float_value>0)) cost

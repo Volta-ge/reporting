@@ -1103,7 +1103,7 @@ final class NewDbReport
         // order id / order_item id (a data-entry glitch that had inflated September COGS by ~112,638 GEL).
         // COGS rule confirmed by the developer (2026-10-22): first source > 0 of vendor_price (line) → crm_product_vendors.price
         // (product + the line's vendor) → product attribute 'cost' (Bagisto); × qty_ordered; none → cost-unknown. Same SQL as pull_new.sh.
-        $stmt = $this->pdo->prepare("SELECT DATE_FORMAT(COALESCE(o.crm_creator_date,o.created_at),'%Y-%m') period, DATE(COALESCE(o.crm_creator_date,o.created_at)) d, oi.product_id, oi.qty_ordered qty, oi.base_total sales,
+        $stmt = $this->pdo->prepare("SELECT DATE_FORMAT(COALESCE(o.crm_creator_date,o.created_at),'%Y-%m') period, DATE(COALESCE(o.crm_creator_date,o.created_at)) d, o.id order_id, oi.name product_name, oi.product_id, oi.qty_ordered qty, oi.base_total sales,
               CASE WHEN o.crm_order_status=99 THEN 'single' ELSE 'installment' END deal_type, COALESCE(ao.admin_name,'') brand,
               COALESCE(CASE WHEN lf.vendor_price>0 AND lf.vendor_price<>o.id AND lf.vendor_price<>oi.id THEN lf.vendor_price END, (SELECT MAX(pv.price) FROM crm_product_vendors pv WHERE pv.product_id=oi.product_id AND pv.vendor_id=lf.vendor_id AND pv.price>0), (SELECT MAX(pa.float_value) FROM product_attribute_values pa WHERE pa.product_id=oi.product_id AND pa.attribute_id=(SELECT id FROM attributes WHERE code='cost') AND pa.float_value>0)) cost
             FROM orders o JOIN order_items oi ON oi.order_id=o.id
@@ -1119,7 +1119,8 @@ final class NewDbReport
             $unitCost = ($r['cost'] !== null && $r['cost'] !== '') ? (float) $r['cost'] : null;
             $hasCost = $unitCost !== null && $unitCost > 0;
             $newGrouped[] = ['period' => $r['period'], 'category' => $rawCategory((string) $r['product_id']), 'brand' => (string) $r['brand'], 'deal_type' => $r['deal_type'],
-                'sales' => (float) $r['sales'], 'cogs' => $hasCost ? $unitCost * $qty : 0.0, 'qty' => (int) $r['qty'], 'cogsUnknownSales' => $hasCost ? 0.0 : (float) $r['sales']];
+                'sales' => (float) $r['sales'], 'cogs' => $hasCost ? $unitCost * $qty : 0.0, 'qty' => (int) $r['qty'], 'cogsUnknownSales' => $hasCost ? 0.0 : (float) $r['sales'],
+                'order_id' => (int) $r['order_id'], 'product_name' => (string) $r['product_name']];
         }
         $rawRows = array_merge($oldGrouped, $newGrouped);
 
@@ -1145,6 +1146,32 @@ final class NewDbReport
             return $result;
         };
         $salesMonthlyStats = $threeWay(fn ($r) => $this->classifyProduct($r['category']), 'Uncategorized');
+
+        // Sales Monthly drill-down (Product Category -> Product -> Case ID) — same structure and classification as
+        // build_sales.js's `drill`: one entry per order line [periodIdx, bucketIdx, productIdx, caseId, oldCaseId,
+        // single?1:0, sales, cogs, qty, cogsUnknownSales]; old-DB lines from the frozen old_sales_cases.tsv.
+        $dPeriods = $salesMonthlyStats['all']['periods'];
+        $dPIdx = array_flip($dPeriods);
+        $dBuckets = []; $dBIdx = []; $dProducts = []; $dPrIdx = []; $dLines = [];
+        $dIdx = static function (array &$arr, array &$map, string $v): int {
+            if (!array_key_exists($v, $map)) { $map[$v] = count($arr); $arr[] = $v; }
+            return $map[$v];
+        };
+        $dAdd = function (string $period, string $raw, string $product, int $caseId, int $oldId, string $dt, float $sales, float $cogs, int $qty, float $unknown)
+            use (&$dBuckets, &$dBIdx, &$dProducts, &$dPrIdx, &$dLines, $dPIdx, $dIdx): void {
+            if (!isset($dPIdx[$period])) { return; }
+            $b = $this->classifyProduct($raw) ?? 'Uncategorized';
+            $name = trim($product) !== '' ? trim($product) : '(no name)';
+            $dLines[] = [$dPIdx[$period], $dIdx($dBuckets, $dBIdx, $b), $dIdx($dProducts, $dPrIdx, $name), $caseId, $oldId, $dt === 'single' ? 1 : 0,
+                self::r2($sales), self::r2($cogs), $qty, self::r2($unknown)];
+        };
+        foreach ($this->tsv('old_sales_cases.tsv') as $r) {
+            $dAdd($r['period'], (string) $r['category'], (string) $r['product_name'], (int) $r['new_case_id'], (int) $r['case_id'], $r['deal_type'], (float) $r['sales'], (float) $r['cogs'], 1, 0.0);
+        }
+        foreach ($newGrouped as $g) {
+            $dAdd($g['period'], (string) $g['category'], $g['product_name'], $g['order_id'], 0, $g['deal_type'], $g['sales'], $g['cogs'], $g['qty'], $g['cogsUnknownSales']);
+        }
+        $drill = ['periods' => $dPeriods, 'buckets' => $dBuckets, 'products' => $dProducts, 'lines' => $dLines];
         $subcategoryStats = $threeWay(fn ($r) => $this->classifySubcategory($r['category']), 'Uncategorized');
         $brandStats = $threeWay(fn ($r) => $this->classifyBrand($r['brand']), 'No Brand');
 
@@ -1198,6 +1225,7 @@ final class NewDbReport
 
         return [
             'salesMonthlyStats' => $salesMonthlyStats,
+            'drill' => $drill,
             'brandStats' => $brandStats,
             'subcategoryStats' => $subcategoryStats,
             'categoryBrandBreakdown' => $categoryBrandBreakdown,

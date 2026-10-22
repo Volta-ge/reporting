@@ -330,6 +330,116 @@ wireDealTypeFilter('categoryBrandDealTypeNav', dt => { categoryBrandDealType = d
     "  if (btn.dataset.page === 'dailystats') dailyScrollUpdate();\n  if (btn.dataset.page === 'salesmonthly') salesMonthlyScrollUpdate();\n  if (btn.dataset.page === 'brandanalyze') brandScrollUpdate();\n  if (btn.dataset.page === 'subcategoryanalyze') subcategoryScrollUpdate();");
 }
 
+// ---------- 6. Sales Monthly drill-down: Product Category -> Product -> Case ID (user, 2026-10-22) ----------
+// Its own marker pair, removed and re-inserted on every run (unlike the one-time JS_MARK block above), so later edits here
+// always reach the page. Works off SALES_JSON.drill (build_sales.js / NewDbReport::salesAnalyze): click a category row to
+// list its products, click a product to list its cases. Drill rows are built only on click and reuse the table's own
+// bucketedRowCells(), so the columns and number formats are exactly the table's; Share = share of the parent row.
+const DRILL_MARK = '/* ---------- Sales Monthly drill-down ---------- */';
+const DRILL_END = '/* ---------- /Sales Monthly drill-down ---------- */';
+{
+  const a = html.indexOf(DRILL_MARK);
+  if (a >= 0) { const b = html.indexOf(DRILL_END, a); if (b < 0) throw new Error('drill block end missing'); html = html.slice(0, a) + html.slice(b + DRILL_END.length); }
+}
+const drillJs = String.raw`${DRILL_MARK}
+(function () {
+  const D = SALES_JSON.drill, table = document.getElementById('salesMonthlyTable');
+  if (!D || !table) return;
+  const css = document.createElement('style');
+  css.textContent = 'table.sm-table tr.sm-row.sm-drillable td:first-child{cursor:pointer}'
+    + 'table.sm-table tr.sm-row td:first-child .sm-caret,table.sm-table tr.sm-drill td:first-child .sm-caret{display:inline-block;width:14px;color:var(--rpt-muted)}'
+    + 'table.sm-table tr.sm-drill td{background:var(--surface-1);color:var(--rpt-ink);font-size:12px}'
+    + 'table.sm-table tr.sm-drill-1 td:first-child{padding-left:22px;cursor:pointer;white-space:normal;min-width:260px}'
+    + 'table.sm-table tr.sm-drill-2 td{background:var(--rpt-plain-bg);color:var(--rpt-ink)}'
+    + 'table.sm-table tr.sm-drill-2 td:first-child{padding-left:44px}';
+  document.head.appendChild(css);
+  const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  const dealType = () => { const b = document.querySelector('#salesMonthlyDealTypeNav button.active'); return b ? b.getAttribute('data-deal') : 'all'; };
+  const zero = () => ({ sales: 0, cogs: 0, qty: 0, cogsUnknownSales: 0 });
+  const addTo = (c, l) => { c.sales += l[6]; c.cogs += l[7]; c.qty += l[8]; c.cogsUnknownSales += l[9]; };
+  // aggregate a set of drill lines into the row shape bucketedRowCells() expects, for the table's current periods
+  function rowOf(lines, st, parent) {
+    const byPeriod = {}; st.periods.forEach(p => byPeriod[p] = zero());
+    const q1 = zero(), q2 = zero(), total = zero();
+    for (const l of lines) {
+      const p = D.periods[l[0]]; if (!byPeriod[p]) continue;
+      addTo(byPeriod[p], l); addTo(total, l);
+      if (st.q1Periods.includes(p)) addTo(q1, l);
+      if (st.q2Periods.includes(p)) addTo(q2, l);
+    }
+    const sh = (c, pc) => pc && pc.sales > 0 ? c.sales / pc.sales : 0;
+    q1.share = sh(q1, parent && parent.q1); q2.share = sh(q2, parent && parent.q2); total.share = sh(total, parent && parent.total);
+    return { byPeriod, q1, q2, total };
+  }
+  function linesFor(bucket) {
+    const b = D.buckets.indexOf(bucket), dt = dealType();
+    return D.lines.filter(l => l[1] === b && (dt === 'all' || l[5] === (dt === 'single' ? 1 : 0)));
+  }
+  function statsNow() { return salesMonthlyStats[dealType()]; }
+  function removeChildren(tr, level) {
+    let n = tr.nextElementSibling;
+    while (n && n.classList.contains('sm-drill') && +n.dataset.level > level) { const x = n.nextElementSibling; n.remove(); n = x; }
+  }
+  function setCaret(tr, open) { const c = tr.querySelector('.sm-caret'); if (c) c.textContent = open ? '▾' : '▸'; tr.dataset.open = open ? '1' : ''; }
+  function openCategory(tr) {
+    const bucket = tr.dataset.bucket, st = statsNow(), lines = linesFor(bucket);
+    const parent = rowOf(lines, st, null);
+    const byProduct = new Map();
+    for (const l of lines) { const k = l[2]; if (!byProduct.has(k)) byProduct.set(k, []); byProduct.get(k).push(l); }
+    const rows = [...byProduct.entries()].map(([k, ls]) => ({ k, ls, row: rowOf(ls, st, parent) })).sort((a, b) => b.row.total.sales - a.row.total.sales);
+    let html = '';
+    for (const r of rows) {
+      html += '<tr class="sm-drill sm-drill-1" data-level="1" data-bucket="' + esc(bucket) + '" data-product="' + r.k + '"><td><span class="sm-caret">▸</span>'
+        + esc(D.products[r.k]) + ' <span style="color:var(--rpt-muted)">(' + fmt(r.row.total.qty) + ')</span></td>'
+        + bucketedRowCells(r.row, st.periods, st.q1Periods, st.q2Periods) + '</tr>';
+    }
+    tr.insertAdjacentHTML('afterend', html);
+    setCaret(tr, true);
+  }
+  function openProduct(tr) {
+    const st = statsNow(), prod = +tr.dataset.product;
+    const lines = linesFor(tr.dataset.bucket).filter(l => l[2] === prod);
+    const parent = rowOf(lines, st, null);
+    const byCase = new Map();
+    for (const l of lines) { const k = l[3] + '|' + l[4]; if (!byCase.has(k)) byCase.set(k, []); byCase.get(k).push(l); }
+    const rows = [...byCase.values()].map(ls => ({ ls, row: rowOf(ls, st, parent) }))
+      .sort((a, b) => (a.ls[0][0] - b.ls[0][0]) || ((a.ls[0][3] || a.ls[0][4]) - (b.ls[0][3] || b.ls[0][4])));
+    let html = '';
+    for (const r of rows) {
+      const l = r.ls[0], label = l[3] ? 'Case #' + l[3] : 'Old CRM #' + l[4];
+      const tip = l[4] ? ' title="Old CRM Instalment_ID ' + l[4] + '"' : '';
+      html += '<tr class="sm-drill sm-drill-2" data-level="2"><td' + tip + '>' + label + (l[5] ? ' <span style="color:var(--rpt-muted)">(single payment)</span>' : '') + '</td>'
+        + bucketedRowCells(r.row, st.periods, st.q1Periods, st.q2Periods) + '</tr>';
+    }
+    tr.insertAdjacentHTML('afterend', html);
+    setCaret(tr, true);
+  }
+  // after every (re)render of the table: make each category row expandable
+  function decorate() {
+    table.querySelectorAll('tbody tr.sm-row').forEach(tr => {
+      if (tr.dataset.bucket) return;
+      const td = tr.cells[0]; tr.dataset.bucket = td.textContent.trim();
+      tr.classList.add('sm-drillable');
+      td.insertAdjacentHTML('afterbegin', '<span class="sm-caret">▸</span>');
+    });
+  }
+  new MutationObserver(decorate).observe(table.querySelector('tbody'), { childList: true });
+  decorate();
+  table.addEventListener('click', e => {
+    const tr = e.target.closest('tr'); if (!tr || !e.target.closest('td') || e.target.closest('td') !== tr.cells[0]) return;
+    if (tr.classList.contains('sm-row') && tr.dataset.bucket) {
+      if (tr.dataset.open) { removeChildren(tr, 0); setCaret(tr, false); } else openCategory(tr);
+    } else if (tr.classList.contains('sm-drill-1')) {
+      if (tr.dataset.open) { removeChildren(tr, 1); setCaret(tr, false); } else openProduct(tr);
+    } else return;
+    if (typeof salesMonthlyScrollUpdate === 'function') salesMonthlyScrollUpdate();
+  });
+})();
+${DRILL_END}
+`;
+must('// ---- top-level page nav (grows as more reports get added) ----', 'nav handler (drill)');
+html = html.replace('// ---- top-level page nav (grows as more reports get added) ----', drillJs + '// ---- top-level page nav (grows as more reports get added) ----');
+
 fs.writeFileSync(htmlPath, html);
 const m = html.match(/<script>([\s\S]*)<\/script>/);
 fs.writeFileSync(path.join(__dirname, 'extracted.js'), m[1]);
