@@ -52,31 +52,39 @@ if (!is_string($action) || $action === '') {
 try {
     switch ($action) {
         case 'diag':
-            // TEMPORARY diagnostic -- investigating "vendor not found" immediately after
-            // create_vendor on the live server. Remove once resolved.
-            $dataDir = __DIR__ . '/../../data';
-            $vendorsDir = $dataDir . '/vendors';
-            $testFile = $vendorsDir . '/_diag_test_' . bin2hex(random_bytes(4)) . '.json';
-            $mkdirOk = is_dir($vendorsDir) || @mkdir($vendorsDir, 0775, true);
-            $writeBytes = @file_put_contents($testFile, '{"ok":true}');
-            $readBack = $writeBytes !== false ? @file_get_contents($testFile) : null;
-            $unlinkOk = $writeBytes !== false ? @unlink($testFile) : null;
-            $vendorsJsonPath = $vendorsDir . '/vendors.json';
+            // TEMPORARY diagnostic -- probing several candidate writable locations so we don't
+            // have to touch server permissions if one of them already works. Remove once resolved.
+            $candidates = [
+                'data/ (repo root, current)' => __DIR__ . '/../../data/_diag_probe',
+                'public/vendors/_store (inside webroot)' => __DIR__ . '/_diag_probe',
+                'sys_get_temp_dir()' => rtrim(sys_get_temp_dir(), '/\\') . '/volta-vendors-diag',
+                '/var/www/reporting (repo root itself)' => __DIR__ . '/../../_diag_probe',
+            ];
+            $results = [];
+            foreach ($candidates as $label => $dir) {
+                error_clear_last();
+                $mkdirOk = is_dir($dir) || @mkdir($dir, 0775, true);
+                $testFile = $dir . '/_diag_test_' . bin2hex(random_bytes(4)) . '.json';
+                $writeBytes = $mkdirOk ? @file_put_contents($testFile, '{"ok":true}') : false;
+                $readBack = $writeBytes !== false ? @file_get_contents($testFile) : null;
+                if ($writeBytes !== false) {
+                    @unlink($testFile);
+                }
+                $results[$label] = [
+                    'path' => $dir,
+                    'realpath' => realpath($dir) ?: realpath(dirname($dir)) ?: '(neither exists)',
+                    'mkdir_ok' => $mkdirOk,
+                    'write_ok' => $writeBytes !== false,
+                    'read_back_ok' => $readBack === '{"ok":true}',
+                    'error' => error_get_last()['message'] ?? null,
+                ];
+            }
             respond([
                 'hostname' => gethostname(),
                 'php_sapi' => PHP_SAPI,
-                'data_dir_realpath' => realpath($dataDir) ?: '(does not exist)',
-                'vendors_dir_realpath' => realpath($vendorsDir) ?: '(does not exist)',
-                'vendors_dir_is_writable' => is_dir($vendorsDir) ? is_writable($vendorsDir) : null,
-                'mkdir_ok' => $mkdirOk,
-                'write_bytes' => $writeBytes,
-                'read_back' => $readBack,
-                'unlink_ok' => $unlinkOk,
-                'last_error' => error_get_last(),
-                'vendors_json_exists' => is_file($vendorsJsonPath),
-                'vendors_json_contents' => is_file($vendorsJsonPath) ? @file_get_contents($vendorsJsonPath) : null,
-                'open_basedir' => ini_get('open_basedir'),
-                'disk_free_bytes' => @disk_free_space($dataDir),
+                'whoami_uid' => function_exists('posix_getuid') ? posix_getuid() : null,
+                'script_owner_uid' => @fileowner(__FILE__),
+                'candidates' => $results,
             ]);
             // no break
 
