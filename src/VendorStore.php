@@ -40,15 +40,32 @@ final class VendorStore
         return $data === null ? $fallback : $data;
     }
 
+    /**
+     * Writes are verified at every step and throw on failure -- this used to swallow errors
+     * with @ and report success regardless, which is exactly how a vendor could "save"
+     * successfully and then 404 on the very next read: mkdir()/file_put_contents() were
+     * silently failing (confirmed live: data/ didn't exist and couldn't be created) while
+     * createVendor() still returned the in-memory record as if it had been persisted.
+     */
     private function writeJson(string $path, $data): void
     {
         $dir = dirname($path);
-        if (!is_dir($dir)) {
-            @mkdir($dir, 0775, true);
+        if (!is_dir($dir) && !@mkdir($dir, 0775, true) && !is_dir($dir)) {
+            throw new \RuntimeException("Storage directory does not exist and could not be created: $dir -- ask whoever manages the server to create it and make it writable by the web server user.");
+        }
+        if (!is_writable($dir)) {
+            throw new \RuntimeException("Storage directory is not writable: $dir -- ask whoever manages the server to fix its permissions.");
         }
         $tmp = $path . '.tmp' . bin2hex(random_bytes(4));
-        file_put_contents($tmp, json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT), LOCK_EX);
-        rename($tmp, $path);
+        $bytes = @file_put_contents($tmp, json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT), LOCK_EX);
+        if ($bytes === false) {
+            $err = error_get_last();
+            throw new \RuntimeException('Failed to write ' . $tmp . ($err ? ': ' . $err['message'] : ''));
+        }
+        if (!@rename($tmp, $path)) {
+            @unlink($tmp);
+            throw new \RuntimeException("Failed to finalize write to $path");
+        }
     }
 
     private function vendorsFile(): string
