@@ -29,10 +29,9 @@
 body{margin:0; font-family:'Segoe UI',system-ui,-apple-system,sans-serif; background:var(--bg); color:var(--fg);}
 .app{display:flex; gap:20px; max-width:1300px; margin:0 auto; padding:20px; min-height:80vh;}
 .sidebar{width:260px; flex-shrink:0; background:var(--navy); color:var(--navy-ink); border-radius:14px; padding:16px; align-self:flex-start;}
-.sidebar-top{display:flex; align-items:flex-start; justify-content:space-between; gap:8px;}
 .sidebar h1{font-size:16px; margin:0 0 4px; color:var(--lime);}
 .sidebar .sub{font-size:11px; opacity:.7; margin:0 0 14px;}
-.toggle-row{display:flex; align-items:center; gap:6px; flex-shrink:0;}
+.top-right-controls{position:fixed; top:14px; right:14px; z-index:100; display:flex; align-items:center; gap:6px; background:var(--navy); color:var(--navy-ink); padding:6px; border-radius:10px; box-shadow:0 2px 10px rgba(0,0,0,.18);}
 .icon-btn{background:rgba(255,255,255,.08); border:none; color:inherit; width:28px; height:28px; border-radius:7px; cursor:pointer; display:flex; align-items:center; justify-content:center; padding:0;}
 .icon-btn svg{width:15px; height:15px; stroke:currentColor; fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round;}
 .lang-switch{display:flex; background:rgba(255,255,255,.08); border-radius:7px; padding:2px; gap:2px;}
@@ -108,6 +107,7 @@ button.ghost{background:var(--surface-2); color:var(--fg); border:1px solid var(
   .sidebar{width:100%;}
   .vendor-list{max-height:none; flex-direction:row; overflow-x:auto; flex-wrap:nowrap;}
   .vendor-list li{white-space:nowrap;}
+  .top-right-controls{top:10px; right:10px;}
 }
 </style>
 <script>
@@ -121,21 +121,18 @@ button.ghost{background:var(--surface-2); color:var(--fg); border:1px solid var(
 </head>
 <body>
 
+<div class="top-right-controls">
+  <div id="langSwitch" class="lang-switch">
+    <button data-lang="ka" aria-pressed="true">ქართ</button>
+    <button data-lang="en" aria-pressed="false">EN</button>
+  </div>
+  <button id="themeToggle" class="icon-btn" title="თემის შეცვლა"><svg id="themeToggleIcon" viewBox="0 0 24 24"></svg></button>
+</div>
+
 <div class="app">
   <aside class="sidebar">
-    <div class="sidebar-top">
-      <div>
-        <h1 data-i18n="sidebarTitle">ვენდორების ფასები</h1>
-        <p class="sub" data-i18n="sidebarSub">ძველი ↔ ახალი ფასების შედარება</p>
-      </div>
-      <div class="toggle-row">
-        <div id="langSwitch" class="lang-switch">
-          <button data-lang="ka" aria-pressed="true">ქართ</button>
-          <button data-lang="en" aria-pressed="false">EN</button>
-        </div>
-        <button id="themeToggle" class="icon-btn" title="თემის შეცვლა"><svg id="themeToggleIcon" viewBox="0 0 24 24"></svg></button>
-      </div>
-    </div>
+    <h1 data-i18n="sidebarTitle">ვენდორების ფასები</h1>
+    <p class="sub" data-i18n="sidebarSub">ძველი ↔ ახალი ფასების შედარება</p>
     <div class="add-vendor">
       <input id="newVendorName" type="text" data-i18n-placeholder="newVendorPlaceholder" placeholder="ახალი ვენდორი" />
       <button id="addVendorBtn" data-i18n="addVendorBtn">+ დამატება</button>
