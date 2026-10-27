@@ -180,8 +180,14 @@ final class VendorStore
     {
         $id = self::newId();
         $createdAt = gmdate('c');
+        // Date+time, not just date: more than one file can be uploaded for the same vendor on
+        // the same day, and a date-only default label made those indistinguishable in the
+        // history list and the compare dropdowns. Tbilisi local time, not UTC, to match the
+        // timestamp already shown next to the label in the history list (which the browser
+        // renders in the viewer's local time from createdAt).
+        $defaultLabel = (new \DateTimeImmutable('now', new \DateTimeZone('Asia/Tbilisi')))->format('Y-m-d H:i:s');
         $meta = [
-            'id' => $id, 'vendorId' => $vendorId, 'label' => $label !== '' ? $label : substr($createdAt, 0, 10),
+            'id' => $id, 'vendorId' => $vendorId, 'label' => $label !== '' ? $label : $defaultLabel,
             'createdAt' => $createdAt, 'sheetsIncluded' => $sheetsIncluded, 'productCount' => count($products),
         ];
         $full = $meta;

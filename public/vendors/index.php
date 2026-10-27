@@ -152,12 +152,12 @@ button.ghost{background:var(--surface-2); color:var(--fg); border:1px solid var(
       </div>
 
       <nav class="tabs">
-        <button class="tab-btn active" data-tab="upload" data-i18n="tabUpload">ფასების ატვირთვა</button>
+        <button class="tab-btn active" data-tab="history" data-i18n="tabHistory">ისტორია</button>
+        <button class="tab-btn" data-tab="upload" data-i18n="tabUpload">ფასების ატვირთვა</button>
         <button class="tab-btn" data-tab="compare" data-i18n="tabCompare">შედარება</button>
-        <button class="tab-btn" data-tab="history" data-i18n="tabHistory">ისტორია</button>
       </nav>
 
-      <section id="tab-upload" class="tab-panel active">
+      <section id="tab-upload" class="tab-panel">
         <div class="card">
           <div class="upload-box">
             <input id="fileInput" type="file" accept=".xlsx,.xlsm" />
@@ -194,7 +194,7 @@ button.ghost{background:var(--surface-2); color:var(--fg); border:1px solid var(
         </div>
       </section>
 
-      <section id="tab-history" class="tab-panel">
+      <section id="tab-history" class="tab-panel active">
         <div class="card"><div id="historyList"></div></div>
         <div id="historyViewCard" class="card" hidden>
           <div class="vendor-header">

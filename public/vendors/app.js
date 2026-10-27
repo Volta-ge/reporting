@@ -86,6 +86,7 @@
       historyMetaSheets: 'ფურცელი',
       deleteBtn: 'წაშლა',
       viewBtn: 'ნახვა',
+      hideBtn: 'დახურვა',
       confirmDeleteSnapshot: 'წავშალო ეს ჩამონათვალი?',
       vendorsLoadError: 'ვენდორების სია ვერ ჩაიტვირთა: {msg}',
       zeroRowsWarning: 'ფურცელ(ებ)მა 0 მწკრივი დააბრუნა: {sheets}',
@@ -166,6 +167,7 @@
       historyMetaSheets: 'sheet(s)',
       deleteBtn: 'Delete',
       viewBtn: 'View',
+      hideBtn: 'Hide',
       confirmDeleteSnapshot: 'Delete this snapshot?',
       vendorsLoadError: 'Could not load vendor list: {msg}',
       zeroRowsWarning: 'Sheet(s) returned 0 rows: {sheets}',
@@ -446,6 +448,7 @@
     state.currentVendorId=id; state.upload=null; state.compare=null;
     $('emptyState').hidden=true; $('vendorPanel').hidden=false;
     $('mappingArea').innerHTML=''; $('uploadStatus').textContent='';
+    viewedSnapshotId = null; $('historyViewCard').hidden = true;
     renderVendorList();
     loadVendorDetail(id);
     switchTab('history');
@@ -764,17 +767,24 @@
 
   // ---------- history ----------
 
+  var viewedSnapshotId = null;
+  var viewedProducts = [];
+
   function renderHistory(){
     var el=$('historyList');
-    $('historyViewCard').hidden = true;
-    if(!state.snapshots.length){ el.innerHTML='<p class="muted">'+escapeHtml(t('noSnapshotsYet'))+'</p>'; return; }
+    if(!state.snapshots.length){
+      el.innerHTML='<p class="muted">'+escapeHtml(t('noSnapshotsYet'))+'</p>';
+      viewedSnapshotId = null; $('historyViewCard').hidden = true;
+      return;
+    }
     var sorted = state.snapshots.slice().sort(function(a,b){ return b.createdAt.localeCompare(a.createdAt); });
     var locale = state.lang==='en' ? 'en-US' : 'ka-GE';
     el.innerHTML = sorted.map(function(s){
+      var isOpen = s.id === viewedSnapshotId;
       return '<div class="history-item"><div><strong>'+escapeHtml(s.label)+'</strong>'+
         '<div class="meta">'+new Date(s.createdAt).toLocaleString(locale)+' · '+escapeHtml(t('productsCountSuffix',{n:s.productCount}))+' · '+(s.sheetsIncluded||[]).length+' '+escapeHtml(t('historyMetaSheets'))+'</div></div>'+
         '<div class="checkbox-row">'+
-          '<button class="ghost" data-role="view" data-id="'+s.id+'" data-label="'+escapeHtml(s.label)+'">'+escapeHtml(t('viewBtn'))+'</button>'+
+          '<button class="ghost" data-role="view" data-id="'+s.id+'" data-label="'+escapeHtml(s.label)+'">'+escapeHtml(isOpen ? t('hideBtn') : t('viewBtn'))+'</button>'+
           '<button class="small-danger" data-role="delete" data-id="'+s.id+'">'+escapeHtml(t('deleteBtn'))+'</button>'+
         '</div></div>';
     }).join('');
@@ -787,18 +797,28 @@
       });
     });
     el.querySelectorAll('[data-role="view"]').forEach(function(btn){
-      btn.addEventListener('click', function(){ viewSnapshot(btn.dataset.id, btn.dataset.label); });
+      btn.addEventListener('click', function(){
+        if(btn.dataset.id === viewedSnapshotId){ closeHistoryView(); }
+        else { viewSnapshot(btn.dataset.id, btn.dataset.label); }
+      });
     });
   }
 
-  var viewedProducts = [];
+  function closeHistoryView(){
+    viewedSnapshotId = null;
+    $('historyViewCard').hidden = true;
+    renderHistory();
+  }
+
   function viewSnapshot(snapshotId, label){
     apiGet('action=snapshot_products&vendorId='+encodeURIComponent(state.currentVendorId)+'&snapshotId='+encodeURIComponent(snapshotId)).then(function(data){
       viewedProducts = data.products || [];
+      viewedSnapshotId = snapshotId;
       $('historyViewTitle').textContent = label;
       $('historyViewCard').hidden = false;
       $('historyViewSearch').value = '';
       renderHistoryViewTable();
+      renderHistory();
     }).catch(function(e){ alert(e.message); });
   }
 
@@ -822,7 +842,7 @@
   }
 
   $('historyViewSearch').addEventListener('input', function(){ if(!$('historyViewCard').hidden) renderHistoryViewTable(); });
-  $('historyViewClose').addEventListener('click', function(){ $('historyViewCard').hidden = true; });
+  $('historyViewClose').addEventListener('click', function(){ closeHistoryView(); });
 
   // ---------- init ----------
 
