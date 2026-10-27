@@ -444,7 +444,7 @@
     $('mappingArea').innerHTML=''; $('uploadStatus').textContent='';
     renderVendorList();
     loadVendorDetail(id);
-    switchTab('upload');
+    switchTab('history');
   }
 
   function loadVendorDetail(id){
