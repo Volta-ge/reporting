@@ -35,7 +35,14 @@ function requireSafeId(?string $id, string $label): string
     return $id;
 }
 
-$store = new VendorStore(__DIR__ . '/../../data');
+// Confirmed live (see the former diag endpoint, removed once this was resolved): the PHP-FPM
+// user (uid 33) has no write access anywhere inside the deployed code tree (owned by uid 1000,
+// the deploy user) -- only sys_get_temp_dir() (/tmp) is writable, with zero server changes
+// needed. Caveat: /tmp isn't guaranteed permanent (a reboot or a periodic cleanup job could
+// clear it, losing accumulated vendor price history) -- the fully durable fix is a one-time
+// chown/chmod of a directory inside the deployed tree for whoever has server access, but this
+// works today without waiting on that.
+$store = new VendorStore(sys_get_temp_dir() . '/volta-vendors');
 $method = $_SERVER['REQUEST_METHOD'];
 $action = $_GET['action'] ?? null;
 $input = [];
@@ -51,43 +58,6 @@ if (!is_string($action) || $action === '') {
 
 try {
     switch ($action) {
-        case 'diag':
-            // TEMPORARY diagnostic -- probing several candidate writable locations so we don't
-            // have to touch server permissions if one of them already works. Remove once resolved.
-            $candidates = [
-                'data/ (repo root, current)' => __DIR__ . '/../../data/_diag_probe',
-                'public/vendors/_store (inside webroot)' => __DIR__ . '/_diag_probe',
-                'sys_get_temp_dir()' => rtrim(sys_get_temp_dir(), '/\\') . '/volta-vendors-diag',
-                '/var/www/reporting (repo root itself)' => __DIR__ . '/../../_diag_probe',
-            ];
-            $results = [];
-            foreach ($candidates as $label => $dir) {
-                error_clear_last();
-                $mkdirOk = is_dir($dir) || @mkdir($dir, 0775, true);
-                $testFile = $dir . '/_diag_test_' . bin2hex(random_bytes(4)) . '.json';
-                $writeBytes = $mkdirOk ? @file_put_contents($testFile, '{"ok":true}') : false;
-                $readBack = $writeBytes !== false ? @file_get_contents($testFile) : null;
-                if ($writeBytes !== false) {
-                    @unlink($testFile);
-                }
-                $results[$label] = [
-                    'path' => $dir,
-                    'realpath' => realpath($dir) ?: realpath(dirname($dir)) ?: '(neither exists)',
-                    'mkdir_ok' => $mkdirOk,
-                    'write_ok' => $writeBytes !== false,
-                    'read_back_ok' => $readBack === '{"ok":true}',
-                    'error' => error_get_last()['message'] ?? null,
-                ];
-            }
-            respond([
-                'hostname' => gethostname(),
-                'php_sapi' => PHP_SAPI,
-                'whoami_uid' => function_exists('posix_getuid') ? posix_getuid() : null,
-                'script_owner_uid' => @fileowner(__FILE__),
-                'candidates' => $results,
-            ]);
-            // no break
-
         case 'vendors':
             respond(['vendors' => $store->listVendors()]);
             // no break
