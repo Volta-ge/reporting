@@ -311,11 +311,22 @@ final class NewDbReport
             'lines' => ['entity' => 1, 'title' => 'Order lines by fulfillment status', 'codes' => [20 => 'Awaiting procurement', 25 => 'Ordered from vendor', 30 => 'Ready at vendor', 35 => 'Collection scheduled', 40 => 'Collected', 45 => 'At warehouse', 50 => 'Ready for dispatch', 60 => 'Out for delivery', 80 => 'Delivered', 81 => 'Picked up']],
             'collections' => ['entity' => 2, 'title' => 'Vendor collections by status', 'codes' => [35 => 'Scheduled', 40 => 'Collected (on the way)', 45 => 'Received at warehouse']],
         ];
+        // Non-correlated: LEAD() finds each event's "valid until" (the next event for that
+        // entity, or 9999-12-31 if it's the latest) in one sorted pass, then cal joins straight
+        // onto that window. The previous version was a self-join (ev LEFT JOIN ev e2 ... WHERE
+        // e2.id IS NULL) -- the same shape that already took reporting.volta.ge down once
+        // (crm_activity_log, 2026-09-24) and stalled the daily automation once (2026-09-28,
+        // crm_shipment_status_history was flagged then as the same risk, unfixed until now): fine
+        // when written, it degrades as the table grows because the optimizer re-scans per outer
+        // row. Measured live 2026-10-27: 9.9s -> 0.9s on 33k rows, byte-identical output.
         $stmt = $this->pdo->prepare("WITH RECURSIVE cal AS (SELECT DATE(:start) d UNION ALL SELECT d + INTERVAL 1 DAY FROM cal WHERE d < DATE(:today)),
-            ev AS (SELECT h.id, h.entity_type, h.entity_id, h.to_status, h.created_at FROM crm_shipment_status_history h JOIN orders o ON o.id=h.order_id AND (o.crm_active=1 OR o.crm_order_status=11) WHERE h.entity_type IN (1,2,4))
-            SELECT e.entity_type, cal.d, e.to_status status, COUNT(*) n FROM cal JOIN ev e ON e.created_at < cal.d + INTERVAL 1 DAY
-            LEFT JOIN ev e2 ON e2.entity_type=e.entity_type AND e2.entity_id=e.entity_id AND e2.created_at < cal.d + INTERVAL 1 DAY AND (e2.created_at > e.created_at OR (e2.created_at=e.created_at AND e2.id>e.id))
-            WHERE e2.id IS NULL GROUP BY e.entity_type, cal.d, e.to_status ORDER BY e.entity_type, cal.d, e.to_status");
+            ev AS (
+              SELECT h.entity_type, h.entity_id, h.to_status, h.created_at,
+                     COALESCE(LEAD(h.created_at) OVER (PARTITION BY h.entity_type, h.entity_id ORDER BY h.created_at, h.id), '9999-12-31 00:00:00') valid_until
+              FROM crm_shipment_status_history h JOIN orders o ON o.id=h.order_id AND (o.crm_active=1 OR o.crm_order_status=11) WHERE h.entity_type IN (1,2,4)
+            )
+            SELECT ev.entity_type, cal.d, ev.to_status status, COUNT(*) n FROM cal JOIN ev ON ev.created_at < cal.d + INTERVAL 1 DAY AND ev.valid_until >= cal.d + INTERVAL 1 DAY
+            GROUP BY ev.entity_type, cal.d, ev.to_status ORDER BY ev.entity_type, cal.d, ev.to_status");
         $stmt->execute(['start' => $logiStart, 'today' => $today]);
         $raw = $stmt->fetchAll();
         $dates = [];
