@@ -99,6 +99,8 @@ button.ghost{background:var(--surface-2); color:var(--fg); border:1px solid var(
 .row-removed,.row-price_removed{background:var(--rem-bg); color:var(--rem-fg);}
 .row-unchanged{background:var(--surface); color:var(--fg);}
 .history-item{display:flex; justify-content:space-between; align-items:center; background:var(--surface-2); border:1px solid var(--border); border-radius:8px; padding:11px 14px; margin-bottom:7px; font-size:13px; flex-wrap:wrap; gap:8px;}
+.history-item.open{border-color:var(--lime); box-shadow:0 0 0 1px var(--lime) inset;}
+.history-item-main{cursor:pointer; flex:1; min-width:0;}
 .history-item .meta{font-size:11px; color:var(--muted);}
 .small-danger{background:none; border:none; color:#c43b3b; cursor:pointer; font-size:11px; text-decoration:underline; padding:0;}
 .banner{background:var(--surface-2); border:1px solid var(--border); border-radius:10px; padding:12px 16px; font-size:13px; margin-bottom:16px;}

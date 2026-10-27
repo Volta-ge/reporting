@@ -85,8 +85,6 @@
       noSnapshotsYet: 'ჯერ არ არის ატვირთული ჩამონათვალი.',
       historyMetaSheets: 'ფურცელი',
       deleteBtn: 'წაშლა',
-      viewBtn: 'ნახვა',
-      hideBtn: 'დახურვა',
       confirmDeleteSnapshot: 'წავშალო ეს ჩამონათვალი?',
       vendorsLoadError: 'ვენდორების სია ვერ ჩაიტვირთა: {msg}',
       zeroRowsWarning: 'ფურცელ(ებ)მა 0 მწკრივი დააბრუნა: {sheets}',
@@ -166,8 +164,6 @@
       noSnapshotsYet: 'No snapshot uploaded yet.',
       historyMetaSheets: 'sheet(s)',
       deleteBtn: 'Delete',
-      viewBtn: 'View',
-      hideBtn: 'Hide',
       confirmDeleteSnapshot: 'Delete this snapshot?',
       vendorsLoadError: 'Could not load vendor list: {msg}',
       zeroRowsWarning: 'Sheet(s) returned 0 rows: {sheets}',
@@ -781,10 +777,12 @@
     var locale = state.lang==='en' ? 'en-US' : 'ka-GE';
     el.innerHTML = sorted.map(function(s){
       var isOpen = s.id === viewedSnapshotId;
-      return '<div class="history-item"><div><strong>'+escapeHtml(s.label)+'</strong>'+
-        '<div class="meta">'+new Date(s.createdAt).toLocaleString(locale)+' · '+escapeHtml(t('productsCountSuffix',{n:s.productCount}))+' · '+(s.sheetsIncluded||[]).length+' '+escapeHtml(t('historyMetaSheets'))+'</div></div>'+
+      return '<div class="history-item'+(isOpen?' open':'')+'">'+
+        '<div class="history-item-main" data-role="toggle" data-id="'+s.id+'" data-label="'+escapeHtml(s.label)+'">'+
+          '<strong>'+escapeHtml(s.label)+'</strong>'+
+          '<div class="meta">'+new Date(s.createdAt).toLocaleString(locale)+' · '+escapeHtml(t('productsCountSuffix',{n:s.productCount}))+' · '+(s.sheetsIncluded||[]).length+' '+escapeHtml(t('historyMetaSheets'))+'</div>'+
+        '</div>'+
         '<div class="checkbox-row">'+
-          '<button class="ghost" data-role="view" data-id="'+s.id+'" data-label="'+escapeHtml(s.label)+'">'+escapeHtml(isOpen ? t('hideBtn') : t('viewBtn'))+'</button>'+
           '<button class="small-danger" data-role="delete" data-id="'+s.id+'">'+escapeHtml(t('deleteBtn'))+'</button>'+
         '</div></div>';
     }).join('');
@@ -796,10 +794,12 @@
         }).catch(function(e){ alert(e.message); });
       });
     });
-    el.querySelectorAll('[data-role="view"]').forEach(function(btn){
-      btn.addEventListener('click', function(){
-        if(btn.dataset.id === viewedSnapshotId){ closeHistoryView(); }
-        else { viewSnapshot(btn.dataset.id, btn.dataset.label); }
+    // Clicking the row itself (label + meta) toggles the product table open/closed --
+    // replaces the separate View/Hide button per user request, same open-vs-close logic.
+    el.querySelectorAll('[data-role="toggle"]').forEach(function(row){
+      row.addEventListener('click', function(){
+        if(row.dataset.id === viewedSnapshotId){ closeHistoryView(); }
+        else { viewSnapshot(row.dataset.id, row.dataset.label); }
       });
     });
   }
