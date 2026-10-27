@@ -51,6 +51,35 @@ if (!is_string($action) || $action === '') {
 
 try {
     switch ($action) {
+        case 'diag':
+            // TEMPORARY diagnostic -- investigating "vendor not found" immediately after
+            // create_vendor on the live server. Remove once resolved.
+            $dataDir = __DIR__ . '/../../data';
+            $vendorsDir = $dataDir . '/vendors';
+            $testFile = $vendorsDir . '/_diag_test_' . bin2hex(random_bytes(4)) . '.json';
+            $mkdirOk = is_dir($vendorsDir) || @mkdir($vendorsDir, 0775, true);
+            $writeBytes = @file_put_contents($testFile, '{"ok":true}');
+            $readBack = $writeBytes !== false ? @file_get_contents($testFile) : null;
+            $unlinkOk = $writeBytes !== false ? @unlink($testFile) : null;
+            $vendorsJsonPath = $vendorsDir . '/vendors.json';
+            respond([
+                'hostname' => gethostname(),
+                'php_sapi' => PHP_SAPI,
+                'data_dir_realpath' => realpath($dataDir) ?: '(does not exist)',
+                'vendors_dir_realpath' => realpath($vendorsDir) ?: '(does not exist)',
+                'vendors_dir_is_writable' => is_dir($vendorsDir) ? is_writable($vendorsDir) : null,
+                'mkdir_ok' => $mkdirOk,
+                'write_bytes' => $writeBytes,
+                'read_back' => $readBack,
+                'unlink_ok' => $unlinkOk,
+                'last_error' => error_get_last(),
+                'vendors_json_exists' => is_file($vendorsJsonPath),
+                'vendors_json_contents' => is_file($vendorsJsonPath) ? @file_get_contents($vendorsJsonPath) : null,
+                'open_basedir' => ini_get('open_basedir'),
+                'disk_free_bytes' => @disk_free_space($dataDir),
+            ]);
+            // no break
+
         case 'vendors':
             respond(['vendors' => $store->listVendors()]);
             // no break
