@@ -43,52 +43,78 @@ $config = is_file($configPath) ? require $configPath : [];
 requireBasicAuth($config);
 
 if (!isset($config['voltastoredb'])) {
-    $fallbackNote = 'config.php has no voltastoredb block — showing the last committed build';
-} else {
-    $today = (new \DateTimeImmutable('today'))->format('Y-m-d');
-    $cacheDir = __DIR__ . '/../data';
-    $cacheFile = $cacheDir . '/for_marketing_' . $today . '.json';
-    // Always recompute live — the cache file below is written every time only as an emergency fallback
-    // for the catch block (DB briefly unreachable), never read as if it were "fresh enough" to serve.
-    $cached = null;
-    try {
-        $pdo = Database::connect($config['voltastoredb']);
-        $cached = (new ForMarketingReport($pdo))->build();
-        if (!is_dir($cacheDir)) {
-            @mkdir($cacheDir, 0775, true);
-        }
-        @file_put_contents($cacheFile, json_encode($cached, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES), LOCK_EX);
-        foreach (glob($cacheDir . '/for_marketing_*.json') ?: [] as $old) {
-            if ($old !== $cacheFile) {
-                @unlink($old);
-            }
-        }
-    } catch (\Throwable $e) {
-        $root = $e;
-        while ($root->getPrevious() !== null) {
-            $root = $root->getPrevious();
-        }
-        $why = $root === $e ? $e->getMessage() : ($e->getMessage() . ' Driver said: ' . $root->getMessage());
-        $stale = is_file($cacheFile) ? json_decode((string) file_get_contents($cacheFile), true) : null;
-        if (is_array($stale) && isset($stale['rows'])) {
-            $cached = $stale;
-            $fallbackNote = 'live refresh failed (' . $why . ') — showing the last cached numbers from ' . ($stale['generatedAt'] ?? '?');
-        } else {
-            $cached = null;
-            $fallbackNote = 'live refresh failed (' . $why . ') — showing the last committed build';
-        }
-    }
-
-    if (is_array($cached) && isset($cached['rows'], $cached['summary'])) {
-        $html = ForMarketingReport::applyToHtml($html, $cached);
-    }
+    header('Content-Type: text/html; charset=utf-8');
+    header('Cache-Control: no-cache, must-revalidate');
+    echo "<!doctype html>\n<html lang=\"ka\">\n<head>\n<meta charset=\"utf-8\">\n<meta name=\"viewport\" content=\"width=device-width,initial-scale=1\">\n</head>\n<body>\n";
+    echo '<div style="background:#fff2cc;color:#6b6b6b;font:12px -apple-system,sans-serif;padding:6px 20px;">For Marketing: config.php has no voltastoredb block — showing the last committed build</div>' . "\n";
+    echo $html;
+    echo "\n</body>\n</html>\n";
+    return;
 }
 
+// Streamed, like public/index.php: the per-loan waterfall takes ~15-30s, so a plain blocking
+// response left the page blank the whole time. Instead, flush the shell with whatever data is
+// already baked into the committed HTML (today's cache, or last night's static build) THE
+// INSTANT the request arrives -- true zero-wait first paint -- then replace it in place via a
+// second <script> once the live query finishes. for-marketing/for_marketing.html's GOOD_PAYERS/
+// NEVER_PURCHASED/FM_SUMMARY/GENERATED_AT are `var` (not `const`) specifically so this later
+// script tag can reassign them; window.__fmRefreshAll() (defined in that file) re-renders
+// everything from the new values.
 header('Content-Type: text/html; charset=utf-8');
-header('Cache-Control: no-cache, must-revalidate');
-echo "<!doctype html>\n<html lang=\"ka\">\n<head>\n<meta charset=\"utf-8\">\n<meta name=\"viewport\" content=\"width=device-width,initial-scale=1\">\n</head>\n<body>\n";
-if ($fallbackNote !== null) {
-    echo '<div style="background:#fff2cc;color:#6b6b6b;font:12px -apple-system,sans-serif;padding:6px 20px;">For Marketing: ' . htmlspecialchars($fallbackNote, ENT_QUOTES) . "</div>\n";
+header('X-Accel-Buffering: no');
+header('Cache-Control: no-store');
+@ini_set('zlib.output_compression', '0');
+@ini_set('output_buffering', '0');
+@ini_set('implicit_flush', '1');
+while (ob_get_level() > 0) {
+    ob_end_flush();
 }
+ob_implicit_flush(true);
+
+echo "<!doctype html>\n<html lang=\"ka\">\n<head>\n<meta charset=\"utf-8\">\n<meta name=\"viewport\" content=\"width=device-width,initial-scale=1\">\n</head>\n<body>\n";
 echo $html;
 echo "\n</body>\n</html>\n";
+flush();
+
+$today = (new \DateTimeImmutable('today'))->format('Y-m-d');
+$cacheDir = __DIR__ . '/../data';
+$cacheFile = $cacheDir . '/for_marketing_' . $today . '.json';
+// Always recompute live — the cache file below is written every time only as an emergency fallback
+// for the catch block (DB briefly unreachable), never read as if it were "fresh enough" to serve.
+$cached = null;
+$liveNote = null;
+try {
+    $pdo = Database::connect($config['voltastoredb']);
+    $cached = (new ForMarketingReport($pdo))->build();
+    if (!is_dir($cacheDir)) {
+        @mkdir($cacheDir, 0775, true);
+    }
+    @file_put_contents($cacheFile, json_encode($cached, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES), LOCK_EX);
+    foreach (glob($cacheDir . '/for_marketing_*.json') ?: [] as $old) {
+        if ($old !== $cacheFile) {
+            @unlink($old);
+        }
+    }
+} catch (\Throwable $e) {
+    $root = $e;
+    while ($root->getPrevious() !== null) {
+        $root = $root->getPrevious();
+    }
+    $why = $root === $e ? $e->getMessage() : ($e->getMessage() . ' Driver said: ' . $root->getMessage());
+    $liveNote = 'live refresh failed (' . $why . ') — showing the last committed numbers';
+    $cached = null;
+}
+
+if (is_array($cached) && isset($cached['rows'], $cached['summary'], $cached['generatedAt'])) {
+    $flags = JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP;
+    echo '<script>'
+        . 'window.GOOD_PAYERS = ' . json_encode($cached['rows'], $flags) . ';'
+        . 'window.NEVER_PURCHASED = ' . json_encode($cached['neverPurchased'] ?? [], $flags) . ';'
+        . 'window.FM_SUMMARY = ' . json_encode($cached['summary'], $flags) . ';'
+        . 'window.GENERATED_AT = ' . json_encode($cached['generatedAt'], $flags) . ';'
+        . 'window.__fmRefreshAll && window.__fmRefreshAll();'
+        . "</script>\n";
+} elseif ($liveNote !== null) {
+    echo '<script>(function(){var d=document.createElement("div");d.style.cssText="background:#fff2cc;color:#6b6b6b;font:12px -apple-system,sans-serif;padding:6px 20px;";d.textContent=' . json_encode('For Marketing: ' . $liveNote, JSON_UNESCAPED_UNICODE) . ';document.body.insertBefore(d, document.body.firstChild);})();</script>' . "\n";
+}
+flush();

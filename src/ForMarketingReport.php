@@ -470,7 +470,11 @@ final class ForMarketingReport
         $flags = JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES;
         $consts = ['GOOD_PAYERS' => 'rows', 'NEVER_PURCHASED' => 'neverPurchased', 'FM_SUMMARY' => 'summary', 'GENERATED_AT' => 'generatedAt'];
         foreach ($consts as $const => $key) {
-            $needle = "const $const = ";
+            // `var`, not `const`: the page needs to reassign these from a later <script> tag once
+            // public/for_marketing.php streams live data in (see requireBasicAuth-adjacent streaming
+            // change) -- a `const`/`let` in the template's own <script> tag isn't visible to one PHP
+            // injects afterwards, but `var` becomes a `window.*` property either way can write to.
+            $needle = "var $const = ";
             $start = strpos($html, "\n$needle");
             if ($start === false) {
                 throw new \RuntimeException("ForMarketingReport::applyToHtml: const $const not found in template");
