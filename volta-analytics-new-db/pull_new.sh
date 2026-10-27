@@ -97,15 +97,21 @@ Q "SELECT DATE(p.payment_date) d, $SEG seg, ROUND(SUM(p.amount),2) dp
 # products; crm_line_fulfillment.vendor_price covers ~84%, and every Sept/Oct order_item already has a
 # fulfillment row (the gap is purely "not yet picked up/priced", not a missing join). NULL where not yet
 # filled — build_sales.js's existing cogsUnknownSales mechanism already handles partial coverage correctly.
+# COGS rule confirmed by the developer (2026-10-22): per line, the FIRST source with a value > 0, times qty_ordered:
+#   1. crm_line_fulfillment.vendor_price (order_item_id = order_items.id) — the price typed into logistics for the line;
+#   2. crm_product_vendors.price (product_id + the line's crm_line_fulfillment.vendor_id) — the vendor's price list;
+#   3. product_attribute_values.float_value, attribute code 'cost' — the Bagisto CMS cost.
+# Lines with none of the three stay cost-unknown (margin is computed only over sales that have a cost). Checked against
+# vendor_price on lines that have both: the 'cost' attribute agrees within ±5% on 92% of 690 lines, the price list 6/6.
 # data-entry glitch guard (found 2026-10-15): two Sept rows had vendor_price typed in as the order's own
 # id (e.g. order 56106 -> vendor_price 56106.00 on a 629 GEL sale) instead of a real price, inflating COGS
 # by ~112,638 GEL for that one month alone. Treat vendor_price as unset whenever it equals the order id or
 # order_item id (the CASE below) rather than as a real, if absurd, cost.
 Q "SELECT DATE_FORMAT(COALESCE(o.crm_creator_date,o.created_at),'%Y-%m') period, DATE(COALESCE(o.crm_creator_date,o.created_at)) d, o.id order_id, oi.product_id, oi.qty_ordered qty, oi.base_total sales,
-   CASE WHEN o.crm_order_status=99 THEN 'single' ELSE 'installment' END deal_type, COALESCE(ao.admin_name,'') brand, pf.sku, pf.name product_name,
+   CASE WHEN o.crm_order_status=99 THEN 'single' ELSE 'installment' END deal_type, COALESCE(ao.admin_name,'') brand, pf.sku, pf.name product_name, (EXISTS (SELECT 1 FROM product_attribute_values pk JOIN attribute_options aok ON aok.id=pk.integer_value AND aok.admin_name='KARCHER GEORGIA' WHERE pk.product_id=oi.product_id AND pk.attribute_id=25)) is_karcher_item, (SELECT MAX(sp.float_value) FROM product_attribute_values sp WHERE sp.product_id=oi.product_id AND sp.attribute_id=(SELECT id FROM attributes WHERE code='special_price') AND sp.float_value>0) special, REPLACE(REPLACE(oi.name,'\t',' '),'\n',' ') item_name,
    o.crm_creator_date creator_date,
    (EXISTS (SELECT 1 FROM order_items oi2 JOIN product_attribute_values pb2 ON pb2.product_id=oi2.product_id AND pb2.attribute_id=25 JOIN attribute_options ao2 ON ao2.id=pb2.integer_value AND ao2.admin_name='KARCHER GEORGIA' WHERE oi2.order_id=o.id)) is_karcher,
-   CASE WHEN lf.vendor_price=o.id OR lf.vendor_price=oi.id THEN NULL ELSE lf.vendor_price END cost
+   COALESCE(CASE WHEN lf.vendor_price>0 AND lf.vendor_price<>o.id AND lf.vendor_price<>oi.id THEN lf.vendor_price END, (SELECT MAX(pv.price) FROM crm_product_vendors pv WHERE pv.product_id=oi.product_id AND pv.vendor_id=lf.vendor_id AND pv.price>0), (SELECT MAX(pa.float_value) FROM product_attribute_values pa WHERE pa.product_id=oi.product_id AND pa.attribute_id=(SELECT id FROM attributes WHERE code='cost') AND pa.float_value>0)) cost
    FROM orders o JOIN order_items oi ON oi.order_id=o.id
    LEFT JOIN product_flat pf ON pf.product_id=oi.product_id AND pf.locale='ka_GE'
    LEFT JOIN product_attribute_values pb ON pb.product_id=oi.product_id AND pb.attribute_id=25

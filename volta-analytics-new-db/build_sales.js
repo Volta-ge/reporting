@@ -93,9 +93,20 @@ const newGrouped = newLinesRaw.map(r => {
   const cogs = hasCost ? unitCost * qty : 0;
   const markupEligible = r.deal_type === 'installment' && r.creator_date && r.creator_date >= MARKUP_CUTOVER;
   const rate = r.is_karcher === '1' ? MARKUP_RATE_KAR : MARKUP_RATE_STD;
+  // Sales = installment total price (user, 2026-10-22) — the CRM's own "განვადების ჯამური ფასი" per line: the unit price
+  // (the catalog's special_price when it is set and below the site price, else the site price) x the markup, rounded UP
+  // to 10 GEL, x qty; single-payment sales and pre-markup (before 2026-09-01) installments = the site price. Reproduces
+  // the CRM's September shipments export on 98.7% of lines (the rest: discounts added to the catalog after the sale).
+  // Karcher markup is per PRODUCT in the CRM's installment total (a non-Karcher line in an order that also holds a Karcher
+  // product still gets x1.26) — unlike the order-level is_karcher above, which stays as is for the Profit Margins markup.
+  const instRate = r.is_karcher_item === '1' ? MARKUP_RATE_KAR : MARKUP_RATE_STD;
+  const unitSite = sales / qty;
+  const special = r.special !== undefined && r.special !== '' && r.special !== 'NULL' ? +r.special : 0;
+  const unitEff = special > 0 && special < unitSite ? special : unitSite;
+  const instTotal = markupEligible ? Math.ceil(Math.round(unitEff * instRate * 1e6) / 1e6 / 10) * 10 * qty : sales;
   return {
     period: r.period, category: newProductRawCategory(r.product_id), brand: r.brand, deal_type: r.deal_type,
-    sales, cogs, qty: +r.qty, cogsUnknownSales: hasCost ? 0 : sales,
+    sales: instTotal, siteSales: sales, cogs, qty: +r.qty, cogsUnknownSales: hasCost ? 0 : instTotal,
     markupGel: markupEligible ? sales * (rate - 1) : 0,
     markupEligibleSales: markupEligible ? sales : 0,
     source: 'new',
@@ -187,6 +198,38 @@ function threeWay(classify, fallback) {
   return result;
 }
 const salesMonthlyStats = threeWay(r => classifyProduct(r.category), 'Uncategorized');
+
+// ---------- Sales Monthly drill-down: Product Category -> Product -> Case ID (user, 2026-10-22) ----------
+// One entry per order line, classified with the very same classifyProduct(raw category) as the table, so every drill
+// level adds up to its category row. Case = the new CRM application number (orders.id); old-DB lines (Jan 1..Aug 30,
+// old_sales_cases.tsv — the line-level twin of old_sales_grouped.tsv, same query, frozen 2026-10-22) carry their
+// migrated orders.id plus the old Instalment_ID. Line = [periodIdx, bucketIdx, productIdx, caseId, oldCaseId,
+// single?1:0, sales, cogs, qty, cogsUnknownSales].
+const drill = (() => {
+  const periods = salesMonthlyStats.all.periods, pIdx = Object.fromEntries(periods.map((p, i) => [p, i]));
+  const buckets = [], bIdx = {}, products = [], prIdx = {}, lines = [];
+  const idx = (arr, map, v) => (map[v] ??= arr.push(v) - 1);
+  const add = (period, raw, product, caseId, oldId, dt, sales, cogs, qty, unknown) => {
+    if (pIdx[period] === undefined) throw new Error('drill: period ' + period + ' not in the table');
+    lines.push([pIdx[period], idx(buckets, bIdx, classifyProduct(raw) || 'Uncategorized'), idx(products, prIdx, String(product || '(no name)').trim()),
+                caseId, oldId, dt === 'single' ? 1 : 0, r2(sales), r2(cogs), qty, r2(unknown)]);
+  };
+  if (fs.existsSync(path.join(__dirname, 'old_sales_cases.tsv')))
+    for (const r of parseTsv('old_sales_cases.tsv')) add(r.period, r.category, r.product_name, +r.new_case_id || 0, +r.case_id, r.deal_type, +r.sales, +r.cogs, 1, 0);
+  newLinesRaw.forEach((r, i) => { const g = newGrouped[i]; add(g.period, g.category, (r.item_name && r.item_name !== 'NULL') ? r.item_name : r.product_name, +r.order_id, 0, g.deal_type, g.sales, g.cogs, g.qty, g.cogsUnknownSales); });
+  // the drill must add up to the table, cell by cell
+  const sums = {};
+  for (const l of lines) for (const dt of ['all', l[5] ? 'single' : 'installment']) {
+    const s = (sums[dt + '|' + l[1] + '|' + l[0]] ||= [0, 0, 0]); s[0] += l[6]; s[1] += l[7]; s[2] += l[8];
+  }
+  for (const dt of ['all', 'installment', 'single']) for (const row of salesMonthlyStats[dt].rows) for (const p of salesMonthlyStats[dt].periods) {
+    const s = sums[dt + '|' + bIdx[row.bucket] + '|' + pIdx[p]] || [0, 0, 0];
+    const c = row.byPeriod[p];
+    if (Math.abs(s[0] - c.sales) > 0.05 || Math.abs(s[1] - c.cogs) > 0.05 || s[2] !== c.qty) throw new Error(`drill mismatch ${dt} ${row.bucket} ${p}: ${s} vs ${c.sales}/${c.cogs}/${c.qty}`);
+  }
+  return { periods, buckets, products, lines };
+})();
+console.log('drill: lines', drill.lines.length, '| products', drill.products.length, '| buckets', drill.buckets.length, '| adds up to the table: yes');
 const subcategoryStats = threeWay(r => classifySubcategory(r.category), 'Uncategorized');
 const brandStats = threeWay(r => classifyBrand(r.brand), 'No Brand');
 
@@ -316,7 +359,7 @@ const marginCoverage = {
 };
 console.log('Profit Margins (September, VoltaStoreDB only): Site-vs-Purchase', margin1LinesMatched + '/' + margin1LinesTotal, 'lines have a cost value | Installment-vs-Site', margin2OrdersMatched + '/' + margin2OrdersTotal, 'orders have posted schedule data');
 
-const payload = { salesMonthlyStats, brandStats, subcategoryStats, categoryBrandBreakdown, productStats, margin1, margin2, marginCoverage, cutover: CUTOVER, generatedAt: new Date().toISOString().slice(0, 16).replace('T', ' ') + ' UTC' };
+const payload = { salesMonthlyStats, drill, brandStats, subcategoryStats, categoryBrandBreakdown, productStats, margin1, margin2, marginCoverage, cutover: CUTOVER, generatedAt: new Date().toISOString().slice(0, 16).replace('T', ' ') + ' UTC' };
 fs.writeFileSync(path.join(__dirname, 'sales_data.json'), JSON.stringify(payload));
 
 // ---------- checks ----------

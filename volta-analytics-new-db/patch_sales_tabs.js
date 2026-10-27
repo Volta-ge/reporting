@@ -162,7 +162,7 @@ else {
 // never reach deals_amount_migration.html on any future run, since JS_MARK is already present from the
 // very first build and its whole block - banner included - is skipped from then on.
 const bannerRe = /^document\.getElementById\('salesHybridBanner'\)\.innerHTML = '.*';$/m;
-const bannerLine = `document.getElementById('salesHybridBanner').innerHTML = '<b>Source:</b> before ' + SALES_CUTOVER + ', the old database (myvolta.info: <code>instalment_products</code>); from ' + SALES_CUTOVER + ' on, the new database (VoltaStoreDB: <code>order_items</code>, category via the new catalog\\'s category tree, same mapping sheet). <b>Cogs from ' + SALES_CUTOVER + ' on</b> is the CRM\\'s own per-line vendor pickup price (<code>crm_line_fulfillment.vendor_price</code>, "ასაღები ფასი" on the Logistics → Deliveries page), filled in by staff as each line is collected from the vendor &mdash; still partial for recent months (growing daily), so months with unpriced lines show Mrg marked * computed only over the Cogs-known part of that cell\\'s sales, same convention as a mixed month like August. The brand attribute is also only partially filled in the new catalog &mdash; &ldquo;No Brand&rdquo; grows from ' + SALES_CUTOVER + ' on.';`;
+const bannerLine = `document.getElementById('salesHybridBanner').innerHTML = '<b>Source:</b> before ' + SALES_CUTOVER + ', the old database (myvolta.info: <code>instalment_products</code>); from ' + SALES_CUTOVER + ' on, the new database (VoltaStoreDB: <code>order_items</code>, category via the new catalog\\'s category tree, same mapping sheet). <b>Sales</b> is the installment total price (the CRM\\'s &ldquo;განვადების ჯამური ფასი&rdquo;): from 2026-09-01, per line, the unit price (the catalog\\'s special price when it is lower than the site price) &times; the markup (&times;1.26; Karcher products &times;1.449), rounded up to 10 GEL, &times; the quantity &mdash; reproduces the CRM\\'s own September figures on 99.5% of lines; single-payment sales and the months before (0% installments then) = the price. <b>Cogs from ' + SALES_CUTOVER + ' on</b> is, per order line, the first available of: the price typed into logistics for that line (<code>crm_line_fulfillment.vendor_price</code>, "ასაღები ფასი"), the vendor\\'s price list (<code>crm_product_vendors.price</code>), and the product\\'s cost in the catalog (attribute <code>cost</code>) &mdash; times the quantity (rule confirmed by the developer, 2026-10-22). Lines with none of the three are cost-unknown, so months with unpriced lines show Mrg marked * computed only over the Cogs-known part of that cell\\'s sales, same convention as a mixed month like August. The brand attribute is also only partially filled in the new catalog &mdash; &ldquo;No Brand&rdquo; grows from ' + SALES_CUTOVER + ' on.';`;
 if (bannerRe.test(html)) html = html.replace(bannerRe, bannerLine);
 
 // ---------- 5. Render code (once), inserted before the page-nav handler ----------
@@ -329,6 +329,166 @@ wireDealTypeFilter('categoryBrandDealTypeNav', dt => { categoryBrandDealType = d
   html = html.replace("  if (btn.dataset.page === 'dailystats') dailyScrollUpdate();",
     "  if (btn.dataset.page === 'dailystats') dailyScrollUpdate();\n  if (btn.dataset.page === 'salesmonthly') salesMonthlyScrollUpdate();\n  if (btn.dataset.page === 'brandanalyze') brandScrollUpdate();\n  if (btn.dataset.page === 'subcategoryanalyze') subcategoryScrollUpdate();");
 }
+
+// ---------- 6. Sales Monthly drill-down: Product Category -> Product -> Case ID (user, 2026-10-22) ----------
+// Its own marker pair, removed and re-inserted on every run (unlike the one-time JS_MARK block above), so later edits here
+// always reach the page. Works off SALES_JSON.drill (build_sales.js / NewDbReport::salesAnalyze): click a category row to
+// list its products, click a product to list its cases. Drill rows are built only on click and reuse the table's own
+// bucketedRowCells(), so the columns and number formats are exactly the table's; Share = share of the parent row.
+const DRILL_MARK = '/* ---------- Sales Monthly drill-down ---------- */';
+const DRILL_END = '/* ---------- /Sales Monthly drill-down ---------- */';
+{
+  const a = html.indexOf(DRILL_MARK);
+  if (a >= 0) { const b = html.indexOf(DRILL_END, a); if (b < 0) throw new Error('drill block end missing'); html = html.slice(0, a) + html.slice(b + DRILL_END.length); }
+}
+const drillJs = String.raw`${DRILL_MARK}
+(function () {
+  const D = SALES_JSON.drill, table = document.getElementById('salesMonthlyTable');
+  if (!D || !table) return;
+  const css = document.createElement('style');
+  css.textContent = 'table.sm-table tr.sm-row.sm-drillable td:first-child{cursor:pointer}'
+    + 'table.sm-table tr.sm-row td:first-child .sm-caret,table.sm-table tr.sm-drill td:first-child .sm-caret{display:inline-block;width:14px;color:var(--rpt-muted)}'
+    + 'table.sm-table tr.sm-drill td{background:var(--surface-1);color:var(--rpt-ink);font-size:12px}'
+    + 'table.sm-table tr.sm-drill-1 td:first-child{padding-left:22px;cursor:pointer;white-space:normal;min-width:260px}'
+    + 'table.sm-table tr.sm-drill-2 td{background:var(--rpt-plain-bg);color:var(--rpt-ink)}'
+    + 'table.sm-table tr.sm-drill-2 td:first-child{padding-left:44px}'
+    + 'table.sm-table tr.rpt-colhead td.sm-sortable{cursor:pointer}'
+    + 'table.sm-table tr.rpt-colhead td.sm-sortable:hover{text-decoration:underline}';
+  document.head.appendChild(css);
+  // ---- sorting (user, 2026-10-22): click a month / Q1 / Q2 / Total header to sort by that column's Sales, largest first;
+  // categories, their products and their cases all follow it; Uncategorized stays at the bottom; click again = back to Total.
+  let sortKey = 'total';
+  const valOf = (row, key) => !row ? 0 : key === 'total' ? row.total.sales : key === 'q1' ? row.q1.sales : key === 'q2' ? row.q2.sales : (row.byPeriod[key] ? row.byPeriod[key].sales : 0);
+  const byVal = (a, b) => (valOf(b, sortKey) - valOf(a, sortKey)) || (b.total.sales - a.total.sales);
+  const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  const dealType = () => { const b = document.querySelector('#salesMonthlyDealTypeNav button.active'); return b ? b.getAttribute('data-deal') : 'all'; };
+  const zero = () => ({ sales: 0, cogs: 0, qty: 0, cogsUnknownSales: 0 });
+  const addTo = (c, l) => { c.sales += l[6]; c.cogs += l[7]; c.qty += l[8]; c.cogsUnknownSales += l[9]; };
+  // aggregate a set of drill lines into the row shape bucketedRowCells() expects, for the table's current periods
+  function rowOf(lines, st, parent) {
+    const byPeriod = {}; st.periods.forEach(p => byPeriod[p] = zero());
+    const q1 = zero(), q2 = zero(), total = zero();
+    for (const l of lines) {
+      const p = D.periods[l[0]]; if (!byPeriod[p]) continue;
+      addTo(byPeriod[p], l); addTo(total, l);
+      if (st.q1Periods.includes(p)) addTo(q1, l);
+      if (st.q2Periods.includes(p)) addTo(q2, l);
+    }
+    const sh = (c, pc) => pc && pc.sales > 0 ? c.sales / pc.sales : 0;
+    q1.share = sh(q1, parent && parent.q1); q2.share = sh(q2, parent && parent.q2); total.share = sh(total, parent && parent.total);
+    return { byPeriod, q1, q2, total };
+  }
+  function linesFor(bucket) {
+    const b = D.buckets.indexOf(bucket), dt = dealType();
+    return D.lines.filter(l => l[1] === b && (dt === 'all' || l[5] === (dt === 'single' ? 1 : 0)));
+  }
+  function statsNow() { return salesMonthlyStats[dealType()]; }
+  function removeChildren(tr, level) {
+    let n = tr.nextElementSibling;
+    while (n && n.classList.contains('sm-drill') && +n.dataset.level > level) { const x = n.nextElementSibling; n.remove(); n = x; }
+  }
+  function setCaret(tr, open) { const c = tr.querySelector('.sm-caret'); if (c) c.textContent = open ? '▾' : '▸'; tr.dataset.open = open ? '1' : ''; }
+  function openCategory(tr) {
+    const bucket = tr.dataset.bucket, st = statsNow(), lines = linesFor(bucket);
+    const parent = rowOf(lines, st, null);
+    const byProduct = new Map();
+    for (const l of lines) { const k = l[2]; if (!byProduct.has(k)) byProduct.set(k, []); byProduct.get(k).push(l); }
+    const rows = [...byProduct.entries()].map(([k, ls]) => ({ k, ls, row: rowOf(ls, st, parent) })).sort((a, b) => byVal(a.row, b.row));
+    let html = '';
+    for (const r of rows) {
+      html += '<tr class="sm-drill sm-drill-1" data-level="1" data-bucket="' + esc(bucket) + '" data-product="' + r.k + '"><td><span class="sm-caret">▸</span>'
+        + esc(D.products[r.k]) + ' <span style="color:var(--rpt-muted)">(' + fmt(r.row.total.qty) + ')</span></td>'
+        + bucketedRowCells(r.row, st.periods, st.q1Periods, st.q2Periods) + '</tr>';
+    }
+    tr.insertAdjacentHTML('afterend', html);
+    setCaret(tr, true);
+  }
+  function openProduct(tr) {
+    const st = statsNow(), prod = +tr.dataset.product;
+    const lines = linesFor(tr.dataset.bucket).filter(l => l[2] === prod);
+    const parent = rowOf(lines, st, null);
+    const byCase = new Map();
+    for (const l of lines) { const k = l[3] + '|' + l[4]; if (!byCase.has(k)) byCase.set(k, []); byCase.get(k).push(l); }
+    const rows = [...byCase.values()].map(ls => ({ ls, row: rowOf(ls, st, parent) }))
+      .sort((a, b) => (valOf(b.row, sortKey) - valOf(a.row, sortKey)) || (a.ls[0][0] - b.ls[0][0]) || ((a.ls[0][3] || a.ls[0][4]) - (b.ls[0][3] || b.ls[0][4])));
+    let html = '';
+    for (const r of rows) {
+      const l = r.ls[0], label = l[3] ? 'Case #' + l[3] : 'Old CRM #' + l[4];
+      const tip = l[4] ? ' title="Old CRM Instalment_ID ' + l[4] + '"' : '';
+      html += '<tr class="sm-drill sm-drill-2" data-level="2"><td' + tip + '>' + label + (l[5] ? ' <span style="color:var(--rpt-muted)">(single payment)</span>' : '') + '</td>'
+        + bucketedRowCells(r.row, st.periods, st.q1Periods, st.q2Periods) + '</tr>';
+    }
+    tr.insertAdjacentHTML('afterend', html);
+    setCaret(tr, true);
+  }
+  // header cells (row 1 of the column head: one per month, Q1 / Q2 Total, Total) -> sort keys, in render order
+  function labelHeaders() {
+    const st = statsNow(), head = table.querySelector('tbody tr.rpt-colhead');
+    if (!st || !head) return;
+    const keys = [];
+    st.periods.forEach(p => {
+      keys.push(p);
+      if (st.q1Periods.length && p === st.q1Periods[st.q1Periods.length - 1]) keys.push('q1');
+      if (st.q2Periods.length && p === st.q2Periods[st.q2Periods.length - 1]) keys.push('q2');
+    });
+    keys.push('total');
+    [...head.cells].slice(1).forEach((td, i) => {
+      if (!keys[i]) return;
+      if (!td.dataset.label) td.dataset.label = td.textContent.trim();
+      td.dataset.sortKey = keys[i]; td.classList.add('sm-sortable');
+      td.title = 'Sort by this column\'s Sales, largest first (click again: back to Total)';
+      td.textContent = td.dataset.label + (keys[i] === sortKey ? ' ▼' : '');
+    });
+  }
+  function sortCategories() {
+    const st = statsNow(), tbody = table.querySelector('tbody');
+    tbody.querySelectorAll('tr.sm-drill').forEach(r => r.remove());
+    tbody.querySelectorAll('tr.sm-row').forEach(r => setCaret(r, false));
+    const by = {}; st.rows.forEach(r => { by[r.bucket] = r; });
+    const rows = [...tbody.querySelectorAll('tr.sm-row')];
+    rows.sort((a, b) => (a.classList.contains('sm-uncategorized') - b.classList.contains('sm-uncategorized'))
+      || (valOf(by[b.dataset.bucket], sortKey) - valOf(by[a.dataset.bucket], sortKey))
+      || ((by[b.dataset.bucket] ? by[b.dataset.bucket].total.sales : 0) - (by[a.dataset.bucket] ? by[a.dataset.bucket].total.sales : 0)));
+    rows.forEach(r => tbody.appendChild(r));
+  }
+  // after every (re)render of the table: make each category row expandable, label the headers, re-apply the sort
+  let busy = false;
+  function decorate() {
+    if (busy) return;
+    busy = true;
+    const fresh = !!table.querySelector('tbody tr.sm-row:not([data-bucket])');
+    table.querySelectorAll('tbody tr.sm-row').forEach(tr => {
+      if (tr.dataset.bucket) return;
+      const td = tr.cells[0]; tr.dataset.bucket = td.textContent.trim();
+      tr.classList.add('sm-drillable');
+      td.insertAdjacentHTML('afterbegin', '<span class="sm-caret">▸</span>');
+    });
+    if (fresh) { labelHeaders(); if (sortKey !== 'total') sortCategories(); }
+    busy = false;
+  }
+  new MutationObserver(decorate).observe(table.querySelector('tbody'), { childList: true });
+  decorate();
+  table.addEventListener('click', e => {
+    const hd = e.target.closest('td.sm-sortable');
+    if (hd) {
+      sortKey = (hd.dataset.sortKey === sortKey) ? 'total' : hd.dataset.sortKey;
+      busy = true; sortCategories(); labelHeaders(); busy = false;
+      if (typeof salesMonthlyScrollUpdate === 'function') salesMonthlyScrollUpdate();
+      return;
+    }
+    const tr = e.target.closest('tr'); if (!tr || !e.target.closest('td') || e.target.closest('td') !== tr.cells[0]) return;
+    if (tr.classList.contains('sm-row') && tr.dataset.bucket) {
+      if (tr.dataset.open) { removeChildren(tr, 0); setCaret(tr, false); } else openCategory(tr);
+    } else if (tr.classList.contains('sm-drill-1')) {
+      if (tr.dataset.open) { removeChildren(tr, 1); setCaret(tr, false); } else openProduct(tr);
+    } else return;
+    if (typeof salesMonthlyScrollUpdate === 'function') salesMonthlyScrollUpdate();
+  });
+})();
+${DRILL_END}
+`;
+must('// ---- top-level page nav (grows as more reports get added) ----', 'nav handler (drill)');
+html = html.replace('// ---- top-level page nav (grows as more reports get added) ----', drillJs + '// ---- top-level page nav (grows as more reports get added) ----');
 
 fs.writeFileSync(htmlPath, html);
 const m = html.match(/<script>([\s\S]*)<\/script>/);

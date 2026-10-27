@@ -27,6 +27,19 @@ Q "SELECT DATE_FORMAT(COALESCE(i.Order_Date,i.Aplication_Date),'%Y-%m') period, 
    WHERE (i.Order_Status=5 OR (i.Order_Status IN (1,3) AND i.Type_Of_Sales=99)) AND DATE(COALESCE(i.Order_Date,i.Aplication_Date)) BETWEEN '$FROM' AND '$TO'
    GROUP BY period, category, brand, deal_type ORDER BY period, category, brand;" > "$S/old_sales_grouped.tsv"
 
+# Sales Monthly drill-down (2026-10-22): the same rows as old_sales_grouped.tsv, one per line, with the case. Written to
+# old_sales_cases_raw.tsv; new_case_id (the migrated orders.id, VoltaStoreDB orders.my_volta_installment_id -> id) is then
+# added as the 3rd column by a one-off join to give old_sales_cases.tsv (period, case_id, new_case_id, product_name,
+# category, brand, deal_type, sales, cogs). Regenerated together with old_sales_grouped.tsv on 2026-10-22 (5 August COGS
+# placeholders of 1 GEL had since been corrected in the old DB) so the drill adds up to the table exactly.
+Q "SELECT DATE_FORMAT(COALESCE(i.Order_Date,i.Aplication_Date),'%Y-%m') period, i.Instalment_ID case_id, REPLACE(REPLACE(COALESCE(p.Model,''),'	',' '),'
+',' ') product_name,
+   COALESCE(pc.Category_Name,'') category, COALESCE(pb.Brand_Name,'') brand, CASE WHEN i.Type_Of_Sales=99 THEN 'single' ELSE 'installment' END deal_type, ip.Final_Price sales, ip.Start_Price cogs
+   FROM instalment_products ip JOIN instalments i ON i.Instalment_ID=ip.Instalment_ID
+   JOIN products p ON p.Product_ID=ip.Product_ID LEFT JOIN product_category pc ON pc.Category_ID=p.Category_ID LEFT JOIN product_brands pb ON pb.Brand_ID=p.Brand_ID
+   WHERE (i.Order_Status=5 OR (i.Order_Status IN (1,3) AND i.Type_Of_Sales=99)) AND DATE(COALESCE(i.Order_Date,i.Aplication_Date)) BETWEEN '$FROM' AND '$TO'
+   ORDER BY period, case_id, ip.Product_ID;" > "$S/old_sales_cases_raw.tsv"
+
 # line items for the Cogs data-quality (placeholder/outlier) statistics
 Q "SELECT ip.Product_ID product_id, ip.Start_Price start_price, ip.Final_Price final_price, CASE WHEN i.Type_Of_Sales=99 THEN 'single' ELSE 'installment' END deal_type
    FROM instalment_products ip JOIN instalments i ON i.Instalment_ID=ip.Instalment_ID
