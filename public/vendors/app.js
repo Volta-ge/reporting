@@ -80,10 +80,12 @@
       colNewPrice: 'ახალი ფასი',
       colDiff: 'სხვაობა',
       colPct: '% ცვლილება',
+      colPrice: 'ფასი',
       rowsShown: '{n} მწკრივი ნაჩვენებია',
       noSnapshotsYet: 'ჯერ არ არის ატვირთული ჩამონათვალი.',
       historyMetaSheets: 'ფურცელი',
       deleteBtn: 'წაშლა',
+      viewBtn: 'ნახვა',
       confirmDeleteSnapshot: 'წავშალო ეს ჩამონათვალი?',
       vendorsLoadError: 'ვენდორების სია ვერ ჩაიტვირთა: {msg}',
       zeroRowsWarning: 'ფურცელ(ებ)მა 0 მწკრივი დააბრუნა: {sheets}',
@@ -158,10 +160,12 @@
       colNewPrice: 'New price',
       colDiff: 'Diff',
       colPct: '% change',
+      colPrice: 'Price',
       rowsShown: '{n} rows shown',
       noSnapshotsYet: 'No snapshot uploaded yet.',
       historyMetaSheets: 'sheet(s)',
       deleteBtn: 'Delete',
+      viewBtn: 'View',
       confirmDeleteSnapshot: 'Delete this snapshot?',
       vendorsLoadError: 'Could not load vendor list: {msg}',
       zeroRowsWarning: 'Sheet(s) returned 0 rows: {sheets}',
@@ -762,15 +766,19 @@
 
   function renderHistory(){
     var el=$('historyList');
+    $('historyViewCard').hidden = true;
     if(!state.snapshots.length){ el.innerHTML='<p class="muted">'+escapeHtml(t('noSnapshotsYet'))+'</p>'; return; }
     var sorted = state.snapshots.slice().sort(function(a,b){ return b.createdAt.localeCompare(a.createdAt); });
     var locale = state.lang==='en' ? 'en-US' : 'ka-GE';
     el.innerHTML = sorted.map(function(s){
       return '<div class="history-item"><div><strong>'+escapeHtml(s.label)+'</strong>'+
         '<div class="meta">'+new Date(s.createdAt).toLocaleString(locale)+' · '+escapeHtml(t('productsCountSuffix',{n:s.productCount}))+' · '+(s.sheetsIncluded||[]).length+' '+escapeHtml(t('historyMetaSheets'))+'</div></div>'+
-        '<button class="small-danger" data-id="'+s.id+'">'+escapeHtml(t('deleteBtn'))+'</button></div>';
+        '<div class="checkbox-row">'+
+          '<button class="ghost" data-role="view" data-id="'+s.id+'" data-label="'+escapeHtml(s.label)+'">'+escapeHtml(t('viewBtn'))+'</button>'+
+          '<button class="small-danger" data-role="delete" data-id="'+s.id+'">'+escapeHtml(t('deleteBtn'))+'</button>'+
+        '</div></div>';
     }).join('');
-    el.querySelectorAll('.small-danger').forEach(function(btn){
+    el.querySelectorAll('[data-role="delete"]').forEach(function(btn){
       btn.addEventListener('click', function(){
         if(!confirm(t('confirmDeleteSnapshot'))) return;
         apiPost({action:'delete_snapshot', vendorId: state.currentVendorId, snapshotId: btn.dataset.id}).then(function(){
@@ -778,7 +786,43 @@
         }).catch(function(e){ alert(e.message); });
       });
     });
+    el.querySelectorAll('[data-role="view"]').forEach(function(btn){
+      btn.addEventListener('click', function(){ viewSnapshot(btn.dataset.id, btn.dataset.label); });
+    });
   }
+
+  var viewedProducts = [];
+  function viewSnapshot(snapshotId, label){
+    apiGet('action=snapshot_products&vendorId='+encodeURIComponent(state.currentVendorId)+'&snapshotId='+encodeURIComponent(snapshotId)).then(function(data){
+      viewedProducts = data.products || [];
+      $('historyViewTitle').textContent = label;
+      $('historyViewCard').hidden = false;
+      $('historyViewSearch').value = '';
+      renderHistoryViewTable();
+    }).catch(function(e){ alert(e.message); });
+  }
+
+  function renderHistoryViewTable(){
+    var search = $('historyViewSearch').value.trim().toLowerCase();
+    var rows = viewedProducts.filter(function(p){
+      if(!search) return true;
+      var hay = ((p.name||'')+' '+(p.code||'')).toLowerCase();
+      return hay.indexOf(search) !== -1;
+    });
+    function fmtNum(n){ return (n===null||n===undefined) ? '—' : Number(n).toLocaleString(state.lang==='en'?'en-US':'ka-GE',{maximumFractionDigits:2}); }
+    var html = '<table class="compare-table"><thead><tr>'+
+      '<th>'+escapeHtml(t('colCategory'))+'</th><th>'+escapeHtml(t('colCode'))+'</th>'+
+      '<th>'+escapeHtml(t('colName'))+'</th><th>'+escapeHtml(t('colPrice'))+'</th></tr></thead><tbody>';
+    rows.forEach(function(p){
+      html += '<tr><td>'+escapeHtml(p.sheet||'')+'</td><td>'+escapeHtml(p.code||'')+'</td>'+
+        '<td>'+escapeHtml(p.name||'')+'</td><td>'+fmtNum(p.price)+'</td></tr>';
+    });
+    html += '</tbody></table><p class="muted" style="margin-top:8px;">'+escapeHtml(t('rowsShown',{n:rows.length}))+'</p>';
+    $('historyViewTableWrap').innerHTML = html;
+  }
+
+  $('historyViewSearch').addEventListener('input', function(){ if(!$('historyViewCard').hidden) renderHistoryViewTable(); });
+  $('historyViewClose').addEventListener('click', function(){ $('historyViewCard').hidden = true; });
 
   // ---------- init ----------
 

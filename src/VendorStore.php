@@ -115,7 +115,11 @@ final class VendorStore
     {
         $data = $this->readJson($this->vendorsFile(), ['vendors' => []]);
         foreach ($data['vendors'] as $v) {
-            if (mb_strtolower($v['name']) === mb_strtolower($name)) {
+            // Plain strtolower(), not mb_strtolower(): Georgian has no letter case at all, so
+            // this is sufficient for Georgian/English vendor names and doesn't depend on the
+            // mbstring extension being installed (confirmed missing in at least one PHP build
+            // this project runs under).
+            if (strtolower($v['name']) === strtolower($name)) {
                 throw new \RuntimeException('ასეთი სახელის ვენდორი უკვე არსებობს');
             }
         }

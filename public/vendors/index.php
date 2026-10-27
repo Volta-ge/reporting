@@ -196,6 +196,16 @@ button.ghost{background:var(--surface-2); color:var(--fg); border:1px solid var(
 
       <section id="tab-history" class="tab-panel">
         <div class="card"><div id="historyList"></div></div>
+        <div id="historyViewCard" class="card" hidden>
+          <div class="vendor-header">
+            <h2 id="historyViewTitle" style="font-size:16px;"></h2>
+            <button id="historyViewClose" class="ghost">×</button>
+          </div>
+          <div class="table-controls">
+            <input id="historyViewSearch" type="text" data-i18n-placeholder="searchPlaceholder" placeholder="ძებნა დასახელებით ან კოდით..." />
+          </div>
+          <div class="table-scroll"><div id="historyViewTableWrap"></div></div>
+        </div>
       </section>
     </div>
   </main>
