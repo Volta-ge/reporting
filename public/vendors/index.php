@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>ვენდორების ფასების შედარება</title>
+<title data-i18n="pageTitle">ვენდორების ფასების შედარება</title>
 <style>
 :root{
   --bg:#f4f5f7; --surface:#ffffff; --surface-2:#eef0f3; --fg:#1a1a34; --muted:#6b6f80; --border:#dde1e8;
@@ -12,19 +12,32 @@
   --add-bg:#e3ecfd; --add-fg:#1f3f8a; --rem-bg:#eef0f3; --rem-fg:#5a5f6e;
 }
 @media (prefers-color-scheme: dark){
-  :root{
+  :root:not([data-theme="light"]){
     --bg:#13131f; --surface:#1d1d2e; --surface-2:#242438; --fg:#e8e9f3; --muted:#9a9db0; --border:#34354a;
     --navy:#242438; --navy-ink:#f1f2fb;
     --inc-bg:#3a1f1f; --inc-fg:#ff9b9b; --dec-bg:#1f3a24; --dec-fg:#8fe3a0;
     --add-bg:#1f2b4a; --add-fg:#9db8ff; --rem-bg:#2a2a3d; --rem-fg:#aeb0c4;
   }
 }
+:root[data-theme="dark"]{
+  --bg:#13131f; --surface:#1d1d2e; --surface-2:#242438; --fg:#e8e9f3; --muted:#9a9db0; --border:#34354a;
+  --navy:#242438; --navy-ink:#f1f2fb;
+  --inc-bg:#3a1f1f; --inc-fg:#ff9b9b; --dec-bg:#1f3a24; --dec-fg:#8fe3a0;
+  --add-bg:#1f2b4a; --add-fg:#9db8ff; --rem-bg:#2a2a3d; --rem-fg:#aeb0c4;
+}
 *{box-sizing:border-box;}
 body{margin:0; font-family:'Segoe UI',system-ui,-apple-system,sans-serif; background:var(--bg); color:var(--fg);}
 .app{display:flex; gap:20px; max-width:1300px; margin:0 auto; padding:20px; min-height:80vh;}
 .sidebar{width:260px; flex-shrink:0; background:var(--navy); color:var(--navy-ink); border-radius:14px; padding:16px; align-self:flex-start;}
+.sidebar-top{display:flex; align-items:flex-start; justify-content:space-between; gap:8px;}
 .sidebar h1{font-size:16px; margin:0 0 4px; color:var(--lime);}
 .sidebar .sub{font-size:11px; opacity:.7; margin:0 0 14px;}
+.toggle-row{display:flex; align-items:center; gap:6px; flex-shrink:0;}
+.icon-btn{background:rgba(255,255,255,.08); border:none; color:inherit; width:28px; height:28px; border-radius:7px; cursor:pointer; display:flex; align-items:center; justify-content:center; padding:0;}
+.icon-btn svg{width:15px; height:15px; stroke:currentColor; fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round;}
+.lang-switch{display:flex; background:rgba(255,255,255,.08); border-radius:7px; padding:2px; gap:2px;}
+.lang-switch button{background:none; border:none; color:inherit; opacity:.65; font-size:11px; font-weight:600; padding:4px 7px; border-radius:5px; cursor:pointer;}
+.lang-switch button[aria-pressed="true"]{background:var(--lime); color:var(--lime-ink); opacity:1;}
 .add-vendor{display:flex; gap:6px; margin-bottom:14px;}
 .add-vendor input{flex:1; min-width:0; padding:7px 8px; border-radius:6px; border:1px solid #3a3a5a; background:rgba(255,255,255,.08); color:inherit; font-size:13px;}
 .add-vendor button{background:var(--lime); color:var(--lime-ink); border:none; border-radius:6px; padding:7px 10px; font-weight:600; cursor:pointer; font-size:13px;}
@@ -97,43 +110,62 @@ button.ghost{background:var(--surface-2); color:var(--fg); border:1px solid var(
   .vendor-list li{white-space:nowrap;}
 }
 </style>
+<script>
+(function(){
+  try {
+    var theme = localStorage.getItem('vendorToolTheme');
+    if (theme === 'light' || theme === 'dark') document.documentElement.setAttribute('data-theme', theme);
+  } catch (e) {}
+})();
+</script>
 </head>
 <body>
 
 <div class="app">
   <aside class="sidebar">
-    <h1>ვენდორების ფასები</h1>
-    <p class="sub">ძველი ↔ ახალი ფასების შედარება</p>
+    <div class="sidebar-top">
+      <div>
+        <h1 data-i18n="sidebarTitle">ვენდორების ფასები</h1>
+        <p class="sub" data-i18n="sidebarSub">ძველი ↔ ახალი ფასების შედარება</p>
+      </div>
+      <div class="toggle-row">
+        <div id="langSwitch" class="lang-switch">
+          <button data-lang="ka" aria-pressed="true">ქართ</button>
+          <button data-lang="en" aria-pressed="false">EN</button>
+        </div>
+        <button id="themeToggle" class="icon-btn" title="თემის შეცვლა"><svg id="themeToggleIcon" viewBox="0 0 24 24"></svg></button>
+      </div>
+    </div>
     <div class="add-vendor">
-      <input id="newVendorName" type="text" placeholder="ახალი ვენდორი" />
-      <button id="addVendorBtn">+ დამატება</button>
+      <input id="newVendorName" type="text" data-i18n-placeholder="newVendorPlaceholder" placeholder="ახალი ვენდორი" />
+      <button id="addVendorBtn" data-i18n="addVendorBtn">+ დამატება</button>
     </div>
     <ul id="vendorList" class="vendor-list"></ul>
   </aside>
 
   <main class="main">
     <div id="emptyState" class="card empty-state">
-      <p>აირჩიეთ ვენდორი მარცხნივ, ან დაამატეთ ახალი.</p>
+      <p data-i18n="emptyState">აირჩიეთ ვენდორი მარცხნივ, ან დაამატეთ ახალი.</p>
     </div>
 
     <div id="vendorPanel" hidden>
       <div class="vendor-header">
         <h2 id="vendorTitle"></h2>
-        <button id="deleteVendorBtn" class="danger-link">ვენდორის წაშლა</button>
+        <button id="deleteVendorBtn" class="danger-link" data-i18n="deleteVendorBtn">ვენდორის წაშლა</button>
       </div>
 
       <nav class="tabs">
-        <button class="tab-btn active" data-tab="upload">ფასების ატვირთვა</button>
-        <button class="tab-btn" data-tab="compare">შედარება</button>
-        <button class="tab-btn" data-tab="history">ისტორია</button>
+        <button class="tab-btn active" data-tab="upload" data-i18n="tabUpload">ფასების ატვირთვა</button>
+        <button class="tab-btn" data-tab="compare" data-i18n="tabCompare">შედარება</button>
+        <button class="tab-btn" data-tab="history" data-i18n="tabHistory">ისტორია</button>
       </nav>
 
       <section id="tab-upload" class="tab-panel active">
         <div class="card">
           <div class="upload-box">
             <input id="fileInput" type="file" accept=".xlsx,.xlsm" />
-            <input id="snapshotLabel" type="text" placeholder="ჩამონათვალის სახელი (მაგ: 2026-10-27)" />
-            <button id="uploadBtn" class="primary">ატვირთვა და გაანალიზება</button>
+            <input id="snapshotLabel" type="text" data-i18n-placeholder="snapshotLabelPlaceholder" placeholder="ჩამონათვალის სახელი (მაგ: 2026-10-27)" />
+            <button id="uploadBtn" class="primary" data-i18n="uploadBtn">ატვირთვა და გაანალიზება</button>
           </div>
           <div id="uploadStatus" class="status-line"></div>
         </div>
@@ -143,23 +175,23 @@ button.ghost{background:var(--surface-2); color:var(--fg); border:1px solid var(
       <section id="tab-compare" class="tab-panel">
         <div class="card">
           <div class="compare-controls">
-            <label>ძველი ჩამონათვალი <select id="fromSelect"></select></label>
-            <label>ახალი ჩამონათვალი <select id="toSelect"></select></label>
-            <button id="compareBtn" class="primary">შედარება</button>
-            <button id="exportBtn" class="ghost" hidden>Excel-ში ექსპორტი</button>
+            <label><span data-i18n="fromSnapshotLabel">ძველი ჩამონათვალი</span> <select id="fromSelect"></select></label>
+            <label><span data-i18n="toSnapshotLabel">ახალი ჩამონათვალი</span> <select id="toSelect"></select></label>
+            <button id="compareBtn" class="primary" data-i18n="compareBtn">შედარება</button>
+            <button id="exportBtn" class="ghost" hidden data-i18n="exportBtn">Excel-ში ექსპორტი</button>
           </div>
           <div id="compareSummary" class="summary-cards"></div>
           <div class="table-controls" id="tableControls" hidden>
-            <input id="searchInput" type="text" placeholder="ძებნა დასახელებით ან კოდით..." />
+            <input id="searchInput" type="text" data-i18n-placeholder="searchPlaceholder" placeholder="ძებნა დასახელებით ან კოდით..." />
             <select id="statusFilter">
-              <option value="">ყველა სტატუსი</option>
-              <option value="increased">ფასი გაიზარდა</option>
-              <option value="decreased">ფასი დაეცა</option>
-              <option value="added">ახალი პოზიცია</option>
-              <option value="removed">მოხსნილი პოზიცია</option>
-              <option value="unchanged">უცვლელი</option>
+              <option value="" data-i18n="statusAll">ყველა სტატუსი</option>
+              <option value="increased" data-i18n="status_increased">ფასი გაიზარდა</option>
+              <option value="decreased" data-i18n="status_decreased">ფასი დაეცა</option>
+              <option value="added" data-i18n="status_added">ახალი პოზიცია</option>
+              <option value="removed" data-i18n="status_removed">მოხსნილი პოზიცია</option>
+              <option value="unchanged" data-i18n="status_unchanged">უცვლელი</option>
             </select>
-            <select id="sheetFilter"><option value="">ყველა კატეგორია</option></select>
+            <select id="sheetFilter"><option value="" data-i18n="categoryAll">ყველა კატეგორია</option></select>
           </div>
           <div class="table-scroll"><div id="compareTableWrap"></div></div>
         </div>

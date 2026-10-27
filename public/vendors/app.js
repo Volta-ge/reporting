@@ -1,16 +1,239 @@
 (function(){
   'use strict';
 
-  var STATUS_LABELS = {
-    increased:'ფასი გაიზარდა', decreased:'ფასი დაეცა', unchanged:'უცვლელი',
-    added:'ახალი პოზიცია', removed:'მოხსნილი პოზიცია',
-    price_added:'ფასი გაჩნდა', price_removed:'ფასი მოიხსნა'
-  };
   var CODE_KEYWORDS = ['sku','code','კოდ','ბარკოდ','barcode','ean','item no','item. no','id','არტიკ'];
   var NAME_KEYWORDS = ['name','დასახელ','პროდუქ','product','model','მოდელ','brand','ბრენდ','nomenklatura','ნომენკლატურ'];
   var PRICE_KEYWORDS = ['price','ფას','drp','rrp','cost','სადილერო','სარეკომენდაციო','promo','special','selling','sale','wholesale','retail','main','sarekomendacio','dileri','vip'];
 
-  var state = { vendors: [], currentVendorId: null, snapshots: [], upload: null, compare: null };
+  // ---------- i18n ----------
+
+  var LANG_KEY = 'vendorToolLang';
+  var THEME_KEY = 'vendorToolTheme';
+
+  var TR = {
+    ka: {
+      pageTitle: 'ვენდორების ფასების შედარება',
+      sidebarTitle: 'ვენდორების ფასები',
+      sidebarSub: 'ძველი ↔ ახალი ფასების შედარება',
+      newVendorPlaceholder: 'ახალი ვენდორი',
+      addVendorBtn: '+ დამატება',
+      emptyState: 'აირჩიეთ ვენდორი მარცხნივ, ან დაამატეთ ახალი.',
+      deleteVendorBtn: 'ვენდორის წაშლა',
+      tabUpload: 'ფასების ატვირთვა',
+      tabCompare: 'შედარება',
+      tabHistory: 'ისტორია',
+      snapshotLabelPlaceholder: 'ჩამონათვალის სახელი (მაგ: 2026-10-27)',
+      uploadBtn: 'ატვირთვა და გაანალიზება',
+      fromSnapshotLabel: 'ძველი ჩამონათვალი',
+      toSnapshotLabel: 'ახალი ჩამონათვალი',
+      compareBtn: 'შედარება',
+      exportBtn: 'Excel-ში ექსპორტი',
+      searchPlaceholder: 'ძებნა დასახელებით ან კოდით...',
+      statusAll: 'ყველა სტატუსი',
+      categoryAll: 'ყველა კატეგორია',
+      status_increased: 'ფასი გაიზარდა',
+      status_decreased: 'ფასი დაეცა',
+      status_added: 'ახალი პოზიცია',
+      status_removed: 'მოხსნილი პოზიცია',
+      status_unchanged: 'უცვლელი',
+      status_price_added: 'ფასი გაჩნდა',
+      status_price_removed: 'ფასი მოიხსნა',
+      vendorMetaCount: 'ჩამონათვალი',
+      vendorMetaNone: 'ჯერ არ აქვს ფასები',
+      confirmDeleteVendor: 'წავშალო ეს ვენდორი და მისი ყველა ჩამონათვალი?',
+      duplicateVendorName: 'ასეთი სახელის ვენდორი უკვე არსებობს',
+      selectFileFirst: 'აირჩიეთ ფაილი',
+      processingFile: 'ვამუშავებ ფაილს... დიდი ფაილისთვის შეიძლება რამდენიმე წამი დასჭირდეს.',
+      fileProcessed: 'ფაილი დამუშავდა: {n} ფურცელი. გადახედეთ რუკირებას და დააჭირეთ "დადასტურება".',
+      fileError: 'შეცდომა ფაილის დამუშავებისას: {msg}',
+      includeCheckbox: 'ჩავრთო',
+      rowCountSuffix: 'მწკრივი',
+      fromTemplateSuffix: '· შენახული რუკირება',
+      copyMappingBtn: 'რუკირების კოპირება ყველაზე',
+      headerRowLabel: 'სათაურის მწკრივი',
+      codeColLabel: 'კოდი / SKU',
+      nameColLabel: 'დასახელება',
+      priceColLabel: 'ფასი (შესადარებელი)',
+      noneOption: '— არ არის —',
+      emptyCell: '(ცარიელი)',
+      rowLabel: 'მწკრივი {n}',
+      saveTemplateCheckbox: 'რუკირების დამახსოვრება ამ ვენდორისთვის',
+      confirmImportBtn: 'დადასტურება და შენახვა ჩამონათვალად',
+      pickOneSheet: 'ერთი ფურცელი მაინც აირჩიეთ.',
+      needPriceCol: 'ყველა ჩართულ ფურცელს უნდა ჰქონდეს ფასის სვეტი.',
+      importing: 'ვიმპორტებ და ვინახავ...',
+      savedMsg: 'შენახულია: "{label}" — {n} პროდუქტი.',
+      warningPrefix: ' გაფრთხილება: ',
+      saveError: 'შეცდომა შენახვისას: {msg}',
+      productsCountSuffix: '{n} პროდუქტი',
+      pickBothSnapshots: 'აირჩიეთ ორივე ჩამონათვალი',
+      pickDifferentSnapshots: 'აირჩიეთ ორი განსხვავებული ჩამონათვალი',
+      compareFailed: 'შედარება ვერ მოხერხდა: {msg}',
+      summaryTotal: 'სულ',
+      summaryAdded: 'ახალი',
+      summaryRemoved: 'მოხსნილი',
+      colStatus: 'სტატუსი',
+      colCategory: 'კატეგორია',
+      colCode: 'კოდი',
+      colName: 'დასახელება',
+      colOldPrice: 'ძველი ფასი',
+      colNewPrice: 'ახალი ფასი',
+      colDiff: 'სხვაობა',
+      colPct: '% ცვლილება',
+      rowsShown: '{n} მწკრივი ნაჩვენებია',
+      noSnapshotsYet: 'ჯერ არ არის ატვირთული ჩამონათვალი.',
+      historyMetaSheets: 'ფურცელი',
+      deleteBtn: 'წაშლა',
+      confirmDeleteSnapshot: 'წავშალო ეს ჩამონათვალი?',
+      vendorsLoadError: 'ვენდორების სია ვერ ჩაიტვირთა: {msg}',
+      zeroRowsWarning: 'ფურცელ(ებ)მა 0 მწკრივი დააბრუნა: {sheets}',
+      genericError: 'შეცდომა'
+    },
+    en: {
+      pageTitle: 'Vendor Price Comparison',
+      sidebarTitle: 'Vendor Prices',
+      sidebarSub: 'Old ↔ New price comparison',
+      newVendorPlaceholder: 'New vendor',
+      addVendorBtn: '+ Add',
+      emptyState: 'Select a vendor on the left, or add a new one.',
+      deleteVendorBtn: 'Delete vendor',
+      tabUpload: 'Upload prices',
+      tabCompare: 'Compare',
+      tabHistory: 'History',
+      snapshotLabelPlaceholder: 'Snapshot name (e.g. 2026-10-27)',
+      uploadBtn: 'Upload & analyze',
+      fromSnapshotLabel: 'Old snapshot',
+      toSnapshotLabel: 'New snapshot',
+      compareBtn: 'Compare',
+      exportBtn: 'Export to Excel',
+      searchPlaceholder: 'Search by name or code...',
+      statusAll: 'All statuses',
+      categoryAll: 'All categories',
+      status_increased: 'Price increased',
+      status_decreased: 'Price decreased',
+      status_added: 'New item',
+      status_removed: 'Removed item',
+      status_unchanged: 'Unchanged',
+      status_price_added: 'Price added',
+      status_price_removed: 'Price removed',
+      vendorMetaCount: 'snapshot(s)',
+      vendorMetaNone: 'No prices yet',
+      confirmDeleteVendor: 'Delete this vendor and all its snapshots?',
+      duplicateVendorName: 'A vendor with this name already exists',
+      selectFileFirst: 'Choose a file',
+      processingFile: 'Processing the file... large files may take a few seconds.',
+      fileProcessed: 'File processed: {n} sheet(s). Review the mapping and click "Confirm".',
+      fileError: 'Error processing the file: {msg}',
+      includeCheckbox: 'Include',
+      rowCountSuffix: 'rows',
+      fromTemplateSuffix: '· saved mapping',
+      copyMappingBtn: 'Copy mapping to all',
+      headerRowLabel: 'Header row',
+      codeColLabel: 'Code / SKU',
+      nameColLabel: 'Name',
+      priceColLabel: 'Price (to compare)',
+      noneOption: '— None —',
+      emptyCell: '(empty)',
+      rowLabel: 'Row {n}',
+      saveTemplateCheckbox: 'Remember this mapping for this vendor',
+      confirmImportBtn: 'Confirm & save as snapshot',
+      pickOneSheet: 'Select at least one sheet.',
+      needPriceCol: 'Every included sheet needs a price column.',
+      importing: 'Importing and saving...',
+      savedMsg: 'Saved: "{label}" — {n} products.',
+      warningPrefix: ' Warning: ',
+      saveError: 'Error saving: {msg}',
+      productsCountSuffix: '{n} products',
+      pickBothSnapshots: 'Select both snapshots',
+      pickDifferentSnapshots: 'Select two different snapshots',
+      compareFailed: 'Comparison failed: {msg}',
+      summaryTotal: 'Total',
+      summaryAdded: 'New',
+      summaryRemoved: 'Removed',
+      colStatus: 'Status',
+      colCategory: 'Category',
+      colCode: 'Code',
+      colName: 'Name',
+      colOldPrice: 'Old price',
+      colNewPrice: 'New price',
+      colDiff: 'Diff',
+      colPct: '% change',
+      rowsShown: '{n} rows shown',
+      noSnapshotsYet: 'No snapshot uploaded yet.',
+      historyMetaSheets: 'sheet(s)',
+      deleteBtn: 'Delete',
+      confirmDeleteSnapshot: 'Delete this snapshot?',
+      vendorsLoadError: 'Could not load vendor list: {msg}',
+      zeroRowsWarning: 'Sheet(s) returned 0 rows: {sheets}',
+      genericError: 'Error'
+    }
+  };
+
+  function fmt(str, vals){
+    return str.replace(/\{(\w+)\}/g, function(_, k){ return (vals && vals[k] !== undefined) ? vals[k] : ''; });
+  }
+  function t(key, vals){
+    var dict = TR[state.lang] || TR.ka;
+    var str = dict[key] !== undefined ? dict[key] : (TR.ka[key] !== undefined ? TR.ka[key] : key);
+    return vals ? fmt(str, vals) : str;
+  }
+
+  function applyTranslations(){
+    document.querySelectorAll('[data-i18n]').forEach(function(el){
+      el.textContent = t(el.getAttribute('data-i18n'));
+    });
+    document.querySelectorAll('[data-i18n-placeholder]').forEach(function(el){
+      el.setAttribute('placeholder', t(el.getAttribute('data-i18n-placeholder')));
+    });
+    document.querySelectorAll('#langSwitch button').forEach(function(b){
+      b.setAttribute('aria-pressed', b.dataset.lang === state.lang ? 'true' : 'false');
+    });
+  }
+
+  function setLang(lang){
+    state.lang = lang;
+    try { localStorage.setItem(LANG_KEY, lang); } catch(e){}
+    applyTranslations();
+    renderVendorList();
+    if(state.currentVendorId){
+      renderHistory();
+      if(state.upload) renderMappingArea();
+      if(state.compare){ renderSummary(state.compare.summary); renderCompareTable(); }
+    }
+  }
+
+  document.getElementById('langSwitch').addEventListener('click', function(e){
+    var b = e.target.closest('button[data-lang]');
+    if(!b) return;
+    setLang(b.dataset.lang);
+  });
+
+  // ---------- theme ----------
+
+  var SUN = '<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>';
+  var MOON = '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>';
+  function isDark(){
+    var cur = document.documentElement.getAttribute('data-theme');
+    if(cur === 'dark') return true;
+    if(cur === 'light') return false;
+    return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  }
+  function paintThemeIcon(){
+    var icon = document.getElementById('themeToggleIcon');
+    icon.innerHTML = isDark() ? SUN : MOON;
+  }
+  document.getElementById('themeToggle').addEventListener('click', function(){
+    var next = isDark() ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', next);
+    try { localStorage.setItem(THEME_KEY, next); } catch(e){}
+    paintThemeIcon();
+  });
+  paintThemeIcon();
+
+  // ---------- state ----------
+
+  var state = { vendors: [], currentVendorId: null, snapshots: [], upload: null, compare: null,
+    lang: (function(){ try { return localStorage.getItem(LANG_KEY) || 'ka'; } catch(e){ return 'ka'; } })() };
   var API = 'api.php';
 
   function $(id){ return document.getElementById(id); }
@@ -71,9 +294,9 @@
     for(var i=0;i<limit;i++){
       var row=previewRows[i], score=0;
       for(var j=0;j<row.length;j++){
-        var t=String(row[j]).trim(); if(!t) continue;
-        if(matchesAny(t,CODE_KEYWORDS)||matchesAny(t,NAME_KEYWORDS)||matchesAny(t,PRICE_KEYWORDS)) score+=2;
-        else if(/^[A-Za-zა-ჰ]/.test(t) && t.length<40) score+=1;
+        var tt=String(row[j]).trim(); if(!tt) continue;
+        if(matchesAny(tt,CODE_KEYWORDS)||matchesAny(tt,NAME_KEYWORDS)||matchesAny(tt,PRICE_KEYWORDS)) score+=2;
+        else if(/^[A-Za-zა-ჰ]/.test(tt) && tt.length<40) score+=1;
       }
       if(score>bestScore){ bestScore=score; bestIdx=i; }
     }
@@ -83,21 +306,21 @@
   function guessColumnRoles(headerRow){
     var codeCol=null, nameCol=null, priceOptions=[], used={};
     headerRow.forEach(function(label, idx){
-      var col=idx+1, t=String(label).trim(); if(!t) return;
-      if(codeCol===null && matchesAny(t,CODE_KEYWORDS)){ codeCol=col; used[col]=1; }
+      var col=idx+1, tt=String(label).trim(); if(!tt) return;
+      if(codeCol===null && matchesAny(tt,CODE_KEYWORDS)){ codeCol=col; used[col]=1; }
     });
     headerRow.forEach(function(label, idx){
-      var col=idx+1, t=String(label).trim(); if(!t||used[col]) return;
-      if(nameCol===null && matchesAny(t,NAME_KEYWORDS)){ nameCol=col; used[col]=1; }
+      var col=idx+1, tt=String(label).trim(); if(!tt||used[col]) return;
+      if(nameCol===null && matchesAny(tt,NAME_KEYWORDS)){ nameCol=col; used[col]=1; }
     });
     headerRow.forEach(function(label, idx){
-      var col=idx+1, t=String(label).trim(); if(!t) return;
-      if(matchesAny(t,PRICE_KEYWORDS)) priceOptions.push({col:col, label:t});
+      var col=idx+1, tt=String(label).trim(); if(!tt) return;
+      if(matchesAny(tt,PRICE_KEYWORDS)) priceOptions.push({col:col, label:tt});
     });
     if(nameCol===null){
       headerRow.forEach(function(label, idx){
-        var col=idx+1, t=String(label).trim();
-        if(nameCol===null && t && !used[col] && !priceOptions.some(function(p){return p.col===col;})){ nameCol=col; used[col]=1; }
+        var col=idx+1, tt=String(label).trim();
+        if(nameCol===null && tt && !used[col] && !priceOptions.some(function(p){return p.col===col;})){ nameCol=col; used[col]=1; }
       });
     }
     var priceCol = priceOptions.length ? priceOptions[0].col : null;
@@ -129,7 +352,7 @@
         products.push({ sheet: cfg.name, code: code||null, name: name||null, price: price });
         extracted++;
       }
-      if(extracted===0) warnings.push('ფურცელმა "'+cfg.name+'" 0 მწკრივი დააბრუნა მოცემული რუკირებით.');
+      if(extracted===0) warnings.push(cfg.name);
     });
     return { products: products, warnings: warnings };
   }
@@ -193,7 +416,7 @@
     state.vendors.forEach(function(v){
       var li=document.createElement('li');
       li.className = v.id===state.currentVendorId ? 'active' : '';
-      var meta = v.snapshotCount ? (v.snapshotCount+' ჩამონათვალი · '+escapeHtml(v.lastSnapshotLabel||'')) : 'ჯერ არ აქვს ფასები';
+      var meta = v.snapshotCount ? (v.snapshotCount+' '+t('vendorMetaCount')+' · '+escapeHtml(v.lastSnapshotLabel||'')) : t('vendorMetaNone');
       li.innerHTML = escapeHtml(v.name)+'<span class="meta">'+meta+'</span>';
       li.addEventListener('click', function(){ selectVendor(v.id); });
       ul.appendChild(li);
@@ -203,6 +426,10 @@
   $('addVendorBtn').addEventListener('click', function(){
     var input=$('newVendorName'); var name=input.value.trim();
     if(!name) return;
+    if(state.vendors.some(function(v){ return v.name.toLowerCase()===name.toLowerCase(); })){
+      alert(t('duplicateVendorName'));
+      return;
+    }
     apiPost({action:'create_vendor', name:name}).then(function(data){
       input.value='';
       return loadVendors().then(function(){ renderVendorList(); selectVendor(data.vendor.id); });
@@ -231,7 +458,7 @@
 
   $('deleteVendorBtn').addEventListener('click', function(){
     if(!state.currentVendorId) return;
-    if(!confirm('წავშალო ეს ვენდორი და მისი ყველა ჩამონათვალი?')) return;
+    if(!confirm(t('confirmDeleteVendor'))) return;
     apiPost({action:'delete_vendor', id:state.currentVendorId}).then(function(){
       state.currentVendorId=null;
       $('vendorPanel').hidden=true; $('emptyState').hidden=false;
@@ -253,9 +480,9 @@
 
   $('uploadBtn').addEventListener('click', function(){
     var fileInput=$('fileInput'); var statusEl=$('uploadStatus');
-    if(!fileInput.files.length){ statusEl.textContent='აირჩიეთ ფაილი'; statusEl.className='status-line error'; return; }
+    if(!fileInput.files.length){ statusEl.textContent=t('selectFileFirst'); statusEl.className='status-line error'; return; }
     var file=fileInput.files[0];
-    statusEl.textContent='ვამუშავებ ფაილს... დიდი ფაილისთვის შეიძლება რამდენიმე წამი დასჭირდეს.';
+    statusEl.textContent=t('processingFile');
     statusEl.className='status-line';
     parseWorkbookFile(file).then(function(rawSheets){
       var vendor = state.vendors.filter(function(v){return v.id===state.currentVendorId;})[0];
@@ -284,11 +511,11 @@
         sheetInfos.forEach(function(s){ s.include = s.rowCount > s.headerRow+1; });
       }
       state.upload = { originalName: file.name, sheets: sheetInfos };
-      statusEl.textContent = 'ფაილი დამუშავდა: '+sheetInfos.length+' ფურცელი. გადახედეთ რუკირებას და დააჭირეთ "დადასტურება".';
+      statusEl.textContent = t('fileProcessed', {n: sheetInfos.length});
       statusEl.className='status-line ok';
       renderMappingArea();
     }).catch(function(e){
-      statusEl.textContent = 'შეცდომა ფაილის დამუშავებისას: '+e.message;
+      statusEl.textContent = t('fileError', {msg: e.message});
       statusEl.className='status-line error';
     });
   });
@@ -296,9 +523,9 @@
   function columnOptionsHtml(sheet, selectedCol){
     var headerRow = sheet.rows[sheet.headerRow] || [];
     var max = maxColsForSheet(sheet);
-    var html = '<option value="">— არ არის —</option>';
+    var html = '<option value="">'+escapeHtml(t('noneOption'))+'</option>';
     for(var c=1;c<=max;c++){
-      var label=(headerRow[c-1]||'').toString().trim() || '(ცარიელი)';
+      var label=(headerRow[c-1]||'').toString().trim() || t('emptyCell');
       var sel = c===selectedCol ? 'selected' : '';
       html += '<option value="'+c+'" '+sel+'>'+colLetter(c)+': '+escapeHtml(label.slice(0,36))+'</option>';
     }
@@ -309,7 +536,7 @@
     sheet.rows.slice(0,10).forEach(function(row, idx){
       var preview = row.filter(function(c){return String(c).trim();}).slice(0,4).join(' | ');
       var sel = idx===sheet.headerRow ? 'selected' : '';
-      html += '<option value="'+idx+'" '+sel+'>მწკრივი '+(idx+1)+': '+escapeHtml(preview.slice(0,55))+'</option>';
+      html += '<option value="'+idx+'" '+sel+'>'+escapeHtml(t('rowLabel',{n:idx+1}))+': '+escapeHtml(preview.slice(0,55))+'</option>';
     });
     return html;
   }
@@ -333,16 +560,16 @@
       var card=document.createElement('div'); card.className='sheet-card';
       card.innerHTML =
         '<div class="sheet-card-header">'+
-          '<label class="checkbox-row"><input type="checkbox" data-role="include" '+(sheet.include?'checked':'')+'/> ჩავრთო</label>'+
+          '<label class="checkbox-row"><input type="checkbox" data-role="include" '+(sheet.include?'checked':'')+'/> '+escapeHtml(t('includeCheckbox'))+'</label>'+
           '<span class="sheet-name">'+escapeHtml(sheet.name)+'</span>'+
-          '<span class="row-count">'+sheet.rowCount+' მწკრივი'+(sheet.fromTemplate?' · შენახული რუკირება':'')+'</span>'+
-          '<button class="ghost copy-mapping-btn" data-role="copy">რუკირების კოპირება ყველაზე</button>'+
+          '<span class="row-count">'+sheet.rowCount+' '+escapeHtml(t('rowCountSuffix'))+(sheet.fromTemplate?' '+escapeHtml(t('fromTemplateSuffix')):'')+'</span>'+
+          '<button class="ghost copy-mapping-btn" data-role="copy">'+escapeHtml(t('copyMappingBtn'))+'</button>'+
         '</div>'+
         '<div class="mapping-row">'+
-          '<label>სათაურის მწკრივი <select data-role="headerRow">'+headerRowOptionsHtml(sheet)+'</select></label>'+
-          '<label>კოდი / SKU <select data-role="codeCol">'+columnOptionsHtml(sheet, sheet.codeCol)+'</select></label>'+
-          '<label>დასახელება <select data-role="nameCol">'+columnOptionsHtml(sheet, sheet.nameCol)+'</select></label>'+
-          '<label>ფასი (შესადარებელი) <select data-role="priceCol">'+columnOptionsHtml(sheet, sheet.priceCol)+'</select></label>'+
+          '<label>'+escapeHtml(t('headerRowLabel'))+' <select data-role="headerRow">'+headerRowOptionsHtml(sheet)+'</select></label>'+
+          '<label>'+escapeHtml(t('codeColLabel'))+' <select data-role="codeCol">'+columnOptionsHtml(sheet, sheet.codeCol)+'</select></label>'+
+          '<label>'+escapeHtml(t('nameColLabel'))+' <select data-role="nameCol">'+columnOptionsHtml(sheet, sheet.nameCol)+'</select></label>'+
+          '<label>'+escapeHtml(t('priceColLabel'))+' <select data-role="priceCol">'+columnOptionsHtml(sheet, sheet.priceCol)+'</select></label>'+
         '</div>'+
         previewTableHtml(sheet);
 
@@ -363,8 +590,8 @@
 
     var bar=document.createElement('div'); bar.className='import-bar card';
     bar.innerHTML =
-      '<label class="checkbox-row"><input type="checkbox" id="saveAsTemplate" checked/> რუკირების დამახსოვრება ამ ვენდორისთვის</label>'+
-      '<button id="confirmImportBtn" class="primary">დადასტურება და შენახვა ჩამონათვალად</button>';
+      '<label class="checkbox-row"><input type="checkbox" id="saveAsTemplate" checked/> '+escapeHtml(t('saveTemplateCheckbox'))+'</label>'+
+      '<button id="confirmImportBtn" class="primary">'+escapeHtml(t('confirmImportBtn'))+'</button>';
     area.appendChild(bar);
     $('confirmImportBtn').addEventListener('click', confirmImport);
   }
@@ -374,10 +601,10 @@
     var label=$('snapshotLabel').value.trim();
     var saveAsTemplate=$('saveAsTemplate').checked;
     var sheets=state.upload.sheets;
-    if(!sheets.some(function(s){return s.include;})){ statusEl.textContent='ერთი ფურცელი მაინც აირჩიეთ.'; statusEl.className='status-line error'; return; }
-    if(sheets.some(function(s){return s.include && !s.priceCol;})){ statusEl.textContent='ყველა ჩართულ ფურცელს უნდა ჰქონდეს ფასის სვეტი.'; statusEl.className='status-line error'; return; }
+    if(!sheets.some(function(s){return s.include;})){ statusEl.textContent=t('pickOneSheet'); statusEl.className='status-line error'; return; }
+    if(sheets.some(function(s){return s.include && !s.priceCol;})){ statusEl.textContent=t('needPriceCol'); statusEl.className='status-line error'; return; }
 
-    statusEl.textContent='ვიმპორტებ და ვინახავ...'; statusEl.className='status-line';
+    statusEl.textContent=t('importing'); statusEl.className='status-line';
     var extracted = extractProducts(sheets, sheets);
     var products = extracted.products, warnings = extracted.warnings;
     var sheetsIncluded = sheets.filter(function(s){return s.include;}).map(function(s){return s.name;});
@@ -392,12 +619,12 @@
     }
 
     apiPost(payload).then(function(result){
-      statusEl.textContent = 'შენახულია: "'+result.snapshot.label+'" — '+result.snapshot.productCount+' პროდუქტი.' + (warnings.length ? ' გაფრთხილება: '+warnings.join('; ') : '');
+      statusEl.textContent = t('savedMsg', {label: result.snapshot.label, n: result.snapshot.productCount}) + (warnings.length ? ' ' + t('zeroRowsWarning', {sheets: warnings.join(', ')}) : '');
       statusEl.className='status-line ok';
       state.upload=null; $('mappingArea').innerHTML=''; $('fileInput').value=''; $('snapshotLabel').value='';
       return loadVendors().then(function(){ renderVendorList(); loadVendorDetail(state.currentVendorId); });
     }).catch(function(e){
-      statusEl.textContent = 'შეცდომა შენახვისას: '+e.message;
+      statusEl.textContent = t('saveError', {msg: e.message});
       statusEl.className='status-line error';
     });
   }
@@ -407,7 +634,7 @@
   function populateCompareSelects(){
     var sorted = state.snapshots.slice().sort(function(a,b){ return b.createdAt.localeCompare(a.createdAt); });
     var fromSel=$('fromSelect'), toSel=$('toSelect');
-    function opt(s){ return '<option value="'+s.id+'">'+escapeHtml(s.label)+' ('+s.productCount+' პროდუქტი)</option>'; }
+    function opt(s){ return '<option value="'+s.id+'">'+escapeHtml(s.label)+' ('+escapeHtml(t('productsCountSuffix',{n:s.productCount}))+')</option>'; }
     fromSel.innerHTML = sorted.map(opt).join('');
     toSel.innerHTML = sorted.map(opt).join('');
     if(sorted.length>=2){ toSel.value=sorted[0].id; fromSel.value=sorted[1].id; }
@@ -418,8 +645,8 @@
 
   $('compareBtn').addEventListener('click', function(){
     var from=$('fromSelect').value, to=$('toSelect').value;
-    if(!from||!to) return alert('აირჩიეთ ორივე ჩამონათვალი');
-    if(from===to) return alert('აირჩიეთ ორი განსხვავებული ჩამონათვალი');
+    if(!from||!to) return alert(t('pickBothSnapshots'));
+    if(from===to) return alert(t('pickDifferentSnapshots'));
     var fromMeta = state.snapshots.filter(function(s){return s.id===from;})[0];
     var toMeta = state.snapshots.filter(function(s){return s.id===to;})[0];
     var vid=state.currentVendorId;
@@ -434,21 +661,21 @@
       populateSheetFilter(result.rows);
       renderCompareTable();
       $('tableControls').hidden=false; $('exportBtn').hidden=false;
-    }).catch(function(e){ alert('შედარება ვერ მოხერხდა: '+e.message); })
+    }).catch(function(e){ alert(t('compareFailed', {msg: e.message})); })
       .then(function(){ $('compareBtn').disabled=false; });
   });
 
   $('exportBtn').addEventListener('click', function(){
     if(!state.compare) return;
     var rows = getFilteredSortedRows();
-    var aoa = [['სტატუსი','კატეგორია','კოდი','დასახელება','ძველი ფასი','ახალი ფასი','სხვაობა','% ცვლილება']];
+    var aoa = [[t('colStatus'),t('colCategory'),t('colCode'),t('colName'),t('colOldPrice'),t('colNewPrice'),t('colDiff'),t('colPct')]];
     rows.forEach(function(r){
-      aoa.push([STATUS_LABELS[r.status]||r.status, r.sheet||'', r.code||'', r.name||'',
+      aoa.push([t('status_'+r.status)||r.status, r.sheet||'', r.code||'', r.name||'',
         r.oldPrice===null?'':r.oldPrice, r.newPrice===null?'':r.newPrice, r.diff===null?'':r.diff, r.pct===null?'':r.pct]);
     });
     var ws = XLSX.utils.aoa_to_sheet(aoa);
     var wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'შედარება');
+    XLSX.utils.book_append_sheet(wb, ws, t('tabCompare'));
     var arr = XLSX.write(wb, {bookType:'xlsx', type:'array'});
     var blob = new Blob([arr], {type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
     var fname = 'comparison-'+(state.compare.from.label||'old')+'-vs-'+(state.compare.to.label||'new')+'.xlsx';
@@ -461,21 +688,21 @@
 
   function renderSummary(summary){
     var cards=[
-      {key:'total', label:'სულ', cls:''},
-      {key:'increased', label:'ფასი გაიზარდა', cls:'row-increased'},
-      {key:'decreased', label:'ფასი დაეცა', cls:'row-decreased'},
-      {key:'added', label:'ახალი', cls:'row-added'},
-      {key:'removed', label:'მოხსნილი', cls:'row-removed'},
-      {key:'unchanged', label:'უცვლელი', cls:''}
+      {key:'total', label:t('summaryTotal'), cls:''},
+      {key:'increased', label:t('status_increased'), cls:'row-increased'},
+      {key:'decreased', label:t('status_decreased'), cls:'row-decreased'},
+      {key:'added', label:t('summaryAdded'), cls:'row-added'},
+      {key:'removed', label:t('summaryRemoved'), cls:'row-removed'},
+      {key:'unchanged', label:t('status_unchanged'), cls:''}
     ];
     $('compareSummary').innerHTML = cards.map(function(c){
-      return '<div class="summary-card '+c.cls+'"><span class="num">'+(summary[c.key]||0)+'</span>'+c.label+'</div>';
+      return '<div class="summary-card '+c.cls+'"><span class="num">'+(summary[c.key]||0)+'</span>'+escapeHtml(c.label)+'</div>';
     }).join('');
   }
 
   function populateSheetFilter(rows){
     var sheets = Array.from(new Set(rows.map(function(r){return r.sheet;}).filter(Boolean))).sort();
-    $('sheetFilter').innerHTML = '<option value="">ყველა კატეგორია</option>' + sheets.map(function(s){
+    $('sheetFilter').innerHTML = '<option value="">'+escapeHtml(t('categoryAll'))+'</option>' + sheets.map(function(s){
       return '<option value="'+escapeHtml(s)+'">'+escapeHtml(s)+'</option>';
     }).join('');
   }
@@ -504,18 +731,18 @@
 
   function renderCompareTable(){
     var wrap=$('compareTableWrap'); var rows=getFilteredSortedRows();
-    function fmt(n){ return (n===null||n===undefined) ? '—' : Number(n).toLocaleString('ka-GE',{maximumFractionDigits:2}); }
+    function fmtNum(n){ return (n===null||n===undefined) ? '—' : Number(n).toLocaleString(state.lang==='en'?'en-US':'ka-GE',{maximumFractionDigits:2}); }
     function fmtPct(n){ return (n===null||n===undefined) ? '—' : ((n>0?'+':'')+n.toFixed(1)+'%'); }
     var html = '<table class="compare-table"><thead><tr>'+
-      '<th data-sort="status">სტატუსი</th><th data-sort="sheet">კატეგორია</th><th data-sort="code">კოდი</th>'+
-      '<th data-sort="name">დასახელება</th><th data-sort="oldPrice">ძველი ფასი</th><th data-sort="newPrice">ახალი ფასი</th>'+
-      '<th data-sort="diff">სხვაობა</th><th data-sort="pct">% ცვლილება</th></tr></thead><tbody>';
+      '<th data-sort="status">'+escapeHtml(t('colStatus'))+'</th><th data-sort="sheet">'+escapeHtml(t('colCategory'))+'</th><th data-sort="code">'+escapeHtml(t('colCode'))+'</th>'+
+      '<th data-sort="name">'+escapeHtml(t('colName'))+'</th><th data-sort="oldPrice">'+escapeHtml(t('colOldPrice'))+'</th><th data-sort="newPrice">'+escapeHtml(t('colNewPrice'))+'</th>'+
+      '<th data-sort="diff">'+escapeHtml(t('colDiff'))+'</th><th data-sort="pct">'+escapeHtml(t('colPct'))+'</th></tr></thead><tbody>';
     rows.forEach(function(r){
-      html += '<tr class="row-'+r.status+'"><td>'+(STATUS_LABELS[r.status]||r.status)+'</td><td>'+escapeHtml(r.sheet||'')+'</td>'+
-        '<td>'+escapeHtml(r.code||'')+'</td><td>'+escapeHtml(r.name||'')+'</td><td>'+fmt(r.oldPrice)+'</td>'+
-        '<td>'+fmt(r.newPrice)+'</td><td>'+fmt(r.diff)+'</td><td>'+fmtPct(r.pct)+'</td></tr>';
+      html += '<tr class="row-'+r.status+'"><td>'+escapeHtml(t('status_'+r.status)||r.status)+'</td><td>'+escapeHtml(r.sheet||'')+'</td>'+
+        '<td>'+escapeHtml(r.code||'')+'</td><td>'+escapeHtml(r.name||'')+'</td><td>'+fmtNum(r.oldPrice)+'</td>'+
+        '<td>'+fmtNum(r.newPrice)+'</td><td>'+fmtNum(r.diff)+'</td><td>'+fmtPct(r.pct)+'</td></tr>';
     });
-    html += '</tbody></table><p class="muted" style="margin-top:8px;">'+rows.length+' მწკრივი ნაჩვენებია</p>';
+    html += '</tbody></table><p class="muted" style="margin-top:8px;">'+escapeHtml(t('rowsShown',{n:rows.length}))+'</p>';
     wrap.innerHTML = html;
     wrap.querySelectorAll('th[data-sort]').forEach(function(th){
       th.addEventListener('click', function(){
@@ -535,16 +762,17 @@
 
   function renderHistory(){
     var el=$('historyList');
-    if(!state.snapshots.length){ el.innerHTML='<p class="muted">ჯერ არ არის ატვირთული ჩამონათვალი.</p>'; return; }
+    if(!state.snapshots.length){ el.innerHTML='<p class="muted">'+escapeHtml(t('noSnapshotsYet'))+'</p>'; return; }
     var sorted = state.snapshots.slice().sort(function(a,b){ return b.createdAt.localeCompare(a.createdAt); });
+    var locale = state.lang==='en' ? 'en-US' : 'ka-GE';
     el.innerHTML = sorted.map(function(s){
       return '<div class="history-item"><div><strong>'+escapeHtml(s.label)+'</strong>'+
-        '<div class="meta">'+new Date(s.createdAt).toLocaleString('ka-GE')+' · '+s.productCount+' პროდუქტი · '+(s.sheetsIncluded||[]).length+' ფურცელი</div></div>'+
-        '<button class="small-danger" data-id="'+s.id+'">წაშლა</button></div>';
+        '<div class="meta">'+new Date(s.createdAt).toLocaleString(locale)+' · '+escapeHtml(t('productsCountSuffix',{n:s.productCount}))+' · '+(s.sheetsIncluded||[]).length+' '+escapeHtml(t('historyMetaSheets'))+'</div></div>'+
+        '<button class="small-danger" data-id="'+s.id+'">'+escapeHtml(t('deleteBtn'))+'</button></div>';
     }).join('');
     el.querySelectorAll('.small-danger').forEach(function(btn){
       btn.addEventListener('click', function(){
-        if(!confirm('წავშალო ეს ჩამონათვალი?')) return;
+        if(!confirm(t('confirmDeleteSnapshot'))) return;
         apiPost({action:'delete_snapshot', vendorId: state.currentVendorId, snapshotId: btn.dataset.id}).then(function(){
           return loadVendors().then(function(){ renderVendorList(); loadVendorDetail(state.currentVendorId); });
         }).catch(function(e){ alert(e.message); });
@@ -554,7 +782,8 @@
 
   // ---------- init ----------
 
+  applyTranslations();
   loadVendors().then(renderVendorList).catch(function(e){
-    $('emptyState').innerHTML = '<p>ვენდორების სია ვერ ჩაიტვირთა: '+escapeHtml(e.message)+'</p>';
+    $('emptyState').innerHTML = '<p>'+escapeHtml(t('vendorsLoadError', {msg: e.message}))+'</p>';
   });
 })();
