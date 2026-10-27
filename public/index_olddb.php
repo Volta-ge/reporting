@@ -28,6 +28,7 @@ require __DIR__ . '/../src/PortfolioRepository.php';
 require __DIR__ . '/../src/IncomeDelinquencyRepository.php';
 require __DIR__ . '/../src/ExCustomerRepository.php';
 require __DIR__ . '/../src/CollectionsRepository.php';
+require __DIR__ . '/../src/BasicAuth.php';
 
 $configPath = __DIR__ . '/../config.php';
 if (!is_file($configPath)) {
@@ -35,6 +36,7 @@ if (!is_file($configPath)) {
     exit('Missing config.php — copy config.example.php to config.php and fill in real credentials.');
 }
 $config = require $configPath;
+requireBasicAuth($config);
 
 $now = new \DateTimeImmutable('now');
 [$yesterdayFrom, $yesterdayTo] = DateHelper::yesterdayRange($now);

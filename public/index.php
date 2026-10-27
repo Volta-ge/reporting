@@ -19,6 +19,7 @@ namespace Volta\Funnel;
 
 require __DIR__ . '/../src/Database.php';
 require __DIR__ . '/../src/NewDbReport.php';
+require __DIR__ . '/../src/BasicAuth.php';
 
 $page = __DIR__ . '/../volta-analytics-new-db/deals_amount_migration.html';
 $html = @file_get_contents($page);
@@ -31,6 +32,7 @@ $fallbackNote = null;
 $streamed = false;
 $configPath = __DIR__ . '/../config.php';
 $config = is_file($configPath) ? require $configPath : [];
+requireBasicAuth($config);
 
 if (!isset($config['voltastoredb'])) {
     $fallbackNote = 'config.php has no voltastoredb block — showing the last committed build';

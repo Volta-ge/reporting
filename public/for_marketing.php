@@ -28,6 +28,7 @@ set_time_limit(120);
 
 require __DIR__ . '/../src/Database.php';
 require __DIR__ . '/../src/ForMarketingReport.php';
+require __DIR__ . '/../src/BasicAuth.php';
 
 $page = __DIR__ . '/../for-marketing/for_marketing.html';
 $html = @file_get_contents($page);
@@ -39,6 +40,7 @@ if ($html === false) {
 $fallbackNote = null;
 $configPath = __DIR__ . '/../config.php';
 $config = is_file($configPath) ? require $configPath : [];
+requireBasicAuth($config);
 
 if (!isset($config['voltastoredb'])) {
     $fallbackNote = 'config.php has no voltastoredb block — showing the last committed build';

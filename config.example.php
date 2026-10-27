@@ -7,6 +7,17 @@ declare(strict_types=1);
  * config.php is required by public/index.php and must never be committed.
  */
 return [
+    // HTTP Basic Auth in front of every page (enforced server-side by src/BasicAuth.php, before
+    // any page content is sent — not the removed client-side nav filter, see the
+    // volta-analytics-auth history for why that one doesn't count as real security). Leave this
+    // whole block OUT of config.php to keep the site open with no password; add it to turn the
+    // gate on. If daily-mail-sender/config.json also has an 'auth' block, keep the two in sync —
+    // the automated Daily Mail download authenticates with those same credentials.
+    'basic_auth' => [
+        'username' => 'CHANGE_ME',
+        'password' => 'CHANGE_ME',
+    ],
+
     'db' => [
         'host' => 'myvolta.info',
         'port' => 3306,
