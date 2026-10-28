@@ -1033,24 +1033,53 @@
     // Every column the rows carry, ordered the same left-to-right way they appeared in the
     // Excel file (by original column index), not grouped into fixed code/name/price columns
     // up front -- matches the sheet's own layout. Blank where a given row doesn't have it.
-    var columns = [], seenLabel = {};
-    rows.forEach(function(p){
-      (p.extra||[]).forEach(function(e){
-        if(!(e.label in seenLabel)){ seenLabel[e.label] = true; columns.push({label:e.label, col:e.col}); }
+    // Snapshots imported before this column-index tracking existed have "extra" entries with
+    // no .col (code/name/price weren't in "extra" at all back then) -- for those, fall back
+    // to the old layout (fixed Category/Code/Name/Price, then whatever extra columns that
+    // older version did capture) instead of silently dropping code/name/price from the view.
+    var hasColInfo = rows.some(function(p){ return (p.extra||[]).some(function(e){ return typeof e.col === 'number'; }); });
+    function fmtNum(n){ return (n===null||n===undefined) ? '—' : Number(n).toLocaleString(state.lang==='en'?'en-US':'ka-GE',{maximumFractionDigits:2}); }
+    var html;
+    if(hasColInfo){
+      var columns = [], seenLabel = {};
+      rows.forEach(function(p){
+        (p.extra||[]).forEach(function(e){
+          if(!(e.label in seenLabel)){ seenLabel[e.label] = true; columns.push({label:e.label, col:e.col}); }
+        });
       });
-    });
-    columns.sort(function(a,b){ return a.col-b.col; });
-    var html = '<table class="compare-table"><thead><tr>'+
-      '<th>'+escapeHtml(t('colCategory'))+'</th>'+
-      columns.map(function(c){ return '<th>'+escapeHtml(c.label)+'</th>'; }).join('')+
-      '</tr></thead><tbody>';
-    rows.forEach(function(p){
-      var byLabel = {};
-      (p.extra||[]).forEach(function(e){ byLabel[e.label] = e.value; });
-      html += '<tr><td>'+escapeHtml(p.sheet||'')+'</td>'+
-        columns.map(function(c){ return '<td>'+escapeHtml(byLabel[c.label]||'')+'</td>'; }).join('')+
-        '</tr>';
-    });
+      columns.sort(function(a,b){ return a.col-b.col; });
+      html = '<table class="compare-table"><thead><tr>'+
+        '<th>'+escapeHtml(t('colCategory'))+'</th>'+
+        columns.map(function(c){ return '<th>'+escapeHtml(c.label)+'</th>'; }).join('')+
+        '</tr></thead><tbody>';
+      rows.forEach(function(p){
+        var byLabel = {};
+        (p.extra||[]).forEach(function(e){ byLabel[e.label] = e.value; });
+        html += '<tr><td>'+escapeHtml(p.sheet||'')+'</td>'+
+          columns.map(function(c){ return '<td>'+escapeHtml(byLabel[c.label]||'')+'</td>'; }).join('')+
+          '</tr>';
+      });
+    } else {
+      var extraLabels = [], seenLabel2 = {};
+      rows.forEach(function(p){
+        (p.extra||[]).forEach(function(e){
+          if(!seenLabel2[e.label]){ seenLabel2[e.label] = true; extraLabels.push(e.label); }
+        });
+      });
+      html = '<table class="compare-table"><thead><tr>'+
+        '<th>'+escapeHtml(t('colCategory'))+'</th><th>'+escapeHtml(t('colCode'))+'</th>'+
+        '<th>'+escapeHtml(t('colName'))+'</th><th>'+escapeHtml(t('colPrice'))+'</th>'+
+        extraLabels.map(function(l){ return '<th>'+escapeHtml(l)+'</th>'; }).join('')+
+        '</tr></thead><tbody>';
+      rows.forEach(function(p){
+        var byLabel = {};
+        (p.extra||[]).forEach(function(e){ byLabel[e.label] = e.value; });
+        html += '<tr><td>'+escapeHtml(p.sheet||'')+'</td><td>'+escapeHtml(p.code||'')+'</td>'+
+          '<td>'+escapeHtml(p.name||'')+'</td><td>'+fmtNum(p.price)+'</td>'+
+          extraLabels.map(function(l){ return '<td>'+escapeHtml(byLabel[l]||'')+'</td>'; }).join('')+
+          '</tr>';
+      });
+    }
     html += '</tbody></table><p class="muted" style="margin-top:8px;">'+escapeHtml(t('rowsShown',{n:rows.length}))+'</p>';
     $('historyViewTableWrap').innerHTML = html;
   }
