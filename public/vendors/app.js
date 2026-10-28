@@ -5,6 +5,17 @@
   var NAME_KEYWORDS = ['name','დასახელ','პროდუქ','product','model','მოდელ','brand','ბრენდ','nomenklatura','ნომენკლატურ'];
   var PRICE_KEYWORDS = ['price','ფას','drp','rrp','cost','სადილერო','სარეკომენდაციო','promo','special','selling','sale','wholesale','retail','main','sarekomendacio','dileri','vip'];
 
+  // History view: a vendor's own Excel column header text (e.g. "ჯგუფი") can't be auto-
+  // translated in general -- it's the vendor's own wording, not app UI. This is a best-effort
+  // display-only lookup for the exact header texts seen in practice so far; an unrecognized
+  // header just falls back to showing it unmodified, same as before this existed. Never
+  // touches the stored data, only how the header is rendered in the EN view.
+  var EXCEL_HEADER_TRANSLATIONS = {
+    'ჯგუფი': 'Group',
+    'საცალო ფასი': 'Retail price',
+    'მარაგი': 'Stock'
+  };
+
   // ---------- i18n ----------
 
   var LANG_KEY = 'vendorToolLang';
@@ -1057,7 +1068,10 @@
       // The mapped code/name/price column shows the app's own translated header there, at
       // its natural Excel position, since it's app-owned text; every other column keeps the
       // Excel file's own header text (can't be translated -- it's the vendor's own wording).
-      function colHeader(c){ return c.role && ROLE_HEADER_KEY[c.role] ? t(ROLE_HEADER_KEY[c.role]) : c.label; }
+      function colHeader(c){
+        if(c.role && ROLE_HEADER_KEY[c.role]) return t(ROLE_HEADER_KEY[c.role]);
+        return (state.lang==='en' && EXCEL_HEADER_TRANSLATIONS[c.label]) || c.label;
+      }
       html = '<table class="compare-table"><thead><tr>'+
         '<th>'+escapeHtml(t('colCategory'))+'</th>'+
         columns.map(function(c){ return '<th>'+escapeHtml(colHeader(c))+'</th>'; }).join('')+
@@ -1079,7 +1093,7 @@
       html = '<table class="compare-table"><thead><tr>'+
         '<th>'+escapeHtml(t('colCategory'))+'</th><th>'+escapeHtml(t('colCode'))+'</th>'+
         '<th>'+escapeHtml(t('colName'))+'</th><th>'+escapeHtml(t('colPrice'))+'</th>'+
-        extraLabels.map(function(l){ return '<th>'+escapeHtml(l)+'</th>'; }).join('')+
+        extraLabels.map(function(l){ return '<th>'+escapeHtml((state.lang==='en' && EXCEL_HEADER_TRANSLATIONS[l]) || l)+'</th>'; }).join('')+
         '</tr></thead><tbody>';
       rows.forEach(function(p){
         var byLabel = {};
