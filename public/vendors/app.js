@@ -19,6 +19,8 @@
       addVendorBtn: '+ დამატება',
       emptyState: 'აირჩიეთ ვენდორი მარცხნივ, ან დაამატეთ ახალი.',
       deleteVendorBtn: 'ვენდორის წაშლა',
+      editVendorBtn: 'სახელის რედაქტირება',
+      renameVendorPrompt: 'ახალი სახელი',
       tabUpload: 'ფასების ატვირთვა',
       tabCompare: 'შედარება',
       tabHistory: 'ისტორია',
@@ -110,6 +112,8 @@
       addVendorBtn: '+ Add',
       emptyState: 'Select a vendor on the left, or add a new one.',
       deleteVendorBtn: 'Delete vendor',
+      editVendorBtn: 'Edit name',
+      renameVendorPrompt: 'New name',
       tabUpload: 'Upload prices',
       tabCompare: 'Compare',
       tabHistory: 'History',
@@ -499,6 +503,19 @@
       renderHistory();
     }).catch(function(e){ alert(e.message); });
   }
+
+  $('editVendorBtn').addEventListener('click', function(){
+    if(!state.currentVendorId) return;
+    var current = $('vendorTitle').textContent;
+    var next = prompt(t('renameVendorPrompt'), current);
+    if(next===null) return;
+    next = next.trim();
+    if(!next || next===current) return;
+    apiPost({action:'rename_vendor', id:state.currentVendorId, name:next}).then(function(){
+      $('vendorTitle').textContent = next;
+      return loadVendors().then(renderVendorList);
+    }).catch(function(e){ alert(e.message); });
+  });
 
   $('deleteVendorBtn').addEventListener('click', function(){
     if(!state.currentVendorId) return;

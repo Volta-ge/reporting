@@ -129,6 +129,31 @@ final class VendorStore
         return $vendor;
     }
 
+    public function renameVendor(string $id, string $name): array
+    {
+        $data = $this->readJson($this->vendorsFile(), ['vendors' => []]);
+        $found = null;
+        foreach ($data['vendors'] as $v) {
+            // Same plain strtolower() duplicate check as createVendor() -- see that method's
+            // comment for why mb_strtolower() isn't needed here.
+            if ($v['id'] !== $id && strtolower($v['name']) === strtolower($name)) {
+                throw new \RuntimeException('ასეთი სახელის ვენდორი უკვე არსებობს');
+            }
+        }
+        foreach ($data['vendors'] as &$v) {
+            if ($v['id'] === $id) {
+                $v['name'] = $name;
+                $found = $v;
+                break;
+            }
+        }
+        if ($found === null) {
+            throw new \RuntimeException('ვენდორი ვერ მოიძებნა');
+        }
+        $this->writeJson($this->vendorsFile(), $data);
+        return $found;
+    }
+
     public function getVendor(string $id): ?array
     {
         $data = $this->readJson($this->vendorsFile(), ['vendors' => []]);

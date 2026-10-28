@@ -150,7 +150,10 @@ button.ghost{background:var(--surface-2); color:var(--fg); border:1px solid var(
     <div id="vendorPanel" hidden>
       <div class="vendor-header">
         <h2 id="vendorTitle"></h2>
-        <button id="deleteVendorBtn" class="danger-link" data-i18n="deleteVendorBtn">ვენდორის წაშლა</button>
+        <div class="checkbox-row">
+          <button id="editVendorBtn" class="ghost" data-i18n="editVendorBtn">სახელის რედაქტირება</button>
+          <button id="deleteVendorBtn" class="danger-link" data-i18n="deleteVendorBtn">ვენდორის წაშლა</button>
+        </div>
       </div>
 
       <nav class="tabs">

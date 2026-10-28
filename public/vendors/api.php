@@ -86,6 +86,15 @@ try {
             respond(['ok' => true]);
             // no break
 
+        case 'rename_vendor':
+            $id = requireSafeId($input['id'] ?? null, 'id');
+            $name = trim((string) ($input['name'] ?? ''));
+            if ($name === '') {
+                respond(['error' => 'name is required'], 400);
+            }
+            respond(['vendor' => $store->renameVendor($id, $name)]);
+            // no break
+
         case 'snapshots':
             $id = requireSafeId($_GET['vendorId'] ?? null, 'vendorId');
             respond(['snapshots' => $store->listSnapshots($id)]);
