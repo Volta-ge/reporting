@@ -236,6 +236,6 @@ button.ghost{background:var(--surface-2); color:var(--fg); border:1px solid var(
 </div>
 
 <script src="https://unpkg.com/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-<script src="app.js"></script>
+<script src="app.js?v=<?= @filemtime(__DIR__ . '/app.js') ?: time() ?>"></script>
 </body>
 </html>
