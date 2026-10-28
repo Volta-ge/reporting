@@ -12,6 +12,7 @@ namespace Volta\Funnel;
 // only small already-extracted JSON, so it needs no upload handling and no PHP Excel library.
 
 require __DIR__ . '/../../src/VendorStore.php';
+require __DIR__ . '/../../src/Database.php';
 
 header('Content-Type: application/json; charset=utf-8');
 
@@ -103,11 +104,21 @@ try {
             }
             $clean = [];
             foreach ($products as $p) {
+                $extra = [];
+                if (!empty($p['extra']) && is_array($p['extra'])) {
+                    foreach ($p['extra'] as $e) {
+                        if (!is_array($e) || !isset($e['label'])) {
+                            continue;
+                        }
+                        $extra[] = ['label' => (string) $e['label'], 'value' => isset($e['value']) ? (string) $e['value'] : ''];
+                    }
+                }
                 $clean[] = [
                     'sheet' => isset($p['sheet']) ? (string) $p['sheet'] : null,
                     'code' => isset($p['code']) && $p['code'] !== '' ? (string) $p['code'] : null,
                     'name' => isset($p['name']) && $p['name'] !== '' ? (string) $p['name'] : null,
                     'price' => isset($p['price']) && is_numeric($p['price']) ? (float) $p['price'] : null,
+                    'extra' => $extra,
                 ];
             }
             $meta = $store->createSnapshot($vendorId, $label, array_values($sheetsIncluded), $clean);
@@ -125,6 +136,61 @@ try {
                 respond(['error' => 'snapshot not found'], 404);
             }
             respond(['products' => $snap['products'] ?? []]);
+            // no break
+
+        case 'site_prices':
+            // Looks up the live, public storefront price for each vendor code, matched against
+            // products.sku (exact, case/whitespace-insensitive) -- validated against the real
+            // "ეს ჯი ჯი" vendor data: all 29 barcodes matched a sku exactly. Read-only, and the
+            // prices returned are the same ones any shopper already sees on volta.ge, so this
+            // needs no more protection than the rest of this deliberately public tool (see the
+            // file-level comment above).
+            $codes = $input['codes'] ?? [];
+            if (!is_array($codes)) {
+                respond(['error' => 'codes must be an array'], 400);
+            }
+            $norm = [];
+            foreach ($codes as $c) {
+                $c = strtoupper(trim((string) $c));
+                if ($c !== '') {
+                    $norm[$c] = true;
+                }
+            }
+            $norm = array_keys($norm);
+            if (count($norm) > 3000) {
+                respond(['error' => 'too many codes (max 3000)'], 400);
+            }
+            if (empty($norm)) {
+                respond(['prices' => []]);
+            }
+            $cfg = require __DIR__ . '/../../config.php';
+            if (!isset($cfg['voltastoredb'])) {
+                respond(['error' => 'voltastoredb is not configured on this server (config.php)'], 500);
+            }
+            $pdo = Database::connect($cfg['voltastoredb']);
+            $placeholders = implode(',', array_fill(0, count($norm), '?'));
+            $stmt = $pdo->prepare(
+                "SELECT UPPER(TRIM(pr.sku)) AS sku, pf.name, pf.price, pf.special_price, pf.special_price_from, pf.special_price_to
+                 FROM products pr
+                 JOIN product_flat pf ON pf.product_id = pr.id AND pf.locale = 'ka_GE' AND pf.channel = 'default'
+                 WHERE UPPER(TRIM(pr.sku)) IN ($placeholders)"
+            );
+            $stmt->execute($norm);
+            $today = date('Y-m-d');
+            $prices = [];
+            foreach ($stmt->fetchAll() as $r) {
+                $specialPrice = $r['special_price'] !== null ? (float) $r['special_price'] : null;
+                $specialActive = $specialPrice !== null && $specialPrice > 0
+                    && ($r['special_price_from'] === null || $r['special_price_from'] <= $today)
+                    && ($r['special_price_to'] === null || $r['special_price_to'] >= $today);
+                $prices[$r['sku']] = [
+                    'name' => $r['name'],
+                    'price' => $r['price'] !== null ? (float) $r['price'] : null,
+                    'specialPrice' => $specialPrice,
+                    'specialActive' => $specialActive,
+                ];
+            }
+            respond(['prices' => $prices]);
             // no break
 
         case 'delete_snapshot':

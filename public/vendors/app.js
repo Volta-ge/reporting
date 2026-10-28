@@ -22,6 +22,7 @@
       tabUpload: 'ფასების ატვირთვა',
       tabCompare: 'შედარება',
       tabHistory: 'ისტორია',
+      tabSitePrice: 'საიტის ფასთან შედარება',
       snapshotLabelPlaceholder: 'ჩამონათვალის სახელი (მაგ: 2026-10-27)',
       uploadBtn: 'ატვირთვა და გაანალიზება',
       fromSnapshotLabel: 'ძველი ჩამონათვალი',
@@ -88,7 +89,18 @@
       confirmDeleteSnapshot: 'წავშალო ეს ჩამონათვალი?',
       vendorsLoadError: 'ვენდორების სია ვერ ჩაიტვირთა: {msg}',
       zeroRowsWarning: 'ფურცელ(ებ)მა 0 მწკრივი დააბრუნა: {sheets}',
-      genericError: 'შეცდომა'
+      genericError: 'შეცდომა',
+      siteCompareSnapshotLabel: 'ჩამონათვალი',
+      colVendorPrice: 'მოწოდებული ფასი',
+      colExpectedPrice: 'მოსალოდნელი ფასი საიტზე',
+      colSitePrice: 'ფასი საიტზე',
+      colSpecialPrice: 'აქციური ფასი',
+      status_site_match: 'ემთხვევა',
+      status_site_diff: 'განსხვავდება',
+      status_site_notfound: 'ვერ მოიძებნა საიტზე',
+      status_site_noprice: 'ფასი არ არის მითითებული',
+      siteCompareFailed: 'შედარება ვერ მოხერხდა: {msg}',
+      pickSnapshotFirst: 'აირჩიეთ ჩამონათვალი'
     },
     en: {
       pageTitle: 'Vendor Price Comparison',
@@ -101,6 +113,7 @@
       tabUpload: 'Upload prices',
       tabCompare: 'Compare',
       tabHistory: 'History',
+      tabSitePrice: 'Compare to site price',
       snapshotLabelPlaceholder: 'Snapshot name (e.g. 2026-10-27)',
       uploadBtn: 'Upload & analyze',
       fromSnapshotLabel: 'Old snapshot',
@@ -167,7 +180,18 @@
       confirmDeleteSnapshot: 'Delete this snapshot?',
       vendorsLoadError: 'Could not load vendor list: {msg}',
       zeroRowsWarning: 'Sheet(s) returned 0 rows: {sheets}',
-      genericError: 'Error'
+      genericError: 'Error',
+      siteCompareSnapshotLabel: 'Snapshot',
+      colVendorPrice: 'Supplied price',
+      colExpectedPrice: 'Expected site price',
+      colSitePrice: 'Site price',
+      colSpecialPrice: 'Special price',
+      status_site_match: 'Match',
+      status_site_diff: 'Different',
+      status_site_notfound: 'Not found on site',
+      status_site_noprice: 'No vendor price',
+      siteCompareFailed: 'Comparison failed: {msg}',
+      pickSnapshotFirst: 'Select a snapshot'
     }
   };
 
@@ -234,7 +258,7 @@
 
   // ---------- state ----------
 
-  var state = { vendors: [], currentVendorId: null, snapshots: [], upload: null, compare: null,
+  var state = { vendors: [], currentVendorId: null, snapshots: [], upload: null, compare: null, siteCompare: null,
     lang: (function(){ try { return localStorage.getItem(LANG_KEY) || 'ka'; } catch(e){ return 'ka'; } })() };
   var API = 'api.php';
 
@@ -340,6 +364,7 @@
     sheetMappings.filter(function(s){return s.include;}).forEach(function(cfg){
       var sheet = byName[cfg.name];
       if(!sheet) return;
+      var headerRow = sheet.rows[cfg.headerRow] || [];
       var extracted=0;
       for(var r=cfg.headerRow+1; r<sheet.rows.length; r++){
         var row=sheet.rows[r];
@@ -351,7 +376,20 @@
         var price = toNumberOrNull(priceRaw);
         if(!name && !code) continue;
         if(price===null && !name) continue;
-        products.push({ sheet: cfg.name, code: code||null, name: name||null, price: price });
+        // Every other column from the sheet, not just the mapped code/name/price -- the
+        // History view shows these so nothing from the original Excel file is lost, even
+        // columns the mapping heuristics didn't recognize. Falls back to the column letter
+        // when a column has no header text, so a trailing unlabeled column still shows up.
+        var extra=[];
+        var maxC = Math.max(row.length, headerRow.length);
+        for(var c=1;c<=maxC;c++){
+          if(c===cfg.codeCol || c===cfg.nameCol || c===cfg.priceCol) continue;
+          var cellRaw = row[c-1];
+          if(cellRaw===undefined || String(cellRaw).trim()==='') continue;
+          var label = String(headerRow[c-1]||'').trim() || colLetter(c);
+          extra.push({ label: label, value: String(cellRaw).trim() });
+        }
+        products.push({ sheet: cfg.name, code: code||null, name: name||null, price: price, extra: extra });
         extracted++;
       }
       if(extracted===0) warnings.push(cfg.name);
@@ -441,7 +479,7 @@
 
   function selectVendor(id){
     if(!id) return;
-    state.currentVendorId=id; state.upload=null; state.compare=null;
+    state.currentVendorId=id; state.upload=null; state.compare=null; state.siteCompare=null;
     $('emptyState').hidden=true; $('vendorPanel').hidden=false;
     $('mappingArea').innerHTML=''; $('uploadStatus').textContent='';
     viewedSnapshotId = null; $('historyViewCard').hidden = true;
@@ -455,6 +493,7 @@
       $('vendorTitle').textContent = data.vendor.name;
       state.snapshots = data.snapshots;
       populateCompareSelects();
+      populateSiteSnapshotSelect();
       renderHistory();
     }).catch(function(e){ alert(e.message); });
   }
@@ -761,6 +800,149 @@
     $(id).addEventListener('input', function(){ if(state.compare) renderCompareTable(); });
   });
 
+  // ---------- site price compare ----------
+
+  // User-supplied formula: =ROUNDUP('მოწოდებული ფასი'*1.35+1,-1)-1 -- rounds up to the next
+  // 10 GEL then subtracts 1, i.e. the site's standard "ends in 9" retail price for the given
+  // vendor cost. Validated against 29 real "ეს ჯი ჯი" products: matches the live site price
+  // on 25/29, with the other 4 being genuine stale-price cases this tab exists to catch.
+  function expectedSitePrice(vendorPrice){
+    if(vendorPrice===null || vendorPrice===undefined || !isFinite(vendorPrice)) return null;
+    return Math.ceil((vendorPrice*1.35+1)/10)*10 - 1;
+  }
+
+  function populateSiteSnapshotSelect(){
+    var sorted = state.snapshots.slice().sort(function(a,b){ return b.createdAt.localeCompare(a.createdAt); });
+    var sel = $('siteSnapshotSelect');
+    sel.innerHTML = sorted.map(function(s){
+      return '<option value="'+s.id+'">'+escapeHtml(s.label)+' ('+escapeHtml(t('productsCountSuffix',{n:s.productCount}))+')</option>';
+    }).join('');
+    $('siteCompareSummary').innerHTML=''; $('siteCompareTableWrap').innerHTML='';
+    $('siteTableControls').hidden=true; $('siteExportBtn').hidden=true;
+    state.siteCompare=null;
+  }
+
+  $('siteCompareBtn').addEventListener('click', function(){
+    var snapId = $('siteSnapshotSelect').value;
+    if(!snapId) return alert(t('pickSnapshotFirst'));
+    var vid = state.currentVendorId;
+    $('siteCompareBtn').disabled=true;
+    apiGet('action=snapshot_products&vendorId='+encodeURIComponent(vid)+'&snapshotId='+encodeURIComponent(snapId)).then(function(data){
+      var products = data.products || [];
+      var codes = Array.from(new Set(products.map(function(p){ return normalizeCode(p.code); }).filter(Boolean)));
+      return apiPost({action:'site_prices', codes: codes}).then(function(res){
+        var prices = res.prices || {};
+        var rows = products.map(function(p){
+          var nc = normalizeCode(p.code);
+          var site = nc ? prices[nc] : null;
+          var expected = expectedSitePrice(p.price);
+          var status;
+          if(!site) status = 'notfound';
+          else if(expected===null) status = 'noprice';
+          else status = Math.abs(expected-site.price) < 0.01 ? 'match' : 'diff';
+          return {
+            sheet: p.sheet, code: p.code, name: p.name, vendorPrice: p.price,
+            expectedPrice: expected, sitePrice: site ? site.price : null,
+            specialPrice: (site && site.specialActive) ? site.specialPrice : null,
+            status: status
+          };
+        });
+        var summary = {total: rows.length, match:0, diff:0, notfound:0, noprice:0};
+        rows.forEach(function(r){ summary[r.status]=(summary[r.status]||0)+1; });
+        state.siteCompare = { rows: rows, summary: summary, snapshot: state.snapshots.filter(function(s){return s.id===snapId;})[0] };
+        renderSiteCompareSummary(summary);
+        renderSiteCompareTable();
+        $('siteTableControls').hidden=false; $('siteExportBtn').hidden=false;
+      });
+    }).catch(function(e){ alert(t('siteCompareFailed', {msg: e.message})); })
+      .then(function(){ $('siteCompareBtn').disabled=false; });
+  });
+
+  function renderSiteCompareSummary(summary){
+    var cards=[
+      {key:'total', label:t('summaryTotal'), cls:''},
+      {key:'match', label:t('status_site_match'), cls:'row-unchanged'},
+      {key:'diff', label:t('status_site_diff'), cls:'row-increased'},
+      {key:'notfound', label:t('status_site_notfound'), cls:'row-removed'}
+    ];
+    $('siteCompareSummary').innerHTML = cards.map(function(c){
+      return '<div class="summary-card '+c.cls+'"><span class="num">'+(summary[c.key]||0)+'</span>'+escapeHtml(c.label)+'</div>';
+    }).join('');
+  }
+
+  var siteSortState = {key:'status', dir:'asc'};
+  function getFilteredSortedSiteRows(){
+    if(!state.siteCompare) return [];
+    var search=$('siteSearchInput').value.trim().toLowerCase();
+    var statusF=$('siteStatusFilter').value;
+    var rows = state.siteCompare.rows.filter(function(r){
+      if(statusF && r.status!==statusF) return false;
+      if(search){ var hay=((r.name||'')+' '+(r.code||'')).toLowerCase(); if(hay.indexOf(search)===-1) return false; }
+      return true;
+    });
+    var key=siteSortState.key;
+    rows = rows.slice().sort(function(a,b){
+      var av=a[key], bv=b[key];
+      if(av===null||av===undefined) av=-Infinity;
+      if(bv===null||bv===undefined) bv=-Infinity;
+      if(typeof av==='string') return siteSortState.dir==='asc' ? av.localeCompare(bv) : bv.localeCompare(av);
+      return siteSortState.dir==='asc' ? av-bv : bv-av;
+    });
+    return rows;
+  }
+
+  function renderSiteCompareTable(){
+    var wrap=$('siteCompareTableWrap'); var rows=getFilteredSortedSiteRows();
+    function fmtNum(n){ return (n===null||n===undefined) ? '—' : Number(n).toLocaleString(state.lang==='en'?'en-US':'ka-GE',{maximumFractionDigits:2}); }
+    var html = '<table class="compare-table"><thead><tr>'+
+      '<th data-sort="status">'+escapeHtml(t('colStatus'))+'</th><th data-sort="sheet">'+escapeHtml(t('colCategory'))+'</th><th data-sort="code">'+escapeHtml(t('colCode'))+'</th>'+
+      '<th data-sort="name">'+escapeHtml(t('colName'))+'</th><th data-sort="vendorPrice">'+escapeHtml(t('colVendorPrice'))+'</th>'+
+      '<th data-sort="expectedPrice">'+escapeHtml(t('colExpectedPrice'))+'</th><th data-sort="sitePrice">'+escapeHtml(t('colSitePrice'))+'</th>'+
+      '<th data-sort="specialPrice">'+escapeHtml(t('colSpecialPrice'))+'</th></tr></thead><tbody>';
+    rows.forEach(function(r){
+      var rowCls = r.status==='match' ? 'row-unchanged' : (r.status==='diff' ? 'row-increased' : 'row-removed');
+      html += '<tr class="'+rowCls+'"><td>'+escapeHtml(t('status_site_'+r.status)||r.status)+'</td><td>'+escapeHtml(r.sheet||'')+'</td>'+
+        '<td>'+escapeHtml(r.code||'')+'</td><td>'+escapeHtml(r.name||'')+'</td><td>'+fmtNum(r.vendorPrice)+'</td>'+
+        '<td>'+fmtNum(r.expectedPrice)+'</td><td>'+fmtNum(r.sitePrice)+'</td><td>'+fmtNum(r.specialPrice)+'</td></tr>';
+    });
+    html += '</tbody></table><p class="muted" style="margin-top:8px;">'+escapeHtml(t('rowsShown',{n:rows.length}))+'</p>';
+    wrap.innerHTML = html;
+    wrap.querySelectorAll('th[data-sort]').forEach(function(th){
+      th.addEventListener('click', function(){
+        var key=th.dataset.sort;
+        if(siteSortState.key===key) siteSortState.dir = siteSortState.dir==='asc'?'desc':'asc';
+        else { siteSortState.key=key; siteSortState.dir='desc'; }
+        renderSiteCompareTable();
+      });
+    });
+  }
+
+  ['siteSearchInput','siteStatusFilter'].forEach(function(id){
+    $(id).addEventListener('input', function(){ if(state.siteCompare) renderSiteCompareTable(); });
+  });
+
+  $('siteExportBtn').addEventListener('click', function(){
+    if(!state.siteCompare) return;
+    var rows = getFilteredSortedSiteRows();
+    var aoa = [[t('colStatus'),t('colCategory'),t('colCode'),t('colName'),t('colVendorPrice'),t('colExpectedPrice'),t('colSitePrice'),t('colSpecialPrice')]];
+    rows.forEach(function(r){
+      aoa.push([t('status_site_'+r.status)||r.status, r.sheet||'', r.code||'', r.name||'',
+        r.vendorPrice===null?'':r.vendorPrice, r.expectedPrice===null?'':r.expectedPrice,
+        r.sitePrice===null?'':r.sitePrice, r.specialPrice===null?'':r.specialPrice]);
+    });
+    var ws = XLSX.utils.aoa_to_sheet(aoa);
+    var wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, t('tabSitePrice').slice(0,31));
+    var arr = XLSX.write(wb, {bookType:'xlsx', type:'array'});
+    var blob = new Blob([arr], {type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+    var fname = 'site-price-'+(state.siteCompare.snapshot ? state.siteCompare.snapshot.label : 'snapshot')+'.xlsx';
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url; a.download = fname;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 1000);
+  });
+
   // ---------- history ----------
 
   var viewedSnapshotId = null;
@@ -829,13 +1011,28 @@
       var hay = ((p.name||'')+' '+(p.code||'')).toLowerCase();
       return hay.indexOf(search) !== -1;
     });
+    // Union of every "extra" column label seen across the shown rows, first-seen order --
+    // the Excel file's other columns, beyond the fixed category/code/name/price ones, so
+    // nothing from the original upload is hidden. Blank where a given row doesn't have it.
+    var extraLabels = [], seenLabel = {};
+    rows.forEach(function(p){
+      (p.extra||[]).forEach(function(e){
+        if(!seenLabel[e.label]){ seenLabel[e.label] = true; extraLabels.push(e.label); }
+      });
+    });
     function fmtNum(n){ return (n===null||n===undefined) ? '—' : Number(n).toLocaleString(state.lang==='en'?'en-US':'ka-GE',{maximumFractionDigits:2}); }
     var html = '<table class="compare-table"><thead><tr>'+
       '<th>'+escapeHtml(t('colCategory'))+'</th><th>'+escapeHtml(t('colCode'))+'</th>'+
-      '<th>'+escapeHtml(t('colName'))+'</th><th>'+escapeHtml(t('colPrice'))+'</th></tr></thead><tbody>';
+      '<th>'+escapeHtml(t('colName'))+'</th><th>'+escapeHtml(t('colPrice'))+'</th>'+
+      extraLabels.map(function(l){ return '<th>'+escapeHtml(l)+'</th>'; }).join('')+
+      '</tr></thead><tbody>';
     rows.forEach(function(p){
+      var byLabel = {};
+      (p.extra||[]).forEach(function(e){ byLabel[e.label] = e.value; });
       html += '<tr><td>'+escapeHtml(p.sheet||'')+'</td><td>'+escapeHtml(p.code||'')+'</td>'+
-        '<td>'+escapeHtml(p.name||'')+'</td><td>'+fmtNum(p.price)+'</td></tr>';
+        '<td>'+escapeHtml(p.name||'')+'</td><td>'+fmtNum(p.price)+'</td>'+
+        extraLabels.map(function(l){ return '<td>'+escapeHtml(byLabel[l]||'')+'</td>'; }).join('')+
+        '</tr>';
     });
     html += '</tbody></table><p class="muted" style="margin-top:8px;">'+escapeHtml(t('rowsShown',{n:rows.length}))+'</p>';
     $('historyViewTableWrap').innerHTML = html;

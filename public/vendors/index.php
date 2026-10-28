@@ -157,6 +157,7 @@ button.ghost{background:var(--surface-2); color:var(--fg); border:1px solid var(
         <button class="tab-btn active" data-tab="history" data-i18n="tabHistory">ისტორია</button>
         <button class="tab-btn" data-tab="upload" data-i18n="tabUpload">ფასების ატვირთვა</button>
         <button class="tab-btn" data-tab="compare" data-i18n="tabCompare">შედარება</button>
+        <button class="tab-btn" data-tab="siteprice" data-i18n="tabSitePrice">საიტის ფასთან შედარება</button>
       </nav>
 
       <section id="tab-upload" class="tab-panel">
@@ -193,6 +194,27 @@ button.ghost{background:var(--surface-2); color:var(--fg); border:1px solid var(
             <select id="sheetFilter"><option value="" data-i18n="categoryAll">ყველა კატეგორია</option></select>
           </div>
           <div class="table-scroll"><div id="compareTableWrap"></div></div>
+        </div>
+      </section>
+
+      <section id="tab-siteprice" class="tab-panel">
+        <div class="card">
+          <div class="compare-controls">
+            <label><span data-i18n="siteCompareSnapshotLabel">ჩამონათვალი</span> <select id="siteSnapshotSelect"></select></label>
+            <button id="siteCompareBtn" class="primary" data-i18n="compareBtn">შედარება</button>
+            <button id="siteExportBtn" class="ghost" hidden data-i18n="exportBtn">Excel-ში ექსპორტი</button>
+          </div>
+          <div id="siteCompareSummary" class="summary-cards"></div>
+          <div class="table-controls" id="siteTableControls" hidden>
+            <input id="siteSearchInput" type="text" data-i18n-placeholder="searchPlaceholder" placeholder="ძებნა დასახელებით ან კოდით..." />
+            <select id="siteStatusFilter">
+              <option value="" data-i18n="statusAll">ყველა სტატუსი</option>
+              <option value="match" data-i18n="status_site_match">ემთხვევა</option>
+              <option value="diff" data-i18n="status_site_diff">განსხვავდება</option>
+              <option value="notfound" data-i18n="status_site_notfound">ვერ მოიძებნა საიტზე</option>
+            </select>
+          </div>
+          <div class="table-scroll"><div id="siteCompareTableWrap"></div></div>
         </div>
       </section>
 
