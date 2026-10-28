@@ -223,8 +223,10 @@
     renderVendorList();
     if(state.currentVendorId){
       renderHistory();
+      if(!$('historyViewCard').hidden) renderHistoryViewTable();
       if(state.upload) renderMappingArea();
       if(state.compare){ renderSummary(state.compare.summary); renderCompareTable(); }
+      if(state.siteCompare){ renderSiteCompareSummary(state.siteCompare.summary); renderSiteCompareTable(); }
     }
   }
 
