@@ -382,18 +382,18 @@
         var price = toNumberOrNull(priceRaw);
         if(!name && !code) continue;
         if(price===null && !name) continue;
-        // Every other column from the sheet, not just the mapped code/name/price -- the
-        // History view shows these so nothing from the original Excel file is lost, even
-        // columns the mapping heuristics didn't recognize. Falls back to the column letter
-        // when a column has no header text, so a trailing unlabeled column still shows up.
+        // Every column from the sheet, in its original left-to-right order, including the
+        // mapped code/name/price ones -- the History view renders the row exactly as laid
+        // out in the Excel file, nothing pulled to the front or dropped. Falls back to the
+        // column letter when a column has no header text, so a trailing unlabeled column
+        // still shows up.
         var extra=[];
         var maxC = Math.max(row.length, headerRow.length);
         for(var c=1;c<=maxC;c++){
-          if(c===cfg.codeCol || c===cfg.nameCol || c===cfg.priceCol) continue;
           var cellRaw = row[c-1];
           if(cellRaw===undefined || String(cellRaw).trim()==='') continue;
           var label = String(headerRow[c-1]||'').trim() || colLetter(c);
-          extra.push({ label: label, value: String(cellRaw).trim() });
+          extra.push({ col: c, label: label, value: String(cellRaw).trim() });
         }
         products.push({ sheet: cfg.name, code: code||null, name: name||null, price: price, extra: extra });
         extracted++;
@@ -1030,27 +1030,25 @@
       var hay = ((p.name||'')+' '+(p.code||'')).toLowerCase();
       return hay.indexOf(search) !== -1;
     });
-    // Union of every "extra" column label seen across the shown rows, first-seen order --
-    // the Excel file's other columns, beyond the fixed category/code/name/price ones, so
-    // nothing from the original upload is hidden. Blank where a given row doesn't have it.
-    var extraLabels = [], seenLabel = {};
+    // Every column the rows carry, ordered the same left-to-right way they appeared in the
+    // Excel file (by original column index), not grouped into fixed code/name/price columns
+    // up front -- matches the sheet's own layout. Blank where a given row doesn't have it.
+    var columns = [], seenLabel = {};
     rows.forEach(function(p){
       (p.extra||[]).forEach(function(e){
-        if(!seenLabel[e.label]){ seenLabel[e.label] = true; extraLabels.push(e.label); }
+        if(!(e.label in seenLabel)){ seenLabel[e.label] = true; columns.push({label:e.label, col:e.col}); }
       });
     });
-    function fmtNum(n){ return (n===null||n===undefined) ? '—' : Number(n).toLocaleString(state.lang==='en'?'en-US':'ka-GE',{maximumFractionDigits:2}); }
+    columns.sort(function(a,b){ return a.col-b.col; });
     var html = '<table class="compare-table"><thead><tr>'+
-      '<th>'+escapeHtml(t('colCategory'))+'</th><th>'+escapeHtml(t('colCode'))+'</th>'+
-      '<th>'+escapeHtml(t('colName'))+'</th><th>'+escapeHtml(t('colPrice'))+'</th>'+
-      extraLabels.map(function(l){ return '<th>'+escapeHtml(l)+'</th>'; }).join('')+
+      '<th>'+escapeHtml(t('colCategory'))+'</th>'+
+      columns.map(function(c){ return '<th>'+escapeHtml(c.label)+'</th>'; }).join('')+
       '</tr></thead><tbody>';
     rows.forEach(function(p){
       var byLabel = {};
       (p.extra||[]).forEach(function(e){ byLabel[e.label] = e.value; });
-      html += '<tr><td>'+escapeHtml(p.sheet||'')+'</td><td>'+escapeHtml(p.code||'')+'</td>'+
-        '<td>'+escapeHtml(p.name||'')+'</td><td>'+fmtNum(p.price)+'</td>'+
-        extraLabels.map(function(l){ return '<td>'+escapeHtml(byLabel[l]||'')+'</td>'; }).join('')+
+      html += '<tr><td>'+escapeHtml(p.sheet||'')+'</td>'+
+        columns.map(function(c){ return '<td>'+escapeHtml(byLabel[c.label]||'')+'</td>'; }).join('')+
         '</tr>';
     });
     html += '</tbody></table><p class="muted" style="margin-top:8px;">'+escapeHtml(t('rowsShown',{n:rows.length}))+'</p>';
