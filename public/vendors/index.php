@@ -194,7 +194,7 @@ button.ghost{background:var(--surface-2); color:var(--fg); border:1px solid var(
               <option value="removed" data-i18n="status_removed">მოხსნილი პოზიცია</option>
               <option value="unchanged" data-i18n="status_unchanged">უცვლელი</option>
             </select>
-            <select id="sheetFilter"><option value="" data-i18n="categoryAll">ყველა კატეგორია</option></select>
+            <select id="sheetFilter"><option value="" data-i18n="categoryAll">ყველა ფურცელი</option></select>
           </div>
           <div class="table-scroll"><div id="compareTableWrap"></div></div>
         </div>
