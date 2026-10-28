@@ -393,7 +393,12 @@
           var cellRaw = row[c-1];
           if(cellRaw===undefined || String(cellRaw).trim()==='') continue;
           var label = String(headerRow[c-1]||'').trim() || colLetter(c);
-          extra.push({ col: c, label: label, value: String(cellRaw).trim() });
+          // role marks the mapped code/name/price column, if this is it -- the renderer uses
+          // it to show the app's own translated header ("Code"/"Name"/"Price") there instead
+          // of the Excel file's own header text, which can't be translated since it's the
+          // vendor's own text, not app UI. Every other column keeps its raw Excel header.
+          var role = c===cfg.codeCol ? 'code' : (c===cfg.nameCol ? 'name' : (c===cfg.priceCol ? 'price' : null));
+          extra.push({ col: c, label: label, value: String(cellRaw).trim(), role: role });
         }
         products.push({ sheet: cfg.name, code: code||null, name: name||null, price: price, extra: extra });
         extracted++;
@@ -1040,17 +1045,22 @@
     var hasColInfo = rows.some(function(p){ return (p.extra||[]).some(function(e){ return typeof e.col === 'number'; }); });
     function fmtNum(n){ return (n===null||n===undefined) ? '—' : Number(n).toLocaleString(state.lang==='en'?'en-US':'ka-GE',{maximumFractionDigits:2}); }
     var html;
+    var ROLE_HEADER_KEY = {code:'colCode', name:'colName', price:'colPrice'};
     if(hasColInfo){
       var columns = [], seenLabel = {};
       rows.forEach(function(p){
         (p.extra||[]).forEach(function(e){
-          if(!(e.label in seenLabel)){ seenLabel[e.label] = true; columns.push({label:e.label, col:e.col}); }
+          if(!(e.label in seenLabel)){ seenLabel[e.label] = true; columns.push({label:e.label, col:e.col, role:e.role||null}); }
         });
       });
       columns.sort(function(a,b){ return a.col-b.col; });
+      // The mapped code/name/price column shows the app's own translated header there, at
+      // its natural Excel position, since it's app-owned text; every other column keeps the
+      // Excel file's own header text (can't be translated -- it's the vendor's own wording).
+      function colHeader(c){ return c.role && ROLE_HEADER_KEY[c.role] ? t(ROLE_HEADER_KEY[c.role]) : c.label; }
       html = '<table class="compare-table"><thead><tr>'+
         '<th>'+escapeHtml(t('colCategory'))+'</th>'+
-        columns.map(function(c){ return '<th>'+escapeHtml(c.label)+'</th>'; }).join('')+
+        columns.map(function(c){ return '<th>'+escapeHtml(colHeader(c))+'</th>'; }).join('')+
         '</tr></thead><tbody>';
       rows.forEach(function(p){
         var byLabel = {};

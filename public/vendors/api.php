@@ -119,10 +119,12 @@ try {
                         if (!is_array($e) || !isset($e['label'])) {
                             continue;
                         }
+                        $role = $e['role'] ?? null;
                         $extra[] = [
                             'label' => (string) $e['label'],
                             'value' => isset($e['value']) ? (string) $e['value'] : '',
                             'col' => isset($e['col']) && is_numeric($e['col']) ? (int) $e['col'] : 0,
+                            'role' => in_array($role, ['code', 'name', 'price'], true) ? $role : null,
                         ];
                     }
                 }
