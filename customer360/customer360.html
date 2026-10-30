@@ -1,0 +1,782 @@
+<meta charset="utf-8">
+<title>Volta Customer 360</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Georgian:wght@400;500;600;700;800&family=Noto+Sans:wght@400;600;700;800&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<script>
+(function(){ try{ var t=localStorage.getItem('voltaTheme'); if(t==='dark'||t==='light') document.documentElement.setAttribute('data-theme',t); }catch(e){} })();
+</script>
+<style>
+  /* Layout: Volta navy band header with tabs, then either the customer ledger (Data) or a findings-first report (Analysis); a profile sheet slides over the ledger. */
+  :root{
+    --paper:#f4f4ef; --surface:#ffffff; --ink:#171724; --muted:#66667a; --line:#e0e0d9;
+    --navy:#1a1a34; --navy-ink:#f2f2ee; --navy-sub:#c8c8d4; --lime:#a8d600; --lime-ink:#1a1a34;
+    --good:#1f8a4c; --good-soft:#e4f4e9; --bad:#c9432f; --bad-soft:#fbe8e5; --warn:#b8790f; --warn-soft:#f8ecd8;
+    --track:#e7e7e0; --hover:#f0f0e8; --scrim:rgba(23,23,36,.45); --grid:#e6e6df;
+    --s1:#2a78d6; --s2:#eb6834; --s3:#1baf7a; --s4:#eda100;
+    --shadow:0 1px 2px rgba(23,23,36,.06), 0 8px 24px -12px rgba(23,23,36,.18);
+    --f-body:"Noto Sans Georgian","Noto Sans",system-ui,sans-serif; --f-num:"IBM Plex Mono",ui-monospace,monospace;
+  }
+  @media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+    --paper:#131320; --surface:#1b1b2c; --ink:#ededf2; --muted:#9a9aae; --line:#31314a;
+    --navy:#0d0d1a; --navy-ink:#f2f2ee; --navy-sub:#a9a9bd; --lime:#c2ff00; --lime-ink:#12120c;
+    --good:#4cc785; --good-soft:#173226; --bad:#ff7a63; --bad-soft:#3a1c17; --warn:#e3ac4b; --warn-soft:#392c14;
+    --track:#282840; --hover:#232338; --scrim:rgba(0,0,0,.6); --grid:#2a2a40;
+    --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 12px 28px -14px rgba(0,0,0,.6); color-scheme:dark; } }
+  :root[data-theme="dark"]{
+    --paper:#131320; --surface:#1b1b2c; --ink:#ededf2; --muted:#9a9aae; --line:#31314a;
+    --navy:#0d0d1a; --navy-ink:#f2f2ee; --navy-sub:#a9a9bd; --lime:#c2ff00; --lime-ink:#12120c;
+    --good:#4cc785; --good-soft:#173226; --bad:#ff7a63; --bad-soft:#3a1c17; --warn:#e3ac4b; --warn-soft:#392c14;
+    --track:#282840; --hover:#232338; --scrim:rgba(0,0,0,.6); --grid:#2a2a40;
+    --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 12px 28px -14px rgba(0,0,0,.6); color-scheme:dark; }
+
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--f-body);font-size:14px;line-height:1.45}
+  .gut{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+  .wrap{max-width:1320px;margin:0 auto}
+  td.n,.num{font-family:var(--f-num);font-variant-numeric:tabular-nums}
+
+  header.top{background:var(--navy);color:var(--navy-ink);border-bottom:4px solid var(--lime);padding-block:20px 0}
+  .toprow{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;flex-wrap:wrap}
+  .eyebrow{font-family:var(--f-num);font-size:11.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--lime);font-weight:600;margin:0 0 8px}
+  h1{font-size:clamp(24px,3.4vw,32px);line-height:1.15;margin:0 0 6px;font-weight:800;text-wrap:balance}
+  .sub{margin:0;color:var(--navy-sub);font-size:14px;max-width:76ch}
+  .stamp{margin-top:12px;font-family:var(--f-num);font-size:11.5px;color:var(--navy-sub);display:flex;gap:16px;flex-wrap:wrap}
+  .stamp b{color:var(--navy-ink);font-weight:600}
+  .toggles{display:flex;gap:8px;align-items:center;flex:none}
+  .seg2{display:inline-flex;border:1px solid var(--navy-sub);border-radius:8px;overflow:hidden}
+  .seg2 button{font:inherit;font-size:12.5px;font-weight:700;padding:6px 11px;background:transparent;color:var(--navy-sub);border:none;cursor:pointer}
+  .seg2 button[aria-pressed="true"]{background:var(--lime);color:var(--lime-ink)}
+  .iconbtn{width:34px;height:34px;border-radius:8px;border:1px solid var(--navy-sub);background:transparent;color:var(--navy-ink);display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0}
+  .iconbtn svg{width:17px;height:17px}
+  nav.tabs{display:flex;gap:4px;margin-top:16px}
+  nav.tabs button{font:inherit;font-size:14px;font-weight:700;color:var(--navy-sub);background:transparent;border:none;border-radius:8px 8px 0 0;padding:10px 16px;cursor:pointer}
+  nav.tabs button[aria-selected="true"]{background:var(--lime);color:var(--lime-ink)}
+
+  .kpis{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px;margin-block:20px 16px}
+  .kpi{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px 14px;min-width:0}
+  .kpi .l{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);font-weight:600}
+  .kpi .v{font-family:var(--f-num);font-size:22px;font-weight:600;margin-top:4px;font-variant-numeric:tabular-nums}
+  .kpi .d{font-size:12px;color:var(--muted);margin-top:2px}
+
+  .bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:10px}
+  .bar input[type=search]{flex:1 1 300px;min-width:0;font:inherit;padding:9px 12px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink)}
+  .bar select{font:inherit;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink);max-width:100%}
+  input:focus-visible,select:focus-visible,button:focus-visible,tr:focus-visible{outline:2px solid var(--lime);outline-offset:1px}
+  .btn{font:inherit;font-weight:700;font-size:13px;border:none;border-radius:8px;padding:9px 14px;cursor:pointer;background:var(--lime);color:var(--lime-ink)}
+  .btn:disabled{opacity:.6;cursor:default}
+  .btn.ghost{background:var(--surface);color:var(--ink);border:1px solid var(--line);font-weight:600}
+  .count{font-size:12.5px;color:var(--muted);margin-bottom:8px}
+
+  .tw{background:var(--surface);border:1px solid var(--line);border-radius:10px;overflow-x:auto}
+  #pData .tw.main{box-shadow:var(--shadow)}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  thead th{text-align:left;font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;font-weight:700;color:var(--muted);background:var(--paper);padding:9px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+  th.n,td.n{text-align:right}
+  tbody td{padding:7px 10px;border-bottom:1px solid var(--line);vertical-align:middle;white-space:nowrap}
+  tbody tr:last-child td{border-bottom:none}
+  #list tbody tr{cursor:pointer}
+  #list tbody tr:hover td{background:var(--hover)}
+  td.nm{font-weight:600;max-width:240px;overflow:hidden;text-overflow:ellipsis}
+  .z{color:var(--muted)}
+  .pill{display:inline-block;font-size:11px;font-weight:700;border-radius:999px;padding:1px 8px;font-family:var(--f-num)}
+  .p-good{background:var(--good-soft);color:var(--good)} .p-bad{background:var(--bad-soft);color:var(--bad)}
+  .p-warn{background:var(--warn-soft);color:var(--warn)} .p-mut{background:var(--track);color:var(--muted)}
+  .pager{display:flex;gap:8px;align-items:center;justify-content:flex-end;margin-top:10px;font-size:13px;color:var(--muted)}
+
+  .scrim{position:fixed;inset:0;background:var(--scrim);z-index:20}
+  .sheet{position:fixed;top:0;right:0;bottom:0;width:min(980px,100%);background:var(--paper);z-index:21;overflow-y:auto;box-shadow:var(--shadow);
+         padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);padding-right:env(safe-area-inset-right,0px)}
+  .sheet-h{background:var(--navy);color:var(--navy-ink);padding:18px 20px;display:flex;gap:12px;align-items:flex-start;justify-content:space-between;border-bottom:3px solid var(--lime)}
+  .sheet-h h2{margin:0;font-size:22px;font-weight:800}
+  .sheet-h .meta{font-family:var(--f-num);font-size:12px;color:var(--navy-sub);margin-top:4px;display:flex;gap:14px;flex-wrap:wrap}
+  .x{background:transparent;color:var(--navy-ink);border:1px solid var(--navy-sub);border-radius:8px;font:inherit;font-size:13px;padding:6px 12px;cursor:pointer;flex:none}
+  .sec{padding:16px 20px 4px}
+  .sec h3{font-size:13px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:0 0 10px;font-weight:700}
+  .kv{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+  .kv div{background:var(--surface);padding:9px 12px;min-width:0}
+  .kv .k{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+  .kv .v{margin-top:2px;overflow-wrap:anywhere}
+  .kv .v.e{color:var(--muted)}
+  .sheet table{font-size:12.5px}
+  td.prod{max-width:300px;overflow:hidden;text-overflow:ellipsis}
+
+  .asm-tiles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+  .asm-t{background:var(--surface);padding:10px 12px;min-width:0}
+  .asm-t .k,.asm-why .k{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px}
+  .asm-t .v .pill{font-size:12.5px;padding:2px 10px;font-family:var(--f-body)}
+  .asm-t .d{font-size:12px;color:var(--muted);margin-top:6px}
+  .asm-t .d b{color:var(--ink);font-family:var(--f-num)}
+  .asm-why{display:grid;grid-template-columns:minmax(0,3fr) minmax(0,2fr);gap:14px;margin-top:12px}
+  ul.why{list-style:none;margin:0;padding:0;display:grid;gap:5px;font-size:13px}
+  ul.why li{padding-left:22px;position:relative}
+  ul.why li::before{position:absolute;left:0;top:0;width:16px;text-align:center;font-weight:800}
+  ul.why li.pos::before{content:"+";color:var(--good)} ul.why li.neg::before{content:"−";color:var(--bad)} ul.why li.neu::before{content:"•";color:var(--muted)}
+  .asm-f{display:grid;gap:4px;font-size:13px}
+  .asm-f div{display:flex;justify-content:space-between;gap:10px;border-bottom:1px dashed var(--line);padding-bottom:3px}
+  .asm-f span{color:var(--muted)} .asm-f b{font-family:var(--f-num);font-weight:600}
+  .asm-disc{font-size:11.5px;color:var(--muted);margin:10px 0 0}
+  @media (max-width:760px){.asm-tiles{grid-template-columns:1fr 1fr}.asm-why{grid-template-columns:1fr}}
+  footer.note{margin-block:22px 40px;font-size:12.5px;line-height:1.65;color:var(--muted);background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+  footer.note b{color:var(--ink)}
+  footer.note ul{margin:6px 0 0;padding-left:18px}
+  .loading{padding:40px 0;text-align:center;color:var(--muted)}
+
+  /* ---- analysis ---- */
+  #pAn{padding-block:20px 40px}
+  .an-h{font-size:20px;font-weight:800;margin:30px 0 4px;text-wrap:balance}
+  .an-h:first-child{margin-top:4px}
+  .an-d{color:var(--muted);margin:0 0 14px;max-width:80ch;font-size:13.5px}
+  .finds{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+  .find{background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--fc,var(--s1));border-radius:10px;padding:12px 14px;min-width:0}
+  .find .t{font-weight:700;margin-bottom:4px}
+  .find .b{color:var(--muted);font-size:13.5px}
+  .find .b b{color:var(--ink);font-family:var(--f-num);font-weight:600}
+  .f-bad{--fc:var(--bad)} .f-good{--fc:var(--good)} .f-warn{--fc:var(--warn)} .f-info{--fc:var(--s1)}
+  .grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 14px 10px;min-width:0}
+  .card h4{margin:0 0 2px;font-size:14px;font-weight:700}
+  .card .cd{margin:0 0 10px;font-size:12px;color:var(--muted)}
+  .rt td{padding:6px 8px;font-size:12.5px}
+  .rt thead th{padding:7px 8px;font-size:10px}
+  .bcell{width:42%;min-width:120px}
+  .btrack{position:relative;height:16px;border-radius:4px;background:var(--track)}
+  .bfill{position:absolute;left:0;top:0;bottom:0;border-radius:0 4px 4px 0;background:var(--s1)}
+  .bval{position:absolute;top:50%;transform:translateY(-50%);font-family:var(--f-num);font-size:11.5px;font-weight:600;color:var(--ink);padding-left:6px;white-space:nowrap}
+  .bfill.hi{background:var(--s2)}
+  .legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin:2px 0 8px}
+  .legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px}
+  .chart{width:100%;height:auto;display:block}
+  .chart text{fill:var(--muted);font-family:var(--f-num);font-size:10.5px}
+  .chart .gl{stroke:var(--grid);stroke-width:1}
+  .tip{position:fixed;z-index:30;pointer-events:none;background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-size:12px;box-shadow:var(--shadow);min-width:150px}
+  .tip b{font-family:var(--f-num)}
+  .tip .r{display:flex;justify-content:space-between;gap:14px}
+  .callout{font-size:12px;color:var(--muted);margin-top:6px}
+
+  @media (max-width:1000px){.kpis{grid-template-columns:repeat(3,minmax(0,1fr))}.grid2,.finds{grid-template-columns:1fr}}
+  @media (max-width:640px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.kv{grid-template-columns:1fr 1fr}}
+  @media (max-width:420px){.kv{grid-template-columns:1fr}}
+  @media (prefers-reduced-motion:no-preference){.sheet{animation:in .18s ease-out}@keyframes in{from{transform:translateX(24px)}to{transform:none}}}
+</style>
+
+<header class="top gut">
+  <div class="wrap">
+    <div class="toprow">
+      <div>
+        <p class="eyebrow" data-t="eyebrow"></p>
+        <h1>Customer 360</h1>
+        <p class="sub" data-t="sub"></p>
+      </div>
+      <div class="toggles">
+        <div class="seg2" role="group" aria-label="Language"><button type="button" id="lKa" aria-pressed="true">ქარ</button><button type="button" id="lEn" aria-pressed="false">ENG</button></div>
+        <button class="iconbtn" id="themeBtn" type="button" aria-label="Light / dark"><svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></svg></button>
+      </div>
+    </div>
+    <div class="stamp"><span><span data-t="src"></span> <b>VoltaStoreDB</b></span><span><span data-t="asof"></span> <b id="asOf">&nbsp;</b></span></div>
+    <nav class="tabs" role="tablist">
+      <button type="button" role="tab" id="tData" aria-selected="true" data-t="tabData"></button>
+      <button type="button" role="tab" id="tAn" aria-selected="false" data-t="tabAn"></button>
+    </nav>
+  </div>
+</header>
+
+<main class="gut">
+  <div class="wrap">
+    <section id="pData">
+      <div class="kpis" id="kpis"><div class="kpi"><div class="l">&hellip;</div><div class="v">&hellip;</div></div></div>
+      <div class="bar">
+        <input type="search" id="q" autocomplete="off">
+        <select id="seg"></select>
+        <select id="sort"></select>
+        <button class="btn" id="xlsx" type="button"></button>
+      </div>
+      <div class="count" id="count"></div>
+      <div class="tw main">
+        <table id="list"><thead><tr id="listHead"></tr></thead>
+          <tbody><tr><td colspan="13" class="loading">&hellip;</td></tr></tbody></table>
+      </div>
+      <div class="pager"><button class="btn ghost" id="prev" type="button"></button><span id="pg"></span><button class="btn ghost" id="next" type="button"></button></div>
+      <footer class="note" id="method"></footer>
+    </section>
+    <section id="pAn" hidden></section>
+  </div>
+</main>
+
+<div class="scrim" id="scrim" hidden></div>
+<aside class="sheet" id="sheet" hidden aria-modal="true" role="dialog" aria-labelledby="pname"></aside>
+<div class="tip" id="tip" hidden></div>
+
+<script src="c360_meta.js" charset="utf-8"></script>
+<script src="c360_analysis.js" charset="utf-8"></script>
+<script src="c360_cust1.js" charset="utf-8"></script>
+<script src="c360_cust2.js" charset="utf-8"></script>
+<script src="c360_apps.js" charset="utf-8"></script>
+<script src="c360_loans.js" charset="utf-8"></script>
+<script>
+(function(){
+  var M = window.C360_META, AN = window.C360_AN, C = (window.C360_C1||[]).concat(window.C360_C2||[]), A = window.C360_A||[], L = window.C360_L||[];
+  if(!M){ document.querySelector('#list tbody').innerHTML='<tr><td colspan="13" class="loading">Data failed to load.</td></tr>'; return; }
+  var P = M.P;
+  function ix(cols){ var o={}; cols.forEach(function(c,i){o[c]=i}); return o; }
+  var c = ix(M.C), a = ix(M.A), l = ix(M.L);
+
+  // ================= i18n =================
+  var LANG = 'ka';
+  try{ var sl=localStorage.getItem('voltaLang'); if(sl==='en'||sl==='ka') LANG=sl; }catch(e){}
+  var T = {
+    ka:{eyebrow:'Volta · CRM · კლიენტის ერთიანი პროფილი', sub:'თითოეული კლიენტი ერთ პროფილად, პირადი ნომრის მიხედვით: პირადი მონაცემები, დასაქმება და შემოსავალი, ყველა განაცხადი, მიმდინარე და დახურული სესხები.',
+      src:'წყარო:', asof:'მონაცემები:', tabData:'მონაცემები', tabAn:'ანალიზი და რეპორტები',
+      k_cust:'კლიენტი', k_apps:'განაცხადი', k_act:'აქტიური სესხით', k_actl:'აქტიური სესხი', k_out:'მიმდინარე ვალდებულება', k_outd:'გრაფიკის გადაუხდელი ნაწილი',
+      k_dpd:'ახლა ვადაგადაცილებული', k_dpdd:'კლიენტი, DPD > 0', k_dpd30:'DPD 30+', k_closed:'დახურული სესხი', k_clean:'ვადაგადაცილების გარეშე',
+      q:'ძიება: სახელი, გვარი, პირადი ნომერი, ტელეფონი ან განაცხადის ნომერი',
+      f_all:'ყველა კლიენტი', f_active:'აქტიური სესხით', f_dpd:'ახლა ვადაგადაცილებული (DPD > 0)', f_dpd30:'DPD 30+ დღე', f_closedonly:'მხოლოდ დახურული სესხებით',
+      f_cleanall:'ყველა დახურული სესხი ვადაგადაცილების გარეშე', f_repeat:'განმეორებითი სესხის კანდიდატი (სუფთად დახურა, ახალი განაცხადი არ შემოუტანია)',
+      f_never:'არასდროს მიუღია სესხი', f_rejected:'ერთხელ მაინც უარყოფილი',
+      o_out:'ვალდებულება ↓', o_dpd:'მიმდინარე DPD ↓', o_dpdsum:'DPD ჯამი ↓', o_apps:'განაცხადები ↓', o_loans:'სესხები ↓', o_last:'ბოლო განაცხადი ↓', o_name:'სახელი (ა–ჰ)',
+      xlsx:'⇩ Excel (ფილტრის მიხედვით)', xlsxBusy:'მზადდება…', prev:'← წინა', next:'შემდეგი →', nclients:'კლიენტი', none:'ამ ფილტრით კლიენტი ვერ მოიძებნა.',
+      h_name:'სახელი, გვარი', h_pid:'პირადი ნომერი', h_phone:'ტელეფონი', h_apps:'განაცხ.', h_appr:'დადასტ.', h_rej:'უარყ.', h_act:'აქტიური', h_out:'ვალდებულება ₾', h_mon:'თვეში ₾',
+      h_dpd:'DPD ახლა', h_dpdsum:'DPD ჯამი', h_closed:'დახურული', h_clean:'სუფთად', noname:'(სახელი არ არის)',
+      close:'დახურვა ×', pidl:'პირადი №', firstapp:'პირველი განაცხადი',
+      s1:'1. პირადი ინფორმაცია', s2:'2. დასაქმება და შემოსავალი', s3:'3. Volta-სთან ურთიერთობის ისტორია',
+      pf_name:'სახელი და გვარი', pf_pid:'პირადი ნომერი', pf_gender:'სქესი', pf_dob:'დაბადების თარიღი', pf_phone:'ტელეფონი', pf_fact:'ფაქტობრივი / საცხოვრებელი მისამართი', pf_ship:'მიტანის მისამართი',
+      pf_work:'სამუშაო ადგილი', pf_pos:'თანამდებობა', pf_emp:'დასაქმების ტიპი', pf_sal:'ხელფასი', pf_extra:'დამატებითი შემოსავალი', pf_obl:'ფინანსური ვალდებულებები', pf_oblamt:'ვალდებულებების ოდენობა (თვეში)',
+      pf_apps:'მოთხოვნილი განაცხადი', pf_appr:'დადასტურებული', pf_single:'ერთჯერადი', pf_rej:'უარყოფილი (Volta)', pf_other:'სხვა (კლიენტის უარი, მოლოდინი…)', pf_act:'აქტიური სესხი',
+      pf_out:'მიმდინარე ვალდებულება', pf_mon:'ყოველთვიური გადასახადი', pf_term:'ვადა (თვე), აქტიური', pf_dpd:'მიმდინარე DPD', pf_dpdsum:'DPD ჯამი, ყველა სესხი', pf_closed:'დახურული სესხი', pf_clean:'დახურული ვადაგადაცილების გარეშე', incl:'მ.შ.',
+      cur_loans:'მიმდინარე სესხები', cl_loans:'დახურული სესხები', all_apps:'ყველა განაცხადი', no_act:'აქტიური სესხი არ აქვს.', no_cl:'დახურული სესხი არ აქვს.',
+      l_case:'ქეისი', l_old:'ძველი №', l_prod:'პროდუქტი', l_iss:'გაცემა', l_close:'დახურვა', l_price:'ფასი ₾', l_sched:'გრაფიკი ₾', l_term:'ვადა', l_mon:'თვეში ₾', l_left:'დარჩენილი ₾',
+      l_dpdsum:'DPD ჯამი', l_worst:'მაქს. დაგვ.', l_dpd:'DPD ახლა', l_res:'შედეგი', l_date:'თარიღი', l_status:'სტატუსი',
+      r_clean:'სუფთად', r_late:'იყო ვადაგად.', r_ct2:'close type 2'},
+    en:{eyebrow:'Volta · CRM · single customer profile', sub:'Every customer as one profile, joined on personal number: personal data, employment and income, every application, active and closed loans.',
+      src:'Source:', asof:'Data as of:', tabData:'Data', tabAn:'Analysis & reports',
+      k_cust:'Customers', k_apps:'applications', k_act:'With an active loan', k_actl:'active loans', k_out:'Outstanding', k_outd:'unpaid part of schedules',
+      k_dpd:'Past due now', k_dpdd:'customers, DPD > 0', k_dpd30:'DPD 30+', k_closed:'Closed loans', k_clean:'without any delay',
+      q:'Search: name, personal number, phone or application number',
+      f_all:'All customers', f_active:'With an active loan', f_dpd:'Past due now (DPD > 0)', f_dpd30:'DPD 30+ days', f_closedonly:'Only closed loans',
+      f_cleanall:'All closed loans without any delay', f_repeat:'Repeat-loan candidates (closed clean, no new application)',
+      f_never:'Never got a loan', f_rejected:'Rejected at least once',
+      o_out:'Outstanding ↓', o_dpd:'Current DPD ↓', o_dpdsum:'DPD total ↓', o_apps:'Applications ↓', o_loans:'Loans ↓', o_last:'Last application ↓', o_name:'Name (A–Z)',
+      xlsx:'⇩ Excel (current filter)', xlsxBusy:'Preparing…', prev:'← Previous', next:'Next →', nclients:'customers', none:'No customers match this filter.',
+      h_name:'Name', h_pid:'Personal no.', h_phone:'Phone', h_apps:'Apps', h_appr:'Approved', h_rej:'Rejected', h_act:'Active', h_out:'Outstanding ₾', h_mon:'Monthly ₾',
+      h_dpd:'DPD now', h_dpdsum:'DPD total', h_closed:'Closed', h_clean:'Clean', noname:'(no name)',
+      close:'Close ×', pidl:'Personal no.', firstapp:'First application',
+      s1:'1. Personal information', s2:'2. Employment and income', s3:'3. History with Volta',
+      pf_name:'Full name', pf_pid:'Personal number', pf_gender:'Gender', pf_dob:'Date of birth', pf_phone:'Phone', pf_fact:'Actual / residential address', pf_ship:'Delivery address',
+      pf_work:'Workplace', pf_pos:'Position', pf_emp:'Employment type', pf_sal:'Salary', pf_extra:'Additional income', pf_obl:'Financial obligations', pf_oblamt:'Obligations amount (monthly)',
+      pf_apps:'Applications submitted', pf_appr:'Approved', pf_single:'single-payment', pf_rej:'Rejected (Volta)', pf_other:'Other (client declined, pending…)', pf_act:'Active loans',
+      pf_out:'Current outstanding', pf_mon:'Monthly payment', pf_term:'Term (months), active', pf_dpd:'Current DPD', pf_dpdsum:'DPD total, all loans', pf_closed:'Closed loans', pf_clean:'Closed without delay', incl:'incl.',
+      cur_loans:'Active loans', cl_loans:'Closed loans', all_apps:'All applications', no_act:'No active loan.', no_cl:'No closed loan.',
+      l_case:'Case', l_old:'Old no.', l_prod:'Product', l_iss:'Issued', l_close:'Closed', l_price:'Price ₾', l_sched:'Schedule ₾', l_term:'Term', l_mon:'Monthly ₾', l_left:'Remaining ₾',
+      l_dpdsum:'DPD total', l_worst:'Max delay', l_dpd:'DPD now', l_res:'Result', l_date:'Date', l_status:'Status',
+      r_clean:'clean', r_late:'had delay', r_ct2:'close type 2'}
+  };
+  function t(k){ return (T[LANG][k]!=null?T[LANG][k]:T.ka[k]) || k; }
+  var ST = {ka:{'1':'გაცემული (ძველი)','5':'გაცემული','11':'გაცემული','99':'ერთჯერადი გადახდა','6':'უარყოფილი (Volta)','12':'კლიენტმა უარი თქვა','13':'გაუქმებული','14':'კონტაქტი ვერ დამყარდა','4':'მოლოდინში','3':'სხვა','8':'კომიტეტზე','15':'განხილვაში','16':'განხილვაში','17':'განხილვაში','18':'გაუქმებული'},
+            en:{'1':'Issued (legacy)','5':'Issued','11':'Issued','99':'Single payment','6':'Rejected (Volta)','12':'Client declined','13':'Cancelled','14':'No contact','4':'Pending','3':'Other','8':'At committee','15':'Under review','16':'Under review','17':'Under review','18':'Cancelled'}};
+  var VAL = {'ქალი':'Female','კაცი':'Male','კი':'Yes','არა':'No','პირადი ნომერი':'Personal number','მხოლოდ ანგარიში (PID არ არის)':'Account only (no personal number)','მხოლოდ განაცხადი':'Application only',
+    'დაიხურა ვადაგადაცილების გარეშე':'Closed without delay','დაიხურა, იყო ვადაგადაცილება':'Closed, had a delay','ჩამოწერილი/სხვა (close type 2)':'Written off / other (close type 2)',
+    'კერძო':'Private sector','საჯარო':'Public sector','თვითდასაქმებული':'Self-employed','დაუსაქმებელი':'Unemployed','სხვა':'Other'};
+  function tv(v){ if(LANG==='ka'||!v) return v; if(VAL[v]) return VAL[v]; var m=/^კი \((.*)\)$/.exec(v); return m?'Yes ('+m[1]+')':v; }
+  function stl(code){ return ST[LANG][code] || ((LANG==='ka'?'სტატუსი ':'Status ')+code); }
+
+  // ================= theme =================
+  var SUN='<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>';
+  var MOON='<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>';
+  function isDark(){ var th=document.documentElement.getAttribute('data-theme'); if(th==='dark')return true; if(th==='light')return false; return window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches; }
+  function paintTheme(){ document.getElementById('themeIcon').innerHTML = isDark()?SUN:MOON; document.getElementById('themeBtn').title = LANG==='ka'?(isDark()?'ღია ფონი':'მუქი ფონი'):(isDark()?'Light mode':'Dark mode'); }
+  document.getElementById('themeBtn').addEventListener('click',function(){ var nx=isDark()?'light':'dark'; document.documentElement.setAttribute('data-theme',nx); try{localStorage.setItem('voltaTheme',nx)}catch(e){} paintTheme(); });
+
+  // ================= helpers =================
+  function fm(v){ return v==null||v==='' ? '' : Number(v).toLocaleString('en-US',{maximumFractionDigits:0}); }
+  function fm2(v){ return v==null||v==='' ? '' : Number(v).toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:2}); }
+  function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,function(ch){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[ch]}); }
+  function z(v,f){ return v ? (f||fm)(v) : '<span class="z">0</span>'; }
+  function dpdPill(d){ if(!d) return '<span class="z">0</span>'; var cl = d>30?'p-bad':(d>7?'p-warn':'p-mut'); return '<span class="pill '+cl+'">'+d+'</span>'; }
+  function money(v){ return v==null||v==='' ? '' : '₾'+fm2(v); }
+  document.getElementById('asOf').textContent = M.asOf;
+
+  // ================= indexes =================
+  var aOf = new Array(C.length), lOf = new Array(C.length);
+  A.forEach(function(r,i){ (aOf[r[a.c]] || (aOf[r[a.c]]=[])).push(i); });
+  L.forEach(function(r,i){ (lOf[r[l.c]] || (lOf[r[l.c]]=[])).push(i); });
+  var hay = C.map(function(r,i){
+    var ids = (aOf[i]||[]).map(function(j){ return A[j][a.id] + ' ' + (A[j][a.legacy]||''); }).join(' ');
+    return (r[c.name]+' '+r[c.pid]+' '+r[c.phones]+' '+ids).toLowerCase();
+  });
+  // repeat-loan candidate: no active loan, every closed loan clean, no application after the last close
+  var repeatC = C.map(function(r,i){
+    if(r[c.active_n]>0 || r[c.closed_n]===0 || r[c.closed_overdue_n]>0) return false;
+    var lc=''; (lOf[i]||[]).forEach(function(j){ var d=L[j][l.close_date]; if(d>lc) lc=d; });
+    return !(r[c.last_app] > lc);
+  });
+
+  // ================= per-customer assessment =================
+  // Rule-based, behaviour only (repayment history, current arrears, load). Gender and age are deliberately NOT used
+  // for an individual decision. Group rates come from the back-test in the Analysis tab (AN.backtest).
+  var BT={}; (AN.backtest||[]).forEach(function(b){BT[b.k]=b;});
+  var TODAY=M.today, Y1=(function(){ var d=new Date(TODAY+'T00:00:00'); d.setFullYear(d.getFullYear()-1); return d.toISOString().slice(0,10); })();
+  function salNum(v){ var m=String(v||'').match(/\d+(?:\.\d+)?/g); if(!m) return null; var n=m.map(Number).filter(function(x){return x>=50&&x<=50000}); if(!n.length) return null; return n.length>1?(n[0]+n[1])/2:n[0]; }
+  function monthsBetween(a,b){ if(!a||!b) return 0; return Math.max(0,Math.round((new Date(b)-new Date(a))/2629800000)); }
+  function assess(i){
+    var r=C[i], lo=(lOf[i]||[]).map(function(j){return L[j]});
+    var cl=lo.filter(function(x){return !x[l.active]}), act=lo.filter(function(x){return x[l.active]});
+    var worstAll=0, worstCl=0, wLoan=null, wo=false, recent31=false, clean=0, minor=0, borrowed=0, paid=0, pen=0, maxClean=0, first='';
+    lo.forEach(function(x){ var w=x[l.worst]||0; if(w>worstAll){worstAll=w;wLoan=x;} borrowed+=x[l.price]||0; paid+=x[l.paid_total]||0; pen+=x[l.penalty_paid]||0;
+      if(!first||x[l.issued]<first) first=x[l.issued];
+      if(w>30 && ((x[l.active]?TODAY:x[l.close_date])>=Y1)) recent31=true; });
+    cl.forEach(function(x){ var w=x[l.worst]||0; worstCl=Math.max(worstCl,w); if(x[l.ct]==='2') wo=true; if(w===0) clean++; if(w<=7) minor++; if(w<=7) maxClean=Math.max(maxClean,x[l.price]||0); });
+    var cur=r[c.cur_dpd]||0, sal=salNum(r[c.salary]), obl=r[c.obligation_amt]||0, mon=r[c.active_monthly]||0;
+    var dti = sal ? (mon+obl)/sal : null, hist=monthsBetween(first,TODAY);
+    // customer type
+    var type, typeKey;
+    if(!lo.length){ typeKey = r[c.single_n]>0 ? 'ty_single' : (r[c.rejected_n]>0 ? 'ty_rejected' : 'ty_applicant'); }
+    else typeKey = lo.length===1 ? 'ty_one' : (lo.length===2 ? 'ty_repeat' : 'ty_loyal');
+    // payer grade
+    var grade;
+    if(!lo.length) grade='g_none';
+    else if(wo || worstAll>90 || cur>30) grade='g_E';
+    else if(worstAll>30 || cur>=8) grade='g_D';
+    else if(worstAll>7) grade='g_C';
+    else if(worstAll===0 && cl.length) grade='g_A';
+    else grade='g_B';
+    // risk level + matching historical group
+    var risk, grp=null;
+    if(wo || cur>30 || worstAll>90 || recent31 || cur>=8) risk='rk_high';
+    else if(cur>=1) risk='rk_elev';
+    else if(!lo.length){ risk='rk_new'; grp='bt_first'; }
+    else if(cl.length){ if(worstAll<=7){risk='rk_low';grp='bt_0_7';} else if(worstAll<=30){risk='rk_mod';grp='bt_8_30';} else {risk='rk_elev';grp='bt_31';} }
+    else { if(worstAll<=7){risk='rk_mod';grp='bt_open';} else {risk='rk_elev';} }
+    // recommendation
+    var rec;
+    if(wo || cur>30 || worstAll>90 || recent31) rec='rc_no';
+    else if(cur>=1) rec='rc_notnow';
+    else if(!lo.length) rec='rc_new';
+    else if(risk==='rk_low') rec='rc_yes';
+    else if(risk==='rk_mod') rec='rc_std';
+    else rec='rc_cond';
+    var load = act.length>=3 || (dti!=null && dti>0.6);
+    if(load && (rec==='rc_yes'||rec==='rc_std')) rec='rc_cond';
+    else if(act.length===2 && rec==='rc_yes') rec='rc_std';
+    return {typeKey:typeKey, grade:grade, risk:risk, grp:grp, rec:rec, worstAll:worstAll, wLoan:wLoan, wo:wo, recent31:recent31, clean:clean, minor:minor,
+            closed:cl.length, act:act.length, cur:cur, borrowed:borrowed, paid:paid, pen:pen, maxClean:maxClean, hist:hist, dti:dti, sal:sal, mon:mon, obl:obl, load:load, n:lo.length};
+  }
+  var ASM = C.map(function(_,i){ return assess(i); });
+  var REC_CLS={rc_new:'p-mut',rc_yes:'p-good',rc_std:'p-good',rc_cond:'p-warn',rc_notnow:'p-warn',rc_no:'p-bad'};
+  var RISK_CLS={rk_low:'p-good',rk_mod:'p-mut',rk_new:'p-mut',rk_elev:'p-warn',rk_high:'p-bad'};
+  var GRADE_CLS={g_A:'p-good',g_B:'p-good',g_C:'p-warn',g_D:'p-bad',g_E:'p-bad',g_none:'p-mut'};
+  var AS = {
+    ka:{h:'კლიენტის შეფასება', type:'კლიენტის ტიპი', grade:'როგორი გადამხდელია', risk:'რისკის დონე', rec:'კიდევ განვადება?',
+      ty_single:'მხოლოდ ერთჯერადი გადახდით მყიდველი', ty_rejected:'განმცხადებელი, სესხი არ დაუმტკიცდა', ty_applicant:'განმცხადებელი, სესხი არ მიუღია',
+      ty_one:'ერთჯერადი მსესხებელი', ty_repeat:'განმეორებითი მსესხებელი', ty_loyal:'ლოიალური კლიენტი',
+      g_A:'A · სანიმუშო', g_B:'B · კარგი', g_C:'C · საშუალო', g_D:'D · სუსტი', g_E:'E · ცუდი', g_none:'ისტორია არ აქვს',
+      gd_A:'ერთხელაც არ დაუგვიანებია.', gd_B:'მხოლოდ მცირე, 7 დღემდე დაგვიანებები.', gd_C:'ჰქონდა 8–30 დღის დაგვიანება.', gd_D:'ჰქონდა 31–90 დღის დაგვიანება ან ახლა 8–30 დღით აგვიანებს.', gd_E:'90+ დღის დაგვიანება, ჩამოწერა ან ახლა 30+ დღით აგვიანებს.', gd_none:'Volta-ში სესხი ჯერ არ ჰქონია.',
+      rk_low:'დაბალი', rk_mod:'ზომიერი', rk_new:'უცნობი (ახალი)', rk_elev:'მომატებული', rk_high:'მაღალი',
+      rc_new:'ახალი: სრული შემოწმება', rcd_new:'Volta-ში სესხი არ ჰქონია, ისტორიაზე დაყრდნობა შეუძლებელია: საჭიროა სრული ანდერაიტინგი.', fr_new:'რეკომენდაცია: ახალი კლიენტი, სრული შემოწმება',
+      rc_yes:'კი, შეიძლება', rc_std:'კი, სტანდარტული შემოწმებით', rc_cond:'პირობით', rc_notnow:'ახლა არა', rc_no:'არა',
+      rcd_yes:'კარგი გადახდის ისტორია და ახლა დავალიანება არ აქვს.', rcd_std:'ჩვეულებრივი ანდერაიტინგი, დამატებითი პირობების გარეშე.',
+      rcd_cond:'მხოლოდ შემცირებული თანხით, მეტი ავანსით ან დამატებითი შემოწმებით.', rcd_notnow:'ჯერ მიმდინარე ვადაგადაცილებული შენატანი უნდა დაფაროს.', rcd_no:'სერიოზული ვადაგადაცილება ან ჩამოწერა: ახალი განვადება არ არის რეკომენდებული.',
+      grp:'მსგავსი ისტორიის კლიენტების შემდეგ სესხზე 30+ დღის დაგვიანება ჰქონდა', of:'-ს', why:'რატომ', facts:'ციფრები',
+      p_clean:function(n){return n+' სესხი დახურა ერთი დღის დაგვიანების გარეშეც'}, p_minor:function(n){return n+' სესხი დახურა მაქსიმუმ 7 დღის დაგვიანებით'},
+      p_long:function(m){return 'Volta-ს მსესხებელია '+m+' თვეა'}, p_repaid:function(v){return 'სულ დაფარა ₾'+v}, p_ontime:'ახლა ვადაგადაცილება არ აქვს',
+      m_cur:function(d,o){return 'ახლა '+d+' დღით აგვიანებს, დარჩენილი ვალი ₾'+o}, m_worst:function(d,id){return 'ყველაზე დიდი დაგვიანება: '+d+' დღე (ქეისი '+id+')'},
+      m_wo:'ერთი სესხი ჩამოწერილია / დაიხურა close type 2-ით', m_recent:'ბოლო 12 თვეში ჰქონდა 30+ დღის დაგვიანება', m_rej:function(n){return n+' განაცხადი უარყო Volta-მ'},
+      m_load:function(n,m){return 'უკვე '+n+' აქტიური სესხი, თვეში ₾'+m}, m_dti:function(p){return 'სესხები და ვალდებულებები ხელფასის '+p+'%-ია'},
+      m_pen:function(v){return 'გადაიხადა ჯარიმა ₾'+v}, n_new:'Volta-ში გადახდის ისტორია არ აქვს: შეფასება პირველი სესხების საშუალო რისკს ეყრდნობა.',
+      f_loans:'სესხი სულ', f_borrowed:'სესხად აიღო ₾', f_paid:'გადაიხადა ₾', f_maxclean:'უდიდესი სუფთად დაფარული ₾', f_dti:'დატვირთვა (თვეში / ხელფასი)',
+      disc:'ავტომატური შეფასება გადახდის ისტორიაზე, მიმდინარე დავალიანებასა და დატვირთვაზე. სქესი და ასაკი არ გამოიყენება. საბოლოო გადაწყვეტილება ანდერაიტერისაა.',
+      fr_yes:'რეკომენდაცია: კი, შეიძლება', fr_std:'რეკომენდაცია: კი, სტანდარტული შემოწმებით', fr_cond:'რეკომენდაცია: პირობით', fr_notnow:'რეკომენდაცია: ახლა არა', fr_no:'რეკომენდაცია: არა', h_rec:'შეფასება',
+      x:['კლიენტის ტიპი','გადამხდელის კლასი','რისკის დონე','რეკომენდაცია']},
+    en:{h:'Customer assessment', type:'Customer type', grade:'Payer grade', risk:'Risk level', rec:'Another installment?',
+      ty_single:'Single-payment buyer only', ty_rejected:'Applicant, never approved', ty_applicant:'Applicant, no loan taken',
+      ty_one:'One-time borrower', ty_repeat:'Repeat borrower', ty_loyal:'Loyal customer',
+      g_A:'A · Exemplary', g_B:'B · Good', g_C:'C · Fair', g_D:'D · Weak', g_E:'E · Poor', g_none:'No history',
+      gd_A:'Never late, not even one day.', gd_B:'Only minor delays of up to 7 days.', gd_C:'Had a delay of 8–30 days.', gd_D:'Had a 31–90 day delay, or is 8–30 days late now.', gd_E:'90+ days late, a write-off, or 30+ days late now.', gd_none:'Has not had a loan with Volta yet.',
+      rk_low:'Low', rk_mod:'Moderate', rk_new:'Unknown (new)', rk_elev:'Elevated', rk_high:'High',
+      rc_new:'New: full checks', rcd_new:'No loan with Volta yet, so there is no history to rely on: full underwriting needed.', fr_new:'Recommendation: new customer, full checks',
+      rc_yes:'Yes', rc_std:'Yes, standard checks', rc_cond:'Conditional', rc_notnow:'Not now', rc_no:'No',
+      rcd_yes:'Good repayment history and nothing overdue now.', rcd_std:'Usual underwriting, no extra conditions.',
+      rcd_cond:'Only with a smaller amount, a larger advance or extra checks.', rcd_notnow:'Must first pay the overdue instalment.', rcd_no:'Serious delays or a write-off: a new installment is not recommended.',
+      grp:'Customers with a similar history were 30+ days late on their next loan in', of:'', why:'Why', facts:'Figures',
+      p_clean:function(n){return 'Closed '+n+' loan(s) without a single day late'}, p_minor:function(n){return 'Closed '+n+' loan(s) at most 7 days late'},
+      p_long:function(m){return 'Borrowing from Volta for '+m+' months'}, p_repaid:function(v){return 'Paid ₾'+v+' in total'}, p_ontime:'Nothing overdue now',
+      m_cur:function(d,o){return d+' days late now, ₾'+o+' outstanding'}, m_worst:function(d,id){return 'Longest delay: '+d+' days (case '+id+')'},
+      m_wo:'A loan was written off / closed with close type 2', m_recent:'Was 30+ days late within the last 12 months', m_rej:function(n){return n+' application(s) rejected by Volta'},
+      m_load:function(n,m){return 'Already '+n+' active loans, ₾'+m+' a month'}, m_dti:function(p){return 'Loans and obligations take '+p+'% of salary'},
+      m_pen:function(v){return 'Paid ₾'+v+' in penalties'}, n_new:'No repayment history with Volta: the assessment uses the average risk of first loans.',
+      f_loans:'Loans in total', f_borrowed:'Borrowed ₾', f_paid:'Paid ₾', f_maxclean:'Largest loan repaid clean ₾', f_dti:'Load (monthly / salary)',
+      disc:'Automatic assessment from repayment history, current arrears and load. Gender and age are not used. The final decision is the underwriter\'s.',
+      fr_yes:'Recommendation: yes', fr_std:'Recommendation: yes, standard checks', fr_cond:'Recommendation: conditional', fr_notnow:'Recommendation: not now', fr_no:'Recommendation: no', h_rec:'Assessment',
+      x:['Customer type','Payer grade','Risk level','Recommendation']}
+  };
+  function as(k){ var v=AS[LANG][k]; return v!=null?v:k; }
+  function asmHtml(i){
+    var s=ASM[i], r=C[i], pos=[], neg=[];
+    if(s.clean) pos.push(as('p_clean')(s.clean)); else if(s.minor) pos.push(as('p_minor')(s.minor));
+    if(s.hist>=24 && s.n) pos.push(as('p_long')(s.hist));
+    if(s.paid>0) pos.push(as('p_repaid')(fm(s.paid)));
+    if(s.n && !s.cur) pos.push(as('p_ontime'));
+    if(s.cur) neg.push(as('m_cur')(s.cur, fm(r[c.active_outstanding])));
+    if(s.worstAll>7 && s.wLoan) neg.push(as('m_worst')(s.worstAll, s.wLoan[l.id]));
+    if(s.wo) neg.push(as('m_wo')); if(s.recent31) neg.push(as('m_recent'));
+    if(r[c.rejected_n]) neg.push(as('m_rej')(r[c.rejected_n]));
+    if(s.act>=2) neg.push(as('m_load')(s.act, fm(s.mon)));
+    if(s.dti!=null && s.dti>0.5) neg.push(as('m_dti')(Math.round(s.dti*100)));
+    if(s.pen>=10) neg.push(as('m_pen')(fm(s.pen)));
+    var tiles=[[as('type'),'<span class="pill p-mut">'+as(s.typeKey)+'</span>', s.n? (s.n+' · '+(LANG==='ka'?'სესხი':'loans')) : ''],
+      [as('grade'),'<span class="pill '+GRADE_CLS[s.grade]+'">'+as(s.grade)+'</span>', as('gd_'+s.grade.slice(2))],
+      [as('risk'),'<span class="pill '+RISK_CLS[s.risk]+'">'+as(s.risk)+'</span>', s.grp&&BT[s.grp]&&s.grp!=='bt_31' ? as('grp')+' <b>'+BT[s.grp].bad.toFixed(1)+'%</b>'+as('of')+'.' : ''],
+      [as('rec'),'<span class="pill '+REC_CLS[s.rec]+'">'+as(s.rec)+'</span>', as('rcd_'+s.rec.slice(3))]];
+    var h='<div class="sec asm"><h3>'+as('h')+'</h3><div class="asm-tiles">'+tiles.map(function(x){return '<div class="asm-t"><div class="k">'+x[0]+'</div><div class="v">'+x[1]+'</div><div class="d">'+x[2]+'</div></div>'}).join('')+'</div>';
+    h+='<div class="asm-why"><div><div class="k">'+as('why')+'</div><ul class="why">'+pos.map(function(x){return '<li class="pos">'+esc(x)+'</li>'}).join('')+neg.map(function(x){return '<li class="neg">'+esc(x)+'</li>'}).join('')+(s.n?'':'<li class="neu">'+esc(as('n_new'))+'</li>')+'</ul></div>';
+    h+='<div><div class="k">'+as('facts')+'</div><div class="asm-f">'+[[as('f_loans'),s.n],[as('f_borrowed'),fm(s.borrowed)],[as('f_paid'),fm(s.paid)],[as('f_maxclean'),s.maxClean?fm(s.maxClean):'—'],[as('f_dti'),s.dti!=null?Math.round(s.dti*100)+'%':'—']]
+      .map(function(f){return '<div><span>'+f[0]+'</span><b>'+f[1]+'</b></div>'}).join('')+'</div></div></div><p class="asm-disc">'+as('disc')+'</p></div>';
+    return h;
+  }
+
+  // ================= data tab =================
+  var withActive=0, out=0, dpdNow=0, dpd30=0, closedLoans=0, cleanLoans=0, actLoans=0;
+  C.forEach(function(r){ if(r[c.active_n]>0){withActive++; out+=r[c.active_outstanding]||0;} if(r[c.cur_dpd]>0)dpdNow++; if(r[c.cur_dpd]>30)dpd30++; closedLoans+=r[c.closed_n]; cleanLoans+=r[c.closed_clean_n]; });
+  L.forEach(function(r){ if(r[l.active]) actLoans++; });
+
+  var SEG = {
+    all:function(){return true}, active:function(r){return r[c.active_n]>0}, dpd:function(r){return r[c.cur_dpd]>0}, dpd30:function(r){return r[c.cur_dpd]>30},
+    closedonly:function(r){return r[c.closed_n]>0 && r[c.active_n]===0}, cleanall:function(r){return r[c.closed_n]>0 && r[c.closed_overdue_n]===0},
+    repeat:function(r,i){return repeatC[i]}, never:function(r){return r[c.loans_n]===0}, rejected:function(r){return r[c.rejected_n]>0},
+    rc_yes:function(r,i){return ASM[i].rec==='rc_yes'}, rc_new:function(r,i){return ASM[i].rec==='rc_new'}, rc_std:function(r,i){return ASM[i].rec==='rc_std'}, rc_cond:function(r,i){return ASM[i].rec==='rc_cond'},
+    rc_notnow:function(r,i){return ASM[i].rec==='rc_notnow'}, rc_no:function(r,i){return ASM[i].rec==='rc_no'}
+  };
+  var SORT = {
+    out:function(x,y){return (C[y][c.active_outstanding]||0)-(C[x][c.active_outstanding]||0)},
+    dpd:function(x,y){return C[y][c.cur_dpd]-C[x][c.cur_dpd]},
+    dpdsum:function(x,y){return C[y][c.dpd_sum_all]-C[x][c.dpd_sum_all]},
+    apps:function(x,y){return C[y][c.apps_n]-C[x][c.apps_n]},
+    loans:function(x,y){return C[y][c.loans_n]-C[x][c.loans_n]},
+    last:function(x,y){return C[y][c.last_app]<C[x][c.last_app]?-1:(C[y][c.last_app]>C[x][c.last_app]?1:0)},
+    name:function(x,y){return C[x][c.name].localeCompare(C[y][c.name],'ka')}
+  };
+  var qEl=document.getElementById('q'), segEl=document.getElementById('seg'), sortEl=document.getElementById('sort');
+  var segSel='all', sortSel='out';
+  try{ var s=JSON.parse(localStorage.getItem('c360v')||'{}'); if(s.seg&&SEG[s.seg])segSel=s.seg; if(s.sort&&SORT[s.sort])sortSel=s.sort; }catch(e){}
+  var view=[], page=0, PER=50;
+
+  function fillControls(){
+    qEl.placeholder=t('q');
+    segEl.innerHTML=Object.keys(SEG).map(function(k){return '<option value="'+k+'">'+esc(k.indexOf('rc_')===0?as('fr_'+k.slice(3)):t('f_'+k))+'</option>'}).join(''); segEl.value=segSel;
+    sortEl.innerHTML=Object.keys(SORT).map(function(k){return '<option value="'+k+'">'+esc(t('o_'+k))+'</option>'}).join(''); sortEl.value=sortSel;
+    segEl.setAttribute('aria-label',LANG==='ka'?'ფილტრი':'Filter'); sortEl.setAttribute('aria-label',LANG==='ka'?'დალაგება':'Sort');
+    document.getElementById('xlsx').textContent=t('xlsx');
+    document.getElementById('prev').textContent=t('prev'); document.getElementById('next').textContent=t('next');
+    document.getElementById('listHead').innerHTML=['h_name','h_pid','h_phone','h_apps','h_appr','h_rej','h_act','h_out','h_mon','h_dpd','h_dpdsum','h_closed','h_clean']
+      .map(function(k,i){return '<th'+(i>=3?' class="n"':'')+'>'+t(k)+'</th>'}).join('')+'<th>'+as('h_rec')+'</th>';
+    var kp=[[t('k_cust'),fm(C.length),fm(A.length)+' '+t('k_apps')],[t('k_act'),fm(withActive),fm(actLoans)+' '+t('k_actl')],[t('k_out'),'₾'+fm(out),t('k_outd')],
+            [t('k_dpd'),fm(dpdNow),t('k_dpdd')],[t('k_dpd30'),fm(dpd30),t('k_cust')],[t('k_closed'),fm(closedLoans),fm(cleanLoans)+' '+t('k_clean')]];
+    document.getElementById('kpis').innerHTML=kp.map(function(k){return '<div class="kpi"><div class="l">'+esc(k[0])+'</div><div class="v">'+k[1]+'</div><div class="d">'+esc(k[2])+'</div></div>'}).join('');
+    document.getElementById('method').innerHTML = LANG==='ka' ? METHOD_KA : METHOD_EN;
+  }
+  function apply(){
+    var q=qEl.value.trim().toLowerCase(), f=SEG[segSel], terms=q?q.split(/\s+/):[];
+    view=[];
+    for(var i=0;i<C.length;i++){
+      if(!f(C[i],i)) continue;
+      if(terms.length){ var h=hay[i], ok=true; for(var k=0;k<terms.length;k++){ if(h.indexOf(terms[k])<0){ok=false;break;} } if(!ok) continue; }
+      view.push(i);
+    }
+    view.sort(SORT[sortSel]); page=0; render();
+    try{ localStorage.setItem('c360v', JSON.stringify({seg:segSel, sort:sortSel})); }catch(e){}
+  }
+  function render(){
+    var pages=Math.max(1,Math.ceil(view.length/PER)); if(page>=pages)page=pages-1;
+    var rows=view.slice(page*PER,(page+1)*PER).map(function(i){
+      var r=C[i];
+      return '<tr tabindex="0" data-i="'+i+'"><td class="nm">'+esc(r[c.name]||t('noname'))+'</td><td class="n">'+esc(r[c.pid]||'—')+'</td><td class="n">'+esc((r[c.phones]||'').split(' | ')[0]||'')+'</td>'+
+        '<td class="n">'+r[c.apps_n]+'</td><td class="n">'+z(r[c.approved_n])+'</td><td class="n">'+z(r[c.rejected_n])+'</td>'+
+        '<td class="n">'+z(r[c.active_n])+'</td><td class="n">'+z(r[c.active_outstanding])+'</td><td class="n">'+z(r[c.active_monthly])+'</td>'+
+        '<td class="n">'+dpdPill(r[c.cur_dpd])+'</td><td class="n">'+z(r[c.dpd_sum_all])+'</td><td class="n">'+z(r[c.closed_n])+'</td><td class="n">'+z(r[c.closed_clean_n])+'</td>'+
+        '<td><span class="pill '+REC_CLS[ASM[i].rec]+'">'+esc(as(ASM[i].rec))+'</span></td></tr>';
+    }).join('');
+    document.querySelector('#list tbody').innerHTML = rows || '<tr><td colspan="14" class="loading">'+esc(t('none'))+'</td></tr>';
+    document.getElementById('count').textContent = fm(view.length)+' '+t('nclients');
+    document.getElementById('pg').textContent = (page+1)+' / '+pages;
+    document.getElementById('prev').disabled = page===0; document.getElementById('next').disabled = page>=pages-1;
+  }
+  var tmr; qEl.addEventListener('input',function(){ clearTimeout(tmr); tmr=setTimeout(apply,180); });
+  segEl.addEventListener('change',function(){segSel=segEl.value;apply();}); sortEl.addEventListener('change',function(){sortSel=sortEl.value;apply();});
+  function toBar(){ window.scrollTo({top:document.querySelector('.bar').getBoundingClientRect().top+window.scrollY-10}); }
+  document.getElementById('prev').addEventListener('click',function(){ page--; render(); toBar(); });
+  document.getElementById('next').addEventListener('click',function(){ page++; render(); toBar(); });
+  var tb=document.querySelector('#list tbody');
+  tb.addEventListener('click',function(e){ var tr=e.target.closest('tr[data-i]'); if(tr) openP(+tr.dataset.i); });
+  tb.addEventListener('keydown',function(e){ if(e.key==='Enter'){ var tr=e.target.closest('tr[data-i]'); if(tr) openP(+tr.dataset.i); } });
+
+  // ---------------- profile sheet ----------------
+  var sheet=document.getElementById('sheet'), scrim=document.getElementById('scrim'), lastFocus=null, openIdx=-1;
+  function kv(items){ return '<div class="kv">'+items.map(function(p){ var v=p[1]; var e=(v===''||v==null); return '<div><div class="k">'+esc(p[0])+'</div><div class="v'+(e?' e':'')+'">'+(e?'—':v)+'</div></div>'; }).join('')+'</div>'; }
+  function openP(i){
+    openIdx=i;
+    var r=C[i], ap=(aOf[i]||[]).map(function(j){return A[j]}), lo=(lOf[i]||[]).map(function(j){return L[j]});
+    var act=lo.filter(function(x){return x[l.active]}), cl=lo.filter(function(x){return !x[l.active]});
+    var h='<div class="sheet-h"><div><h2 id="pname">'+esc(r[c.name]||t('noname'))+'</h2><div class="meta"><span>'+t('pidl')+' '+esc(r[c.pid]||'—')+'</span><span>'+esc(tv(r[c.key_type]))+'</span><span>'+t('firstapp')+' '+esc(r[c.first_app])+'</span></div></div><button class="x" id="closeP" type="button">'+t('close')+'</button></div>';
+    h+=asmHtml(i);
+    h+='<div class="sec"><h3>'+t('s1')+'</h3>'+kv([[t('pf_name'),esc(r[c.name])],[t('pf_pid'),esc(r[c.pid])],[t('pf_gender'),esc(tv(r[c.gender]))],[t('pf_dob'),esc(r[c.dob])],[t('pf_phone'),esc(r[c.phones])],[t('pf_fact'),esc(r[c.fact_addr])],[t('pf_ship'),esc(r[c.ship_addr])]])+'</div>';
+    h+='<div class="sec"><h3>'+t('s2')+'</h3>'+kv([[t('pf_work'),esc(r[c.work_place])],[t('pf_pos'),esc(r[c.position])],[t('pf_emp'),esc(tv(r[c.employment]))],
+      [t('pf_sal'),r[c.salary]?esc(r[c.salary])+' ₾':''],[t('pf_extra'),esc(tv(r[c.extra_income]))+(r[c.extra_income_amt]?' · '+money(r[c.extra_income_amt]):'')+(r[c.extra_income_source]?' · '+esc(tv(r[c.extra_income_source])):'')],
+      [t('pf_obl'),esc(tv(r[c.obligation]))],[t('pf_oblamt'),money(r[c.obligation_amt])]])+'</div>';
+    h+='<div class="sec"><h3>'+t('s3')+'</h3>'+kv([[t('pf_apps'),r[c.apps_n]],[t('pf_appr'),r[c.approved_n]+(r[c.single_n]?' ('+t('incl')+' '+r[c.single_n]+' '+t('pf_single')+')':'')],[t('pf_rej'),r[c.rejected_n]],
+      [t('pf_other'),r[c.other_n]],[t('pf_act'),r[c.active_n]],[t('pf_out'),money(r[c.active_outstanding])],[t('pf_mon'),money(r[c.active_monthly])],[t('pf_term'),esc(r[c.active_term])],
+      [t('pf_dpd'),r[c.cur_dpd]],[t('pf_dpdsum'),r[c.dpd_sum_all]],[t('pf_closed'),r[c.closed_n]],[t('pf_clean'),r[c.closed_clean_n]+' / '+r[c.closed_n]]])+'</div>';
+    function loanRows(arr, closed){
+      return arr.map(function(x){
+        var st = closed ? (x[l.close_kind].indexOf('გარეშე')>=0?'<span class="pill p-good">'+t('r_clean')+'</span>':(x[l.ct]==='2'?'<span class="pill p-mut">'+t('r_ct2')+'</span>':'<span class="pill p-warn">'+t('r_late')+'</span>')) : dpdPill(x[l.cur_dpd]);
+        return '<tr><td class="n">'+esc(x[l.id])+'</td><td class="n">'+esc(x[l.legacy])+'</td><td class="prod" title="'+esc(P[x[l.product]])+'">'+esc(P[x[l.product]])+'</td><td class="n">'+esc(x[l.issued])+'</td>'+
+          (closed?'<td class="n">'+esc(x[l.close_date])+'</td>':'')+'<td class="n">'+fm2(x[l.price])+'</td><td class="n">'+fm2(x[l.sched_total])+'</td><td class="n">'+(x[l.term]==null?'':x[l.term])+'</td><td class="n">'+fm2(x[l.monthly])+'</td>'+
+          (closed?'':'<td class="n">'+fm2(x[l.outstanding])+'</td>')+'<td class="n">'+z(x[l.dpd_sum])+'</td><td class="n">'+z(x[l.worst])+'</td><td>'+st+'</td></tr>';
+      }).join('');
+    }
+    var lh='<th class="n">'+t('l_case')+'</th><th class="n">'+t('l_old')+'</th><th>'+t('l_prod')+'</th><th class="n">'+t('l_iss')+'</th>';
+    var lt='<th class="n">'+t('l_price')+'</th><th class="n">'+t('l_sched')+'</th><th class="n">'+t('l_term')+'</th><th class="n">'+t('l_mon')+'</th>';
+    h+='<div class="sec"><h3>'+t('cur_loans')+' ('+act.length+')</h3>'+(act.length?'<div class="tw"><table><thead><tr>'+lh+lt+'<th class="n">'+t('l_left')+'</th><th class="n">'+t('l_dpdsum')+'</th><th class="n">'+t('l_worst')+'</th><th>'+t('l_dpd')+'</th></tr></thead><tbody>'+loanRows(act,false)+'</tbody></table></div>':'<p class="z">'+t('no_act')+'</p>')+'</div>';
+    h+='<div class="sec"><h3>'+t('cl_loans')+' ('+cl.length+')</h3>'+(cl.length?'<div class="tw"><table><thead><tr>'+lh+'<th class="n">'+t('l_close')+'</th>'+lt+'<th class="n">'+t('l_dpdsum')+'</th><th class="n">'+t('l_worst')+'</th><th>'+t('l_res')+'</th></tr></thead><tbody>'+loanRows(cl,true)+'</tbody></table></div>':'<p class="z">'+t('no_cl')+'</p>')+'</div>';
+    h+='<div class="sec" style="padding-bottom:24px"><h3>'+t('all_apps')+' ('+ap.length+')</h3><div class="tw"><table><thead><tr><th class="n">'+t('l_case')+'</th><th class="n">'+t('l_old')+'</th><th class="n">'+t('l_date')+'</th><th>'+t('l_status')+'</th><th>'+t('l_prod')+'</th><th class="n">'+t('l_price')+'</th></tr></thead><tbody>'+
+      ap.slice().reverse().map(function(x){ var cl2=(x[a.st]==='5'||x[a.st]==='1'||x[a.st]==='11'||x[a.st]==='99')?'p-good':(x[a.st]==='6'?'p-bad':'p-mut');
+        return '<tr><td class="n">'+esc(x[a.id])+'</td><td class="n">'+esc(x[a.legacy])+'</td><td class="n">'+esc(x[a.date])+'</td><td><span class="pill '+cl2+'">'+esc(stl(x[a.st]))+'</span></td><td class="prod" title="'+esc(P[x[a.product]])+'">'+esc(P[x[a.product]])+'</td><td class="n">'+fm2(x[a.price])+'</td></tr>'; }).join('')+
+      '</tbody></table></div></div>';
+    sheet.innerHTML=h; if(sheet.hidden) lastFocus=document.activeElement; sheet.hidden=false; scrim.hidden=false;
+    document.getElementById('closeP').focus(); document.getElementById('closeP').addEventListener('click',closeP);
+  }
+  function closeP(){ sheet.hidden=true; scrim.hidden=true; openIdx=-1; if(lastFocus&&lastFocus.focus) lastFocus.focus(); }
+  scrim.addEventListener('click',closeP);
+  document.addEventListener('keydown',function(e){ if(e.key==='Escape'&&!sheet.hidden) closeP(); });
+
+  // ---------------- Excel export ----------------
+  var XL='https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js', xlP=null;
+  function loadXL(){ if(window.ExcelJS) return Promise.resolve(window.ExcelJS); if(xlP) return xlP;
+    xlP=new Promise(function(res,rej){ var s=document.createElement('script'); s.src=XL; s.onload=function(){res(window.ExcelJS)}; s.onerror=function(){xlP=null;rej(new Error('ExcelJS'))}; document.head.appendChild(s); }); return xlP; }
+  function sheetOf(wb,name,head,rows,widths){
+    var ws=wb.addWorksheet(name,{views:[{state:'frozen',ySplit:1}]});
+    ws.addRow(head); rows.forEach(function(r){ ws.addRow(r); });
+    var hr=ws.getRow(1); hr.font={name:'Arial',size:9,bold:true,color:{argb:'FFF2F2EE'}}; hr.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FF1A1A34'}}; hr.alignment={vertical:'middle',wrapText:true}; hr.height=30;
+    head.forEach(function(_,k){ ws.getColumn(k+1).width=widths[k]||14; });
+    ws.autoFilter={from:{row:1,column:1},to:{row:1,column:head.length}};
+    for(var i=2;i<=rows.length+1;i++){ ws.getRow(i).font={name:'Arial',size:9}; }
+  }
+  function saveBlob(blob,fn){
+    function fb(){ var u=URL.createObjectURL(blob), x=document.createElement('a'); x.href=u; x.download=fn; document.body.appendChild(x); x.click(); x.remove(); setTimeout(function(){URL.revokeObjectURL(u)},1000); }
+    if(window.claude&&window.claude.use){ window.claude.use('downloads').then(function(d){ if(!d){fb();return;} d.save({filename:fn,data:blob}).catch(function(){}); }).catch(fb); return; }
+    fb();
+  }
+  var XH = {
+    ka:{c:['პირადი ნომერი','სახელი, გვარი','სქესი','დაბადების თარიღი','ტელეფონი','ფაქტობრივი მისამართი','მიტანის მისამართი','სამუშაო ადგილი','თანამდებობა','დასაქმების ტიპი','ხელფასი','დამატებითი შემოსავალი','დამ. შემოსავლის თანხა','ფინანსური ვალდებულება','ვალდებულება თვეში ₾','განაცხადი','დადასტურებული','უარყოფილი','სხვა','აქტიური სესხი','მიმდინარე ვალდებულება ₾','ყოველთვიური ₾','ვადა (თვე)','მიმდინარე DPD','DPD ჯამი','დახურული','დახურული სუფთად','დახურული ვადაგად.','მაქს. დაგვიანება','პირველი განაცხადი','ბოლო განაცხადი','იდენტიფიკაცია'],
+        l:['პირადი ნომერი','სახელი, გვარი','ქეისი','ძველი №','პროდუქტი','გაცემის თარიღი','სტატუსი','დახურვის თარიღი','შედეგი','ფასი ₾','ავანსი ₾','გრაფიკის ჯამი ₾','ვადა (თვე)','ყოველთვიური ₾','დარჩენილი ₾','მიმდინარე DPD','DPD ჯამი','მაქს. დაგვიანება','გადახდილი სულ ₾','მ.შ. ჯარიმა ₾'],
+        a:['პირადი ნომერი','სახელი, გვარი','ქეისი','ძველი №','თარიღი','სტატუსი','პროდუქტი','ფასი ₾'], sh:['კლიენტები','სესხები','განაცხადები'], act:'აქტიური', cl:'დახურული'},
+    en:{c:['Personal no.','Name','Gender','Date of birth','Phone','Actual address','Delivery address','Workplace','Position','Employment type','Salary','Additional income','Additional income ₾','Financial obligations','Obligations monthly ₾','Applications','Approved','Rejected','Other','Active loans','Outstanding ₾','Monthly ₾','Term (months)','Current DPD','DPD total','Closed','Closed clean','Closed with delay','Max delay','First application','Last application','Identified by'],
+        l:['Personal no.','Name','Case','Old no.','Product','Issued','Status','Closed on','Result','Price ₾','Advance ₾','Schedule total ₾','Term (months)','Monthly ₾','Remaining ₾','Current DPD','DPD total','Max delay','Paid total ₾','of which penalty ₾'],
+        a:['Personal no.','Name','Case','Old no.','Date','Status','Product','Price ₾'], sh:['Customers','Loans','Applications'], act:'Active', cl:'Closed'}
+  };
+  var xb=document.getElementById('xlsx');
+  xb.addEventListener('click',function(){
+    xb.disabled=true; xb.textContent=t('xlsxBusy'); var H=XH[LANG];
+    loadXL().then(function(ExcelJS){
+      var wb=new ExcelJS.Workbook(), set={};
+      view.forEach(function(i){ set[i]=1; });
+      sheetOf(wb,H.sh[0],H.c.concat(AS[LANG].x), view.map(function(i){ var r=C[i], s=ASM[i]; return [r[c.pid],r[c.name],tv(r[c.gender]),r[c.dob],r[c.phones],r[c.fact_addr],r[c.ship_addr],r[c.work_place],r[c.position],tv(r[c.employment]),r[c.salary],tv(r[c.extra_income]),r[c.extra_income_amt],tv(r[c.obligation]),r[c.obligation_amt],r[c.apps_n],r[c.approved_n],r[c.rejected_n],r[c.other_n],r[c.active_n],r[c.active_outstanding],r[c.active_monthly],r[c.active_term],r[c.cur_dpd],r[c.dpd_sum_all],r[c.closed_n],r[c.closed_clean_n],r[c.closed_overdue_n],r[c.max_delay],r[c.first_app],r[c.last_app],tv(r[c.key_type]),as(s.typeKey),as(s.grade),as(s.risk),as(s.rec)]; }),
+        [14,24,7,11,14,30,30,24,16,12,9,10,10,10,10,8,8,8,7,8,11,10,8,8,8,8,8,8,8,11,11,14,22,12,12,16]);
+      sheetOf(wb,H.sh[1],H.l, L.filter(function(x){return set[x[l.c]]}).map(function(x){ var r=C[x[l.c]]; return [r[c.pid],r[c.name],x[l.id],x[l.legacy],P[x[l.product]],x[l.issued],x[l.active]?H.act:H.cl,x[l.close_date],tv(x[l.close_kind]),x[l.price],x[l.adv],x[l.sched_total],x[l.term],x[l.monthly],x[l.outstanding],x[l.active]?x[l.cur_dpd]:null,x[l.dpd_sum],x[l.worst],x[l.paid_total],x[l.penalty_paid]]; }),
+        [14,24,9,9,40,11,10,11,26,9,9,10,8,10,10,8,8,8,10,9]);
+      sheetOf(wb,H.sh[2],H.a, A.filter(function(x){return set[x[a.c]]}).map(function(x){ var r=C[x[a.c]]; return [r[c.pid],r[c.name],x[a.id],x[a.legacy],x[a.date],stl(x[a.st]),P[x[a.product]],x[a.price]]; }),
+        [14,24,9,9,11,22,44,9]);
+      return wb.xlsx.writeBuffer().then(function(buf){ saveBlob(new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}),'Volta_Customer360_'+M.today+'.xlsx'); });
+    }).catch(function(){}).finally(function(){ xb.disabled=false; xb.textContent=t('xlsx'); });
+  });
+
+  var METHOD_KA = '<b>როგორ არის დათვლილი.</b><ul>'+
+    '<li><b>კლიენტი</b> ერთიანდება პირადი ნომრით (11 ციფრი, განაცხადის ფორმიდან ან კლიენტის ანგარიშიდან). სადაც პირადი ნომერი არ არის, კლიენტი ანგარიშით ან ცალკე განაცხადით ჩანს და ეს პროფილში წერია.</li>'+
+    '<li><b>პირადი, დასაქმების და შემოსავლის ველები</b> აღებულია კლიენტის ბოლო განაცხადიდან, სადაც ველი შევსებულია. ფაქტობრივი მისამართი და სამსახური, სადაც ფორმაში არ არის, CRM-ის კლიენტის პროფილიდან მოდის. ხელფასი, დამატებითი შემოსავალი და ვალდებულებები ფორმაში მხოლოდ ბოლო წლების განაცხადებზე ივსება (დაახლოებით მესამედი კლიენტისა).</li>'+
+    '<li><b>დადასტურებული</b> = გაცემული განვადება + ერთჯერადი გადახდით შეძენა. <b>უარყოფილი</b> = Volta-ს მიერ უარყოფილი (სტატუსი 6). დანარჩენი (კლიენტის უარი, კონტაქტი ვერ დამყარდა, მოლოდინში) პროფილში ცალკე ჩანს.</li>'+
+    '<li><b>მიმდინარე ვალდებულება</b> = აქტიური სესხების გრაფიკის გადაუხდელი ნაწილი, CRM-ის განაწილებით. <b>მიმდინარე DPD</b> = დღეები ყველაზე ძველი გადაუხდელი, ვადაგასული შენატანიდან.</li>'+
+    '<li><b>DPD ჯამი</b> = თითოეული შენატანის დაგვიანების დღეების ჯამი, ყველა სესხზე: გრაფიკის თარიღი შედარებულია იმ დღესთან, როცა გადახდების ჯამმა ეს შენატანი დაფარა (ჯარიმის ნაწილი არ ითვლება). ჯერ დაუფარავი შენატანი ითვლება დღევანდელ დღემდე.</li>'+
+    '<li><b>დახურული ვადაგადაცილების გარეშე</b> = სესხის არცერთი შენატანი არ დაგვიანებულა თუნდაც 1 დღით. პროფილში ჩანს მაქსიმალური ერთჯერადი დაგვიანებაც. დახურვის თარიღი = დღე, როცა გადახდებმა მთელი გრაფიკი დაფარა (თუ არა, CRM-ის დახურვის თარიღი ან ბოლო გადახდა).</li></ul>';
+  var METHOD_EN = '<b>How it is calculated.</b><ul>'+
+    '<li><b>A customer</b> is joined on personal number (11 digits, from the application form or the customer account). Where there is none, the customer is keyed by account or by the single application, and the profile says so.</li>'+
+    '<li><b>Personal, employment and income fields</b> come from the customer\'s latest application where the field is filled. Actual address and workplace fall back to the CRM customer profile. Salary, additional income and obligations are only on recent application forms (about a third of customers).</li>'+
+    '<li><b>Approved</b> = installment issued + single-payment purchase. <b>Rejected</b> = rejected by Volta (status 6). The rest (client declined, no contact, pending) is shown separately in the profile.</li>'+
+    '<li><b>Outstanding</b> = unpaid part of active loans\' schedules, per the CRM\'s own allocation. <b>Current DPD</b> = days since the oldest unpaid instalment that is past due.</li>'+
+    '<li><b>DPD total</b> = days late summed over every instalment of every loan: each due date against the day cumulative payments covered it (penalties excluded). An instalment still unpaid counts up to today.</li>'+
+    '<li><b>Closed without delay</b> = no instalment was even 1 day late. The profile also shows the longest single delay. Close date = the day payments covered the whole schedule (otherwise the CRM close date or the last payment).</li></ul>';
+
+  // ================= analysis tab =================
+  var tip=document.getElementById('tip');
+  function showTip(e,html){ tip.innerHTML=html; tip.hidden=false; var x=e.clientX+14, y=e.clientY+14, w=tip.offsetWidth, h=tip.offsetHeight; if(x+w>innerWidth-8)x=e.clientX-w-14; if(y+h>innerHeight-8)y=e.clientY-h-14; tip.style.left=x+'px'; tip.style.top=y+'px'; }
+  function hideTip(){ tip.hidden=true; }
+  var AT = {
+    ka:{h_find:'მთავარი მიგნებები', d_find:'ციფრები ქვემოთ მოცემული ცხრილებიდან და გრაფიკებიდანაა.',
+      h_port:'აქტიური პორტფელი: ვადაგადაცილების მიხედვით', d_port:'აქტიური სესხების გადაუხდელი ნაწილი, მიმდინარე DPD-ის ჯგუფებში.',
+      h_vint:'რისკი გაცემის პერიოდის მიხედვით', d_vint:'რა წილს ჰქონდა ოდესმე 30+ დღიანი დაგვიანება, სესხის გაცემის ნახევარწლის მიხედვით.',
+      h_risk:'ვინ იხდის უარესად', d_risk:'სესხები, რომლებიც სულ მცირე 3 თვეა გაცემულია. ზოლი = ოდესმე 30+ დღით დაგვიანებულის წილი. სქესი და ასაკი კლიენტის პროფილიდანაა, დანარჩენი თავად ამ სესხის განაცხადიდან.',
+      h_funnel:'განაცხადები და მათი შედეგი თვეების მიხედვით', d_funnel:'2024 წლიდან. „სხვა“ = გაუქმებული, მოლოდინში, განხილვაში.',
+      h_appr:'დამტკიცება განმცხადებლის ისტორიის მიხედვით', d_appr:'2025 წლიდან შემოსული განაცხადები. ისტორია განისაზღვრება განაცხადის მომენტისთვის.',
+      h_seg:'კლიენტების სეგმენტები', d_seg:'თითოეული კლიენტი ერთ სეგმენტშია, ზემოდან ქვემოთ პირველი, რომელსაც აკმაყოფილებს.',
+      h_rep:'განმეორებითი სესხის პოტენციალი', d_rep:'კლიენტები, რომლებსაც აქტიური სესხი არ აქვთ და ყველა დახურული სესხი ვადაგადაცილების გარეშე დაფარეს, ბოლო დახურვიდან გასული დროის მიხედვით.',
+      c_bucket:'ჯგუფი', c_loans:'სესხი', c_out:'დარჩენილი ₾', c_share:'წილი', c_bad:'ოდესმე 30+', c_clean:'სუფთა', c_cur30:'ახლა 30+ (აქტ.)', c_period:'პერიოდი', c_amt:'გაცემული ₾',
+      c_apps:'განაცხადი', c_approved:'დამტკიცდა', c_rejected:'უარყო Volta-მ', c_refused:'კლიენტმა უარი თქვა / კონტაქტი ვერ', c_seg:'სეგმენტი', c_n:'კლიენტი', c_avgapps:'საშ. განაცხადი', c_avgloans:'საშ. სესხი',
+      c_since:'ბოლო დახურვიდან', c_applied:'ახალი განაცხადი შემოიტანა', c_notapplied:'არ შემოუტანია',
+      dpd0:'დროულად (0)', dpd1_7:'1–7 დღე', dpd8_30:'8–30 დღე', dpd31_60:'31–60 დღე', dpd61_90:'61–90 დღე', dpd91_180:'91–180 დღე', dpd180:'180+ დღე',
+      r_seq:'მერამდენე სესხია კლიენტისთვის', r_amt:'სესხის თანხა (პროდუქტის ფასი), ₾', r_term:'ვადა, თვე', r_age:'ასაკი გაცემისას', r_gender:'სქესი', r_emp:'დასაქმების ტიპი (ფორმიდან)', r_sal:'ხელფასი (ფორმიდან), ₾', r_obl:'სხვა ვალდებულება აქვს (ფორმიდან)', r_dti:'ვალდებულება + ეს სესხი / ხელფასი',
+      seq1:'პირველი', seq2:'მეორე', seq3:'მესამე და მეტი', female:'ქალი', male:'კაცი', unknown:'უცნობი', emp_private:'კერძო', emp_public:'საჯარო', emp_self:'თვითდასაქმებული', emp_none:'დაუსაქმებელი', yes:'კი', no:'არა',
+      new:'ახალი (სესხი არასდროს ჰქონია)', prev_rejected:'ადრე უარყოფილი', returning:'არსებული / ყოფილი მსესხებელი',
+      s_active:'აქტიური, დროულად იხდის', s_late:'აქტიური, 1–30 დღით აგვიანებს', s_bad:'აქტიური, 30+ დღით აგვიანებს', s_clean:'დახურა სუფთად, ახლა სესხი არ აქვს', s_closedlate:'დახურა დაგვიანებით, ახლა სესხი არ აქვს',
+      s_single:'მხოლოდ ერთჯერადი ყიდვა', s_rejected:'მხოლოდ უარყოფილი განაცხადები', s_other:'განაცხადი არ დასრულებულა (უარი, კონტაქტი, მოლოდინი)',
+      r0_3:'0–3 თვე', r3_6:'3–6 თვე', r6_12:'6–12 თვე', r12_24:'1–2 წელი', r24:'2+ წელი', total:'სულ', ofApps:'განაცხადი', all:'ყველა',
+      l_loan:'გაცემული / ერთჯერადი', l_rej:'უარყო Volta-მ', l_ref:'კლიენტის უარი / კონტაქტი ვერ', l_oth:'სხვა',
+      h_bt:'წინა ისტორია წინასწარმეტყველებს შემდეგ სესხს', d_bt:'რა წილს ჰქონდა 30+ დღის დაგვიანება შემდეგ სესხზე, იმის მიხედვით, როგორ დახურა კლიენტმა წინა სესხები (მხოლოდ ის სესხები, რომლებიც ახლის გაცემამდე დაიხურა). კლიენტის პროფილის შეფასება ამ ჯგუფებს ეყრდნობა.',
+      bt_first:'პირველი სესხი, ისტორია არ აქვს', bt_0_7:'წინა სესხები დახურა მაქსიმუმ 7 დღის დაგვიანებით', bt_8_30:'წინა სესხზე ჰქონდა 8–30 დღის დაგვიანება', bt_31:'წინა სესხზე ჰქონდა 30+ დღის დაგვიანება (მცირე ნიმუში)', bt_open:'წინა სესხი ჯერ ღია იყო (პარალელური სესხი)', c_next:'შემდეგ სესხზე 30+',
+      vpart:'ბოლო ნახევარწელი (ღია ფერით) ჯერ არ დასრულებულა და მისი სესხები ძალიან ახალია, ამიტომ მისი მაჩვენებელი ჯერ შედარებადი არ არის.',
+      cav:'შენიშვნა: ხელფასი, დასაქმება და ვალდებულებები ფორმაში მხოლოდ ბოლო წლების განაცხადებზეა, ამიტომ ამ ცხრილებში „უცნობი“ ძირითადად ძველი სესხებია.'},
+    en:{h_find:'Key findings', d_find:'Numbers come from the tables and charts below.',
+      h_port:'Active portfolio by days past due', d_port:'Unpaid part of active loans, grouped by current DPD.',
+      h_vint:'Risk by issue period', d_vint:'Share of loans that were ever 30+ days late, by the half-year the loan was issued.',
+      h_risk:'Who pays worse', d_risk:'Loans at least 3 months on book. Bar = share ever 30+ days late. Gender and age come from the customer profile, everything else from that loan\'s own application.',
+      h_funnel:'Applications and their outcome by month', d_funnel:'From 2024. “Other” = cancelled, pending, under review.',
+      h_appr:'Approval by applicant history', d_appr:'Applications since 2025. History is taken as of the moment of applying.',
+      h_seg:'Customer segments', d_seg:'Each customer is in exactly one segment: the first one from the top that fits.',
+      h_rep:'Repeat-loan potential', d_rep:'Customers with no active loan whose every closed loan was repaid without delay, by time since the last close.',
+      c_bucket:'Group', c_loans:'Loans', c_out:'Outstanding ₾', c_share:'Share', c_bad:'Ever 30+', c_clean:'Clean', c_cur30:'30+ now (active)', c_period:'Period', c_amt:'Issued ₾',
+      c_apps:'Applications', c_approved:'Approved', c_rejected:'Rejected by Volta', c_refused:'Client declined / no contact', c_seg:'Segment', c_n:'Customers', c_avgapps:'Avg apps', c_avgloans:'Avg loans',
+      c_since:'Since last close', c_applied:'Applied again', c_notapplied:'Did not apply',
+      dpd0:'On time (0)', dpd1_7:'1–7 days', dpd8_30:'8–30 days', dpd31_60:'31–60 days', dpd61_90:'61–90 days', dpd91_180:'91–180 days', dpd180:'180+ days',
+      r_seq:'Which loan this is for the customer', r_amt:'Loan amount (product price), ₾', r_term:'Term, months', r_age:'Age at issue', r_gender:'Gender', r_emp:'Employment type (form)', r_sal:'Salary (form), ₾', r_obl:'Has other obligations (form)', r_dti:'Obligations + this loan / salary',
+      seq1:'First', seq2:'Second', seq3:'Third or later', female:'Female', male:'Male', unknown:'Unknown', emp_private:'Private sector', emp_public:'Public sector', emp_self:'Self-employed', emp_none:'Unemployed', yes:'Yes', no:'No',
+      new:'New (never had a loan)', prev_rejected:'Previously rejected', returning:'Current / former borrower',
+      s_active:'Active, paying on time', s_late:'Active, 1–30 days late', s_bad:'Active, 30+ days late', s_clean:'Closed clean, no loan now', s_closedlate:'Closed with delays, no loan now',
+      s_single:'Single-payment purchase only', s_rejected:'Only rejected applications', s_other:'Application never completed (declined, no contact, pending)',
+      r0_3:'0–3 months', r3_6:'3–6 months', r6_12:'6–12 months', r12_24:'1–2 years', r24:'2+ years', total:'Total', ofApps:'applications', all:'All',
+      l_loan:'Issued / single payment', l_rej:'Rejected by Volta', l_ref:'Client declined / no contact', l_oth:'Other',
+      h_bt:'Past behaviour predicts the next loan', d_bt:'Share 30+ days late on the next loan, by how the customer closed earlier loans (only loans closed before the new one was issued). The assessment in each customer profile uses these groups.',
+      bt_first:'First loan, no history', bt_0_7:'Earlier loans closed at most 7 days late', bt_8_30:'An earlier loan was 8–30 days late', bt_31:'An earlier loan was 30+ days late (small sample)', bt_open:'Earlier loan still open (parallel loan)', c_next:'30+ on next loan',
+      vpart:'The latest half-year (lighter bar) is still running and its loans are very young, so its rate is not comparable yet.',
+      cav:'Note: salary, employment and obligations are only on recent application forms, so “Unknown” in these tables is mostly older loans.'}
+  };
+  function at(k){ return (AT[LANG][k]!=null?AT[LANG][k]:k); }
+  function pct(v){ return v==null?'—':v.toFixed(1)+'%'; }
+  function barCell(v,max,hi){ if(v==null) return '<td class="bcell"><span class="z">—</span></td>'; var w=max?Math.max(1,v/max*100):0;
+    return '<td class="bcell"><div class="btrack"><div class="bfill'+(hi?' hi':'')+'" style="width:'+(w*0.82)+'%"></div><span class="bval" style="left:'+(w*0.82)+'%">'+pct(v)+'</span></div></td>'; }
+
+  function findings(){
+    var par=AN.par, tot=AN.totals.active_out, p30=0, p90=0, p1=0;
+    par.forEach(function(p){ if(p.k!=='dpd0')p1+=p.out; if(['dpd31_60','dpd61_90','dpd91_180','dpd180'].indexOf(p.k)>=0)p30+=p.out; if(['dpd91_180','dpd180'].indexOf(p.k)>=0)p90+=p.out; });
+    var V={}; AN.vint.forEach(function(v){V[v.k]=v;});
+    var R=AN.risk, sq=R.seq, g={}, ag={}, am={}, tm={}, ap={};
+    R.gender.forEach(function(x){g[x.k]=x}); R.age.forEach(function(x){ag[x.k]=x}); R.amt.forEach(function(x){am[x.k]=x}); R.term.forEach(function(x){tm[x.k]=x}); AN.appr.forEach(function(x){ap[x.k]=x});
+    var sl={}; R.sal.forEach(function(x){sl[x.k]=x});
+    function B(v,suf){ return '<b>'+v+(suf||'')+'</b>'; }
+    var f = LANG==='ka' ? [
+      ['f-bad','აქტიური პორტფელის მეოთხედი 30+ დღით არის ვადაგადაცილებული','აქტიური ვალდებულების '+B('₾'+fm(tot))+'-დან '+B(pct(p30/tot*100))+' (₾'+fm(p30)+') 30 დღეზე მეტით არის ვადაგადაცილებული, '+B(pct(p90/tot*100))+' კი 90 დღეზე მეტით. ნაწილი ძველი, დიდი ხნის გადაუხდელი სესხებია, რომლებიც CRM-ში ჯერ კიდევ აქტიურად ითვლება.'],
+      ['f-bad','2026 წლის პირველ ნახევარში გაცემული სესხები ბევრად სარისკოა','2026-H1-ში გაცემული '+B(fm(V['2026-H1'].n))+' სესხიდან '+B(pct(V['2026-H1'].bad))+'-ს უკვე ჰქონდა 30+ დღიანი დაგვიანება. 2023–2025 წლის პირველი ნახევრის სესხებზე ეს იყო '+B('4–9%')+'. ამავე პერიოდში გაცემული სესხების რაოდენობა სამჯერ მეტად გაიზარდა.'],
+      ['f-good','განმეორებითი მსესხებლები გაცილებით უკეთ იხდიან','პირველ სესხზე ოდესმე 30+ დაგვიანება '+B(pct(sq[0].bad))+' იყო, მეორეზე '+B(pct(sq[1].bad))+', მესამე და მეტზე '+B(pct(sq[2].bad))+'. არსებული/ყოფილი მსესხებლის განაცხადი '+B(pct(ap.returning.approved))+'-ში მტკიცდება, ახალი განმცხადებლის '+B(pct(ap['new'].approved))+'-ში.'],
+      ['f-warn','კაცები და ახალგაზრდები მეტად აგვიანებენ','30+ დაგვიანება: კაცები '+B(pct(g.male.bad))+', ქალები '+B(pct(g.female.bad))+'. ასაკით 25–34 '+B(pct(ag['25–34'].bad))+', 55+ '+B(pct(ag['55+'].bad))+'.'],
+      ['f-warn','რისკი იზრდება თანხასთან და გრძელ ვადასთან ერთად','₾500-მდე სესხი: '+B(pct(am['<500'].bad))+', ₾4,000+: '+B(pct(am['4000+'].bad))+'. 6 თვემდე ვადა: '+B(pct(tm['≤6'].bad))+', 12+ თვე: '+B(pct(tm['12+'].bad))+'.'],
+      ['f-info','ფორმაში მითითებული შემოსავალი რისკს თითქმის ვერ ხსნის','ხელფასით ₾3,000+ კლიენტებს '+B(pct(sl['3000+'].bad))+' აქვთ, ₾1,000-მდე: '+B(pct(sl['<1000'].bad))+'. ვალდებულების/ხელფასის მაღალი ფარდობა დაბალ რისკს ემთხვევა. თვითდეკლარირებული ციფრები სავარაუდოდ არაზუსტია და გადამოწმებას საჭიროებს.'],
+      ['f-good',fm(AN.totals.clean_pool_no_app)+'–'+fm(AN.pool3.no_app)+' კანდიდატი განმეორებითი სესხისთვის',B(fm(AN.totals.clean_pool_no_app))+' კლიენტმა ყველა სესხი ვადაგადაცილების გარეშე დახურა და მას შემდეგ განაცხადი არ შემოუტანია. თუ 3 დღემდე დაგვიანებას დავუშვებთ, ასეთი '+B(fm(AN.pool3.no_app))+' კლიენტია. სიას „მონაცემების“ ტაბზე ფილტრით ნახავ.']
+    ] : [
+      ['f-bad','A quarter of the active portfolio is 30+ days past due','Of '+B('₾'+fm(tot))+' outstanding, '+B(pct(p30/tot*100))+' (₾'+fm(p30)+') is more than 30 days past due and '+B(pct(p90/tot*100))+' more than 90. Part of it is old loans unpaid for a long time that the CRM still counts as active.'],
+      ['f-bad','Loans issued in H1 2026 are much riskier','Of the '+B(fm(V['2026-H1'].n))+' loans issued in 2026-H1, '+B(pct(V['2026-H1'].bad))+' have already been 30+ days late. For loans from 2023 to 2025-H1 it was '+B('4–9%')+'. Issuance more than tripled over the same time.'],
+      ['f-good','Repeat borrowers pay much better','Ever 30+ late: '+B(pct(sq[0].bad))+' on a first loan, '+B(pct(sq[1].bad))+' on a second, '+B(pct(sq[2].bad))+' on a third or later. Applications from current/former borrowers are approved '+B(pct(ap.returning.approved))+' of the time, new applicants '+B(pct(ap['new'].approved))+'.'],
+      ['f-warn','Men and younger customers are late more often','30+ late: men '+B(pct(g.male.bad))+', women '+B(pct(g.female.bad))+'. Age 25–34 '+B(pct(ag['25–34'].bad))+', 55+ '+B(pct(ag['55+'].bad))+'.'],
+      ['f-warn','Risk rises with amount and longer terms','Loans under ₾500: '+B(pct(am['<500'].bad))+', ₾4,000+: '+B(pct(am['4000+'].bad))+'. Terms up to 6 months: '+B(pct(tm['≤6'].bad))+', 12+ months: '+B(pct(tm['12+'].bad))+'.'],
+      ['f-info','Self-reported income hardly explains risk','Customers stating a ₾3,000+ salary: '+B(pct(sl['3000+'].bad))+'; under ₾1,000: '+B(pct(sl['<1000'].bad))+'. A high obligations-to-salary ratio even lines up with lower risk. The declared figures are likely unreliable and worth verifying.'],
+      ['f-good',fm(AN.totals.clean_pool_no_app)+'–'+fm(AN.pool3.no_app)+' candidates for a repeat loan',B(fm(AN.totals.clean_pool_no_app))+' customers closed every loan without a single day late and have not applied since. Allowing up to 3 days late, it is '+B(fm(AN.pool3.no_app))+'. The list is a filter on the Data tab.']
+    ];
+    return '<div class="finds">'+f.map(function(x){return '<div class="find '+x[0]+'"><div class="t">'+x[1]+'</div><div class="b">'+x[2]+'</div></div>'}).join('')+'</div>';
+  }
+  function parTable(){
+    var tot=AN.totals.active_out, max=0; AN.par.forEach(function(p){ max=Math.max(max,p.out/tot*100); });
+    return '<div class="tw"><table class="rt"><thead><tr><th>'+at('c_bucket')+'</th><th class="n">'+at('c_loans')+'</th><th class="n">'+at('c_out')+'</th><th>'+at('c_share')+'</th></tr></thead><tbody>'+
+      AN.par.map(function(p){ var s=p.out/tot*100; return '<tr><td>'+at(p.k)+'</td><td class="n">'+fm(p.n)+'</td><td class="n">'+fm(p.out)+'</td>'+barCell(s,max,['dpd31_60','dpd61_90','dpd91_180','dpd180'].indexOf(p.k)>=0)+'</tr>'; }).join('')+
+      '<tr><td><b>'+at('total')+'</b></td><td class="n"><b>'+fm(AN.totals.active_n)+'</b></td><td class="n"><b>'+fm(tot)+'</b></td><td></td></tr></tbody></table></div>'+
+      '<div class="legend" style="margin-top:8px"><span><i style="background:var(--s1)"></i>0–30 '+(LANG==='ka'?'დღე':'days')+'</span><span><i style="background:var(--s2)"></i>30+ '+(LANG==='ka'?'დღე':'days')+'</span></div>';
+  }
+  function colChart(id, items, val, label, tipf){
+    var W=640, H=220, pl=36, pr=8, pt=14, pb=34, iw=W-pl-pr, ih=H-pt-pb, max=0;
+    items.forEach(function(d){ max=Math.max(max,val(d)); }); max=Math.ceil(max/5)*5||5; var nt=max/5;
+    var bw=iw/items.length, g='';
+    for(var k=0;k<=nt;k++){ var y=pt+ih-ih*k/nt; g+='<line class="gl" x1="'+pl+'" x2="'+(W-pr)+'" y1="'+y+'" y2="'+y+'"/><text x="'+(pl-6)+'" y="'+(y+3.5)+'" text-anchor="end">'+(5*k)+'%</text>'; }
+    items.forEach(function(d,i){ var v=val(d), h=ih*v/max, x=pl+i*bw+bw*0.18, w=bw*0.64, y=pt+ih-h;
+      g+='<path d="M'+x+','+(pt+ih)+' v'+(-(h-4>0?h-4:0))+' q0,-4 4,-4 h'+(w-8)+' q4,0 4,4 v'+(h-4>0?h-4:0)+' z" fill="var(--s1)"'+(tipf&&tipf(d)?' fill-opacity="0.4"':'')+'/>';
+      g+='<text x="'+(x+w/2)+'" y="'+(y-4)+'" text-anchor="middle" style="fill:var(--ink);font-weight:600">'+v.toFixed(1)+'</text>';
+      g+='<text x="'+(x+w/2)+'" y="'+(H-pb+14)+'" text-anchor="middle">'+label(d)+'</text>';
+      g+='<rect x="'+(pl+i*bw)+'" y="'+pt+'" width="'+bw+'" height="'+ih+'" fill="transparent" data-i="'+i+'"/>'; });
+    return '<svg class="chart" id="'+id+'" viewBox="0 0 '+W+' '+H+'" role="img">'+g+'</svg>';
+  }
+  function stackChart(id, items){
+    var keys=[['loan',function(d){return d.loan+d.single},'var(--s1)','l_loan'],['rej',function(d){return d.rejected},'var(--s2)','l_rej'],['ref',function(d){return d.refused+d.nocontact},'var(--s3)','l_ref'],['oth',function(d){return d.other},'var(--s4)','l_oth']];
+    var W=900, H=260, pl=44, pr=8, pt=12, pb=30, iw=W-pl-pr, ih=H-pt-pb, max=0;
+    items.forEach(function(d){ max=Math.max(max,d.apps); }); var step=Math.pow(10,Math.floor(Math.log10(max/4))); var tick=Math.ceil(max/4/step)*step; max=tick*4;
+    var bw=iw/items.length, g='';
+    for(var k=0;k<=4;k++){ var y=pt+ih-ih*k/4; g+='<line class="gl" x1="'+pl+'" x2="'+(W-pr)+'" y1="'+y+'" y2="'+y+'"/><text x="'+(pl-6)+'" y="'+(y+3.5)+'" text-anchor="end">'+fm(tick*k)+'</text>'; }
+    items.forEach(function(d,i){ var x=pl+i*bw+bw*0.14, w=bw*0.72, y0=pt+ih;
+      keys.forEach(function(kk){ var v=kk[1](d), h=ih*v/max; if(h<=0) return; var hh=Math.max(0,h-2); g+='<rect x="'+x+'" y="'+(y0-h)+'" width="'+w+'" height="'+hh+'" fill="'+kk[2]+'"'+(kk[0]==='oth'||true?' rx="1.5"':'')+'/>'; y0-=h; });
+      if(d.k.slice(5)==='01'||i===items.length-1) g+='<text x="'+(x+w/2)+'" y="'+(H-pb+14)+'" text-anchor="middle">'+d.k+'</text>';
+      g+='<rect x="'+(pl+i*bw)+'" y="'+pt+'" width="'+bw+'" height="'+ih+'" fill="transparent" data-i="'+i+'"/>'; });
+    return '<div class="legend">'+keys.map(function(kk){return '<span><i style="background:'+kk[2]+'"></i>'+at(kk[3])+'</span>'}).join('')+'</div><svg class="chart" id="'+id+'" viewBox="0 0 '+W+' '+H+'" role="img">'+g+'</svg>';
+  }
+  function riskCard(key){
+    var rows=AN.risk[key], max=0; rows.forEach(function(r){ if(r.bad!=null) max=Math.max(max,r.bad); });
+    var lab=function(k){ return AT[LANG][k]!=null?at(k):k; };
+    return '<div class="card"><h4>'+at('r_'+key)+'</h4><div class="tw" style="border:none"><table class="rt"><thead><tr><th>'+at('c_bucket')+'</th><th class="n">'+at('c_loans')+'</th><th>'+at('c_bad')+'</th><th class="n">'+at('c_clean')+'</th><th class="n">'+at('c_cur30')+'</th></tr></thead><tbody>'+
+      rows.map(function(r){ return '<tr><td>'+esc(lab(r.k))+'</td><td class="n">'+fm(r.n)+'</td>'+barCell(r.bad,max,false)+'<td class="n">'+pct(r.clean)+'</td><td class="n">'+pct(r.cur30)+'</td></tr>'; }).join('')+'</tbody></table></div></div>';
+  }
+  function renderAn(){
+    var ov=AN.overall;
+    var h='<h2 class="an-h">'+at('h_find')+'</h2><p class="an-d">'+at('d_find')+'</p>'+findings();
+    h+='<h2 class="an-h">'+at('h_port')+'</h2><p class="an-d">'+at('d_port')+'</p>'+parTable();
+    var vint=AN.vint.filter(function(v){return v.n>=200});
+    h+='<h2 class="an-h">'+at('h_vint')+'</h2><p class="an-d">'+at('d_vint')+'</p><div class="card">'+colChart('cVint',vint,function(d){return d.bad},function(d){return d.k},function(d){return d===vint[vint.length-1]})+'<p class="callout">'+at('vpart')+'</p>'+
+      '<div class="tw" style="border:none;margin-top:6px"><table class="rt"><thead><tr><th>'+at('c_period')+'</th><th class="n">'+at('c_loans')+'</th><th class="n">'+at('c_amt')+'</th><th class="n">'+at('c_bad')+'</th><th class="n">'+at('c_clean')+'</th><th class="n">'+at('c_cur30')+'</th></tr></thead><tbody>'+
+      vint.map(function(v){return '<tr><td>'+v.k+'</td><td class="n">'+fm(v.n)+'</td><td class="n">'+fm(v.amt)+'</td><td class="n">'+pct(v.bad)+'</td><td class="n">'+pct(v.clean)+'</td><td class="n">'+(v.active?pct(v.cur30)+' <span class="z">('+v.active+')</span>':'—')+'</td></tr>'}).join('')+'</tbody></table></div></div>';
+    h+='<h2 class="an-h">'+at('h_risk')+'</h2><p class="an-d">'+at('d_risk')+' '+(LANG==='ka'?'საშუალოდ':'Overall')+': <b>'+pct(ov.bad)+'</b> ('+fm(ov.n)+' '+(LANG==='ka'?'სესხი':'loans')+').</p><div class="grid2">'+
+      ['seq','amt','term','age','gender','emp','sal','obl','dti'].map(riskCard).join('')+'</div><p class="callout">'+at('cav')+'</p>';
+    var bmax=0; AN.backtest.forEach(function(b){bmax=Math.max(bmax,b.bad)});
+    h+='<h2 class="an-h">'+at('h_bt')+'</h2><p class="an-d">'+at('d_bt')+'</p><div class="tw"><table class="rt"><thead><tr><th>'+at('c_bucket')+'</th><th class="n">'+at('c_loans')+'</th><th>'+at('c_next')+'</th></tr></thead><tbody>'+
+      AN.backtest.map(function(b){return '<tr><td>'+at(b.k)+'</td><td class="n">'+fm(b.n)+'</td>'+barCell(b.bad,bmax,b.bad>10)+'</tr>'}).join('')+'</tbody></table></div>';
+    h+='<h2 class="an-h">'+at('h_funnel')+'</h2><p class="an-d">'+at('d_funnel')+'</p><div class="card">'+stackChart('cFun',AN.funnel)+'</div>';
+    var amax=0; AN.appr.forEach(function(x){amax=Math.max(amax,x.approved)});
+    h+='<h2 class="an-h">'+at('h_appr')+'</h2><p class="an-d">'+at('d_appr')+'</p><div class="tw"><table class="rt"><thead><tr><th>'+at('c_bucket')+'</th><th class="n">'+at('c_apps')+'</th><th>'+at('c_approved')+'</th><th class="n">'+at('c_rejected')+'</th><th class="n">'+at('c_refused')+'</th></tr></thead><tbody>'+
+      AN.appr.map(function(x){return '<tr><td>'+at(x.k)+'</td><td class="n">'+fm(x.apps)+'</td>'+barCell(x.approved,amax,false)+'<td class="n">'+pct(x.rejected)+'</td><td class="n">'+pct(x.refused)+'</td></tr>'}).join('')+'</tbody></table></div>';
+    var stot=0; AN.segs.forEach(function(s){stot+=s.n});
+    h+='<h2 class="an-h">'+at('h_seg')+'</h2><p class="an-d">'+at('d_seg')+'</p><div class="tw"><table class="rt"><thead><tr><th>'+at('c_seg')+'</th><th class="n">'+at('c_n')+'</th><th class="n">'+at('c_share')+'</th><th class="n">'+at('c_out')+'</th><th class="n">'+at('c_avgapps')+'</th><th class="n">'+at('c_avgloans')+'</th></tr></thead><tbody>'+
+      AN.segs.map(function(s){return '<tr><td>'+at(s.k)+'</td><td class="n">'+fm(s.n)+'</td><td class="n">'+pct(s.n/stot*100)+'</td><td class="n">'+(s.out?fm(s.out):'<span class="z">0</span>')+'</td><td class="n">'+s.apps.toFixed(2)+'</td><td class="n">'+s.loans.toFixed(2)+'</td></tr>'}).join('')+
+      '<tr><td><b>'+at('total')+'</b></td><td class="n"><b>'+fm(stot)+'</b></td><td></td><td class="n"><b>'+fm(AN.totals.active_out)+'</b></td><td></td><td></td></tr></tbody></table></div>';
+    h+='<h2 class="an-h">'+at('h_rep')+'</h2><p class="an-d">'+at('d_rep')+'</p><div class="tw"><table class="rt"><thead><tr><th>'+at('c_since')+'</th><th class="n">'+at('c_n')+'</th><th class="n">'+at('c_applied')+'</th><th class="n">'+at('c_notapplied')+'</th></tr></thead><tbody>'+
+      AN.rep.map(function(r){return '<tr><td>'+at(r.k)+'</td><td class="n">'+fm(r.n)+'</td><td class="n">'+fm(r.applied)+'</td><td class="n"><b>'+fm(r.not_applied)+'</b></td></tr>'}).join('')+'</tbody></table></div>';
+    var pa=document.getElementById('pAn'); pa.innerHTML=h;
+    var cv=document.getElementById('cVint');
+    cv.addEventListener('mousemove',function(e){ var r=e.target.closest('rect[data-i]'); if(!r){hideTip();return;} var v=vint[+r.dataset.i];
+      showTip(e,'<div><b>'+v.k+'</b></div><div class="r"><span>'+at('c_loans')+'</span><b>'+fm(v.n)+'</b></div><div class="r"><span>'+at('c_bad')+'</span><b>'+pct(v.bad)+'</b></div><div class="r"><span>'+at('c_clean')+'</span><b>'+pct(v.clean)+'</b></div>'); });
+    cv.addEventListener('mouseleave',hideTip);
+    var cf=document.getElementById('cFun');
+    cf.addEventListener('mousemove',function(e){ var r=e.target.closest('rect[data-i]'); if(!r){hideTip();return;} var d=AN.funnel[+r.dataset.i];
+      showTip(e,'<div><b>'+d.k+'</b> · '+fm(d.apps)+' '+at('ofApps')+'</div><div class="r"><span>'+at('l_loan')+'</span><b>'+fm(d.loan+d.single)+'</b></div><div class="r"><span>'+at('l_rej')+'</span><b>'+fm(d.rejected)+'</b></div><div class="r"><span>'+at('l_ref')+'</span><b>'+fm(d.refused+d.nocontact)+'</b></div><div class="r"><span>'+at('l_oth')+'</span><b>'+fm(d.other)+'</b></div>'); });
+    cf.addEventListener('mouseleave',hideTip);
+  }
+
+  // ================= tabs + language =================
+  var TAB='data';
+  function setTab(tb){ TAB=tb; document.getElementById('tData').setAttribute('aria-selected',tb==='data'); document.getElementById('tAn').setAttribute('aria-selected',tb==='analysis');
+    document.getElementById('pData').hidden = tb!=='data'; document.getElementById('pAn').hidden = tb!=='analysis'; if(tb==='analysis') renderAn(); hideTip();
+    try{ history.replaceState(null,'',tb==='analysis'?'#analysis':'#data'); }catch(e){} }
+  document.getElementById('tData').addEventListener('click',function(){setTab('data')});
+  document.getElementById('tAn').addEventListener('click',function(){setTab('analysis')});
+  function setLang(lg){ LANG=lg; try{localStorage.setItem('voltaLang',lg)}catch(e){}
+    document.documentElement.lang = lg==='ka'?'ka':'en';
+    document.getElementById('lKa').setAttribute('aria-pressed',lg==='ka'); document.getElementById('lEn').setAttribute('aria-pressed',lg==='en');
+    document.querySelectorAll('[data-t]').forEach(function(el){ el.textContent=t(el.getAttribute('data-t')); });
+    fillControls(); render(); if(TAB==='analysis') renderAn(); if(openIdx>=0) openP(openIdx); paintTheme(); }
+  document.getElementById('lKa').addEventListener('click',function(){setLang('ka')});
+  document.getElementById('lEn').addEventListener('click',function(){setLang('en')});
+
+  setLang(LANG); apply();
+  if(location.hash==='#analysis') setTab('analysis');
+})();
+</script>
