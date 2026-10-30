@@ -236,7 +236,7 @@
       f_all:'ყველა კლიენტი', f_active:'აქტიური სესხით', f_dpd:'ახლა ვადაგადაცილებული (DPD > 0)', f_dpd30:'DPD 30+ დღე', f_closedonly:'მხოლოდ დახურული სესხებით',
       f_cleanall:'ყველა დახურული სესხი ვადაგადაცილების გარეშე', f_repeat:'განმეორებითი სესხის კანდიდატი (სუფთად დახურა, ახალი განაცხადი არ შემოუტანია)',
       f_never:'არასდროს მიუღია სესხი', f_rejected:'ერთხელ მაინც უარყოფილი',
-      o_out:'ვალდებულება ↓', o_dpd:'მიმდინარე DPD ↓', o_dpdsum:'DPD ჯამი ↓', o_apps:'განაცხადები ↓', o_loans:'სესხები ↓', o_last:'ბოლო განაცხადი ↓', o_name:'სახელი (ა–ჰ)',
+      o_lastloan:'ბოლოს აღებული სესხი ↓', o_out:'ვალდებულება ↓', o_dpd:'მიმდინარე DPD ↓', o_dpdsum:'DPD ჯამი ↓', o_apps:'განაცხადები ↓', o_loans:'სესხები ↓', o_last:'ბოლო განაცხადი ↓', o_name:'სახელი (ა–ჰ)',
       xlsx:'⇩ Excel (ფილტრის მიხედვით)', xlsxBusy:'მზადდება…', prev:'← წინა', next:'შემდეგი →', nclients:'კლიენტი', none:'ამ ფილტრით კლიენტი ვერ მოიძებნა.',
       h_name:'სახელი, გვარი', h_pid:'პირადი ნომერი', h_phone:'ტელეფონი', h_apps:'განაცხ.', h_appr:'დადასტ.', h_rej:'უარყ.', h_act:'აქტიური', h_out:'ვალდებულება ₾', h_mon:'თვეში ₾',
       h_dpd:'DPD ახლა', h_dpdsum:'DPD ჯამი', h_closed:'დახურული', h_clean:'სუფთად', noname:'(სახელი არ არის)',
@@ -258,7 +258,7 @@
       f_all:'All customers', f_active:'With an active loan', f_dpd:'Past due now (DPD > 0)', f_dpd30:'DPD 30+ days', f_closedonly:'Only closed loans',
       f_cleanall:'All closed loans without any delay', f_repeat:'Repeat-loan candidates (closed clean, no new application)',
       f_never:'Never got a loan', f_rejected:'Rejected at least once',
-      o_out:'Outstanding ↓', o_dpd:'Current DPD ↓', o_dpdsum:'DPD total ↓', o_apps:'Applications ↓', o_loans:'Loans ↓', o_last:'Last application ↓', o_name:'Name (A–Z)',
+      o_lastloan:'Latest loan taken ↓', o_out:'Outstanding ↓', o_dpd:'Current DPD ↓', o_dpdsum:'DPD total ↓', o_apps:'Applications ↓', o_loans:'Loans ↓', o_last:'Last application ↓', o_name:'Name (A–Z)',
       xlsx:'⇩ Excel (current filter)', xlsxBusy:'Preparing…', prev:'← Previous', next:'Next →', nclients:'customers', none:'No customers match this filter.',
       h_name:'Name', h_pid:'Personal no.', h_phone:'Phone', h_apps:'Apps', h_appr:'Approved', h_rej:'Rejected', h_act:'Active', h_out:'Outstanding ₾', h_mon:'Monthly ₾',
       h_dpd:'DPD now', h_dpdsum:'DPD total', h_closed:'Closed', h_clean:'Clean', noname:'(no name)',
@@ -307,6 +307,8 @@
     return (r[c.name]+' '+r[c.pid]+' '+r[c.phones]+' '+ids).toLowerCase();
   });
   // repeat-loan candidate: no active loan, every closed loan clean, no application after the last close
+  // issue date of each customer's most recent loan ('' = never had one), for the default sort
+  var lastLoan = C.map(function(_,i){ var d=''; (lOf[i]||[]).forEach(function(j){ var v=L[j][l.issued]||''; if(v>d) d=v; }); return d; });
   var repeatC = C.map(function(r,i){
     if(r[c.active_n]>0 || r[c.closed_n]===0 || r[c.closed_overdue_n]>0) return false;
     var lc=''; (lOf[i]||[]).forEach(function(j){ var d=L[j][l.close_date]; if(d>lc) lc=d; });
@@ -449,6 +451,7 @@
     rc_notnow:function(r,i){return ASM[i].rec==='rc_notnow'}, rc_no:function(r,i){return ASM[i].rec==='rc_no'}
   };
   var SORT = {
+    lastloan:function(x,y){ var a=lastLoan[x], b=lastLoan[y]; if(a!==b) return a<b?1:-1; return C[y][c.last_app]<C[x][c.last_app]?-1:(C[y][c.last_app]>C[x][c.last_app]?1:0); },
     out:function(x,y){return (C[y][c.active_outstanding]||0)-(C[x][c.active_outstanding]||0)},
     dpd:function(x,y){return C[y][c.cur_dpd]-C[x][c.cur_dpd]},
     dpdsum:function(x,y){return C[y][c.dpd_sum_all]-C[x][c.dpd_sum_all]},
@@ -458,8 +461,8 @@
     name:function(x,y){return C[x][c.name].localeCompare(C[y][c.name],'ka')}
   };
   var qEl=document.getElementById('q'), segEl=document.getElementById('seg'), sortEl=document.getElementById('sort');
-  var segSel='all', sortSel='out';
-  try{ var s=JSON.parse(localStorage.getItem('c360v')||'{}'); if(s.seg&&SEG[s.seg])segSel=s.seg; if(s.sort&&SORT[s.sort])sortSel=s.sort; }catch(e){}
+  var segSel='all', sortSel='lastloan';
+  try{ var s=JSON.parse(localStorage.getItem('c360v2')||'{}'); if(s.seg&&SEG[s.seg])segSel=s.seg; if(s.sort&&SORT[s.sort])sortSel=s.sort; }catch(e){}
   var view=[], page=0, PER=50;
 
   function fillControls(){
@@ -485,7 +488,7 @@
       view.push(i);
     }
     view.sort(SORT[sortSel]); page=0; render();
-    try{ localStorage.setItem('c360v', JSON.stringify({seg:segSel, sort:sortSel})); }catch(e){}
+    try{ localStorage.setItem('c360v2', JSON.stringify({seg:segSel, sort:sortSel})); }catch(e){}
   }
   function render(){
     var pages=Math.max(1,Math.ceil(view.length/PER)); if(page>=pages)page=pages-1;
