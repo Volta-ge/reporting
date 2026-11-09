@@ -278,7 +278,7 @@ ka:{
   expand:'გაშლა', collapse:'ჩაკეცვა', unknownAcc:'(უცნობი ანგარიში)',
   shownTop:(n,t)=>`ნაჩვენებია ${n} უდიდესი ${t} ქვეანგარიშიდან · სრული სია დებიტორ/კრედიტორთა ჩანართშია`,
   pShownTop:(n,t)=>`ნაჩვენებია ${n} უახლესი ${t} გატარებიდან`,
-  pShown:(n,t,amt)=>`ნაჩვენებია ${amt?'ყველაზე დიდი':'უახლესი'} ${n} ${t} გატარებიდან`, pSortDate:'უახლესი', pSortAmt:'უდიდესი თანხით', pMore:'კიდევ 200-ის ჩვენება',
+  pShown:(n,t,amt)=>`ნაჩვენებია ${amt?'ყველაზე დიდი':'უახლესი'} ${n} ${t} გატარებიდან`, pSortDate:'უახლესი', pSortAmt:'უდიდესი თანხით', pMore:'კიდევ 200-ის ჩვენება', pClose:'✕ დახურვა',
   pSum:(n,s)=>`სულ ${n} გატარება: ${s} ₾`, pDiff:d=>`განსხვავება უჯრის მნიშვნელობისგან: ${d} ₾ (იხ. შენიშვნა)`,
   pBal:(o,m,c)=>`საწყისი ნაშთი ${o} + გატარებები ${m} = ${c}`,
   pClickHintBal:'დააჭირეთ ნებისმიერ არანულოვან ციფრს — ნახავთ იმ თვის გატარებებს, რომლებიც ნაშთს ცვლის (საწყისი ნაშთი + გატარებები = ნაშთი).',
@@ -351,7 +351,7 @@ en:{
   expand:'Expand', collapse:'Collapse', unknownAcc:'(unknown account)',
   shownTop:(n,t)=>`Showing the ${n} largest of ${t} sub-accounts · the full list is in the Receivables · Payables tab`,
   pShownTop:(n,t)=>`Showing the ${n} most recent of ${t} postings`,
-  pShown:(n,t,amt)=>`Showing the ${n} ${amt?'largest':'most recent'} of ${t} postings`, pSortDate:'Most recent', pSortAmt:'Largest amount', pMore:'Show 200 more',
+  pShown:(n,t,amt)=>`Showing the ${n} ${amt?'largest':'most recent'} of ${t} postings`, pSortDate:'Most recent', pSortAmt:'Largest amount', pMore:'Show 200 more', pClose:'✕ Close',
   pSum:(n,s)=>`Total of ${n} postings: ${s} ₾`, pDiff:d=>`differs from the cell by ${d} ₾ (see note)`,
   pBal:(o,m,c)=>`Opening ${o} + postings ${m} = ${c}`,
   pClickHintBal:'Click any non-zero number to see that month\'s postings that move the balance (opening balance + postings = balance).',
@@ -1572,7 +1572,7 @@ function drillPanel(scope,key,colspan){
   else if(r.expected!==undefined){ const dif=r.expected-r.sum; foot+=Math.abs(dif)>0.5?` · <span style="color:var(--neg)">${t.pDiff(fmt(dif))}</span>`:` ✓`; }
   foot+=`</div>`;
   const shown=r.rows.length>shownN?`<div class="more">${t.pShown(shownN,r.rows.length,byAmt)}</div>`:'';
-  const ctl=`<div class="more" style="display:flex;gap:6px;align-items:center;flex-wrap:wrap"><button class="compact-btn" data-drillsort="date" aria-pressed="${!byAmt}">${t.pSortDate}</button><button class="compact-btn" data-drillsort="amt" aria-pressed="${byAmt}">${t.pSortAmt}</button>${r.rows.length>shownN?`<button class="compact-btn" data-drillmore="1">${t.pMore}</button>`:''}</div>`;
+  const ctl=`<div class="more" style="display:flex;gap:6px;align-items:center;flex-wrap:wrap"><button class="compact-btn" data-drillsort="date" aria-pressed="${!byAmt}">${t.pSortDate}</button><button class="compact-btn" data-drillsort="amt" aria-pressed="${byAmt}">${t.pSortAmt}</button>${r.rows.length>shownN?`<button class="compact-btn" data-drillmore="1">${t.pMore}</button>`:''}<button class="compact-btn" data-cellclose="${esc(scope)}|${esc(String(key))}" style="margin-left:auto">${t.pClose}</button></div>`;
   return `<tr><td colspan="${colspan}" style="padding:0;background:var(--surface2)"><div class="postings-wrap"><table class="postings"><thead><tr><th>${t.pDate}</th><th>${t.pPurpose}</th><th>${scope==='ex'?t.pSupplier:t.pCounter}</th><th class="n">${t.pAmount}</th></tr></thead><tbody>${body}</tbody></table>${shown}${foot}${ctl}</div></td></tr>`;
 }
 
@@ -1620,9 +1620,11 @@ document.querySelector('main').addEventListener('click',e=>{
   const rv=e.target.closest('[data-rv]'); if(rv){ state.ratiosView=rv.dataset.rv; render(); return; }
   const p=e.target.closest('[data-cellpost]'); if(p){ const [sc,key,f,tt]=p.dataset.cellpost.split('|'); const k=sc+'|'+key, v=f+'|'+tt;
     if(state.exOpenCell.get(k)===v) state.exOpenCell.delete(k); else { state.exOpenCell.set(k,v); state.drillN=40; } render(); return; }
+  const cc=e.target.closest('[data-cellclose]'); if(cc){ state.exOpenCell.delete(cc.dataset.cellclose); render(); return; }
   const ds=e.target.closest('[data-drillsort]'); if(ds){ state.drillSort=ds.dataset.drillsort; render(); return; }
   if(e.target.closest('[data-drillmore]')){ state.drillN+=200; render(); return; }
   const t=e.target.closest('[data-tg]'); if(!t) return; const id=t.dataset.tg; if(state.open.has(id)) state.open.delete(id); else state.open.add(id); render(); });
+document.addEventListener('keydown',e=>{ if(e.key==='Escape' && state.exOpenCell.size){ state.exOpenCell.clear(); render(); } });
 try{ const t=localStorage.getItem('volta-fin-tab'); if(t&&R[t]) state.tab=t; }catch(_){}
 buildChrome(); render();
 </script>
