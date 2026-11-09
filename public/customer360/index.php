@@ -40,8 +40,10 @@ if (!preg_match('/<script src="c360_meta\.js".*?c360_loans\.js" charset="utf-8">
 $head = substr($page, 0, $m[0][1]);
 $tail = substr($page, $m[0][1] + strlen($m[0][0]));
 
-// Streamed: the shell (header, tabs, empty table) paints immediately, the live build runs, then the data
-// scripts and the page's own script follow.
+// Opens at once, like the dashboard: the page goes out immediately on the most recent finished build (any earlier visit's
+// data, typically minutes or hours old) with a "loading fresh data" note; the live build (~30-40s) runs while the page is
+// already usable, and when it is done a script tag hands the new build id to the page (window.__c360Live), which loads
+// the fresh data in place. With no earlier build on the server yet, the page opens empty with a loading message instead.
 header('Content-Type: text/html; charset=utf-8');
 header('X-Accel-Buffering: no');
 header('Cache-Control: no-store');
@@ -51,12 +53,34 @@ while (ob_get_level() > 0) {
     ob_end_flush();
 }
 ob_implicit_flush(true);
-echo "<!doctype html>\n<html lang=\"ka\">\n<head>\n<meta charset=\"utf-8\">\n<meta name=\"viewport\" content=\"width=device-width,initial-scale=1,viewport-fit=cover\">\n</head>\n<body>\n";
-echo $head;
-flush();
 
 $base = sys_get_temp_dir() . '/volta-c360';
-$note = null;
+$parts = ['meta', 'analysis', 'cust1', 'cust2', 'apps', 'loans'];
+$scripts = static function (string $id) use ($parts): string {
+    $h = '';
+    foreach ($parts as $part) {
+        $h .= '<script src="data.php?b=' . $id . '&amp;p=' . $part . '" charset="utf-8"></script>' . "\n";
+    }
+    return $h;
+};
+// newest finished build (a build is finished once its "done" marker exists, written after all six files)
+$prev = null;
+$prevAt = 0;
+foreach (glob($base . '/*/done') ?: [] as $marker) {
+    $t = (int) @filemtime($marker);
+    if ($t > $prevAt && preg_match('/^[a-f0-9]{16}$/', basename(dirname($marker)))) {
+        $prev = basename(dirname($marker));
+        $prevAt = $t;
+    }
+}
+
+echo "<!doctype html>\n<html lang=\"ka\">\n<head>\n<meta charset=\"utf-8\">\n<meta name=\"viewport\" content=\"width=device-width,initial-scale=1,viewport-fit=cover\">\n</head>\n<body>\n";
+echo $head;
+echo $prev !== null ? $scripts($prev) : '';
+echo $tail;
+echo "\n<script>window.__c360State && window.__c360State('loading');</script>\n";
+flush();
+
 $id = null;
 try {
     if (!isset($config['voltastoredb'])) {
@@ -67,28 +91,22 @@ try {
     $id = bin2hex(random_bytes(8));
     Customer360Report::writeScripts($data, $base . '/' . $id);
     unset($data);
-    // keep the last couple of hours of builds (a page someone still has open may reload its scripts), drop the rest
+    @touch($base . '/' . $id . '/done');
+    // keep the last couple of hours of builds (a page someone still has open may reload its scripts) and always the
+    // newest finished one (the next visit opens on it); drop the rest
     foreach (glob($base . '/*', GLOB_ONLYDIR) ?: [] as $dir) {
         if (basename($dir) !== $id && filemtime($dir) < time() - 7200) {
-            array_map('unlink', glob($dir . '/*.js') ?: []);
+            array_map('unlink', glob($dir . '/*') ?: []);
             @rmdir($dir);
         }
     }
+    echo "<script>window.__c360Live && window.__c360Live('" . $id . "');</script>\n";
 } catch (\Throwable $e) {
     $root = $e;
     while ($root->getPrevious() !== null) {
         $root = $root->getPrevious();
     }
-    $note = 'Customer 360: live build failed (' . $e->getMessage() . ($root !== $e ? ' Driver said: ' . $root->getMessage() : '') . ')';
+    $why = $e->getMessage() . ($root !== $e ? ' Driver said: ' . $root->getMessage() : '');
+    echo '<script>window.__c360State && window.__c360State(\'error\', ' . json_encode($why, JSON_UNESCAPED_UNICODE | JSON_HEX_TAG) . ");</script>\n";
 }
-
-if ($id !== null) {
-    foreach (['meta', 'analysis', 'cust1', 'cust2', 'apps', 'loans'] as $part) {
-        echo '<script src="data.php?b=' . $id . '&amp;p=' . $part . '" charset="utf-8"></script>' . "\n";
-    }
-} else {
-    echo '<div style="background:#fff2cc;color:#6b6b6b;font:12px -apple-system,sans-serif;padding:6px 20px;">'
-        . htmlspecialchars((string) $note, ENT_QUOTES) . "</div>\n";
-}
-echo $tail;
-echo "\n</body>\n</html>\n";
+echo "</body>\n</html>\n";
