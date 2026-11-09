@@ -46,6 +46,8 @@
   .sub{margin:0;color:var(--navy-sub);font-size:14px;max-width:76ch}
   .stamp{margin-top:12px;font-family:var(--f-num);font-size:11.5px;color:var(--navy-sub);display:flex;gap:16px;flex-wrap:wrap}
   .stamp b{color:var(--navy-ink);font-weight:600}
+  #liveState{color:var(--lime);font-weight:600}
+  #liveState.err{color:#ff9b8a}
   .toggles{display:flex;gap:8px;align-items:center;flex:none}
   .seg2{display:inline-flex;border:1px solid var(--navy-sub);border-radius:8px;overflow:hidden}
   .seg2 button{font:inherit;font-size:12.5px;font-weight:700;padding:6px 11px;background:transparent;color:var(--navy-sub);border:none;cursor:pointer}
@@ -176,7 +178,7 @@
         <button class="iconbtn" id="themeBtn" type="button" aria-label="Light / dark"><svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></svg></button>
       </div>
     </div>
-    <div class="stamp"><span><span data-t="src"></span> <b>VoltaStoreDB</b></span><span><span data-t="asof"></span> <b id="asOf">&nbsp;</b></span></div>
+    <div class="stamp"><span><span data-t="src"></span> <b>VoltaStoreDB</b></span><span><span data-t="asof"></span> <b id="asOf">&nbsp;</b></span><span id="liveState" hidden></span></div>
     <nav class="tabs" role="tablist">
       <button type="button" role="tab" id="tData" aria-selected="true" data-t="tabData"></button>
       <button type="button" role="tab" id="tAn" aria-selected="false" data-t="tabAn"></button>
@@ -218,11 +220,17 @@
 <script src="c360_loans.js" charset="utf-8"></script>
 <script>
 (function(){
-  var M = window.C360_META, AN = window.C360_AN, C = (window.C360_C1||[]).concat(window.C360_C2||[]), A = window.C360_A||[], L = window.C360_L||[];
-  if(!M){ document.querySelector('#list tbody').innerHTML='<tr><td colspan="13" class="loading">Data failed to load.</td></tr>'; return; }
-  var P = M.P;
+  // Data can arrive after the page script runs: on reporting.volta.ge the page opens on the previous build (or empty) and
+  // the server streams in a fresh build once computed (window.__c360Live). Everything derived from the data is rebuilt by
+  // loadData() + build(); controls and listeners are wired once.
+  var M, AN, C = [], A = [], L = [], P = [], c = {}, a = {}, l = {}, ready = false;
   function ix(cols){ var o={}; cols.forEach(function(c,i){o[c]=i}); return o; }
-  var c = ix(M.C), a = ix(M.A), l = ix(M.L);
+  function loadData(){
+    if(!window.C360_META) return false;
+    M = window.C360_META; AN = window.C360_AN || {}; C = (window.C360_C1||[]).concat(window.C360_C2||[]); A = window.C360_A||[]; L = window.C360_L||[];
+    P = M.P; c = ix(M.C); a = ix(M.A); l = ix(M.L);
+    return true;
+  }
 
   // ================= i18n =================
   var LANG = 'ka';
@@ -239,7 +247,7 @@
       o_lastloan:'ბოლოს აღებული სესხი ↓', o_out:'ვალდებულება ↓', o_dpd:'მიმდინარე DPD ↓', o_dpdsum:'DPD ჯამი ↓', o_apps:'განაცხადები ↓', o_loans:'სესხები ↓', o_last:'ბოლო განაცხადი ↓', o_name:'სახელი (ა–ჰ)',
       xlsx:'⇩ Excel (ფილტრის მიხედვით)', xlsxBusy:'მზადდება…', prev:'← წინა', next:'შემდეგი →', nclients:'კლიენტი', none:'ამ ფილტრით კლიენტი ვერ მოიძებნა.',
       h_name:'სახელი, გვარი', h_pid:'პირადი ნომერი', h_phone:'ტელეფონი', h_apps:'განაცხ.', h_appr:'დადასტ.', h_rej:'უარყ.', h_act:'აქტიური', h_out:'ვალდებულება ₾', h_mon:'თვეში ₾',
-      h_dpd:'DPD ახლა', h_dpdsum:'DPD ჯამი', h_closed:'დახურული', h_clean:'სუფთად', noname:'(სახელი არ არის)',
+      h_dpd:'DPD ახლა', h_dpdsum:'DPD ჯამი', h_closed:'დახურული', h_clean:'სუფთად', noname:'(სახელი არ არის)', loadingData:'მონაცემები იტვირთება… (დაახლოებით ნახევარი წუთი)', st_loading:'ახალი მონაცემები იტვირთება…', st_done:'განახლდა', st_err:'ახალი მონაცემები ვერ ჩაიტვირთა:',
       close:'დახურვა ×', pidl:'პირადი №', firstapp:'პირველი განაცხადი',
       s1:'1. პირადი ინფორმაცია', s2:'2. დასაქმება და შემოსავალი', s3:'3. Volta-სთან ურთიერთობის ისტორია',
       pf_name:'სახელი და გვარი', pf_pid:'პირადი ნომერი', pf_gender:'სქესი', pf_dob:'დაბადების თარიღი', pf_phone:'ტელეფონი', pf_fact:'ფაქტობრივი / საცხოვრებელი მისამართი', pf_ship:'მიტანის მისამართი',
@@ -261,7 +269,7 @@
       o_lastloan:'Latest loan taken ↓', o_out:'Outstanding ↓', o_dpd:'Current DPD ↓', o_dpdsum:'DPD total ↓', o_apps:'Applications ↓', o_loans:'Loans ↓', o_last:'Last application ↓', o_name:'Name (A–Z)',
       xlsx:'⇩ Excel (current filter)', xlsxBusy:'Preparing…', prev:'← Previous', next:'Next →', nclients:'customers', none:'No customers match this filter.',
       h_name:'Name', h_pid:'Personal no.', h_phone:'Phone', h_apps:'Apps', h_appr:'Approved', h_rej:'Rejected', h_act:'Active', h_out:'Outstanding ₾', h_mon:'Monthly ₾',
-      h_dpd:'DPD now', h_dpdsum:'DPD total', h_closed:'Closed', h_clean:'Clean', noname:'(no name)',
+      h_dpd:'DPD now', h_dpdsum:'DPD total', h_closed:'Closed', h_clean:'Clean', noname:'(no name)', loadingData:'Loading data… (about half a minute)', st_loading:'Loading fresh data…', st_done:'Updated', st_err:'Fresh data could not be loaded:',
       close:'Close ×', pidl:'Personal no.', firstapp:'First application',
       s1:'1. Personal information', s2:'2. Employment and income', s3:'3. History with Volta',
       pf_name:'Full name', pf_pid:'Personal number', pf_gender:'Gender', pf_dob:'Date of birth', pf_phone:'Phone', pf_fact:'Actual / residential address', pf_ship:'Delivery address',
@@ -296,30 +304,38 @@
   function z(v,f){ return v ? (f||fm)(v) : '<span class="z">0</span>'; }
   function dpdPill(d){ if(!d) return '<span class="z">0</span>'; var cl = d>30?'p-bad':(d>7?'p-warn':'p-mut'); return '<span class="pill '+cl+'">'+d+'</span>'; }
   function money(v){ return v==null||v==='' ? '' : '₾'+fm2(v); }
-  document.getElementById('asOf').textContent = M.asOf;
-
-  // ================= indexes =================
-  var aOf = new Array(C.length), lOf = new Array(C.length);
-  A.forEach(function(r,i){ (aOf[r[a.c]] || (aOf[r[a.c]]=[])).push(i); });
-  L.forEach(function(r,i){ (lOf[r[l.c]] || (lOf[r[l.c]]=[])).push(i); });
-  var hay = C.map(function(r,i){
-    var ids = (aOf[i]||[]).map(function(j){ return A[j][a.id] + ' ' + (A[j][a.legacy]||''); }).join(' ');
-    return (r[c.name]+' '+r[c.pid]+' '+r[c.phones]+' '+ids).toLowerCase();
-  });
-  // repeat-loan candidate: no active loan, every closed loan clean, no application after the last close
-  // issue date of each customer's most recent loan ('' = never had one), for the default sort
-  var lastLoan = C.map(function(_,i){ var d=''; (lOf[i]||[]).forEach(function(j){ var v=L[j][l.issued]||''; if(v>d) d=v; }); return d; });
-  var repeatC = C.map(function(r,i){
-    if(r[c.active_n]>0 || r[c.closed_n]===0 || r[c.closed_overdue_n]>0) return false;
-    var lc=''; (lOf[i]||[]).forEach(function(j){ var d=L[j][l.close_date]; if(d>lc) lc=d; });
-    return !(r[c.last_app] > lc);
-  });
+  // ================= indexes (rebuilt by build() whenever data arrives) =================
+  var aOf = [], lOf = [], hay = [], lastLoan = [], repeatC = [], ASM = [], BT = {}, TODAY = '', Y1 = '';
+  var withActive=0, out=0, dpdNow=0, dpd30=0, closedLoans=0, cleanLoans=0, actLoans=0;
+  function build(){
+    document.getElementById('asOf').textContent = M.asOf;
+    aOf = new Array(C.length); lOf = new Array(C.length);
+    A.forEach(function(r,i){ (aOf[r[a.c]] || (aOf[r[a.c]]=[])).push(i); });
+    L.forEach(function(r,i){ (lOf[r[l.c]] || (lOf[r[l.c]]=[])).push(i); });
+    hay = C.map(function(r,i){
+      var ids = (aOf[i]||[]).map(function(j){ return A[j][a.id] + ' ' + (A[j][a.legacy]||''); }).join(' ');
+      return (r[c.name]+' '+r[c.pid]+' '+r[c.phones]+' '+ids).toLowerCase();
+    });
+    // issue date of each customer's most recent loan ('' = never had one), for the default sort
+    lastLoan = C.map(function(_,i){ var d=''; (lOf[i]||[]).forEach(function(j){ var v=L[j][l.issued]||''; if(v>d) d=v; }); return d; });
+    // repeat-loan candidate: no active loan, every closed loan clean, no application after the last close
+    repeatC = C.map(function(r,i){
+      if(r[c.active_n]>0 || r[c.closed_n]===0 || r[c.closed_overdue_n]>0) return false;
+      var lc=''; (lOf[i]||[]).forEach(function(j){ var d=L[j][l.close_date]; if(d>lc) lc=d; });
+      return !(r[c.last_app] > lc);
+    });
+    BT={}; (AN.backtest||[]).forEach(function(b){BT[b.k]=b;});
+    TODAY=M.today; Y1=(function(){ var d=new Date(TODAY+'T00:00:00'); d.setFullYear(d.getFullYear()-1); return d.toISOString().slice(0,10); })();
+    ASM = C.map(function(_,i){ return assess(i); });
+    withActive=0; out=0; dpdNow=0; dpd30=0; closedLoans=0; cleanLoans=0; actLoans=0;
+    C.forEach(function(r){ if(r[c.active_n]>0){withActive++; out+=r[c.active_outstanding]||0;} if(r[c.cur_dpd]>0)dpdNow++; if(r[c.cur_dpd]>30)dpd30++; closedLoans+=r[c.closed_n]; cleanLoans+=r[c.closed_clean_n]; });
+    L.forEach(function(r){ if(r[l.active]) actLoans++; });
+    ready = true;
+  }
 
   // ================= per-customer assessment =================
   // Rule-based, behaviour only (repayment history, current arrears, load). Gender and age are deliberately NOT used
   // for an individual decision. Group rates come from the back-test in the Analysis tab (AN.backtest).
-  var BT={}; (AN.backtest||[]).forEach(function(b){BT[b.k]=b;});
-  var TODAY=M.today, Y1=(function(){ var d=new Date(TODAY+'T00:00:00'); d.setFullYear(d.getFullYear()-1); return d.toISOString().slice(0,10); })();
   function salNum(v){ var m=String(v||'').match(/\d+(?:\.\d+)?/g); if(!m) return null; var n=m.map(Number).filter(function(x){return x>=50&&x<=50000}); if(!n.length) return null; return n.length>1?(n[0]+n[1])/2:n[0]; }
   function monthsBetween(a,b){ if(!a||!b) return 0; return Math.max(0,Math.round((new Date(b)-new Date(a))/2629800000)); }
   function assess(i){
@@ -365,7 +381,6 @@
     return {typeKey:typeKey, grade:grade, risk:risk, grp:grp, rec:rec, worstAll:worstAll, wLoan:wLoan, wo:wo, recent31:recent31, clean:clean, minor:minor,
             closed:cl.length, act:act.length, cur:cur, borrowed:borrowed, paid:paid, pen:pen, maxClean:maxClean, hist:hist, dti:dti, sal:sal, mon:mon, obl:obl, load:load, n:lo.length};
   }
-  var ASM = C.map(function(_,i){ return assess(i); });
   var REC_CLS={rc_new:'p-mut',rc_yes:'p-good',rc_std:'p-good',rc_cond:'p-warn',rc_notnow:'p-warn',rc_no:'p-bad'};
   var RISK_CLS={rk_low:'p-good',rk_mod:'p-mut',rk_new:'p-mut',rk_elev:'p-warn',rk_high:'p-bad'};
   var GRADE_CLS={g_A:'p-good',g_B:'p-good',g_C:'p-warn',g_D:'p-bad',g_E:'p-bad',g_none:'p-mut'};
@@ -439,10 +454,6 @@
   }
 
   // ================= data tab =================
-  var withActive=0, out=0, dpdNow=0, dpd30=0, closedLoans=0, cleanLoans=0, actLoans=0;
-  C.forEach(function(r){ if(r[c.active_n]>0){withActive++; out+=r[c.active_outstanding]||0;} if(r[c.cur_dpd]>0)dpdNow++; if(r[c.cur_dpd]>30)dpd30++; closedLoans+=r[c.closed_n]; cleanLoans+=r[c.closed_clean_n]; });
-  L.forEach(function(r){ if(r[l.active]) actLoans++; });
-
   var SEG = {
     all:function(){return true}, active:function(r){return r[c.active_n]>0}, dpd:function(r){return r[c.cur_dpd]>0}, dpd30:function(r){return r[c.cur_dpd]>30},
     closedonly:function(r){return r[c.closed_n]>0 && r[c.active_n]===0}, cleanall:function(r){return r[c.closed_n]>0 && r[c.closed_overdue_n]===0},
@@ -474,12 +485,15 @@
     document.getElementById('prev').textContent=t('prev'); document.getElementById('next').textContent=t('next');
     document.getElementById('listHead').innerHTML=['h_name','h_pid','h_phone','h_apps','h_appr','h_rej','h_act','h_out','h_mon','h_dpd','h_dpdsum','h_closed','h_clean']
       .map(function(k,i){return '<th'+(i>=3?' class="n"':'')+'>'+t(k)+'</th>'}).join('')+'<th>'+as('h_rec')+'</th>';
-    var kp=[[t('k_cust'),fm(C.length),fm(A.length)+' '+t('k_apps')],[t('k_act'),fm(withActive),fm(actLoans)+' '+t('k_actl')],[t('k_out'),'₾'+fm(out),t('k_outd')],
+    var dots='…';
+    var kp= !ready ? [[t('k_cust'),dots,''],[t('k_act'),dots,''],[t('k_out'),dots,''],[t('k_dpd'),dots,''],[t('k_dpd30'),dots,''],[t('k_closed'),dots,'']] :
+           [[t('k_cust'),fm(C.length),fm(A.length)+' '+t('k_apps')],[t('k_act'),fm(withActive),fm(actLoans)+' '+t('k_actl')],[t('k_out'),'₾'+fm(out),t('k_outd')],
             [t('k_dpd'),fm(dpdNow),t('k_dpdd')],[t('k_dpd30'),fm(dpd30),t('k_cust')],[t('k_closed'),fm(closedLoans),fm(cleanLoans)+' '+t('k_clean')]];
     document.getElementById('kpis').innerHTML=kp.map(function(k){return '<div class="kpi"><div class="l">'+esc(k[0])+'</div><div class="v">'+k[1]+'</div><div class="d">'+esc(k[2])+'</div></div>'}).join('');
     document.getElementById('method').innerHTML = LANG==='ka' ? METHOD_KA : METHOD_EN;
   }
   function apply(){
+    if(!ready){ render(); return; }
     var q=qEl.value.trim().toLowerCase(), f=SEG[segSel], terms=q?q.split(/\s+/):[];
     view=[];
     for(var i=0;i<C.length;i++){
@@ -491,6 +505,7 @@
     try{ localStorage.setItem('c360v2', JSON.stringify({seg:segSel, sort:sortSel})); }catch(e){}
   }
   function render(){
+    if(!ready){ document.querySelector('#list tbody').innerHTML='<tr><td colspan="14" class="loading">'+esc(t('loadingData'))+'</td></tr>'; document.getElementById('count').textContent=''; document.getElementById('pg').textContent=''; return; }
     var pages=Math.max(1,Math.ceil(view.length/PER)); if(page>=pages)page=pages-1;
     var rows=view.slice(page*PER,(page+1)*PER).map(function(i){
       var r=C[i];
@@ -518,7 +533,8 @@
   var sheet=document.getElementById('sheet'), scrim=document.getElementById('scrim'), lastFocus=null, openIdx=-1;
   function kv(items){ return '<div class="kv">'+items.map(function(p){ var v=p[1]; var e=(v===''||v==null); return '<div><div class="k">'+esc(p[0])+'</div><div class="v'+(e?' e':'')+'">'+(e?'—':v)+'</div></div>'; }).join('')+'</div>'; }
   function openP(i){
-    openIdx=i;
+    if(!ready) return;
+    openIdx=i; window.__c360OpenKey=C[i][c.key];
     var r=C[i], ap=(aOf[i]||[]).map(function(j){return A[j]}), lo=(lOf[i]||[]).map(function(j){return L[j]});
     var act=lo.filter(function(x){return x[l.active]}), cl=lo.filter(function(x){return !x[l.active]});
     var h='<div class="sheet-h"><div><h2 id="pname">'+esc(r[c.name]||t('noname'))+'</h2><div class="meta"><span>'+t('pidl')+' '+esc(r[c.pid]||'—')+'</span><span>'+esc(tv(r[c.key_type]))+'</span><span>'+t('firstapp')+' '+esc(r[c.first_app])+'</span></div></div><button class="x" id="closeP" type="button">'+t('close')+'</button></div>';
@@ -549,7 +565,7 @@
     sheet.innerHTML=h; if(sheet.hidden) lastFocus=document.activeElement; sheet.hidden=false; scrim.hidden=false;
     document.getElementById('closeP').focus(); document.getElementById('closeP').addEventListener('click',closeP);
   }
-  function closeP(){ sheet.hidden=true; scrim.hidden=true; openIdx=-1; if(lastFocus&&lastFocus.focus) lastFocus.focus(); }
+  function closeP(){ sheet.hidden=true; scrim.hidden=true; openIdx=-1; window.__c360OpenKey=null; if(lastFocus&&lastFocus.focus) lastFocus.focus(); }
   scrim.addEventListener('click',closeP);
   document.addEventListener('keydown',function(e){ if(e.key==='Escape'&&!sheet.hidden) closeP(); });
 
@@ -580,6 +596,7 @@
   };
   var xb=document.getElementById('xlsx');
   xb.addEventListener('click',function(){
+    if(!ready) return;
     xb.disabled=true; xb.textContent=t('xlsxBusy'); var H=XH[LANG];
     loadXL().then(function(ExcelJS){
       var wb=new ExcelJS.Workbook(), set={};
@@ -731,6 +748,7 @@
       rows.map(function(r){ return '<tr><td>'+esc(lab(r.k))+'</td><td class="n">'+fm(r.n)+'</td>'+barCell(r.bad,max,false)+'<td class="n">'+pct(r.clean)+'</td><td class="n">'+pct(r.cur30)+'</td></tr>'; }).join('')+'</tbody></table></div></div>';
   }
   function renderAn(){
+    if(!ready){ document.getElementById('pAn').innerHTML='<p class="loading">'+esc(t('loadingData'))+'</p>'; return; }
     var ov=AN.overall;
     var h='<h2 class="an-h">'+at('h_find')+'</h2><p class="an-d">'+at('d_find')+'</p>'+findings();
     h+='<h2 class="an-h">'+at('h_port')+'</h2><p class="an-d">'+at('d_port')+'</p>'+parTable();
@@ -775,10 +793,35 @@
     document.documentElement.lang = lg==='ka'?'ka':'en';
     document.getElementById('lKa').setAttribute('aria-pressed',lg==='ka'); document.getElementById('lEn').setAttribute('aria-pressed',lg==='en');
     document.querySelectorAll('[data-t]').forEach(function(el){ el.textContent=t(el.getAttribute('data-t')); });
-    fillControls(); render(); if(TAB==='analysis') renderAn(); if(openIdx>=0) openP(openIdx); paintTheme(); }
+    fillControls(); render(); if(TAB==='analysis') renderAn(); if(openIdx>=0) openP(openIdx); paintTheme(); if(typeof paintState==='function') paintState(); }
   document.getElementById('lKa').addEventListener('click',function(){setLang('ka')});
   document.getElementById('lEn').addEventListener('click',function(){setLang('en')});
 
+  // ---- live data (reporting.volta.ge): the page first shows the previous build (or a loading state), then the server
+  // streams in window.__c360Live(id) once the fresh build is ready; the new scripts replace the C360_* globals and the
+  // page re-renders in place, keeping search, filter, sort, page, tab and an open profile.
+  var liveState = { s: '', msg: '' };
+  function paintState(){ var el=document.getElementById('liveState'); if(!liveState.s){ el.hidden=true; return; }
+    el.hidden=false; el.className = liveState.s==='error' ? 'err' : '';
+    el.textContent = liveState.s==='loading' ? t('st_loading') : liveState.s==='done' ? t('st_done')+' '+liveState.msg : t('st_err')+' '+liveState.msg; }
+  window.__c360State = function(s, msg){ liveState = { s: s, msg: msg || '' }; paintState(); };
+  window.__c360Reload = function(){
+    if(!loadData()) return;
+    var openKey = openIdx>=0 ? window.__c360OpenKey : null, keepPage = page;
+    build(); fillControls(); apply(); page = keepPage; render();
+    if(TAB==='analysis') renderAn();
+    if(openKey){ var ni=-1; for(var i=0;i<C.length;i++){ if(C[i][c.key]===openKey){ ni=i; break; } } if(ni>=0) openP(ni); else closeP(); }
+  };
+  window.__c360Live = function(id){
+    var parts=['meta','analysis','cust1','cust2','apps','loans'], k=0;
+    (function next(){
+      if(k>=parts.length){ window.__c360Reload(); var d=new Date(); window.__c360State('done', String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')); return; }
+      var s=document.createElement('script'); s.src='data.php?b='+id+'&p='+parts[k++]; s.charset='utf-8';
+      s.onload=next; s.onerror=function(){ window.__c360State('error', 'data '+parts[k-1]); };
+      document.head.appendChild(s);
+    })();
+  };
+  if(loadData()) build();
   setLang(LANG); apply();
   if(location.hash==='#analysis') setTab('analysis');
 })();

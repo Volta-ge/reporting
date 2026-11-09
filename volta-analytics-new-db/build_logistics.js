@@ -1745,8 +1745,93 @@ const cps = parseTsv('coll_cps.tsv').map(r => ({ wb: +r.wb, label: CPS_LABEL[+r.
   promisesMade: +r.promises_made, promisesKept: +r.promises_kept, promisesBroken: +r.promises_broken, totalPaid: +r.total_paid, penaltyPaid: +r.penalty_paid, computedAt: r.computed_at }));
 const meta = {}; for (const r of parseTsv('coll_meta.tsv')) meta[r.t] = +r.n;
 
+// ---- Collections Monthly (sub-tab "collmonthly"): monthly collections by component and by overdue stage at the moment of
+// payment, plus KPIs against the month-start portfolio. Per loan, cumulative payments (principal part; reversed and the
+// placeholder row excluded) are matched against the cumulative schedule: on a payment day the loan is overdue by
+// (day - due date of the oldest instalment earlier payments had not covered). Same method as the marketing "Collections SMS"
+// deck. PHP twin: NewDbColl::monthly() in src/NewDbReport.php — keep the two in step.
+function collMonthly(schedRows, payRows, orderRows, todayStr, firstMonth) {
+  const DAY = 86400000, dn = s => Math.round(Date.parse(s + 'T00:00:00Z') / DAY);
+  const BK = ['current', 'd1_4', 'd5_10', 'd11_20', 'd21_30', 'd31_60', 'd61_90', 'd90'];
+  const bucket = d => d <= 0 ? 'current' : d <= 4 ? 'd1_4' : d <= 10 ? 'd5_10' : d <= 20 ? 'd11_20' : d <= 30 ? 'd21_30' : d <= 60 ? 'd31_60' : d <= 90 ? 'd61_90' : 'd90';
+  const lowerBound = (arr, v) => { let lo = 0, hi = arr.length; while (lo < hi) { const m = (lo + hi) >> 1; if (arr[m] < v) lo = m + 1; else hi = m; } return lo; };
+  // complete months only: firstMonth .. the month before today's
+  const months = []; const curM = todayStr.slice(0, 7);
+  for (let m = firstMonth; m < curM; ) { months.push(m); let [y, mo] = m.split('-').map(Number); mo++; if (mo > 12) { mo = 1; y++; } m = y + '-' + String(mo).padStart(2, '0'); }
+  const mI = {}; months.forEach((m, i) => mI[m] = i);
+  const starts = months.map(m => dn(m + '-01'));
+  const ends = months.map((m, i) => i + 1 < months.length ? starts[i + 1] : dn(curM + '-01'));
+  const sched = new Map();
+  for (const r of schedRows) { let s = sched.get(r.installment_id); if (!s) sched.set(r.installment_id, s = { due: [], req: [], run: 0 }); s.run += +r.schedule_amount; s.due.push(dn(r.schedule_date)); s.req.push(s.run); }
+  const order = new Map(); for (const r of orderRows) order.set(r.id, r);
+  const ratioOf = id => { const s = sched.get(id), o = order.get(id); const tot = s ? s.run : 0; return (o && +o.price > 0 && tot > 0) ? Math.min(1, +o.price / tot) : 1; };
+  const z = () => months.map(() => 0);
+  const M = { total: z(), adv: z(), pr: z(), pen: z() }; for (const b of BK) M[b] = z();
+  M.cPri = z(); const payers = months.map(() => new Set()), payersOd = months.map(() => new Set());
+  const hist = new Map();   // loan -> { d: [day], c: [cumulative coverage after that day] }
+  let i = 0;
+  while (i < payRows.length) {
+    const lid = payRows[i].installment_id; let j = i; while (j < payRows.length && payRows[j].installment_id === lid) j++;
+    const s = sched.get(lid), o = order.get(lid), cust = o && o.cid && o.cid !== '0' ? o.cid : 'O' + lid, ratio = ratioOf(lid);
+    let paid = 0; const h = { d: [], c: [] };
+    let k = i;
+    while (k < j) {
+      const day = payRows[k].payment_date; let e = k; while (e < j && payRows[e].payment_date === day) e++;
+      const d = dn(day);
+      let dpd = 0;
+      if (s) { const q = lowerBound(s.req, paid + 0.01); if (q < s.req.length && s.due[q] < d) dpd = d - s.due[q]; }
+      const mi = mI[day.slice(0, 7)];
+      for (let p = k; p < e; p++) {
+        const r = payRows[p], amt = +r.amount, pr = +r.pr, pen = +r.pen, adv = +r.adv;
+        const isAdv = r.src === 'advance' || (adv > 0 && Math.abs(adv - amt) < 0.01);   // down payment taken at issue
+        if (mi !== undefined) {
+          M.total[mi] += amt;
+          if (isAdv) M.adv[mi] += amt;
+          else { const b = bucket(dpd); M.pr[mi] += pr; M.pen[mi] += pen; M[b][mi] += amt; M.cPri[mi] += pr * ratio; payers[mi].add(cust); if (b !== 'current') payersOd[mi].add(cust); }
+        }
+        paid += pr > 0 ? pr : (pen > 0 ? 0 : amt);
+      }
+      h.d.push(d); h.c.push(paid);
+      k = e;
+    }
+    hist.set(lid, h);
+    i = j;
+  }
+  // month-start portfolio over issued installment loans (crm_order_status 1/5/11) with a schedule
+  const P = { n: z(), tot: z(), pri: z(), od: z(), odp: z(), nOd: z(), rec: z(), cured: z() };
+  const today = dn(todayStr);
+  for (const o of orderRows) {
+    if (!['1', '5', '11'].includes(o.st)) continue;
+    const s = sched.get(o.id); if (!s || !o.issued || o.issued === 'NULL') continue;
+    const issued = dn(o.issued), h = hist.get(o.id) || { d: [], c: [] }, tot = s.run, ratio = ratioOf(o.id);
+    let close = null;
+    if (o.act !== '1') { const q = lowerBound(h.c, tot - 0.01); close = q < h.c.length ? h.d[q] : (o.cd && o.cd !== 'NULL' ? dn(o.cd) : (h.d.length ? h.d[h.d.length - 1] : null)); }
+    const paidBefore = D => { const q = lowerBound(h.d, D); return q > 0 ? h.c[q - 1] : 0; };
+    months.forEach((m, mi) => {
+      const D = starts[mi];
+      if (issued >= D || (close !== null && close < D)) return;
+      const paid = paidBefore(D), out = Math.max(0, tot - paid);
+      if (out <= 0.005) return;
+      const q = lowerBound(s.due, D), over = Math.max(0, (q > 0 ? s.req[q - 1] : 0) - paid);
+      P.n[mi]++; P.tot[mi] += out; P.pri[mi] += out * ratio;
+      if (over > 0.005) {
+        P.nOd[mi]++; P.od[mi] += over; P.odp[mi] += over * ratio;
+        const got = Math.max(0, paidBefore(Math.min(ends[mi], today + 1)) - paid);
+        P.rec[mi] += Math.min(over, got); if (got >= over - 0.01) P.cured[mi]++;
+      }
+    });
+  }
+  const out = { months, today: todayStr };
+  for (const [key, arr] of Object.entries(M)) out[key] = arr.map(r2);
+  out.payers = payers.map(s => s.size); out.payersOd = payersOd.map(s => s.size);
+  for (const [key, arr] of Object.entries(P)) out['p_' + key] = arr.map(r2);
+  return out;
+}
+const collm = collMonthly(parseTsv('collm_sched.tsv'), parseTsv('collm_pays.tsv'), parseTsv('collm_orders.tsv'), process.env.COLLM_TODAY || today, '2026-01');   // COLLM_TODAY: test hook for a build on older extracts
+console.log('collections monthly:', collm.months[0], '->', collm.months.at(-1), '| collections', collm.months.map((m, i) => Math.round(collm.total[i] - collm.adv[i])).join(','));
+
 const payload = { cutover: CUTOVER, mstart: MSTART, today, days, months, od, payDay, payMonth, dueDay, dueMonth, perfMonths, perfMonth, reversed, activity, pm, status, cps, meta,
-  generatedAt: new Date().toISOString().slice(0, 16).replace('T', ' ') + ' UTC' };
+  monthly: collm, generatedAt: new Date().toISOString().slice(0, 16).replace('T', ' ') + ' UTC' };
 fs.writeFileSync(path.join(__dirname, 'coll_data.json'), JSON.stringify(payload));
 console.log('days:', days.length, days[0], '->', today, '| months:', months.length, '| overdue today: rows', od.rows.at(-1), 'amt', od.amt.at(-1), 'loans', od.loans.at(-1),
   '| collected today', payDay.amt.at(-1), '| month cols', months.at(-1), payMonth.amt.at(-1), '| activity metrics', Object.keys(activity.metrics).length, '| pm', pm.length, 'status', status.length, 'cps', cps.length);
@@ -1795,10 +1880,17 @@ if (!html.includes(NAV_START)) {
       <div class="nav-group-title">Collections</div>
       <div class="nav-group-items">
         <button data-page="collections">Collections Analyze</button>
+        <button data-page="collmonthly">Collections Monthly</button>
       </div>
     </div>
     ${NAV_END}
 ` + navAnchor);
+}
+// the Collections Monthly button joined the group later: add it to a nav that was inserted before it existed
+if (!html.includes('<button data-page="collmonthly">')) {
+  const btn = '        <button data-page="collections">Collections Analyze</button>' + NL;
+  must(btn, 'Collections Analyze nav button');
+  html = html.replace(btn, btn + '        <button data-page="collmonthly">Collections Monthly</button>' + NL);
 }
 
 // page
@@ -1855,6 +1947,19 @@ ${card('collActMonth')}
     <div class="table-card"><table class="logi-mini" id="collMetaTable"><colgroup><col class="logi-mini-name"></colgroup><tbody></tbody></table></div>
   </div>
   <p class="note" id="collSnapNote"></p>
+</div>
+</div>
+<div class="page" data-page="collmonthly" id="page-collmonthly">
+<div class="wrap">
+  <p class="section-title">Collections Monthly &mdash; Components, Overdue Stages &amp; Portfolio KPIs</p>
+  <div class="banner" id="collmBanner"></div>
+  <div class="coll-kpis" id="collmKpis"></div>
+  <p class="coll-sub-title">Collections by month &mdash; components and overdue stage at the moment of payment</p>
+${card('collmMain')}
+  <p class="note" id="collmMainNote"></p>
+  <p class="coll-sub-title">KPIs against the portfolio &mdash; month-start portfolio vs collections in the month</p>
+${card('collmKpi')}
+  <p class="note" id="collmKpiNote"></p>
 </div>
 </div>
 ${PAGE_END}
@@ -2099,12 +2204,106 @@ window.__registerPage(['collections'], function () {
   const ids = ['collPayDay', 'collPayMonth', 'collOdDay', 'collOdMonth', 'collPmDay', 'collDueDay', 'collDueMonth', 'collActDay', 'collActMonth'];
   window.collScrollUpdaters = ids.map(id => setupTopScrollSync(id + 'ScrollTop', id + 'ScrollBody'));
 });
+// ---- Collections Monthly: COLL_JSON.monthly (collMonthly() in build_logistics.js / NewDbColl::monthly() live)
+window.__registerPage(['collmonthly'], function () {
+  const M = COLL_JSON.monthly, DASH = '&ndash;';
+  if (!M || !M.months || !M.months.length) { document.getElementById('collmBanner').innerHTML = 'No complete month to show yet.'; return; }
+  const k = M.months.length;
+  const mLabel = m => MONTH_NAMES[Number(m.slice(5, 7)) - 1] + ' ' + m.slice(0, 4);
+  const cols = M.months.map(mLabel);
+  const add = (a, b) => a.map((v, i) => (v || 0) + (b[i] || 0));
+  const S = a => a.reduce((t, v) => t + (v || 0), 0);
+  const div = (a, b) => a.map((v, i) => b[i] ? v / b[i] : null);
+  const coll = M.total.map((v, i) => v - M.adv[i]);
+  const other = coll.map((v, i) => v - M.pr[i] - M.pen[i]);
+  const od30 = add(add(M.d1_4, M.d5_10), add(M.d11_20, M.d21_30)), od30p = add(add(M.d31_60, M.d61_90), M.d90), od = add(od30, od30p);
+  const cell = (v, kind) => (v === null || v === undefined) ? DASH : kind === 'pct' ? pct(v) : kind === 'cnt' ? (v ? fmt(v) : DASH) : fmt(v);
+  function table(id, title, rows, totalLabel) {
+    const span = k + 1 + (totalLabel ? 1 : 0);
+    let h = '<tr class="logi-title"><td colspan="' + span + '">' + title + '</td></tr>';
+    h += '<tr class="logi-head"><td>Month</td>' + cols.map(c => '<td>' + c + '</td>').join('') + (totalLabel ? '<td class="logi-extra logi-extra-first">' + totalLabel + '</td>' : '') + '</tr>';
+    rows.forEach(r => {
+      if (r.sub) { h += '<tr class="logi-sub"><td colspan="' + span + '">' + r.label + '</td></tr>'; return; }
+      const tot = totalLabel ? '<td class="logi-extra logi-extra-first">' + (r.total === undefined ? DASH : cell(r.total, r.kind)) + '</td>' : '';
+      h += '<tr class="' + r.cls + '"><td>' + r.label + '</td>' + r.vals.map(v => '<td>' + cell(v, r.kind) + '</td>').join('') + tot + '</tr>';
+    });
+    document.getElementById(id + 'Table').querySelector('tbody').innerHTML = h;
+  }
+  const L = k - 1, period = cols[0] + ' &ndash; ' + cols[L];
+  document.getElementById('collmBanner').innerHTML = '<b>Source:</b> VoltaStoreDB <code>crm_payments</code> (reversed payments and the migration placeholder row excluded) and <code>crm_installment_schedules</code>. '
+    + '<b>Period:</b> complete months from ' + cols[0] + ' to ' + cols[L] + '; the current month joins once it is complete. Amounts in GEL. Last refresh: ' + COLL_JSON.generatedAt + '.';
+  const kpis = [
+    ['Collections ' + cols[L], fmt(coll[L]) + ' GEL', 'excl. advances'],
+    ['Collections ' + period, fmt(S(coll)) + ' GEL', fmt(S(M.adv)) + ' GEL advances on top'],
+    ['Collected while overdue', pct(S(od) / Math.max(1, S(coll))), fmt(S(od)) + ' GEL in ' + period],
+    ['Collections / portfolio, ' + cols[L], pct(M.p_tot[L] ? coll[L] / M.p_tot[L] : 0), 'portfolio ' + fmt(M.p_tot[L]) + ' GEL at month start'],
+    ['Overdue portfolio, start of ' + cols[L], fmt(M.p_od[L]) + ' GEL', fmt(M.p_nOd[L]) + ' loans'],
+    ['Recovery rate, ' + cols[L], pct(M.p_od[L] ? M.p_rec[L] / M.p_od[L] : 0), 'of month-start arrears paid in the month'],
+  ];
+  document.getElementById('collmKpis').innerHTML = kpis.map(x => '<div class="coll-kpi"><div class="coll-kpi-label">' + x[0] + '</div><div class="coll-kpi-value">' + x[1] + '</div><div class="coll-kpi-sub">' + x[2] + '</div></div>').join('');
+  const stages = [['On time or early (0 days)', M.current], ['1&ndash;4 days', M.d1_4], ['5&ndash;10 days', M.d5_10], ['11&ndash;20 days', M.d11_20], ['21&ndash;30 days', M.d21_30], ['31&ndash;60 days', M.d31_60], ['61&ndash;90 days', M.d61_90], ['90+ days', M.d90]];
+  table('collmMain', 'COLLECTIONS BY MONTH &mdash; ' + period, [
+    { cls: 'logi-total', label: 'Total received (GEL)', vals: M.total, total: S(M.total) },
+    { cls: 'logi-light', label: 'of which advances (down payment taken at issue)', vals: M.adv, total: S(M.adv) },
+    { cls: 'logi-total', label: 'Collections excl. advances', vals: coll, total: S(coll) },
+    { cls: 'logi-white', label: 'Principal', vals: M.pr, total: S(M.pr) },
+    { cls: 'logi-light', label: 'Penalties', vals: M.pen, total: S(M.pen) },
+    { cls: 'logi-white', label: 'Other / rounding', vals: other, total: S(other) },
+    { sub: true, label: 'By overdue stage of the loan on the payment day (collections excl. advances)' },
+  ].concat(stages.map((s, i) => ({ cls: i % 2 ? 'logi-light' : 'logi-white', label: s[0], vals: s[1], total: S(s[1]) })), [
+    { cls: 'logi-total', label: 'Collected while overdue (1+ days)', vals: od, total: S(od) },
+    { cls: 'logi-plain', label: 'of which 1&ndash;30 days (the SMS reminder stages)', vals: od30, total: S(od30) },
+    { cls: 'logi-plain', label: 'of which over 30 days', vals: od30p, total: S(od30p) },
+    { cls: 'logi-plain', label: 'Share of collections paid while overdue', vals: div(od, coll), kind: 'pct', total: S(od) / Math.max(1, S(coll)) },
+    { sub: true, label: 'Paying customers (customer accounts with at least one payment in the month, advances excluded)' },
+    { cls: 'logi-plain', label: 'Customers who paid', vals: M.payers, kind: 'cnt' },
+    { cls: 'logi-plain', label: 'of which paid while overdue', vals: M.payersOd, kind: 'cnt' },
+  ]), 'Total');
+  document.getElementById('collmMainNote').innerHTML = 'Flow, by <code>payment_date</code>. Advances = payments with <code>payment_source = advance</code> or whose <code>advance</code> equals the whole amount: the down payment taken when the loan is issued, so they are shown apart from collections. Principal / Penalties = <code>principal_part</code> / <code>penalty_part</code> (principal includes any financing markup). '
+    + 'Overdue stage = how many days the loan was overdue at the start of the payment day: cumulative earlier payments (principal part) are matched against the cumulative schedule, and the oldest instalment they had not yet covered gives the days overdue. The whole payment counts in that stage. Same method as the marketing Collections SMS deck.';
+  table('collmKpi', 'KPIs AGAINST THE PORTFOLIO &mdash; ' + period, [
+    { sub: true, label: 'Portfolio on the 1st of the month' },
+    { cls: 'logi-plain', label: 'Loans in the portfolio', vals: M.p_n, kind: 'cnt' },
+    { cls: 'logi-white', label: 'Total portfolio (GEL)', vals: M.p_tot },
+    { cls: 'logi-light', label: 'Principal portfolio', vals: M.p_pri },
+    { cls: 'logi-white', label: 'Overdue portfolio', vals: M.p_od },
+    { cls: 'logi-light', label: 'Overdue principal', vals: M.p_odp },
+    { cls: 'logi-plain', label: 'Overdue loans', vals: M.p_nOd, kind: 'cnt' },
+    { sub: true, label: 'Collections in the month (excl. advances)' },
+    { cls: 'logi-white', label: 'Total collections', vals: coll },
+    { cls: 'logi-light', label: 'Principal collections', vals: M.cPri },
+    { cls: 'logi-white', label: 'Overdue collections', vals: od },
+    { sub: true, label: 'KPIs' },
+    { cls: 'logi-total', label: 'Total collections / total portfolio', vals: div(coll, M.p_tot), kind: 'pct' },
+    { cls: 'logi-total', label: 'Principal collections / principal portfolio', vals: div(M.cPri, M.p_pri), kind: 'pct' },
+    { cls: 'logi-total', label: 'Overdue collections / overdue portfolio', vals: div(od, M.p_od), kind: 'pct' },
+    { cls: 'logi-total', label: 'Overdue collections / overdue principal', vals: div(od, M.p_odp), kind: 'pct' },
+    { sub: true, label: 'Recovery of the arrears the month started with' },
+    { cls: 'logi-white', label: 'Paid in the month toward month-start arrears (GEL)', vals: M.p_rec },
+    { cls: 'logi-total', label: 'Recovery rate (GEL)', vals: div(M.p_rec, M.p_od), kind: 'pct' },
+    { cls: 'logi-plain', label: 'Overdue loans fully cured in the month', vals: M.p_cured, kind: 'cnt' },
+    { cls: 'logi-plain', label: 'Share of overdue loans fully cured', vals: div(M.p_cured, M.p_nOd), kind: 'pct' },
+  ], null);
+  document.getElementById('collmKpiNote').innerHTML = 'Portfolio = balance on the 1st of the month, rebuilt from the loan schedules and the payments made before that day: issued installment loans (CRM status 1/5/11) not yet closed on that day, their unpaid schedule (overdue plus future instalments, financing markup included). Penalty balances are not stored historically, so they are not in the portfolio. '
+    + 'Principal portfolio = the product-price share of that balance (balance &times; price / schedule total), i.e. without financing markup; principal collections use the same share of each payment. Overdue portfolio / principal = instalments due before the 1st and still unpaid that day. '
+    + 'Overdue collections include loans that fell overdue during the month, while the overdue portfolio only holds the arrears the month started with, so that ratio can run high; the recovery rate compares like with like: the part of each loan&rsquo;s month-start arrears paid within the month (at most its arrears), over the month-start overdue portfolio.';
+  window.collmScrollUpdaters = ['collmMain', 'collmKpi'].map(id => setupTopScrollSync(id + 'ScrollTop', id + 'ScrollBody'));
+});
+// the live page streams COLL_JSON in again once computed: re-render this sub-tab too (the group map names only "collections")
+(function () {
+  const prev = window.__onLiveSection;
+  if (typeof prev !== 'function' || prev.__collm) return;
+  const f = function (key) { prev(key); if (key === 'coll' && window.__forceRenderPage) window.__forceRenderPage('collmonthly'); };
+  f.__collm = true;
+  window.__onLiveSection = f;
+})();
 ${JS_END}
 `;
 must('// ---- top-level page nav (grows as more reports get added) ----', 'nav handler');
 html = html.replace('// ---- top-level page nav (grows as more reports get added) ----', () => js.replace(/^\n/, '') + '// ---- top-level page nav (grows as more reports get added) ----');
 must("  if (btn.dataset.page === 'subcategoryanalyze') subcategoryScrollUpdate();", 'nav updaters');
 if (!html.includes("btn.dataset.page === 'collections'")) html = html.replace("  if (btn.dataset.page === 'subcategoryanalyze') subcategoryScrollUpdate();", "  if (btn.dataset.page === 'subcategoryanalyze') subcategoryScrollUpdate();" + NL + "  if (btn.dataset.page === 'collections' && window.collScrollUpdaters) window.collScrollUpdaters.forEach(f => f());");
+if (!html.includes("btn.dataset.page === 'collmonthly'")) html = html.replace("  if (btn.dataset.page === 'subcategoryanalyze') subcategoryScrollUpdate();", "  if (btn.dataset.page === 'subcategoryanalyze') subcategoryScrollUpdate();" + NL + "  if (btn.dataset.page === 'collmonthly' && window.collmScrollUpdaters) window.collmScrollUpdaters.forEach(f => f());");
 
 if (__hadCRLF) html = html.replace(/\n/g, '\r\n');
 fs.writeFileSync(htmlPath, html);

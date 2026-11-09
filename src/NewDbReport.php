@@ -2791,6 +2791,7 @@ SQL;
         $payload = ['cutover' => self::CUTOVER, 'mstart' => self::MSTART, 'today' => $todayD, 'days' => $days, 'months' => $months, 'od' => $od,
             'payDay' => $payDay, 'payMonth' => $payMonth, 'dueDay' => $dueDay, 'dueMonth' => $dueMonth, 'perfMonths' => $perfMonths, 'perfMonth' => $perfMonth,
             'reversed' => $reversed, 'activity' => $activity, 'pm' => $pm, 'status' => $status, 'cps' => $cps, 'meta' => $meta,
+            'monthly' => $this->monthly($todayD, '2026-01'),
             'generatedAt' => gmdate('Y-m-d H:i') . ' UTC'];
         $payload = self::normalize($payload);
         // keyed-by-id maps must encode as JSON objects even when their keys happen to be 0..n-1 (or empty)
@@ -2799,7 +2800,180 @@ SQL;
         return $payload;
     }
 
+    /**
+     * Collections Monthly sub-tab (COLL_JSON.monthly): the PHP twin of collMonthly() in volta-analytics-new-db/build_logistics.js —
+     * keep the two in step. Monthly collections by component and by the loan's overdue stage on the payment day (cumulative
+     * earlier payments, principal part, against the cumulative schedule), plus the month-start portfolio and its KPIs.
+     * Complete months only, $firstMonth .. the month before $today. The three extracts are streamed (unbuffered) row by row
+     * into compact per-loan arrays, so this adds little to the page's memory.
+     */
+    private function monthly(string $today, string $firstMonth): array
+    {
+        $day = static fn (string $s): int => intdiv((int) gmmktime(0, 0, 0, (int) substr($s, 5, 2), (int) substr($s, 8, 2), (int) substr($s, 0, 4)), 86400);
+        $lowerBound = static function (array $a, float|int $v): int {
+            $lo = 0;
+            $hi = count($a);
+            while ($lo < $hi) {
+                $m = ($lo + $hi) >> 1;
+                if ($a[$m] < $v) { $lo = $m + 1; } else { $hi = $m; }
+            }
+            return $lo;
+        };
+        $bucket = static fn (int $d): string => $d <= 0 ? 'current' : ($d <= 4 ? 'd1_4' : ($d <= 10 ? 'd5_10' : ($d <= 20 ? 'd11_20'
+            : ($d <= 30 ? 'd21_30' : ($d <= 60 ? 'd31_60' : ($d <= 90 ? 'd61_90' : 'd90'))))));
+        $curM = substr($today, 0, 7);
+        $months = [];
+        for ($m = $firstMonth; strcmp($m, $curM) < 0;) {
+            $months[] = $m;
+            [$y, $mo] = array_map('intval', explode('-', $m));
+            $mo++;
+            if ($mo > 12) { $mo = 1; $y++; }
+            $m = sprintf('%04d-%02d', $y, $mo);
+        }
+        $mI = array_flip($months);
+        $n = count($months);
+        $starts = array_map(static fn (string $m): int => $day($m . '-01'), $months);
+        $ends = [];
+        foreach ($months as $i => $m) { $ends[$i] = $i + 1 < $n ? $starts[$i + 1] : $day($curM . '-01'); }
+        $tokens = ['E' => $today];
+
+        $orders = [];   // id => [cid, st, act, cd, price, issued]
+        $this->stream('collm_orders', 'SELECT id, COALESCE(customer_id,0), crm_order_status, crm_active, DATE(crm_close_date), base_grand_total, DATE(COALESCE(crm_creator_date, created_at)) FROM orders', [],
+            static function (array $r) use (&$orders): void { $orders[(int) $r[0]] = [(string) $r[1], (string) $r[2], (string) $r[3], $r[4], $r[5] === null ? 0.0 : (float) $r[5], $r[6]]; });
+        $due = $req = [];
+        $this->stream('collm_sched', 'SELECT installment_id, schedule_date, schedule_amount FROM crm_installment_schedules ORDER BY installment_id, schedule_date, month', [],
+            static function (array $r) use (&$due, &$req, $day): void {
+                $id = (int) $r[0];
+                $run = isset($req[$id]) ? end($req[$id]) : 0.0;
+                $due[$id][] = $day((string) $r[1]);
+                $req[$id][] = $run + (float) $r[2];
+            });
+        $ratio = static function (int $id) use (&$req, &$orders): float {
+            $tot = isset($req[$id]) ? end($req[$id]) : 0.0;
+            $price = $orders[$id][4] ?? 0.0;
+            return ($price > 0 && $tot > 0) ? min(1.0, $price / $tot) : 1.0;
+        };
+
+        $z = array_fill(0, $n, 0.0);
+        $M = ['total' => $z, 'adv' => $z, 'pr' => $z, 'pen' => $z];
+        foreach (['current', 'd1_4', 'd5_10', 'd11_20', 'd21_30', 'd31_60', 'd61_90', 'd90'] as $b) { $M[$b] = $z; }
+        $M['cPri'] = $z;
+        $payers = array_fill(0, $n, []);
+        $payersOd = array_fill(0, $n, []);
+        $histD = $histC = [];   // loan => payment days / cumulative coverage after each day
+        // per loan: running coverage and the payments of the day being read; a day is closed when the date or loan changes
+        $cur = ['id' => null, 'paid' => 0.0, 'day' => null, 'rows' => []];
+        $flushDay = function () use (&$cur, &$M, &$payers, &$payersOd, &$histD, &$histC, &$due, &$req, &$orders, $mI, $lowerBound, $bucket, $day, $ratio): void {
+            if ($cur['day'] === null) { return; }
+            $id = $cur['id'];
+            $d = $day($cur['day']);
+            $dpd = 0;
+            if (isset($req[$id])) {
+                $q = $lowerBound($req[$id], $cur['paid'] + 0.01);
+                if ($q < count($req[$id]) && $due[$id][$q] < $d) { $dpd = $d - $due[$id][$q]; }
+            }
+            $mi = $mI[substr($cur['day'], 0, 7)] ?? null;
+            $o = $orders[$id] ?? null;
+            $cust = ($o !== null && $o[0] !== '' && $o[0] !== '0') ? $o[0] : 'O' . $id;
+            $rt = $ratio($id);
+            foreach ($cur['rows'] as [$amt, $pr, $pen, $adv, $src]) {
+                $isAdv = $src === 'advance' || ($adv > 0 && abs($adv - $amt) < 0.01);   // down payment taken at issue
+                if ($mi !== null) {
+                    $M['total'][$mi] += $amt;
+                    if ($isAdv) {
+                        $M['adv'][$mi] += $amt;
+                    } else {
+                        $b = $bucket($dpd);
+                        $M['pr'][$mi] += $pr;
+                        $M['pen'][$mi] += $pen;
+                        $M[$b][$mi] += $amt;
+                        $M['cPri'][$mi] += $pr * $rt;
+                        $payers[$mi][$cust] = true;
+                        if ($b !== 'current') { $payersOd[$mi][$cust] = true; }
+                    }
+                }
+                $cur['paid'] += $pr > 0 ? $pr : ($pen > 0 ? 0.0 : $amt);
+            }
+            $histD[$id][] = $d;
+            $histC[$id][] = $cur['paid'];
+            $cur['day'] = null;
+            $cur['rows'] = [];
+        };
+        $this->stream('collm_pays', 'SELECT p.installment_id, p.payment_date, p.amount, COALESCE(p.principal_part,0), COALESCE(p.penalty_part,0), COALESCE(p.advance,0), COALESCE(p.payment_source,\'\')
+                FROM crm_payments p WHERE ' . self::PAYOK . ' AND p.payment_date <= :e ORDER BY p.installment_id, p.payment_date, p.id', ['e' => $tokens['E']],
+            static function (array $r) use (&$cur, $flushDay): void {
+                $id = (int) $r[0];
+                $d = (string) $r[1];
+                if ($id !== $cur['id']) { $flushDay(); $cur = ['id' => $id, 'paid' => 0.0, 'day' => null, 'rows' => []]; }
+                elseif ($d !== $cur['day']) { $flushDay(); }
+                $cur['day'] = $d;
+                $cur['rows'][] = [(float) $r[2], (float) $r[3], (float) $r[4], (float) $r[5], (string) $r[6]];
+            });
+        $flushDay();
+
+        // month-start portfolio over issued installment loans (crm_order_status 1/5/11) with a schedule
+        $P = ['n' => $z, 'tot' => $z, 'pri' => $z, 'od' => $z, 'odp' => $z, 'nOd' => $z, 'rec' => $z, 'cured' => $z];
+        $todayN = $day($today);
+        foreach ($orders as $id => [, $st, $act, $cd, , $issued]) {
+            if (!in_array($st, ['1', '5', '11'], true) || !isset($req[$id]) || $issued === null) { continue; }
+            $iss = $day((string) $issued);
+            $hd = $histD[$id] ?? [];
+            $hc = $histC[$id] ?? [];
+            $tot = end($req[$id]);
+            $rt = $ratio($id);
+            $close = null;
+            if ($act !== '1') {
+                $q = $lowerBound($hc, $tot - 0.01);
+                $close = $q < count($hc) ? $hd[$q] : ($cd !== null ? $day((string) $cd) : ($hd ? end($hd) : null));
+            }
+            $paidBefore = static function (int $D) use ($hd, $hc, $lowerBound): float { $q = $lowerBound($hd, $D); return $q > 0 ? $hc[$q - 1] : 0.0; };
+            foreach ($starts as $mi => $D) {
+                if ($iss >= $D || ($close !== null && $close < $D)) { continue; }
+                $paid = $paidBefore($D);
+                $out = max(0.0, $tot - $paid);
+                if ($out <= 0.005) { continue; }
+                $q = $lowerBound($due[$id], $D);
+                $over = max(0.0, ($q > 0 ? $req[$id][$q - 1] : 0.0) - $paid);
+                $P['n'][$mi]++;
+                $P['tot'][$mi] += $out;
+                $P['pri'][$mi] += $out * $rt;
+                if ($over > 0.005) {
+                    $P['nOd'][$mi]++;
+                    $P['od'][$mi] += $over;
+                    $P['odp'][$mi] += $over * $rt;
+                    $got = max(0.0, $paidBefore(min($ends[$mi], $todayN + 1)) - $paid);
+                    $P['rec'][$mi] += min($over, $got);
+                    if ($got >= $over - 0.01) { $P['cured'][$mi]++; }
+                }
+            }
+        }
+
+        $out = ['months' => $months, 'today' => $today];
+        foreach ($M as $k => $arr) { $out[$k] = array_map([self::class, 'r2'], $arr); }
+        $out['payers'] = array_map('count', $payers);
+        $out['payersOd'] = array_map('count', $payersOd);
+        foreach ($P as $k => $arr) { $out['p_' . $k] = array_map([self::class, 'r2'], $arr); }
+        return $out;
+    }
+
     // ------------------------------------------------------------------ helpers
+
+    /** Unbuffered query, rows (numeric arrays) handed to $fn one at a time; timed. */
+    private function stream(string $name, string $sql, array $params, callable $fn): void
+    {
+        $t = microtime(true);
+        $buffered = $this->pdo->getAttribute(PDO::MYSQL_ATTR_USE_BUFFERED_QUERY);
+        $this->pdo->setAttribute(PDO::MYSQL_ATTR_USE_BUFFERED_QUERY, false);
+        try {
+            $stmt = $this->pdo->prepare($sql);
+            $stmt->execute($params);
+            while (($r = $stmt->fetch(PDO::FETCH_NUM)) !== false) { $fn($r); }
+            $stmt->closeCursor();
+        } finally {
+            $this->pdo->setAttribute(PDO::MYSQL_ATTR_USE_BUFFERED_QUERY, $buffered);
+        }
+        $this->timings[$name] = microtime(true) - $t;
+    }
 
     /** Prepared query with {C}/{E}/{M} tokens expanded to distinct placeholders (native prepares refuse a repeated name); timed. */
     private function run(string $name, string $sql, array $tokens): array
