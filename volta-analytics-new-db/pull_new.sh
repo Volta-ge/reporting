@@ -526,6 +526,13 @@ Q "SELECT DATE(c.created_at) d, CONCAT('call_', c.outcome) metric, COUNT(*) n, 0
    UNION ALL SELECT DATE(e.occurred_at), CONCAT('crm_', e.event_type), COUNT(*), 0 FROM crm_payment_events e WHERE e.event_type IN ('overdue_entered','overdue_cured','overdue_bucket_up','case_settled') AND e.occurred_at >= '$CUTOVER' AND DATE(e.occurred_at) <= '$TODAY' GROUP BY 1, 2
    ORDER BY 1, 2;" > "$S/coll_activity.tsv"
 
+# ---- Collections Monthly sub-tab: per-loan schedules, payments and loan facts for the payment-vs-schedule waterfall
+# (overdue stage at each payment, month-start portfolio) that build_logistics.js collMonthly() runs; PHP twin NewDbColl::monthly()
+Q "SELECT installment_id, schedule_date, schedule_amount FROM crm_installment_schedules ORDER BY installment_id, schedule_date, month;" > "$S/collm_sched.tsv"
+Q "SELECT p.installment_id, p.payment_date, p.amount, COALESCE(p.principal_part,0) pr, COALESCE(p.penalty_part,0) pen, COALESCE(p.advance,0) adv, COALESCE(p.payment_source,'') src
+   FROM crm_payments p WHERE $COLL_PAYOK AND p.payment_date <= '$TODAY' ORDER BY p.installment_id, p.payment_date, p.id;" > "$S/collm_pays.tsv"
+Q "SELECT id, COALESCE(customer_id,0) cid, crm_order_status st, crm_active act, DATE(crm_close_date) cd, base_grand_total price, DATE(COALESCE(crm_creator_date, created_at)) issued FROM orders ORDER BY id;" > "$S/collm_orders.tsv"
+
 # ---- today's snapshots: portfolio managers, CRM loan status, the CRM's customer payment-stats cache
 Q "SELECT COALESCE(o.crm_portfolio_manager_id,0) pm, COALESCE(CONCAT(u.first_name,' ',u.last_name),'Unassigned') name, SUM(o.crm_active=1) active_loans,
      COUNT(DISTINCT CASE WHEN s.open_rows > 0 THEN o.id END) open_loans, ROUND(SUM(COALESCE(s.outstanding,0)),2) outstanding
