@@ -694,8 +694,53 @@ Q "SELECT DATE_FORMAT(o.created_at,'%Y-%m') m, COALESCE(rev.st_from, o.crm_order
 # concept for the migrated Jan–Aug months, which have no status log), minus cases whose first "to committee"
 # (status 8) event is after END. Verified 2026-09-24 for Sep 1–23: 1,559 by this vs 1,564 by log to=8, 1,548 in
 # both — the CRM's own Sales funnel page shows 1,583 (it counts today's events too).
+# Drill-down (user 2026-11-12: click a figure, see the applications behind it): the same rows ONE PER APPLICATION, with
+# the same rev / ap / cm derived tables (still non-correlated single GROUP BY passes — see the 2026-09-24 note above)
+# plus the application day, amount (base_grand_total, the fixed sale amount), the top-level items and the sales
+# manager. build_funnel.js counts every figure from this file when it is present, so a cell and its list always
+# agree. Gitignored (~37K rows, rebuilt daily). No customer data in it: the page goes to the public GitHub Pages.
+Q "SELECT o.id, DATE(o.created_at) d, COALESCE(rev.st_from, o.crm_order_status) st,
+     (COALESCE(o.crm_underwriter_status_id,0)=16 AND ap.entity_id IS NULL) uw16,
+     (o.crm_underwriter_status_id IS NOT NULL AND cm.entity_id IS NULL) cmt,
+     CASE WHEN COALESCE(rev.st_from, o.crm_order_status) IN (6,12) THEN LEFT(TRIM(REPLACE(REPLACE(REPLACE(COALESCE(o.crm_reason,''), CHAR(10),' '), CHAR(13),' '), CHAR(9),' ')), 80) ELSE '' END reason,
+     ROUND(COALESCE(o.base_grand_total,0)) amt, TRIM(CONCAT(COALESCE(u.first_name,''),' ',COALESCE(u.last_name,''))) mgr, it.items
+   FROM orders o
+   LEFT JOIN (SELECT f.entity_id, CAST(JSON_EXTRACT(l.metadata,'\$.from') AS UNSIGNED) st_from
+              FROM (SELECT entity_id, MIN(id) mid FROM crm_activity_log WHERE action='installment.status_change' AND created_at > '$END 23:59:59' GROUP BY entity_id) f
+              JOIN crm_activity_log l ON l.id = f.mid) rev ON rev.entity_id=o.id
+   LEFT JOIN (SELECT entity_id FROM crm_activity_log WHERE action='installment.status_change' AND JSON_EXTRACT(metadata,'\$.to')=16 GROUP BY entity_id HAVING MIN(created_at) > '$END 23:59:59') ap ON ap.entity_id=o.id
+   LEFT JOIN (SELECT entity_id FROM crm_activity_log WHERE action='installment.status_change' AND JSON_EXTRACT(metadata,'\$.to')=8 GROUP BY entity_id HAVING MIN(created_at) > '$END 23:59:59') cm ON cm.entity_id=o.id
+   LEFT JOIN (SELECT oi.order_id, GROUP_CONCAT(TRIM(REPLACE(REPLACE(REPLACE(oi.name, CHAR(9),' '), CHAR(10),' '), CHAR(13),' ')) ORDER BY oi.id SEPARATOR ' | ') items
+              FROM order_items oi JOIN orders o2 ON o2.id=oi.order_id
+              WHERE oi.parent_id IS NULL AND o2.created_at >= '$FUNNEL_MSTART' GROUP BY oi.order_id) it ON it.order_id=o.id
+   LEFT JOIN crm_users u ON u.id=o.crm_sales_manager_id
+   WHERE o.created_at >= '$FUNNEL_MSTART' AND DATE(o.created_at) <= '$END'
+   ORDER BY o.id;" > "$S/funnel_drill.tsv"
+# PRIVATE — customer data for the same drill-down (user 2026-11-12: name, phone, personal number, advance … in the
+# list behind each figure). Only build_funnel.js's deals_amount_migration_private.html carries it (gitignored, published
+# to the private claude.ai Artifact only); the committed page and GitHub Pages never do. All three files gitignored.
+#   funnel_pii.tsv         per application: names (order, customer), phones (contact, billing, customer), personal number
+#                          (application form, customer), requested advance, the form's marketing consent, the CRM reason text
+#   funnel_pii_gdpr.tsv    the site's consents (customer, phone) — GDPR = form consent or a consent by customer or phone
+#   funnel_pii_active.tsv  open loans now (customer, personal number) — "has an active loan"
+# Same rule as the other extracts: non-correlated derived tables only.
+Q "SELECT o.id, TRIM(CONCAT(COALESCE(o.customer_first_name,''),' ',COALESCE(o.customer_last_name,''))) oname,
+     TRIM(CONCAT(COALESCE(cu.first_name,''),' ',COALESCE(cu.last_name,''))) cname, o.customer_id cid, cu.id_number cpid,
+     cu.phone cphone, o.crm_contact_phone p1, bl.phone bphone, pf.v fpid, o.crm_advance_amount adv, (mc.order_id IS NOT NULL) mc,
+     LEFT(TRIM(REPLACE(REPLACE(REPLACE(COALESCE(o.crm_reason,''), CHAR(10),' '), CHAR(13),' '), CHAR(9),' ')), 300) rtext
+   FROM orders o LEFT JOIN customers cu ON cu.id=o.customer_id
+   LEFT JOIN (SELECT order_id, MIN(phone) phone FROM addresses WHERE address_type='order_billing' GROUP BY order_id) bl ON bl.order_id=o.id
+   LEFT JOIN (SELECT order_id, MAX(field_value) v FROM volta_application_data WHERE field_code='personal_ID' GROUP BY order_id) pf ON pf.order_id=o.id
+   LEFT JOIN (SELECT order_id FROM volta_application_data WHERE field_code='marketing_concent' AND field_value='1' GROUP BY order_id) mc ON mc.order_id=o.id
+   WHERE o.created_at >= '$FUNNEL_MSTART' AND DATE(o.created_at) <= '$END'
+   ORDER BY o.id;" > "$S/funnel_pii.tsv"
+Q "SELECT customer_id cid, phone FROM gdpr_approvals;" > "$S/funnel_pii_gdpr.tsv"
+Q "SELECT o.id, o.customer_id cid, COALESCE(pf.v, cu.id_number) pid
+   FROM orders o LEFT JOIN customers cu ON cu.id=o.customer_id
+   LEFT JOIN (SELECT order_id, MAX(field_value) v FROM volta_application_data WHERE field_code='personal_ID' GROUP BY order_id) pf ON pf.order_id=o.id
+   WHERE o.crm_active=1 AND o.crm_order_status IN (1,5,11);" > "$S/funnel_pii_active.tsv"
 printf 'through\n%s\n' "$END" > "$S/funnel_meta.tsv"   # build_funnel.js: the last application day in the extract
-wc -l "$S/funnel_apps.tsv" | sed "s#$S/##"
+wc -l "$S/funnel_apps.tsv" "$S/funnel_drill.tsv" | sed "s#$S/##"
 
 echo "END=$END"
 wc -l "$S"/new_*.tsv "$S"/logi_*.tsv "$S"/mkt_*.tsv "$S"/ops_*.tsv "$S"/cust_*.tsv "$S"/coll_*.tsv "$S"/pf_*.tsv | sed "s#$S/##"

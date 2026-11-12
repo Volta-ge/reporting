@@ -23,3 +23,8 @@ php_pf_data.json
 php_cust_data.json
 funnel_data.json
 php_funnel_data.json
+funnel_drill.tsv
+funnel_pii.tsv
+funnel_pii_gdpr.tsv
+funnel_pii_active.tsv
+deals_amount_migration_private.html

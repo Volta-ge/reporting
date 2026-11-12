@@ -102,8 +102,16 @@ installment = 11/5/1, single-payment sale = 99, together as a total, as % of app
 State, not events: a recent month keeps changing on refresh as its applications get decided. Reasons: spelling
 variants merged (`build_funnel.js` REASON_ALIAS), em-dash suffixes dropped, reasons with < 5 applications in total
 grouped as "Other (rare)", blank as "Unspecified"; English glosses from the same table the Operations tab uses.
-Live in PHP as `NewDbReport::fullFunnel()` (part of the streamed `core` section, `FUNNEL_JSON`); verified
-identical to the Node build (2026-09-23). Refresh: `bash pull_new.sh` then `node build_funnel.js`.
+Live in PHP as `NewDbReport::fullFunnel()`, streamed as its own `funnel` section right after `core`
+(`window.FUNNEL_LIVE` → `__funnelBuild()` re-renders the tab); verified identical to the Node build (2026-09-23,
+again with the drill-down 2026-11-12). Refresh: `bash pull_new.sh` then `node build_funnel.js`.
+**Drill-down (2026-11-12):** every count cell opens the list of the applications behind it (search + Excel download).
+Counted from the per-application `funnel_drill.tsv` (gitignored) so a list always adds up to its cell; the page carries
+case data only (`FUNNEL_JSON.drill`: case number, day, items, amount, status, reason row, sales manager). Customer
+data (name, phone, personal number, advance, GDPR, active loan, CRM reason text) comes from the gitignored
+`funnel_pii*.tsv` and goes ONLY into the gitignored `deals_amount_migration_private.html` (`const FUNNEL_PII`), which
+is what the private claude.ai Artifact publishes — never commit it, never copy it to `docs/` (GitHub Pages is public),
+and the live PHP page does not carry it either (user's decision: the site shows case data only).
 | `build_sales.js`, `patch_sales_tabs.js` | Sales Analyze reports (JS port of `FunnelRepository`'s bucketed reports + `ProductClassifier`) and injection |
 | `build_daily_mail_xlsx.js`, `build_logistics_xlsx.js`, `write_daily_mail_xlsx.ps1` | Excel exports (Daily Mail / Logistics Daily); the .ps1 is the shared Excel-COM writer |
 | `old_*.tsv`, `new_*.tsv`, `logi_*.tsv`, `mkt_*.tsv`, `ops_*.tsv`, `cust_*.tsv`, `coll_*.tsv`, `pf_*.tsv` | inputs, all written by `pull_new.sh` |

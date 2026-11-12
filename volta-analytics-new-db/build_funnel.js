@@ -56,7 +56,14 @@ const MIN_REASON_TOTAL = 5;   // smaller free-text one-offs fold into Other
 // ---- applications by month x status (state today)
 const dir = __dirname;
 const appsRows = parseTsv(path.join(dir, 'funnel_apps.tsv'));
-if (!appsRows) throw new Error('funnel_apps.tsv missing — run bash pull_new.sh first');
+// Per-application extract (pull_new.sh funnel_drill.tsv, gitignored: same as-of-END status / approval / committee /
+// reason expressions as funnel_apps.tsv, one row per application plus its date, amount, items and sales manager).
+// When present every figure is counted from it, one row = one application, so the drill-down list behind each
+// cell (user, 2026-11-12: "რომელიმე ციფრზე რომ დავდგები ... იმ მათზე მონაცემები გამოვიდეს, რომლებიც ამ ციფრის
+// უკან დგას") adds up to the cell exactly; the grouped funnel_apps.tsv stays the fallback (no drill-down then).
+const drillRows = parseTsv(path.join(dir, 'funnel_drill.tsv'));
+if (!appsRows && !drillRows) throw new Error('funnel_apps.tsv missing — run bash pull_new.sh first');
+const srcRows = drillRows ? drillRows.map(r => ({ ...r, m: String(r.d).slice(0, 7), n: '1' })) : appsRows;
 // the extract runs through YESTERDAY (pull_new.sh's END, recorded in funnel_meta.tsv); the current month is the
 // month of that day, so on the 1st the report still ends with the finished month and no empty column appears
 const metaRows = parseTsv(path.join(dir, 'funnel_meta.tsv'));
@@ -64,7 +71,7 @@ const appsThrough = (metaRows && metaRows[0] && /^\d{4}-\d{2}-\d{2}$/.test(metaR
   : (() => { const d = new Date(); d.setDate(d.getDate() - 1); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); })();
 const curMonth = appsThrough.slice(0, 7);
 let lastMonth = MONTH_START;
-for (const r of appsRows) if (r.m > lastMonth) lastMonth = r.m;
+for (const r of srcRows) if (r.m > lastMonth) lastMonth = r.m;
 const months = monthRange(MONTH_START, lastMonth > curMonth ? lastMonth : curMonth);
 const mi = Object.fromEntries(months.map((m, i) => [m, i]));
 const zeros = () => months.map(() => 0);
@@ -94,35 +101,35 @@ const IN_PROCESS = new Set([4, 7, 8, 15, 16, 17, 9, 10]);
 const SIGNED = new Set([11, 5, 1]);
 const reasonAcc = { rejSales: {}, declSales: {}, rejCmt: {}, declCmt: {}, declPost: {} };
 const addReason = (bucket, raw, i, n) => { const k = reasonKey(raw); (reasonAcc[bucket][k] ||= zeros())[i] += n; };
-for (const r of appsRows) {
+for (const r of srcRows) {
   const i = mi[r.m]; if (i === undefined) continue;
   const st = +r.st, n = +r.n, uw16 = r.uw16 === '1';
   S.apps[i] += n;
-  if (st === 99) { S.singlePay[i] += n; continue; }
+  if (st === 99) { S.singlePay[i] += n; r.b = 'singlePay'; continue; }
   const reached = r.cmt === '1' || SIGNED.has(st) || st === 8;
   if (!reached) {
-    if (st === 6) { S.rejSales[i] += n; addReason('rejSales', r.reason, i, n); }
-    else if (st === 12) { S.declSales[i] += n; addReason('declSales', r.reason, i, n); }
-    else if (st === 13) S.expiredSales[i] += n;
-    else if (IN_PROCESS.has(st)) S.openSales[i] += n;
-    else S.otherSales[i] += n;
+    if (st === 6) { S.rejSales[i] += n; r.b = 'rejSales'; addReason('rejSales', r.reason, i, n); }
+    else if (st === 12) { S.declSales[i] += n; r.b = 'declSales'; addReason('declSales', r.reason, i, n); }
+    else if (st === 13) { S.expiredSales[i] += n; r.b = 'expiredSales'; }
+    else if (IN_PROCESS.has(st)) { S.openSales[i] += n; r.b = 'openSales'; }
+    else { S.otherSales[i] += n; r.b = 'otherSales'; }
     continue;
   }
   S.committee[i] += n;
-  if (SIGNED.has(st)) { S.approved[i] += n; S.signedActive[i] += n; continue; }
+  if (SIGNED.has(st)) { S.approved[i] += n; { S.signedActive[i] += n; r.b = 'signedActive'; } continue; }
   if (uw16) {
     S.approved[i] += n;
-    if (st === 12) { S.declPost[i] += n; addReason('declPost', r.reason, i, n); }
-    else if (st === 6) S.rejPost[i] += n;
-    else if (st === 13) S.expiredPost[i] += n;
-    else if (IN_PROCESS.has(st)) S.openPost[i] += n;
-    else S.otherPost[i] += n;
+    if (st === 12) { S.declPost[i] += n; r.b = 'declPost'; addReason('declPost', r.reason, i, n); }
+    else if (st === 6) { S.rejPost[i] += n; r.b = 'rejPost'; }
+    else if (st === 13) { S.expiredPost[i] += n; r.b = 'expiredPost'; }
+    else if (IN_PROCESS.has(st)) { S.openPost[i] += n; r.b = 'openPost'; }
+    else { S.otherPost[i] += n; r.b = 'otherPost'; }
   } else {
-    if (st === 6) { S.rejCmt[i] += n; addReason('rejCmt', r.reason, i, n); }
-    else if (st === 12) { S.declCmt[i] += n; addReason('declCmt', r.reason, i, n); }
-    else if (st === 13) S.expiredCmt[i] += n;
-    else if (IN_PROCESS.has(st)) S.openCmt[i] += n;
-    else S.otherCmt[i] += n;
+    if (st === 6) { S.rejCmt[i] += n; r.b = 'rejCmt'; addReason('rejCmt', r.reason, i, n); }
+    else if (st === 12) { S.declCmt[i] += n; r.b = 'declCmt'; addReason('declCmt', r.reason, i, n); }
+    else if (st === 13) { S.expiredCmt[i] += n; r.b = 'expiredCmt'; }
+    else if (IN_PROCESS.has(st)) { S.openCmt[i] += n; r.b = 'openCmt'; }
+    else { S.otherCmt[i] += n; r.b = 'otherCmt'; }
   }
 }
 // self-check: the three gates must close for every month
@@ -180,6 +187,88 @@ for (const r of ga4Month) {
   if (r.through && (!ga4.through || r.through > ga4.through)) ga4.through = r.through;
 }
 
+// ---- drill-down: every counted application with its leaf bucket (the 17 mutually exclusive outcomes above; the
+// table's other rows are unions of them), compact column arrays. Kept identical to NewDbReport::funnelDrill() (PHP
+// twin). No customer data: the page is also published on the public GitHub Pages — case number, application day,
+// items, amount, status, sales manager only, and the reason only as the table's own reason rows (a free-text reason
+// used < MIN_REASON_TOTAL times is folded into "Other (rare)" here too, its text can describe the customer's situation).
+function funnelDrill() {
+  if (!drillRows) return null;
+  const BUCKETS = ["rejSales", "declSales", "expiredSales", "openSales", "otherSales", "singlePay", "rejCmt", "declCmt", "expiredCmt", "openCmt", "otherCmt", "signedActive", "declPost", "rejPost", "expiredPost", "openPost", "otherPost"];
+  const bi = Object.fromEntries(BUCKETS.map((x, i) => [x, i]));
+  // the reason rows the table shows for each bucket (same rule as reasonRows: named once used >= MIN_REASON_TOTAL times)
+  const named = {};
+  for (const [bk, acc] of Object.entries(reasonAcc)) named[bk] = new Set(Object.entries(acc).filter(([k, v]) => k !== '' && v.reduce((x, y) => x + y, 0) >= MIN_REASON_TOTAL).map(([k]) => k));
+  const reasons = [], items = [], mgrs = [];
+  const ri = {}, ii = {}, gi = {};
+  const intern = (list, idx, v) => (idx[v] !== undefined ? idx[v] : (idx[v] = list.push(v) - 1));
+  const D = { id: [], day: [], b: [], st: [], r: [], it: [], amt: [], mg: [] };
+  const day0 = Date.UTC(2026, 0, 1);
+  let prev = 0;
+  for (const r of srcRows) {
+    if (r.b === undefined) continue;
+    const id = +r.id;
+    const [y, mo, da] = String(r.d).split('-').map(Number);
+    let rv = 0;   // 0 = no reason row for this outcome, 1 = unspecified, 2 = other (rare), 3 + k = reasons[k]
+    if (named[r.b]) { const k = reasonKey(r.reason); rv = k === '' ? 1 : named[r.b].has(k) ? 3 + intern(reasons, ri, k) : 2; }
+    const itRaw = (r.items === undefined || r.items === 'NULL') ? '' : String(r.items).replace(/\\\\/g, '\\');
+    const mgRaw = (r.mgr === undefined || r.mgr === 'NULL') ? '' : String(r.mgr).trim();
+    D.id.push(id - prev); prev = id;
+    D.day.push(Math.round((Date.UTC(y, mo - 1, da) - day0) / 864e5));
+    D.b.push(bi[r.b]);
+    D.st.push(+r.st);
+    D.r.push(rv);
+    const cps = Array.from(itRaw);   // code points, like the PHP twin (no mbstring on the server)
+    D.it.push(intern(items, ii, cps.length > 140 ? cps.slice(0, 139).join('') + '…' : itRaw));
+    D.amt.push(Math.round(+r.amt || 0));
+    D.mg.push(intern(mgrs, gi, mgRaw));
+  }
+  return { buckets: BUCKETS, reasons, items, mgrs, ...D };
+}
+
+// ---- PRIVATE customer data for the drill-down (user 2026-11-12: name, phone, personal number, advance … in the list
+// behind each figure). Read from the gitignored funnel_pii*.tsv extracts and written ONLY into
+// deals_amount_migration_private.html (gitignored, published to the private claude.ai Artifact); the committed page —
+// also served on the public GitHub Pages — never carries it. Arrays aligned 1:1 with FUNNEL_JSON.drill's rows.
+// Same rules as the hand-built refusal lists: name = the order's own name, else the customer account's; phone = the
+// first valid Georgian mobile (5XXXXXXXX) of contact / billing / account phone; personal number = the application
+// form's, else the account's; GDPR = the form's marketing consent, or a site consent by customer or phone; active loan =
+// an open issued loan (1/5/11, crm_active) by the same personal number or customer account (the case's own included).
+function funnelPii(drill) {
+  const pii = parseTsv(path.join(dir, 'funnel_pii.tsv'));
+  if (!pii || !drill) return null;
+  const gdpr = parseTsv(path.join(dir, 'funnel_pii_gdpr.tsv')) || [];
+  const active = parseTsv(path.join(dir, 'funnel_pii_active.tsv')) || [];
+  const nn = v => (v === undefined || v === null || v === 'NULL') ? '' : String(v).replace(/\\\\/g, '\\').trim();
+  const digits = v => nn(v).replace(/\D/g, '');
+  const p9 = v => { let d = digits(v); if (d.startsWith('995')) d = d.slice(3); return d.length === 9 && d[0] === '5' ? d : ''; };
+  const gC = new Set(), gP = new Set();
+  for (const r of gdpr) { if (nn(r.cid)) gC.add(nn(r.cid)); const p = p9(r.phone); if (p) gP.add(p); }
+  const aC = new Set(), aP = new Set();
+  for (const r of active) { if (nn(r.cid)) aC.add(nn(r.cid)); const p = digits(r.pid); if (p.length === 11) aP.add(p); }
+  const byId = new Map(pii.map(r => [+r.id, r]));
+  const out = { nm: [], ph: [], pid: [], adv: [], gd: [], act: [], rt: [] };
+  let id = 0, miss = 0;
+  for (let j = 0; j < drill.id.length; j++) {
+    id += drill.id[j];
+    const r = byId.get(id);
+    if (!r) { miss++; out.nm.push(''); out.ph.push(''); out.pid.push(''); out.adv.push(null); out.gd.push(0); out.act.push(0); out.rt.push(''); continue; }
+    const cid = nn(r.cid);
+    const phone = p9(r.p1) || p9(r.bphone) || p9(r.cphone);
+    const pid = digits(r.fpid) || digits(r.cpid);
+    const adv = nn(r.adv) === '' ? null : Math.round(+r.adv);
+    out.nm.push(nn(r.oname) || nn(r.cname));
+    out.ph.push(phone);
+    out.pid.push(pid);
+    out.adv.push(Number.isFinite(adv) ? adv : null);
+    out.gd.push((r.mc === '1' || (cid && gC.has(cid)) || (phone && gP.has(phone))) ? 1 : 0);
+    out.act.push(((pid.length === 11 && aP.has(pid)) || (cid && aC.has(cid))) ? 1 : 0);
+    out.rt.push(drill.r[j] ? nn(r.rtext) : '');   // the CRM reason text, only where the table shows a reason for the case
+  }
+  if (miss) console.log('funnel_pii.tsv: ' + miss + ' drill rows without a PII row (extracts pulled at different times?)');
+  return out;
+}
+
 const payload = {
   months, curMonth, monthStart: MONTH_START, appsThrough, ga4,
   ...S,
@@ -188,6 +277,7 @@ const payload = {
   rejectCommitteeReasons: reasonRows(reasonAcc.rejCmt),
   declineCommitteeReasons: reasonRows(reasonAcc.declCmt),
   declineAfterReasons: reasonRows(reasonAcc.declPost),
+  drill: funnelDrill(),
   generatedAt: new Date().toISOString().slice(0, 16).replace('T', ' ') + ' UTC',
 };
 fs.writeFileSync(path.join(dir, 'funnel_data.json'), JSON.stringify(payload));
@@ -227,6 +317,36 @@ ${CSS_MARK}
 #funnelTable tr.rpt-peach td.pct-cell, #funnelTable tr.rpt-peach-strong td.pct-cell, #funnelTable tr.rpt-green td.pct-cell { color: var(--rpt-ink); font-style: normal; }
 #funnelTable .pct-inline { color: var(--rpt-muted); font-style: italic; font-weight: 400; }
 #funnelTable.is-summary tr.fn-detail { display: none; }
+/* drill-down: a count cell opens the list of applications behind it */
+#funnelTable td[data-mi] { cursor: pointer; }
+#funnelTable td[data-mi]:hover { text-decoration: underline dotted; text-underline-offset: 3px; box-shadow: inset 0 0 0 2px var(--series-a-soft); }
+.fn-drill-ov { position: fixed; inset: 0; z-index: 3000; background: rgba(0,0,0,.45); display: flex; align-items: flex-start; justify-content: center; padding: 40px 16px; overflow: auto; }
+.fn-drill { background: var(--surface-1); color: var(--text-primary); border: 1px solid var(--border); border-radius: 12px; width: 100%; max-width: 1200px; box-shadow: 0 12px 40px rgba(0,0,0,.3); }
+.fn-drill.has-pii { max-width: 1600px; }
+.fn-drill-tbl .rt { display: block; color: var(--text-muted); font-size: 11px; margin-top: 2px; }
+.fn-drill-tbl td.it { min-width: 220px; }
+.fn-drill-tbl td.nm { min-width: 140px; }
+.fn-drill-head { display: flex; gap: 12px; justify-content: space-between; align-items: flex-start; padding: 16px 18px 6px; }
+.fn-drill-title { font-weight: 700; font-size: 15px; color: var(--text-primary); }
+.fn-drill-sub { color: var(--text-secondary); font-size: 12px; margin-top: 4px; }
+.fn-drill-x { border: 1px solid var(--border); background: var(--page); color: var(--text-secondary); border-radius: 50%; width: 30px; height: 30px; cursor: pointer; font-size: 18px; line-height: 1; flex: none; }
+.fn-drill-mix { font-size: 11.5px; color: var(--text-secondary); padding: 2px 18px 8px; line-height: 1.6; }
+.fn-drill-mix b { color: var(--text-primary); font-weight: 600; }
+.fn-drill-tools { padding: 2px 18px 10px; display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+.fn-drill-tools input { flex: 1 1 260px; padding: 7px 10px; border: 1px solid var(--border); border-radius: 8px; background: var(--page); color: var(--text-primary); font-size: 12.5px; }
+.fn-drill-tools span { font-size: 11.5px; color: var(--text-muted); }
+.fn-drill-xlsx { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--border); background: var(--page); color: var(--text-primary); border-radius: 8px; padding: 6px 12px; cursor: pointer; font-size: 12px; white-space: nowrap; }
+.fn-drill-xlsx svg { width: 14px; height: 14px; }
+.fn-drill-xlsx:disabled { opacity: .6; cursor: progress; }
+.fn-drill-body { padding: 0 18px 16px; overflow-x: auto; }
+.fn-drill-tbl { width: 100%; border-collapse: collapse; font-size: 12px; }
+.fn-drill-tbl th { text-align: left; font-weight: 600; color: var(--text-secondary); background: var(--surface-1); border-bottom: 1px solid var(--border); padding: 6px 8px; white-space: nowrap; }
+.fn-drill-tbl td { border-bottom: 1px solid var(--grid); padding: 6px 8px; vertical-align: top; color: var(--text-primary); background: transparent; }
+.fn-drill-tbl td.num, .fn-drill-tbl th.num { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.fn-drill-tbl td.it { min-width: 260px; }
+.fn-drill-tbl td.nw { white-space: nowrap; }
+.fn-drill-more { text-align: center; padding-top: 12px; }
+.fn-drill-more button { border: 1px solid var(--border); background: var(--page); color: var(--text-primary); border-radius: 8px; padding: 6px 14px; cursor: pointer; font-size: 12px; }
 ${CSS_END}`;
   const cssAnchor = '.report-scroll-top > div { height: 1px; }';
   must(cssAnchor, 'css anchor');
@@ -280,8 +400,10 @@ removeBetween(JS_START, JS_END + NL, 'funnel js');
   const js = `
 ${JS_START}
 ${dataLine}
-(function () {
-  const F = FUNNEL_JSON;
+// a function of the data, not a one-shot IIFE: the live page (public/index.php) streams the funnel in as its own section
+// after the page is already open (it is the slowest of the core queries since it went per application, 2026-11-12) and
+// calls it again with the live numbers; the static page / Artifact runs it once with the embedded FUNNEL_JSON
+window.__funnelBuild = function (F) {
   const DASH = '&ndash;';
   const fmtN = n => (n === null || n === undefined) ? null : Math.round(n).toLocaleString('en-US');
   const fmtP = (n, d) => (n === null || n === undefined || d === null || d === undefined) ? null : (d ? (n / d * 100).toLocaleString('en-US', { maximumFractionDigits: 1 }) + '%' : '0%');
@@ -289,25 +411,41 @@ ${dataLine}
   const MN = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   const mLabel = m => { const [y, mo] = m.split('-').map(Number); return MN[mo - 1] + ' ' + y + (m === F.curMonth ? ' (MTD)' : ''); };
   const n = F.months.length, colspan = n + 2;
-  const cell = (v, cls) => (v === null || v === undefined) ? '<td class="dash ' + (cls || '') + '">' + DASH + '</td>' : '<td class="' + (cls || '') + '">' + v + '</td>';
+  // mi = the month index a drill-down cell lists (-1 = the Total column); a 0 or a dash is never clickable
+  const cell = (v, cls, mi) => (v === null || v === undefined) ? '<td class="dash ' + (cls || '') + '">' + DASH + '</td>' : '<td class="' + (cls || '') + '"' + ((mi === undefined || v === '0') ? '' : ' data-mi="' + mi + '"') + '>' + v + '</td>';
+  // ---- drill-down registry: each count row gets a key into DR = { set: leaf buckets it is the union of, rf: reason filter }
+  const DD = F.drill || null;
+  const DR = [];
+  const BI = {}; if (DD) DD.buckets.forEach((b, i) => { BI[b] = i; });
+  const RI = {}; if (DD) DD.reasons.forEach((k, i) => { RI[k] = i; });
+  const dk = (buckets, rf) => { if (!DD) return undefined; const set = {}; buckets.forEach(b => { set[BI[b]] = 1; }); return DR.push({ set, rf: rf || null }) - 1; };
+  const G = {
+    all: DD ? DD.buckets.slice() : [],
+    committee: ['rejCmt', 'declCmt', 'expiredCmt', 'openCmt', 'otherCmt', 'signedActive', 'declPost', 'rejPost', 'expiredPost', 'openPost', 'otherPost'],
+    approved: ['signedActive', 'declPost', 'rejPost', 'expiredPost', 'openPost', 'otherPost'],
+    st31: ['expiredSales', 'openSales', 'otherSales'], st61: ['expiredCmt', 'openCmt', 'otherCmt'], st81: ['rejPost', 'expiredPost', 'openPost', 'otherPost'],
+    finalAll: ['signedActive', 'singlePay'],
+  };
   let secN = 0;
   const secRow = (cls, text) => { const id = 'fsec' + (++secN); return { id, row: '<tr class="' + cls + '" data-toggle="' + id + '"><td colspan="' + colspan + '"><span class="rpt-chevron">&#9662;</span>' + text + '</td></tr>' }; };
   const plain = (cls, text) => '<tr class="' + cls + '"><td colspan="' + colspan + '">' + text + '</td></tr>';
   // one row: label + one value per month + a total column; vals = numbers (or nulls), tot = number|null|'skip'
-  const row = (sec, cls, label, vals, tot, isPct, denom) => {
+  const row = (sec, cls, label, vals, tot, isPct, denom, key) => {
+    const dr = !isPct && key !== undefined;
     let tds = '';
-    for (let i = 0; i < n; i++) tds += isPct ? cell(fmtP(vals[i], denom ? denom[i] : null), 'pct-cell') : cell(fmtN(vals[i]));
+    for (let i = 0; i < n; i++) tds += isPct ? cell(fmtP(vals[i], denom ? denom[i] : null), 'pct-cell') : cell(fmtN(vals[i]), '', dr ? i : undefined);
     const t = tot === 'skip' ? null : (isPct ? fmtP(tot, denom ? sum(denom) : null) : fmtN(tot));
-    return '<tr class="' + cls + '" data-sec="' + sec + '"><td>' + label + '</td>' + tds + cell(t, isPct ? 'pct-cell' : '') + '</tr>';
+    return '<tr class="' + cls + '" data-sec="' + sec + '"' + (dr ? ' data-drill="' + key + '"' : '') + '><td>' + label + '</td>' + tds + cell(t, isPct ? 'pct-cell' : '', dr ? -1 : undefined) + '</tr>';
   };
-  const cnt = (sec, cls, label, vals) => row(sec, cls, label, vals, sum(vals), false);
+  const cnt = (sec, cls, label, vals, key) => row(sec, cls, label, vals, sum(vals), false, null, key);
   const rate = (sec, label, num, den) => row(sec, 'rpt-plain', '<span style="color:var(--text-muted)">' + label + '</span>', num, sum(num), true, den);
   // a breakdown row: the count, then in the same cell its share of the stage it belongs to (denom = that stage's row)
-  const cntPct = (sec, cls, label, vals, denom) => {
-    const c = (v, d) => { if (v === null || v === undefined) return cell(null); const p = fmtP(v, d); return '<td>' + fmtN(v) + (p === null ? '' : ' <span class="pct-inline">(' + p + ')</span>') + '</td>'; };
+  const cntPct = (sec, cls, label, vals, denom, key) => {
+    const dr = key !== undefined;
+    const c = (v, d, mi) => { if (v === null || v === undefined) return cell(null); const p = fmtP(v, d); return '<td' + (dr && v ? ' data-mi="' + mi + '"' : '') + '>' + fmtN(v) + (p === null ? '' : ' <span class="pct-inline">(' + p + ')</span>') + '</td>'; };
     let tds = '';
-    for (let i = 0; i < n; i++) tds += c(vals[i], denom ? denom[i] : null);
-    return '<tr class="' + cls + '" data-sec="' + sec + '"><td>' + label + '</td>' + tds + c(sum(vals), denom ? sum(denom) : null) + '</tr>';
+    for (let i = 0; i < n; i++) tds += c(vals[i], denom ? denom[i] : null, i);
+    return '<tr class="' + cls + '" data-sec="' + sec + '"' + (dr ? ' data-drill="' + key + '"' : '') + '><td>' + label + '</td>' + tds + c(sum(vals), denom ? sum(denom) : null, -1) + '</tr>';
   };
   // every breakdown list is ordered by the LAST month's count (the current picture), ties by the total
   const byLastMonth = (a, b) => (b.vals[n - 1] - a.vals[n - 1]) || (sum(b.vals) - sum(a.vals));
@@ -324,22 +462,29 @@ ${dataLine}
   h += row(s1.id, 'rpt-peach', 'Website sessions', F.ga4.sessions, ga4Total(F.ga4.sessions), false);
 
   const s2 = secRow('rpt-section', '2. Applications'); h += s2.row;
-  h += cnt(s2.id, 'rpt-peach-strong', 'Applications submitted', F.apps);
+  h += cnt(s2.id, 'rpt-peach-strong', 'Applications submitted', F.apps, dk(G.all));
   h += row(s2.id, 'rpt-plain', '<span style="color:var(--text-muted)">Applications as % of website sessions</span>', F.apps, sum(F.apps), true, F.ga4.sessions);
 
   // reason rows: sorted by the last month, each count with its share of the stage's own total (denom)
   // breakdown rows carry fn-detail: the "Main stages" view (#funnelViewNav) hides them and leaves every numbered stage.
   // Their inline share is of the month's APPLICATIONS (user, 2026-09-24: "აპლიკაციების რა პროცენტს შეადგენს
   // თითოეული სტატუსი"), not of the stage — the stage's own share row above them already gives that base.
-  const reasonRowsHtml = (sec, rows) => { let s = ''; for (const r of rows.slice().sort(byLastMonth)) s += cntPct(sec, 'rpt-plain fn-detail', '&nbsp;&nbsp;&middot; ' + r.ka + (r.en ? ' <span style="color:var(--text-muted)">(' + r.en + ')</span>' : ''), r.vals, F.apps); return s; };
+  const reasonRowsHtml = (sec, rows, bucket) => {
+    let s = '';
+    for (const r of rows.slice().sort(byLastMonth)) {
+      const rf = r.other ? (x => x === 2) : r.unspecified ? (x => x === 1) : (RI[r.ka] !== undefined ? (k => x => x === 3 + k)(RI[r.ka]) : null);
+      s += cntPct(sec, 'rpt-plain fn-detail', '&nbsp;&nbsp;&middot; ' + r.ka + (r.en ? ' <span style="color:var(--text-muted)">(' + r.en + ')</span>' : ''), r.vals, F.apps, (DD && rf) ? dk([bucket], rf) : undefined);
+    }
+    return s;
+  };
   // a sub-stage (3.1 / 6.1 / 8.1): its header belongs to the parent section (hidden when it collapses) and toggles its
   // own rows; a total + share row like every other stage, then its items sorted by the last month
-  const subStage = (parent, title, totalLabel, totals, shareLabel, denom, items) => {
+  const subStage = (parent, title, totalLabel, totals, shareLabel, denom, items, totalBuckets) => {
     const id = 'fsec' + (++secN);
     let s = '<tr class="rpt-section" data-sec="' + parent + '" data-toggle="' + id + '"><td colspan="' + colspan + '"><span class="rpt-chevron">&#9662;</span>' + title + '</td></tr>';
-    s += cnt(id, 'rpt-peach', totalLabel, totals);
+    s += cnt(id, 'rpt-peach', totalLabel, totals, dk(totalBuckets));
     s += rate(id, shareLabel, totals, denom);
-    for (const it of items.filter(it => sum(it.vals) || it.always).sort(byLastMonth)) s += cntPct(id, 'rpt-plain fn-detail', '&nbsp;&nbsp;&middot; ' + it.label, it.vals, F.apps);
+    for (const it of items.filter(it => sum(it.vals) || it.always).sort(byLastMonth)) s += cntPct(id, 'rpt-plain fn-detail', '&nbsp;&nbsp;&middot; ' + it.label, it.vals, F.apps, dk([it.b]));
     return s;
   };
   // the sub-stage totals, needed both for their own rows and for the check at the end
@@ -349,62 +494,62 @@ ${dataLine}
 
   // ---- gate 1: the sales screening (3 + 3.1 + 4 + 5 + single-payment sales in 10 = Applications)
   const s3 = secRow('rpt-section', '3. Rejected by sales &mdash; before the committee, no underwriting decision (3 + 3.1 + 4 + 5 + single-payment sales in 10 = Applications)'); h += s3.row;
-  h += cnt(s3.id, 'rpt-peach', 'Rejected by sales (status 6, no underwriting decision)', F.rejSales);
+  h += cnt(s3.id, 'rpt-peach', 'Rejected by sales (status 6, no underwriting decision)', F.rejSales, dk(['rejSales']));
   h += rate(s3.id, '% of applications', F.rejSales, F.apps);
-  h += reasonRowsHtml(s3.id, F.rejectSalesReasons);
+  h += reasonRowsHtml(s3.id, F.rejectSalesReasons, 'rejSales');
   h += subStage(s3.id, '3.1 Other statuses at the sales stage', 'Other statuses at the sales stage (awaiting, unreachable, expired)', st31, '% of applications', F.apps, [
-    { label: 'Still with sales, awaiting (status 4 / 7)', vals: F.openSales, always: true },
-    { label: 'Customer unreachable &mdash; &ldquo;უკონტაქტო&rdquo; (status 14)', vals: F.otherSales },
-    { label: 'Expired at the sales stage (status 13)', vals: F.expiredSales },
-  ]);
+    { label: 'Still with sales, awaiting (status 4 / 7)', vals: F.openSales, always: true, b: 'openSales' },
+    { label: 'Customer unreachable &mdash; &ldquo;უკონტაქტო&rdquo; (status 14)', vals: F.otherSales, b: 'otherSales' },
+    { label: 'Expired at the sales stage (status 13)', vals: F.expiredSales, b: 'expiredSales' },
+  ], G.st31);
 
   const s4 = secRow('rpt-section', '4. Customer withdrew at the sales stage &mdash; before the committee'); h += s4.row;
-  h += cnt(s4.id, 'rpt-peach', 'Customer withdrew at the sales stage (status 12, no underwriting decision)', F.declSales);
+  h += cnt(s4.id, 'rpt-peach', 'Customer withdrew at the sales stage (status 12, no underwriting decision)', F.declSales, dk(['declSales']));
   h += rate(s4.id, '% of applications', F.declSales, F.apps);
-  h += reasonRowsHtml(s4.id, F.declineSalesReasons);
+  h += reasonRowsHtml(s4.id, F.declineSalesReasons, 'declSales');
 
   const s5 = secRow('rpt-section', '5. Reached the committee = 2 Applications &minus; 3 &minus; 3.1 &minus; 4 &minus; single-payment sales (6 + 6.1 + 7 + 8 = 5)'); h += s5.row;
-  h += cnt(s5.id, 'rpt-peach-strong', 'Passed on to the committee (an underwriting decision recorded, at the committee, or signed)', F.committee);
+  h += cnt(s5.id, 'rpt-peach-strong', 'Passed on to the committee (an underwriting decision recorded, at the committee, or signed)', F.committee, dk(G.committee));
   h += rate(s5.id, '% of applications', F.committee, F.apps);
 
   // ---- gate 2: the committee (6 + 6.1 + 7 + 8 = Reached the committee)
   const s6 = secRow('rpt-section', '6. Rejected by the committee &mdash; underwriting said no'); h += s6.row;
-  h += cnt(s6.id, 'rpt-peach', 'Rejected by the committee (status 6, underwriting decision recorded)', F.rejCmt);
+  h += cnt(s6.id, 'rpt-peach', 'Rejected by the committee (status 6, underwriting decision recorded)', F.rejCmt, dk(['rejCmt']));
   h += rate(s6.id, '% of reached the committee', F.rejCmt, F.committee);
-  h += reasonRowsHtml(s6.id, F.rejectCommitteeReasons);
+  h += reasonRowsHtml(s6.id, F.rejectCommitteeReasons, 'rejCmt');
   h += subStage(s6.id, '6.1 Other committee statuses', 'Other committee statuses (awaiting a decision, unreachable, expired)', st61, '% of reached the committee', F.committee, [
-    { label: 'At the committee / clarification needed, awaiting a decision (status 8 / 15)', vals: F.openCmt, always: true },
-    { label: 'Customer unreachable &mdash; &ldquo;უკონტაქტო&rdquo; (status 14)', vals: F.otherCmt },
-    { label: 'Expired at the committee (status 13)', vals: F.expiredCmt },
-  ]);
+    { label: 'At the committee / clarification needed, awaiting a decision (status 8 / 15)', vals: F.openCmt, always: true, b: 'openCmt' },
+    { label: 'Customer unreachable &mdash; &ldquo;უკონტაქტო&rdquo; (status 14)', vals: F.otherCmt, b: 'otherCmt' },
+    { label: 'Expired at the committee (status 13)', vals: F.expiredCmt, b: 'expiredCmt' },
+  ], G.st61);
 
   const s7 = secRow('rpt-section', '7. Customer withdrew at the committee stage &mdash; before approval'); h += s7.row;
-  h += cnt(s7.id, 'rpt-peach', 'Customer withdrew at the committee stage (status 12, before approval)', F.declCmt);
+  h += cnt(s7.id, 'rpt-peach', 'Customer withdrew at the committee stage (status 12, before approval)', F.declCmt, dk(['declCmt']));
   h += rate(s7.id, '% of reached the committee', F.declCmt, F.committee);
-  h += reasonRowsHtml(s7.id, F.declineCommitteeReasons);
+  h += reasonRowsHtml(s7.id, F.declineCommitteeReasons, 'declCmt');
 
   // ---- gate 3: approval (8.1 + 9 + Signed in 10 = Approved)
   const s8 = secRow('rpt-section', '8. Approved by underwriting (= 8.1 + 9 + Signed in 10)'); h += s8.row;
-  h += cnt(s8.id, 'rpt-peach', 'Approved by underwriting (underwriting status 16)', F.approved);
+  h += cnt(s8.id, 'rpt-peach', 'Approved by underwriting (underwriting status 16)', F.approved, dk(G.approved));
   h += rate(s8.id, '% of reached the committee', F.approved, F.committee);
   h += rate(s8.id, '% of applications', F.approved, F.apps);
   h += subStage(s8.id, '8.1 Other underwriting statuses', 'Other underwriting statuses (rejected / expired after approval, in process, cancelled)', st81, '% of approved', F.approved, [
-    { label: 'Rejected after approval (status 6)', vals: F.rejPost, always: true },
-    { label: 'Expired after approval (status 13)', vals: F.expiredPost, always: true },
-    { label: 'Approved, still in process (16 / 17 / 9 / 10)', vals: F.openPost, always: true },
-    { label: 'Signed, then cancelled (status 18)', vals: F.otherPost },
-  ]);
+    { label: 'Rejected after approval (status 6)', vals: F.rejPost, always: true, b: 'rejPost' },
+    { label: 'Expired after approval (status 13)', vals: F.expiredPost, always: true, b: 'expiredPost' },
+    { label: 'Approved, still in process (16 / 17 / 9 / 10)', vals: F.openPost, always: true, b: 'openPost' },
+    { label: 'Signed, then cancelled (status 18)', vals: F.otherPost, b: 'otherPost' },
+  ], G.st81);
 
   const s9 = secRow('rpt-section', '9. Customer declined after approval &mdash; although underwriting approved'); h += s9.row;
-  h += cnt(s9.id, 'rpt-peach', 'Customer declined after approval (status 12)', F.declPost);
+  h += cnt(s9.id, 'rpt-peach', 'Customer declined after approval (status 12)', F.declPost, dk(['declPost']));
   h += rate(s9.id, '% of approved', F.declPost, F.approved);
-  h += reasonRowsHtml(s9.id, F.declineAfterReasons);
+  h += reasonRowsHtml(s9.id, F.declineAfterReasons, 'declPost');
 
   const s10 = secRow('rpt-section-strong', '10. Final agreement between the customer and Volta'); h += s10.row;
-  h += cnt(s10.id, 'rpt-green', 'Signed / active installment (status 11 / 5 / 1)', F.signedActive);
-  h += cnt(s10.id, 'rpt-plain', 'Single-payment sales (status 99, no underwriting)', F.singlePay);
+  h += cnt(s10.id, 'rpt-green', 'Signed / active installment (status 11 / 5 / 1)', F.signedActive, dk(['signedActive']));
+  h += cnt(s10.id, 'rpt-plain', 'Single-payment sales (status 99, no underwriting)', F.singlePay, dk(['singlePay']));
   const finalAll = F.months.map((m, i) => F.signedActive[i] + F.singlePay[i]);
-  h += cnt(s10.id, 'rpt-green', 'Total final agreements (signed + single payment)', finalAll);
+  h += cnt(s10.id, 'rpt-green', 'Total final agreements (signed + single payment)', finalAll, dk(G.finalAll));
   h += rate(s10.id, '% of applications', finalAll, F.apps);
   h += row(s10.id, 'rpt-plain', '<span style="color:var(--text-muted)">Final agreements as % of website sessions</span>', finalAll, sum(finalAll), true, F.ga4.sessions);
 
@@ -421,10 +566,190 @@ ${dataLine}
 
   h += '<tr class="rpt-footer"><td colspan="' + colspan + '">Source: VoltaStoreDB only (no old-DB history in this tab). <b>Applications</b> = <code>orders</code> rows by application month (<code>created_at</code>), 1 January through ' + longDate(F.appsThrough) + ' &mdash; yesterday, like every other Daily Mail figure; today\\'s applications are never included &mdash; including the applications migrated from the old CRM for January&ndash;August, so the counts differ slightly from the Daily Mail Report tab (which reads those months from myvolta.info). <b>Three gates.</b> Reached the committee (5) = an underwriting decision is recorded on the case (<code>crm_underwriter_status_id</code> set &mdash; the same concept for the January&ndash;August months migrated from the old CRM, which have no status log), or the case is at the committee (status 8), or it is signed; a committee entry logged after yesterday does not count yet. Everything else was screened out by sales (3, 3.1, 4) or is a single-payment sale (in 10), so 3 + 3.1 + 4 + 5 + single-payment = Applications. Approved (8) = <code>crm_underwriter_status_id = 16</code> (every signed loan from February 2026 on carries it; January\\'s 128 signed loans without it are legacy loans migrated from the old CRM and are counted as approved), so 6 + 6.1 + 7 + 8 = 5; and 8.1 + 9 + Signed = 8. <b>Statuses</b> = <code>crm_order_status</code> as of the end of yesterday (' + longDate(F.appsThrough) + '): where a status changed after that, the earlier status is taken back from <code>crm_activity_log</code>, and an approval logged after that day does not count yet &mdash; so the whole tab is one consistent end-of-day picture. The same code list the Operations tab verified against the CRM: 6 = rejected (by sales when no underwriting decision is recorded, by the committee when one is), 12 = the customer declined (split the same way: at the sales stage, at the committee stage, or after approval), 13 = expired, 14 = &ldquo;უკონტაქტო&rdquo; (the customer could not be reached; the CRM log\\'s own wording), 11 / 5 / 1 = contract signed / loan active / legacy active, 18 = signed and activated, then cancelled (Bagisto status canceled, close type 4), 99 = single-payment sale (paid in full, no underwriting); everything else is still in process (4 Pending, 7 In processing, 8 At committee, 15 Clarification needed, 16 Approved, 17 Disbursement in process, 9 Invoice &amp; contract draft sent, 10 Contract sent for signing). <b>Reasons</b> = <code>orders.crm_reason</code> as recorded on the application (present on ~99% of rejected and declined applications in every month of 2026); spelling variants are merged (e.g. \\u201Cპროდუქტის არ ქონა\\u201D into \\u201Cპროდუქციის არ ქონა\\u201D, an em-dash suffix such as \\u201C&mdash; აქტიური ჩანაწერი\\u201D dropped), reasons with fewer than ' + ${MIN_REASON_TOTAL} + ' applications in total are grouped as Other (rare). <b>Website sessions</b> = Google Analytics 4 (property 369140604, all traffic, not only paid), summed per month' + (F.ga4.through ? ', data through ' + F.ga4.through : '') + '; the two \\u201Cas % of website sessions\\u201D rows divide the month\\'s applications / final agreements by that month\\'s sessions. Generated ' + F.generatedAt + '.</td></tr>';
 
+  // ---- drill-down panel: the applications behind a count (decoded once from the compact column arrays)
+  const SN = { 1: 'Active', 4: 'New', 5: 'Active', 6: 'Rejected', 7: 'In processing', 8: 'At the committee', 9: 'Approved, invoice sent', 10: 'Contract sent for signing', 11: 'Signed', 12: 'Customer declined', 13: 'Expired', 14: 'Unreachable', 15: 'Clarification needed', 16: 'Approved', 17: 'Disbursement in process', 18: 'Cancelled', 99: 'Single payment' };
+  const REN = {};
+  [F.rejectSalesReasons, F.declineSalesReasons, F.rejectCommitteeReasons, F.declineCommitteeReasons, F.declineAfterReasons].forEach(list => (list || []).forEach(r => { if (r.en && !r.other && !r.unspecified) REN[r.ka] = r.en; }));
+  const esc = v => String(v).replace(/[&<>"]/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[ch]);
+  const reasonText = v => v === 0 ? '' : v === 1 ? 'Unspecified' : v === 2 ? 'Other (rare)' : DD.reasons[v - 3] + (REN[DD.reasons[v - 3]] ? ' (' + REN[DD.reasons[v - 3]] + ')' : '');
+  // the private Artifact copy carries const FUNNEL_PII (name, phone, personal number, advance, GDPR, active loan, CRM
+  // reason text), aligned with DD's rows; the committed / GitHub Pages page has none and shows the case data only
+  const PII = (typeof FUNNEL_PII !== 'undefined' && FUNNEL_PII && DD && FUNNEL_PII.nm.length === DD.id.length) ? FUNNEL_PII : null;
+  const dashC = '<span style="color:var(--text-muted)">&ndash;</span>';
+  let DEC = null;
+  const decode = () => {
+    if (DEC) return DEC;
+    const N = DD.id.length, ids = new Array(N), dates = new Array(N), t0 = Date.UTC(2026, 0, 1);
+    let id = 0;
+    for (let j = 0; j < N; j++) { id += DD.id[j]; ids[j] = id; dates[j] = new Date(t0 + DD.day[j] * 864e5).toISOString().slice(0, 10); }
+    DEC = { ids, dates };
+    return DEC;
+  };
+  const drillList = (key, mi) => {
+    const spec = DR[key], D = decode(), out = [];
+    const m = mi >= 0 ? F.months[mi] : null;
+    for (let j = 0; j < D.ids.length; j++) {
+      if (!spec.set[DD.b[j]]) continue;
+      if (spec.rf && !spec.rf(DD.r[j])) continue;
+      if (m && D.dates[j].slice(0, 7) !== m) continue;
+      out.push(j);
+    }
+    out.sort((a, b) => (D.dates[b] < D.dates[a] ? -1 : D.dates[b] > D.dates[a] ? 1 : D.ids[b] - D.ids[a]));
+    return out;
+  };
+  let ov = null, cur = [], shown = 0, filtered = [];
+  const PAGE = 300;
+  const reasonCell = j => {
+    const canon = reasonText(DD.r[j]), raw = PII ? PII.rt[j] : '';
+    // the CRM's own text under the reason row's name when it says more (always for "Other (rare)", whose text is private)
+    const same = raw && raw.replace(/[ .]+$/, '') === (DD.r[j] >= 3 ? DD.reasons[DD.r[j] - 3] : '');
+    return esc(canon) + (raw && !same ? '<span class="rt">' + esc(raw) + '</span>' : '');
+  };
+  const rowHtml = j => {
+    const D = decode();
+    const amt = DD.amt[j];
+    const p = PII ? ('<td class="nm">' + (esc(PII.nm[j]) || dashC) + '</td><td class="nw">' + (PII.ph[j] || dashC) + '</td><td class="nw">' + (PII.pid[j] || dashC) + '</td>') : '';
+    const adv = PII ? ('<td class="num">' + (PII.adv[j] === null ? dashC : PII.adv[j].toLocaleString('en-US')) + '</td>') : '';
+    const tail = PII ? ('<td class="nw">' + (PII.gd[j] ? 'Yes' : 'No') + '</td><td class="nw">' + (PII.act[j] ? 'Yes' : 'No') + '</td>') : '';
+    return '<tr><td class="nw">' + D.ids[j] + '</td><td class="nw">' + D.dates[j] + '</td>' + p + '<td class="it">' + (esc(DD.items[DD.it[j]]) || dashC) + '</td><td class="num">' + (amt ? amt.toLocaleString('en-US') : '&ndash;') + '</td>' + adv + '<td class="nw">' + esc(SN[DD.st[j]] || ('Status ' + DD.st[j])) + ' <span style="color:var(--text-muted)">(' + DD.st[j] + ')</span></td><td>' + reasonCell(j) + '</td><td class="nw">' + (esc(DD.mgrs[DD.mg[j]]) || dashC) + '</td>' + tail + '</tr>';
+  };
+  const paint = () => {
+    const tb = ov.querySelector('tbody');
+    tb.innerHTML = filtered.slice(0, shown).map(rowHtml).join('');
+    const more = ov.querySelector('.fn-drill-more');
+    const left = filtered.length - shown;
+    more.innerHTML = left > 0 ? '<button type="button">Show ' + Math.min(left, PAGE * 3).toLocaleString('en-US') + ' more (' + left.toLocaleString('en-US') + ' not shown)</button>' : '';
+    ov.querySelector('.fn-drill-count').textContent = filtered.length === cur.length ? '' : filtered.length.toLocaleString('en-US') + ' of ' + cur.length.toLocaleString('en-US') + ' match';
+  };
+  // ---- Excel download of the list on screen: every row of it (not only the ones painted so far), the search applied,
+  // the same columns as the panel. ExcelJS loads from the CDN on the first click only (same library and version as the
+  // dashboard's per-group Excel buttons); the file is saved through the Artifact's downloads capability when there is one.
+  let ctx = { label: '', stage: '', period: '' };
+  let xlP = null;
+  const loadXl = () => window.ExcelJS ? Promise.resolve(window.ExcelJS) : (xlP || (xlP = new Promise((res, rej) => {
+    const sc = document.createElement('script');
+    sc.src = 'https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js';
+    sc.onload = () => res(window.ExcelJS);
+    sc.onerror = () => { xlP = null; rej(new Error('ExcelJS failed to load')); };
+    document.head.appendChild(sc);
+  })));
+  const saveFile = (blob, name) => {
+    const plain = () => { const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1500); };
+    if (window.claude && window.claude.use) window.claude.use('downloads').then(d => { if (!d) plain(); else d.save({ filename: name, data: blob }).catch(() => {}); }).catch(plain);
+    else plain();
+  };
+  const exportXlsx = btn => {
+    const rows = filtered.slice();
+    const q = ov.querySelector('input').value.trim();
+    btn.disabled = true;
+    loadXl().then(ExcelJS => {
+      const D = decode();
+      const wb = new ExcelJS.Workbook();
+      const ws = wb.addWorksheet('Applications');
+      const day = j => { const p = D.dates[j].split('-').map(Number); return new Date(Date.UTC(p[0], p[1] - 1, p[2])); };
+      const cols = [['Case #', 9, j => D.ids[j]], ['Applied', 11, day, 'yyyy-mm-dd']];
+      if (PII) cols.push(['Name', 24, j => PII.nm[j]], ['Phone', 12, j => PII.ph[j]], ['Personal number', 14, j => PII.pid[j]]);
+      cols.push(['Items', 55, j => DD.items[DD.it[j]]], ['Amount (GEL)', 12, j => DD.amt[j] || null, '#,##0']);
+      if (PII) cols.push(['Advance asked (GEL)', 12, j => PII.adv[j], '#,##0']);
+      cols.push(['Status at the end of ' + longDate(F.appsThrough), 24, j => (SN[DD.st[j]] || 'Status') + ' (' + DD.st[j] + ')'], ['Reason', 30, j => reasonText(DD.r[j])]);
+      if (PII) cols.push(['Reason text (CRM)', 45, j => PII.rt[j]]);
+      cols.push(['Sales manager', 20, j => DD.mgrs[DD.mg[j]]]);
+      if (PII) cols.push(['GDPR consent', 10, j => PII.gd[j] ? 'Yes' : 'No'], ['Active loan now', 10, j => PII.act[j] ? 'Yes' : 'No']);
+      const font = { name: 'Arial', size: 10 };
+      ws.getCell('A1').value = ctx.label; ws.getCell('A1').font = { name: 'Arial', size: 12, bold: true };
+      ws.getCell('A2').value = 'Full Sales Funnel: ' + ctx.stage; ws.getCell('A2').font = font;
+      const tot = rows.reduce((a, j) => a + DD.amt[j], 0);
+      ws.getCell('A3').value = ctx.period + ' | ' + rows.length.toLocaleString('en-US') + ' applications | GEL ' + tot.toLocaleString('en-US') + ' | statuses at the end of ' + longDate(F.appsThrough) + (q ? ' | search: ' + q : '') + ' | downloaded ' + new Date().toISOString().slice(0, 10);
+      ws.getCell('A3').font = { name: 'Arial', size: 9, italic: true, color: { argb: 'FF666666' } };
+      const H = 5;
+      const hr = ws.getRow(H);
+      cols.forEach((c, i) => {
+        const cell = hr.getCell(i + 1);
+        cell.value = c[0];
+        cell.font = { name: 'Arial', size: 10, bold: true, color: { argb: 'FF1A1A34' } };
+        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE8EEF5' } };
+        cell.alignment = { vertical: 'middle', wrapText: true };
+        cell.border = { bottom: { style: 'thin', color: { argb: 'FF9AA5B1' } } };
+        ws.getColumn(i + 1).width = c[1];
+      });
+      rows.forEach((j, r) => {
+        const xr = ws.getRow(H + 1 + r);
+        cols.forEach((c, i) => {
+          const v = c[2](j);
+          const cell = xr.getCell(i + 1);
+          cell.value = (v === '' || v === undefined) ? null : v;
+          cell.font = font;
+          cell.alignment = { vertical: 'top', wrapText: i > 1 && c[1] >= 24 };
+          if (c[3]) cell.numFmt = c[3];
+        });
+      });
+      ws.views = [{ state: 'frozen', ySplit: H }];
+      ws.autoFilter = { from: { row: H, column: 1 }, to: { row: H + Math.max(rows.length, 1), column: cols.length } };
+      return wb.xlsx.writeBuffer().then(buf => {
+        const bad = '/:*?"<>|' + String.fromCharCode(92);
+        const clean = t => String(t).split('').map(ch => bad.indexOf(ch) >= 0 ? ' ' : ch).join('').replace(/ +/g, ' ').trim();
+        const lab = clean(ctx.label).slice(0, 70);
+        saveFile(new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }), 'Volta Funnel - ' + lab + ' - ' + clean(ctx.period.replace(' (MTD)', ' MTD')) + '.xlsx');
+      });
+    }).catch(() => {
+      // library failed to load (offline / CDN blocked): no file, nothing else breaks
+    }).finally(() => { btn.disabled = false; });
+  };
+  const closeDrill = () => { if (ov) { ov.style.display = 'none'; document.body.style.overflow = ''; } };
+  const openDrill = (key, mi, label, stage) => {
+    if (!ov) {
+      ov = document.createElement('div');
+      ov.className = 'fn-drill-ov';
+      ov.innerHTML = '<div class="fn-drill' + (PII ? ' has-pii' : '') + '" role="dialog" aria-modal="true"><div class="fn-drill-head"><div><div class="fn-drill-title"></div><div class="fn-drill-sub"></div></div><button type="button" class="fn-drill-x" aria-label="Close">&times;</button></div>'
+        + '<div class="fn-drill-mix"></div><div class="fn-drill-tools"><input type="search" placeholder="Search case number, ' + (PII ? 'name, phone, personal number, ' : '') + 'item, status, reason, sales manager"><button type="button" class="fn-drill-xlsx" title="Download this list as Excel (all rows, the search applied)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg><span>Excel</span></button><span class="fn-drill-count"></span></div>'
+        + '<div class="fn-drill-body"><table class="fn-drill-tbl"><thead><tr><th>Case #</th><th>Applied</th>' + (PII ? '<th>Name</th><th>Phone</th><th>Personal number</th>' : '') + '<th>Items</th><th class="num">Amount (&#8382;)</th>' + (PII ? '<th class="num">Advance asked (&#8382;)</th>' : '') + '<th>Status at the end of ' + longDate(F.appsThrough) + '</th><th>Reason</th><th>Sales manager</th>' + (PII ? '<th>GDPR consent</th><th>Active loan now</th>' : '') + '</tr></thead><tbody></tbody></table><div class="fn-drill-more"></div></div></div>';
+      document.body.appendChild(ov);
+      ov.addEventListener('click', e => { if (e.target === ov || e.target.closest('.fn-drill-x')) closeDrill(); else if (e.target.closest('.fn-drill-more button')) { shown += PAGE * 3; paint(); } else if (e.target.closest('.fn-drill-xlsx')) exportXlsx(e.target.closest('.fn-drill-xlsx')); });
+      document.addEventListener('keydown', e => { if (e.key === 'Escape' && ov.style.display !== 'none') closeDrill(); });
+      ov.querySelector('input').addEventListener('input', e => {
+        const q = e.target.value.trim().toLowerCase();
+        const D = decode();
+        filtered = !q ? cur : cur.filter(j => (D.ids[j] + ' ' + D.dates[j] + ' ' + DD.items[DD.it[j]] + ' ' + (SN[DD.st[j]] || '') + ' ' + reasonText(DD.r[j]) + ' ' + DD.mgrs[DD.mg[j]] + (PII ? ' ' + PII.nm[j] + ' ' + PII.ph[j] + ' ' + PII.pid[j] + ' ' + PII.rt[j] : '')).toLowerCase().indexOf(q) >= 0);
+        shown = PAGE; paint();
+      });
+    }
+    cur = drillList(key, mi); filtered = cur; shown = PAGE;
+    ctx = { label, stage, period: mi >= 0 ? mLabel(F.months[mi]) : 'All months, ' + mLabel(F.months[0]).replace(' (MTD)', '') + ' - ' + mLabel(F.months[n - 1]) };
+    const tot = cur.reduce((a, j) => a + DD.amt[j], 0);
+    ov.querySelector('.fn-drill-title').textContent = label;
+    ov.querySelector('.fn-drill-sub').innerHTML = (stage ? esc(stage) + '<br>' : '') + (mi >= 0 ? mLabel(F.months[mi]) : 'All months, ' + mLabel(F.months[0]).replace(' (MTD)', '') + ' &ndash; ' + mLabel(F.months[n - 1])) + ' &middot; <b>' + cur.length.toLocaleString('en-US') + '</b> application' + (cur.length === 1 ? '' : 's') + ' &middot; &#8382;' + tot.toLocaleString('en-US') + ' in total &middot; newest first';
+    // the mix behind a combined row: by status, then the busiest sales managers
+    const byS = {}, byM = {};
+    cur.forEach(j => { const k = SN[DD.st[j]] || ('Status ' + DD.st[j]); byS[k] = (byS[k] || 0) + 1; const g = DD.mgrs[DD.mg[j]] || 'No sales manager'; byM[g] = (byM[g] || 0) + 1; });
+    const top = (o, k) => Object.entries(o).sort((a, b) => b[1] - a[1]).slice(0, k).map(e => esc(e[0]) + ' <b>' + e[1].toLocaleString('en-US') + '</b>').join(' &middot; ');
+    ov.querySelector('.fn-drill-mix').innerHTML = cur.length ? 'By status: ' + top(byS, 8) + '<br>By sales manager: ' + top(byM, 6) + (Object.keys(byM).length > 6 ? ' &middot; &hellip;' : '') : '';
+    ov.querySelector('input').value = '';
+    paint();
+    ov.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+    ov.scrollTop = 0;
+  };
+
   function render() {
     const table = document.getElementById('funnelTable');
     if (!table) return;
     table.querySelector('tbody').innerHTML = h;
+    table.__drillOpen = DD ? openDrill : null;   // this build's panel (a live rebuild swaps it)
+    if (!table.__drillWired) {
+      table.__drillWired = true;
+      table.addEventListener('click', e => {
+        if (!table.__drillOpen) return;
+        const td = e.target.closest('td[data-mi]');
+        if (!td) return;
+        const tr = td.parentElement;
+        const key = tr.getAttribute('data-drill');
+        if (key === null) return;
+        const lab = tr.firstElementChild.textContent.replace(/^[^A-Za-z0-9ა-ჰ]+/, '').trim();
+        // the stage it belongs to: the section (or 3.1 / 6.1 / 8.1 sub-stage) header that toggles this row
+        const hdr = table.querySelector('tr[data-toggle="' + tr.getAttribute('data-sec') + '"]');
+        table.__drillOpen(+key, +td.getAttribute('data-mi'), lab, hdr ? hdr.textContent.replace(/^[^A-Za-z0-9ა-ჰ]+/, '').trim() : '');
+      });
+    }
     table.querySelectorAll('tr[data-toggle]').forEach(header => {
       header.addEventListener('click', () => {
         const id = header.getAttribute('data-toggle');
@@ -452,11 +777,23 @@ ${dataLine}
       apply(saved === 'summary' ? 'summary' : 'detail');
     }
     const banner = document.getElementById('funnelBanner');
-    if (banner) banner.innerHTML = '<b>How to read it:</b> each month starts with the website sessions Google Analytics counted, then the applications submitted that month, then the sales screening (rejected by sales with the recorded reason, still with sales, the customer withdrew there with their reason) and how many were passed on to the committee, then the committee\\'s decision on those (rejected with the reason, still waiting, the customer withdrew there, approved), then the approved ones that did not end in a contract (rejected or expired after approval, still in process, declined by the customer with their reason), and finally the signed installment contracts and single-payment sales together. 3 + 3.1 + 4 + 5 + single-payment sales = applications; 6 + 6.1 + 7 + 8 = reached the committee; 8.1 + 9 + signed = approved' + (anyGa4 ? '' : ' &mdash; GA4 sessions are not available in this build (funnel_ga4_month.tsv missing)') + '.';
+    if (banner) banner.innerHTML = (DD ? '<b>Click any count</b> to list the applications behind it (case number, date, items, amount, status, reason, sales manager). ' : '') + '<b>How to read it:</b> each month starts with the website sessions Google Analytics counted, then the applications submitted that month, then the sales screening (rejected by sales with the recorded reason, still with sales, the customer withdrew there with their reason) and how many were passed on to the committee, then the committee\\'s decision on those (rejected with the reason, still waiting, the customer withdrew there, approved), then the approved ones that did not end in a contract (rejected or expired after approval, still in process, declined by the customer with their reason), and finally the signed installment contracts and single-payment sales together. 3 + 3.1 + 4 + 5 + single-payment sales = applications; 6 + 6.1 + 7 + 8 = reached the committee; 8.1 + 9 + signed = approved' + (anyGa4 ? '' : ' &mdash; GA4 sessions are not available in this build (funnel_ga4_month.tsv missing)') + '.';
     if (window.__funnelScrollUpdate) window.__funnelScrollUpdate();
   }
   if (document.getElementById('funnelScrollTop') && !window.__funnelScrollUpdate) window.__funnelScrollUpdate = setupTopScrollSync('funnelScrollTop', 'funnelScrollBody');
   if (window.__registerPage) window.__registerPage(['fullfunnel'], render); else render();
+};
+window.__funnelBuild(FUNNEL_JSON);
+// live page: index.php sends window.FUNNEL_LIVE then __onLiveSection('funnel') — rebuild with it and repaint the tab
+(function () {
+  const prev = window.__onLiveSection;
+  if (typeof prev !== 'function' || prev.__funnel) return;
+  const f = function (key) {
+    if (key === 'funnel' && window.FUNNEL_LIVE) { window.__funnelBuild(window.FUNNEL_LIVE); if (window.__forceRenderPage) window.__forceRenderPage('fullfunnel'); }
+    prev(key);
+  };
+  f.__funnel = true;
+  window.__onLiveSection = f;
 })();
 ${JS_END}`;
   const jsAnchor = '/* ---------- Sales Analyze (ported from Volta_Analytics) ---------- */';
@@ -467,3 +804,20 @@ ${JS_END}`;
 if (__hadCRLF) html = html.replace(/\n/g, '\r\n');
 fs.writeFileSync(htmlPath, html);
 console.log('injected Full Sales Funnel into ' + htmlPath);
+
+// the PRIVATE copy for the claude.ai Artifact: the same page plus `const FUNNEL_PII` (see funnelPii above) right after
+// the FUNNEL_JSON line. Gitignored — never commit it, never copy it to docs/ (GitHub Pages is public).
+{
+  const pii = funnelPii(payload.drill);
+  const privPath = htmlPath.replace(/\.html$/i, '') + '_private.html';
+  if (pii) {
+    const a = html.indexOf('const FUNNEL_JSON = ');
+    if (a < 0) throw new Error('FUNNEL_JSON line not found');
+    const e = html.indexOf('\n', a);
+    fs.writeFileSync(privPath, html.slice(0, e + 1) + 'const FUNNEL_PII = ' + JSON.stringify(pii) + ';' + (__hadCRLF ? '\r\n' : '\n') + html.slice(e + 1));
+    console.log('wrote the PRIVATE copy with customer data (never commit, never Pages): ' + privPath);
+  } else if (fs.existsSync(privPath)) {
+    fs.unlinkSync(privPath);   // no PII extract this run: drop a stale private copy rather than publish old customer data
+    console.log('no funnel_pii.tsv — removed the stale private copy ' + privPath);
+  }
+}

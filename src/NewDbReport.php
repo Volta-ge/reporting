@@ -105,8 +105,19 @@ final class NewDbReport
         $logistics = $this->logistics();
         $logistics['cutover'] = self::CUTOVER;
         $logistics['generatedAt'] = $generatedAt;
-        $out = ['report' => $report, 'sales' => $sales, 'logistics' => $logistics, 'funnel' => $this->fullFunnelSafe()];
+        $out = ['report' => $report, 'sales' => $sales, 'logistics' => $logistics];
         $onSection('core', $out, null);
+        // The Full Sales Funnel streams as its own section right after the page went out (2026-11-12): one row per
+        // application for the drill-down made it the slowest core query (~4-7 s), and in 'core' it would hold back
+        // the page's first byte. Until it lands the tab shows the committed numbers, then rebuilds in place.
+        $funnel = $this->fullFunnelSafe();
+        if ($funnel !== null) {
+            $out['funnel'] = $funnel;
+            $onSection('funnel', $funnel, null);
+        } else {
+            $out['errors']['funnel'] = 'Full Sales Funnel query failed (see the server log)';
+            $onSection('funnel', null, $out['errors']['funnel']);
+        }
 
         $groups = [
             'mkt' => fn () => new NewDbMkt($this->pdo, $this->dir, $this->mappingPath),
@@ -509,20 +520,31 @@ final class NewDbReport
         // another copy and reporting.volta.ge went down. Each derived table below is one GROUP BY pass over the
         // ~10k status_change rows and is materialized once; measured 2.2 s via PREPARE/EXECUTE. The hint caps a
         // regression at 30 s so a slow funnel can only fail, never hold a PHP worker.
-        $stmt = $this->pdo->prepare("SELECT /*+ MAX_EXECUTION_TIME(30000) */ DATE_FORMAT(o.created_at,'%Y-%m') m, COALESCE(rev.st_from, o.crm_order_status) st,
+        // ONE ROW PER APPLICATION since 2026-11-12 (the drill-down: click a figure, see the applications behind it), the
+        // same text as pull_new.sh's funnel_drill.tsv: every figure is counted from these rows, so a cell and its list
+        // always agree. Case data only (date, amount, items, sales manager) — no customer data on the live site (user,
+        // 2026-11-12: "საიტზე მხოლოდ ქეისის ინფორმაცია გამოჩნდეს"). ~37K rows, ~3-4 s.
+        $stmt = $this->pdo->prepare("SELECT /*+ MAX_EXECUTION_TIME(30000) */ o.id, DATE(o.created_at) d, COALESCE(rev.st_from, o.crm_order_status) st,
      (COALESCE(o.crm_underwriter_status_id,0)=16 AND ap.entity_id IS NULL) uw16,
      (o.crm_underwriter_status_id IS NOT NULL AND cm.entity_id IS NULL) cmt,
-     CASE WHEN COALESCE(rev.st_from, o.crm_order_status) IN (6,12) THEN LEFT(TRIM(REPLACE(REPLACE(REPLACE(COALESCE(o.crm_reason,''), CHAR(10),' '), CHAR(13),' '), CHAR(9),' ')), 80) ELSE '' END reason, COUNT(*) n
+     CASE WHEN COALESCE(rev.st_from, o.crm_order_status) IN (6,12) THEN LEFT(TRIM(REPLACE(REPLACE(REPLACE(COALESCE(o.crm_reason,''), CHAR(10),' '), CHAR(13),' '), CHAR(9),' ')), 80) ELSE '' END reason,
+     ROUND(COALESCE(o.base_grand_total,0)) amt, TRIM(CONCAT(COALESCE(u.first_name,''),' ',COALESCE(u.last_name,''))) mgr, it.items
    FROM orders o
    LEFT JOIN (SELECT f.entity_id, CAST(JSON_EXTRACT(l.metadata,'$.from') AS UNSIGNED) st_from
               FROM (SELECT entity_id, MIN(id) mid FROM crm_activity_log WHERE action='installment.status_change' AND created_at > :e1 GROUP BY entity_id) f
               JOIN crm_activity_log l ON l.id = f.mid) rev ON rev.entity_id=o.id
    LEFT JOIN (SELECT entity_id FROM crm_activity_log WHERE action='installment.status_change' AND JSON_EXTRACT(metadata,'$.to')=16 GROUP BY entity_id HAVING MIN(created_at) > :e2) ap ON ap.entity_id=o.id
    LEFT JOIN (SELECT entity_id FROM crm_activity_log WHERE action='installment.status_change' AND JSON_EXTRACT(metadata,'$.to')=8 GROUP BY entity_id HAVING MIN(created_at) > :e3) cm ON cm.entity_id=o.id
+   LEFT JOIN (SELECT oi.order_id, GROUP_CONCAT(TRIM(REPLACE(REPLACE(REPLACE(oi.name, CHAR(9),' '), CHAR(10),' '), CHAR(13),' ')) ORDER BY oi.id SEPARATOR ' | ') items
+              FROM order_items oi JOIN orders o2 ON o2.id=oi.order_id
+              WHERE oi.parent_id IS NULL AND o2.created_at >= :mstart2 GROUP BY oi.order_id) it ON it.order_id=o.id
+   LEFT JOIN crm_users u ON u.id=o.crm_sales_manager_id
    WHERE o.created_at >= :mstart AND DATE(o.created_at) <= :today
-   GROUP BY m, st, uw16, cmt, reason ORDER BY m, st, uw16, cmt, reason");
-        $stmt->execute(['mstart' => self::FUNNEL_MONTH_START . '-01', 'today' => $through->format('Y-m-d'), 'e1' => $endTs, 'e2' => $endTs, 'e3' => $endTs]);
+   ORDER BY o.id");
+        $stmt->execute(['mstart' => self::FUNNEL_MONTH_START . '-01', 'mstart2' => self::FUNNEL_MONTH_START . '-01', 'today' => $through->format('Y-m-d'), 'e1' => $endTs, 'e2' => $endTs, 'e3' => $endTs]);
         $rows = $stmt->fetchAll();
+        foreach ($rows as &$r) { $r['m'] = substr((string) $r['d'], 0, 7); $r['n'] = 1; }
+        unset($r);
 
         $lastMonth = self::FUNNEL_MONTH_START;
         foreach ($rows as $r) { if ((string) $r['m'] > $lastMonth) { $lastMonth = (string) $r['m']; } }
@@ -551,7 +573,8 @@ final class NewDbReport
             if (!isset($reasonAcc[$bucket][$k])) { $reasonAcc[$bucket][$k] = $zeros(); }
             $reasonAcc[$bucket][$k][$i] += $cnt;
         };
-        foreach ($rows as $r) {
+        $bk = [];   // row index -> its leaf bucket (the drill-down's unit)
+        foreach ($rows as $k => $r) {
             if (!isset($mi[(string) $r['m']])) { continue; }
             $i = $mi[(string) $r['m']];
             $st = (int) $r['st'];
@@ -559,33 +582,33 @@ final class NewDbReport
             $uw16 = (int) $r['uw16'] === 1;
             $reason = (string) ($r['reason'] ?? '');
             $S['apps'][$i] += $cnt;
-            if ($st === 99) { $S['singlePay'][$i] += $cnt; continue; }
+            if ($st === 99) { $S['singlePay'][$i] += $cnt; $bk[$k] = 'singlePay'; continue; }
             $signed = $st === 11 || $st === 5 || $st === 1;
             // reached the committee = underwriting decision recorded, at the committee, or signed (January's legacy loans have no underwriter status)
             $reached = (int) $r['cmt'] === 1 || $signed || $st === 8;
             if (!$reached) {
-                if ($st === 6) { $S['rejSales'][$i] += $cnt; $addReason('rejSales', $reason, $i, $cnt); }
-                elseif ($st === 12) { $S['declSales'][$i] += $cnt; $addReason('declSales', $reason, $i, $cnt); }
-                elseif ($st === 13) { $S['expiredSales'][$i] += $cnt; }
-                elseif (in_array($st, self::FUNNEL_IN_PROCESS, true)) { $S['openSales'][$i] += $cnt; }
-                else { $S['otherSales'][$i] += $cnt; }
+                if ($st === 6) { $S['rejSales'][$i] += $cnt; $bk[$k] = 'rejSales'; $addReason('rejSales', $reason, $i, $cnt); }
+                elseif ($st === 12) { $S['declSales'][$i] += $cnt; $bk[$k] = 'declSales'; $addReason('declSales', $reason, $i, $cnt); }
+                elseif ($st === 13) { $S['expiredSales'][$i] += $cnt; $bk[$k] = 'expiredSales'; }
+                elseif (in_array($st, self::FUNNEL_IN_PROCESS, true)) { $S['openSales'][$i] += $cnt; $bk[$k] = 'openSales'; }
+                else { $S['otherSales'][$i] += $cnt; $bk[$k] = 'otherSales'; }
                 continue;
             }
             $S['committee'][$i] += $cnt;
-            if ($signed) { $S['approved'][$i] += $cnt; $S['signedActive'][$i] += $cnt; continue; }
+            if ($signed) { $S['approved'][$i] += $cnt; $S['signedActive'][$i] += $cnt; $bk[$k] = 'signedActive'; continue; }
             if ($uw16) {
                 $S['approved'][$i] += $cnt;
-                if ($st === 12) { $S['declPost'][$i] += $cnt; $addReason('declPost', $reason, $i, $cnt); }
-                elseif ($st === 6) { $S['rejPost'][$i] += $cnt; }
-                elseif ($st === 13) { $S['expiredPost'][$i] += $cnt; }
-                elseif (in_array($st, self::FUNNEL_IN_PROCESS, true)) { $S['openPost'][$i] += $cnt; }
-                else { $S['otherPost'][$i] += $cnt; }
+                if ($st === 12) { $S['declPost'][$i] += $cnt; $bk[$k] = 'declPost'; $addReason('declPost', $reason, $i, $cnt); }
+                elseif ($st === 6) { $S['rejPost'][$i] += $cnt; $bk[$k] = 'rejPost'; }
+                elseif ($st === 13) { $S['expiredPost'][$i] += $cnt; $bk[$k] = 'expiredPost'; }
+                elseif (in_array($st, self::FUNNEL_IN_PROCESS, true)) { $S['openPost'][$i] += $cnt; $bk[$k] = 'openPost'; }
+                else { $S['otherPost'][$i] += $cnt; $bk[$k] = 'otherPost'; }
             } else {
-                if ($st === 6) { $S['rejCmt'][$i] += $cnt; $addReason('rejCmt', $reason, $i, $cnt); }
-                elseif ($st === 12) { $S['declCmt'][$i] += $cnt; $addReason('declCmt', $reason, $i, $cnt); }
-                elseif ($st === 13) { $S['expiredCmt'][$i] += $cnt; }
-                elseif (in_array($st, self::FUNNEL_IN_PROCESS, true)) { $S['openCmt'][$i] += $cnt; }
-                else { $S['otherCmt'][$i] += $cnt; }
+                if ($st === 6) { $S['rejCmt'][$i] += $cnt; $bk[$k] = 'rejCmt'; $addReason('rejCmt', $reason, $i, $cnt); }
+                elseif ($st === 12) { $S['declCmt'][$i] += $cnt; $bk[$k] = 'declCmt'; $addReason('declCmt', $reason, $i, $cnt); }
+                elseif ($st === 13) { $S['expiredCmt'][$i] += $cnt; $bk[$k] = 'expiredCmt'; }
+                elseif (in_array($st, self::FUNNEL_IN_PROCESS, true)) { $S['openCmt'][$i] += $cnt; $bk[$k] = 'openCmt'; }
+                else { $S['otherCmt'][$i] += $cnt; $bk[$k] = 'otherCmt'; }
             }
         }
         foreach ($months as $i => $m) {
@@ -617,8 +640,69 @@ final class NewDbReport
         $out['rejectCommitteeReasons'] = self::funnelReasonRows($reasonAcc['rejCmt'], $n);
         $out['declineCommitteeReasons'] = self::funnelReasonRows($reasonAcc['declCmt'], $n);
         $out['declineAfterReasons'] = self::funnelReasonRows($reasonAcc['declPost'], $n);
+        $out['drill'] = self::funnelDrill($rows, $bk, $reasonAcc);
         $out['generatedAt'] = gmdate('Y-m-d H:i') . ' UTC';
         return $out;
+    }
+
+    /**
+     * funnelDrill() in build_funnel.js: every counted application with its leaf bucket, as compact column arrays (ids as
+     * deltas, the day as days since 2026-01-01, dictionaries for reasons / items / sales managers). Case data only. A
+     * reason is shipped only as one of the table's own reason rows: 0 = none, 1 = unspecified, 2 = other (rare, its
+     * free text stays out), 3 + k = reasons[k].
+     *
+     * @param list<array<string,mixed>> $rows
+     * @param array<int,string> $bk
+     * @param array<string,array<string,list<int>>> $reasonAcc
+     */
+    private static function funnelDrill(array $rows, array $bk, array $reasonAcc): array
+    {
+        $buckets = ['rejSales', 'declSales', 'expiredSales', 'openSales', 'otherSales', 'singlePay', 'rejCmt', 'declCmt', 'expiredCmt', 'openCmt', 'otherCmt', 'signedActive', 'declPost', 'rejPost', 'expiredPost', 'openPost', 'otherPost'];
+        $bi = array_flip($buckets);
+        $named = [];
+        foreach ($reasonAcc as $b => $acc) {
+            $named[$b] = [];
+            foreach ($acc as $key => $vals) {
+                $key = (string) $key;
+                if ($key !== '' && array_sum($vals) >= self::FUNNEL_MIN_REASON_TOTAL) { $named[$b][$key] = true; }
+            }
+        }
+        $reasons = $items = $mgrs = [];
+        $ri = $ii = $gi = [];
+        $D = ['id' => [], 'day' => [], 'b' => [], 'st' => [], 'r' => [], 'it' => [], 'amt' => [], 'mg' => []];
+        $day0 = gmmktime(0, 0, 0, 1, 1, 2026);
+        $prev = 0;
+        foreach ($rows as $k => $r) {
+            if (!isset($bk[$k])) { continue; }
+            $b = $bk[$k];
+            $id = (int) $r['id'];
+            [$y, $mo, $da] = array_map('intval', explode('-', (string) $r['d']));
+            $rv = 0;
+            if (isset($named[$b])) {
+                $key = self::funnelReasonKey((string) ($r['reason'] ?? ''));
+                if ($key === '') { $rv = 1; }
+                elseif (isset($named[$b][$key])) {
+                    if (!isset($ri[$key])) { $ri[$key] = count($reasons); $reasons[] = $key; }
+                    $rv = 3 + $ri[$key];
+                } else { $rv = 2; }
+            }
+            $it = (string) ($r['items'] ?? '');
+            // 140 characters at most (code points; no mbstring on the server), like the Node build
+            if (preg_match_all('/./us', $it, $cp) > 140) { $it = implode('', array_slice($cp[0], 0, 139)) . "\u{2026}"; }
+            if (!isset($ii[$it])) { $ii[$it] = count($items); $items[] = $it; }
+            $mg = trim((string) ($r['mgr'] ?? ''));
+            if (!isset($gi[$mg])) { $gi[$mg] = count($mgrs); $mgrs[] = $mg; }
+            $D['id'][] = $id - $prev;
+            $prev = $id;
+            $D['day'][] = intdiv(gmmktime(0, 0, 0, $mo, $da, $y) - $day0, 86400);
+            $D['b'][] = $bi[$b];
+            $D['st'][] = (int) $r['st'];
+            $D['r'][] = $rv;
+            $D['it'][] = $ii[$it];
+            $D['amt'][] = (int) round((float) ($r['amt'] ?? 0));
+            $D['mg'][] = $gi[$mg];
+        }
+        return ['buckets' => $buckets, 'reasons' => $reasons, 'items' => $items, 'mgrs' => $mgrs] + $D;
     }
 
     private static function funnelReasonKey(string $raw): string

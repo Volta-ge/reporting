@@ -86,7 +86,8 @@ if (!isset($config['voltastoredb'])) {
                     if (isset($payload['funnel'])) { $setConst($html, 'FUNNEL_JSON', $payload['funnel']); }
                     echo "<!doctype html>\n<html lang=\"ka\">\n<head>\n<meta charset=\"utf-8\">\n<meta name=\"viewport\" content=\"width=device-width,initial-scale=1\">\n</head>\n<body>\n";
                     echo $html;
-                    echo '<script>window.__streamInit && window.__streamInit(5);</script>' . "\n";
+                    // 6 streamed sections: the Full Sales Funnel (its own section since 2026-11-12, see buildStreaming) + the 5 groups
+                    echo '<script>window.__streamInit && window.__streamInit(6);</script>' . "\n";
                     flush();
                     return;
                 }
@@ -96,7 +97,10 @@ if (!isset($config['voltastoredb'])) {
                     $streamErrors[$key] = $error;
                     echo "<script>window.__onLiveSection && window.__onLiveSection('" . $key . "');</script>\n";
                 } else {
-                    echo '<script>window.' . strtoupper($key) . '_JSON = ' . json_encode($payload, $jsFlags) . "; window.__onLiveSection && window.__onLiveSection('" . $key . "');</script>\n";
+                    // the funnel's page constant is a `const` (FUNNEL_JSON), so its live data comes in as FUNNEL_LIVE and the
+                    // page's own __onLiveSection hook rebuilds the tab from it (build_funnel.js)
+                    $var = $key === 'funnel' ? 'FUNNEL_LIVE' : strtoupper($key) . '_JSON';
+                    echo '<script>window.' . $var . ' = ' . json_encode($payload, $jsFlags) . "; window.__onLiveSection && window.__onLiveSection('" . $key . "');</script>\n";
                 }
                 flush();
             });
