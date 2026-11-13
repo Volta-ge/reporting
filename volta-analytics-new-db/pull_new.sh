@@ -203,6 +203,23 @@ Q "SELECT h.order_id, h.to_status, h.created_at at,
           LEAD(h.created_at) OVER (PARTITION BY h.order_id ORDER BY h.created_at, h.id) next_at
    FROM crm_shipment_status_history h JOIN crm_order_logistics l ON l.order_id=h.order_id AND l.created_at >= '$LOGI_ORDERS_START'
    WHERE h.entity_type=4 ORDER BY h.order_id, h.created_at, h.id;" > "$S/logi_time_events.tsv"
+# Logistics Monthly (user 2026-11-13: "თვეების მიხედვით ჩანდეს გაყიდვების ჯამური თანხა და ორდერების რაოდენობა"): the CRM's own
+# shipments definition (reproduced to the tetri for Sept, see build_logistics.js) — order lines whose logistics started
+# in the month (crm_line_fulfillment.created_at) and that reached ready-to-ship / delivered / returned (50/80/90); price =
+# order_items.base_price x qty. One row per month x order (an order whose lines started in two months is in both), in
+# tetri so the sums are exact; through END (yesterday), like the Daily Mail. NewDbReport::logisticsMonthly() = same SQL.
+Q "SELECT DATE_FORMAT(lf.created_at,'%Y-%m') m, oi.order_id, ROUND(SUM(oi.base_price*oi.qty_ordered)*100) tetri
+   FROM crm_line_fulfillment lf JOIN order_items oi ON oi.id=lf.order_item_id
+   WHERE lf.status IN (50,80,90) AND DATE(lf.created_at) <= '$END'
+   GROUP BY m, oi.order_id ORDER BY m, oi.order_id;" > "$S/logi_monthly.tsv"
+printf 'through\n%s\n' "$END" > "$S/logi_monthly_meta.tsv"
+# ... and the months BEFORE the logistics module (user 2026-11-13: "მთელ 2026 წლის თვეების მიხედვით"): Jan-Aug are sold
+# orders by sale month, exactly Sales Monthly's figures — the frozen old-DB old_sales_cases.tsv (committed) up to the
+# cutover, plus this: the new DB's sold orders (5/99) from the cutover day (2026-08-31) to the module start.
+Q "SELECT DATE_FORMAT(COALESCE(o.crm_creator_date,o.created_at),'%Y-%m') m, o.id order_id, ROUND(SUM(oi.base_total)*100) tetri
+   FROM orders o JOIN order_items oi ON oi.order_id=o.id
+   WHERE o.crm_order_status IN (5,99) AND COALESCE(o.crm_creator_date,o.created_at) >= '$CUTOVER' AND COALESCE(o.crm_creator_date,o.created_at) < '2026-09-01'
+   GROUP BY m, o.id ORDER BY m, o.id;" > "$S/logi_monthly_pre.tsv"
 
 # ================ Marketing — Leads ================
 # Lead status/step/city by day, lead-to-application conversion. No PII (see build_mkt.js). Runs through today.

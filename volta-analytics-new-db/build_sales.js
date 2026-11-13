@@ -77,7 +77,12 @@ const oldGrouped = parseTsv('old_sales_grouped.tsv').map(r => ({
 if (oldGrouped.some(r => r.period >= CUTOVER.slice(0, 7) && r.period > '2026-08')) throw new Error('old rows past cutover month');
 for (const r of oldGrouped) { const b = String(r.brand || '').trim(); if (b && !NO_BRAND.has(b.toLowerCase())) oldBrandBySlug[b.toLowerCase()] ||= b; }
 
-const newLinesRaw = parseTsv('new_sales_lines.tsv');
+// Orders already in the frozen old-DB extract are dropped from the new-DB side (2026-11-13, user: "Sales Monthly-ის
+// აგვისტოც გაასწორე"): 11 orders (13 lines, 17,890 GEL) sold 2026-08-30/31 are in BOTH old_sales_cases.tsv and the new DB's
+// cutover day, and were counted twice in August. The old row wins (it carries the old case id and cost).
+const OLD_CASE_ORDER_IDS = new Set(fs.existsSync(path.join(__dirname, 'old_sales_cases.tsv'))
+  ? parseTsv('old_sales_cases.tsv').map(r => +r.new_case_id).filter(Boolean) : []);
+const newLinesRaw = parseTsv('new_sales_lines.tsv').filter(r => !OLD_CASE_ORDER_IDS.has(+r.order_id));
 if (newLinesRaw.some(r => r.d < CUTOVER)) throw new Error('new-DB line before cutover');
 // cost (2026-10-15, per the user): crm_line_fulfillment.vendor_price, the CRM's own per-line "ასაღები ფასი"
 // (vendor pickup price, per unit — verified against qty>1 rows, e.g. vendor_price 18.90 x qty 32 = 604.80

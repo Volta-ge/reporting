@@ -376,7 +376,63 @@ final class NewDbReport
 
         $timeManagement = ['orders' => $this->logisticsTimeOrders()];
 
-        return ['pending' => $pending, 'delivery' => $delivery, 'byCity' => $byCity, 'byGoods' => $byGoods, 'openCases' => $openCases, 'statusByDay' => $statusByDay, 'timeManagement' => $timeManagement];
+        return ['pending' => $pending, 'delivery' => $delivery, 'byCity' => $byCity, 'byGoods' => $byGoods, 'openCases' => $openCases, 'statusByDay' => $statusByDay, 'timeManagement' => $timeManagement, 'monthly' => $this->logisticsMonthly()];
+    }
+
+    /**
+     * Logistics Monthly (2026-11-13) — sales amount and orders per logistics-start month, the CRM's shipments definition.
+     * Same SQL and aggregation as pull_new.sh's logi_monthly.tsv / build_logistics.js (order lines started in the month
+     * with line status 50/80/90, base_price x qty, summed in tetri so totals are exact; the Total counts each order once).
+     * Through yesterday. ~1.8K rows (one per month x order).
+     */
+    private function logisticsMonthly(): array
+    {
+        $through = (new \DateTimeImmutable('yesterday'))->format('Y-m-d');
+        $stmt = $this->pdo->prepare("SELECT /*+ MAX_EXECUTION_TIME(30000) */ DATE_FORMAT(lf.created_at,'%Y-%m') m, oi.order_id, ROUND(SUM(oi.base_price*oi.qty_ordered)*100) tetri
+   FROM crm_line_fulfillment lf JOIN order_items oi ON oi.id=lf.order_item_id
+   WHERE lf.status IN (50,80,90) AND DATE(lf.created_at) <= :end
+   GROUP BY m, oi.order_id ORDER BY m, oi.order_id");
+        $stmt->execute(['end' => $through]);
+        // whole 2026 (see build_logistics.js): Jan-Aug = sold orders by sale month (= Sales Monthly) — the committed
+        // old-DB old_sales_cases.tsv plus the new DB's sold orders of the cutover day; September on = the module
+        $from = '2026-01';
+        $moduleMonth = '2026-09';
+        $src = [];
+        if (is_file($this->dir . '/old_sales_cases.tsv')) {
+            foreach ($this->tsv('old_sales_cases.tsv') as $r) {
+                $src[] = ['m' => (string) $r['period'], 'id' => ((int) $r['new_case_id']) ? (string) (int) $r['new_case_id'] : 'old' . $r['case_id'], 'tetri' => (int) round((float) $r['sales'] * 100)];
+            }
+        }
+        $pre = $this->pdo->prepare("SELECT /*+ MAX_EXECUTION_TIME(30000) */ DATE_FORMAT(COALESCE(o.crm_creator_date,o.created_at),'%Y-%m') m, o.id order_id, ROUND(SUM(oi.base_total)*100) tetri
+   FROM orders o JOIN order_items oi ON oi.order_id=o.id
+   WHERE o.crm_order_status IN (5,99) AND COALESCE(o.crm_creator_date,o.created_at) >= :cutover AND COALESCE(o.crm_creator_date,o.created_at) < '2026-09-01'
+   GROUP BY m, o.id ORDER BY m, o.id");
+        $pre->execute(['cutover' => self::CUTOVER]);
+        // orders in both the old extract and the cutover day (11 in Aug 2026): the old row wins, each order counted once
+        $oldIds = array_flip(array_column($src, 'id'));
+        foreach ($pre->fetchAll() as $r) {
+            $id = (string) (int) $r['order_id'];
+            if (!isset($oldIds[$id])) { $src[] = ['m' => (string) $r['m'], 'id' => $id, 'tetri' => (int) $r['tetri']]; }
+        }
+        $rows = array_values(array_filter($src, static fn (array $r): bool => $r['m'] >= $from && $r['m'] < $moduleMonth));
+        foreach ($stmt->fetchAll() as $r) {
+            if ((string) $r['m'] >= $moduleMonth) { $rows[] = ['m' => (string) $r['m'], 'id' => (string) (int) $r['order_id'], 'tetri' => (int) $r['tetri']]; }
+        }
+        $by = [];
+        $all = [];
+        $totalTetri = 0;
+        foreach ($rows as $r) {
+            $m = $r['m'];
+            if (!isset($by[$m])) { $by[$m] = ['orders' => [], 'tetri' => 0]; }
+            $by[$m]['orders'][$r['id']] = true;
+            $by[$m]['tetri'] += $r['tetri'];
+            $all[$r['id']] = true;
+            $totalTetri += $r['tetri'];
+        }
+        ksort($by, SORT_STRING);
+        $months = [];
+        foreach ($by as $m => $a) { $months[] = ['m' => (string) $m, 'orders' => count($a['orders']), 'sales' => $a['tetri'] / 100, 'basis' => $m < $moduleMonth ? 'sales' : 'logistics']; }
+        return ['through' => $through, 'moduleMonth' => $moduleMonth, 'months' => $months, 'total' => ['orders' => count($all), 'sales' => $totalTetri / 100]];
     }
 
     /**
@@ -1228,6 +1284,14 @@ final class NewDbReport
                 'sales' => $instTotal, 'cogs' => $hasCost ? $unitCost * $qty : 0.0, 'qty' => (int) $r['qty'], 'cogsUnknownSales' => $hasCost ? 0.0 : $instTotal,
                 'order_id' => (int) $r['order_id'], 'product_name' => (string) $r['product_name']];
         }
+        // orders already in the frozen old-DB extract are dropped from the new-DB side (2026-11-13, same as build_sales.js):
+        // 11 orders sold 2026-08-30/31 are in both old_sales_cases.tsv and the new DB's cutover day and were counted twice
+        // in August — the old row wins
+        $oldCaseOrderIds = [];
+        if (is_file($this->dir . '/old_sales_cases.tsv')) {
+            foreach ($this->tsv('old_sales_cases.tsv') as $r) { if ((int) $r['new_case_id']) { $oldCaseOrderIds[(int) $r['new_case_id']] = true; } }
+        }
+        $newGrouped = array_values(array_filter($newGrouped, static fn (array $r): bool => !isset($oldCaseOrderIds[$r['order_id']])));
         $rawRows = array_merge($oldGrouped, $newGrouped);
 
         // COGS data-quality stats — garbage: old lines only; cogsUnknown: the new-DB lines still without a vendor price

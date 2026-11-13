@@ -176,7 +176,43 @@ const tbs = ms => { const d = new Date(ms + 4 * 3600e3).toISOString(); return d.
   timeManagement.orders = { from: '2026-09-01', asOf: tbs(nowMs), cols, rows: orders };
 }
 
-const payload = { pending, delivery, byCity, byGoods, openCases, statusByDay, timeManagement, cutover: CUTOVER, generatedAt: new Date().toISOString().slice(0, 16).replace('T', ' ') + ' UTC' };
+// Logistics Monthly (user, 2026-11-13): sales amount and number of orders per month, the CRM's shipments definition —
+// order lines whose logistics started in the month (crm_line_fulfillment.created_at, UTC like the CRM's own export) and
+// reached ready-to-ship / delivered / returned (50/80/90), at order_items.base_price x qty (the export's sale price,
+// reproduced to the tetri for Sept 2026). Orders = distinct orders with such a line in the month; the Total counts each
+// order once. Through yesterday. Kept identical to NewDbReport::logisticsMonthly() (PHP twin).
+// Whole 2026 (user, 2026-11-13: "მთელ 2026 წლის თვეების მიხედვით"): the module only exists from September, so Jan-Aug are
+// SOLD orders by sale month instead (basis 'sales') — exactly Sales Monthly's Jan-Aug: the frozen old-DB
+// old_sales_cases.tsv up to the cutover (orders = distinct cases, keyed by their new-DB order id) plus the new DB's sold
+// orders of the cutover day (logi_monthly_pre.tsv); September on is basis 'logistics'. Both at the sale price (no
+// installment markup: 0% before September, and base_price in the module).
+const LOGI_MONTHLY_FROM = '2026-01', LOGI_MODULE_MONTH = '2026-09';
+const monthly = (() => {
+  if (!fs.existsSync(path.join(__dirname, 'logi_monthly.tsv'))) return null;
+  const meta = fs.existsSync(path.join(__dirname, 'logi_monthly_meta.tsv')) ? parseTsv('logi_monthly_meta.tsv') : [];
+  const src = [];
+  if (fs.existsSync(path.join(__dirname, 'old_sales_cases.tsv')))
+    for (const r of parseTsv('old_sales_cases.tsv')) src.push({ m: r.period, id: (+r.new_case_id ? String(+r.new_case_id) : 'old' + r.case_id), tetri: Math.round(+r.sales * 100) });
+  if (fs.existsSync(path.join(__dirname, 'logi_monthly_pre.tsv')))
+    { // 11 orders of 2026-08-30/31 are in BOTH the old extract and the new DB's cutover day (same order, same amount — Sales
+      // Monthly counts them twice in August): the old row wins, so each order is counted once
+      const oldIds = new Set(src.map(r => r.id));
+      for (const r of parseTsv('logi_monthly_pre.tsv')) if (!oldIds.has(String(+r.order_id))) src.push({ m: r.m, id: String(+r.order_id), tetri: +r.tetri });
+    }
+  const pre = src.filter(r => r.m >= LOGI_MONTHLY_FROM && r.m < LOGI_MODULE_MONTH);
+  const post = parseTsv('logi_monthly.tsv').filter(r => r.m >= LOGI_MODULE_MONTH).map(r => ({ m: r.m, id: String(+r.order_id), tetri: +r.tetri }));
+  const by = new Map(), all = new Set();
+  let totalTetri = 0;
+  for (const r of [...pre, ...post]) {
+    const a = by.get(r.m) || { m: r.m, orders: new Set(), tetri: 0 };
+    a.orders.add(r.id); a.tetri += r.tetri; by.set(r.m, a);
+    all.add(r.id); totalTetri += r.tetri;
+  }
+  const months = [...by.values()].sort((a, b) => (a.m < b.m ? -1 : 1))
+    .map(a => ({ m: a.m, orders: a.orders.size, sales: a.tetri / 100, basis: a.m < LOGI_MODULE_MONTH ? 'sales' : 'logistics' }));
+  return { through: (meta[0] && meta[0].through) || null, moduleMonth: LOGI_MODULE_MONTH, months, total: { orders: all.size, sales: totalTetri / 100 } };
+})();
+const payload = { pending, delivery, byCity, byGoods, openCases, statusByDay, timeManagement, monthly, cutover: CUTOVER, generatedAt: new Date().toISOString().slice(0, 16).replace('T', ' ') + ' UTC' };
 fs.writeFileSync(path.join(__dirname, 'logistics_data.json'), JSON.stringify(payload));
 console.log('pending days:', pending.dates.length, '| delivery days:', delivery.dates.length, '| last pending:', pending.upTo1.at(-1), pending.oneTo5.at(-1), pending.over5.at(-1), '| city ND/all today:', byCity.daily[0].total.at(-1), byCity.daily[1].total.at(-1), '| goods rows:', byGoods.daily[0].rows.length, '| open cases:', openCases.length, '| status days:', statusDates.length, 'orders/lines/collections rows:', statusByDay.orders.rows.length, statusByDay.lines.rows.length, statusByDay.collections.rows.length);
 
@@ -274,6 +310,9 @@ if (!html.includes('data-page="logisticstime"')) {
   html = html.replace(navAnchor2, '        <button data-page="logistics">Logistics Daily</button>\n        <button data-page="logisticstime">Logistics Time Management</button>\n      </div>');
 }
 
+if (!html.includes('data-page="logisticsmonthly"') && html.includes('        <button data-page="logisticstime">Logistics Time Management</button>\n')) {
+  html = html.replace('        <button data-page="logisticstime">Logistics Time Management</button>\n', '        <button data-page="logisticstime">Logistics Time Management</button>\n        <button data-page="logisticsmonthly">Logistics Monthly</button>\n');
+}
 // idempotent: a previously injected page block / JS block is removed first, so re-running the build refreshes the
 // markup and render code too (not only the LOGI_JSON data line)
 const JS_MARK = '/* ---------- Logistics Daily (ported from Volta_Analytics) ---------- */';
@@ -287,6 +326,9 @@ const JS_MARK_END = '/* ---------- /Logistics Daily (ported from Volta_Analytics
 // Logistics Time Management sub-tab — same idempotent removal, own marker pair
 const JS_MARK2 = '/* ---------- Logistics Time Management ---------- */';
 const JS_MARK2_END = '/* ---------- /Logistics Time Management ---------- */';
+// Logistics Monthly sub-tab (2026-11-13) — same idempotent removal, own marker pair
+const JS_MARK3 = '/* ---------- Logistics Monthly ---------- */';
+const JS_MARK3_END = '/* ---------- /Logistics Monthly ---------- */';
 {
   const NL = String.fromCharCode(10);
   const PAGE_START = NL + '<div class="page" data-page="logistics" id="page-logistics">', PAGE_END = NL + '</div>' + NL + '</div>' + NL;
@@ -302,6 +344,13 @@ const JS_MARK2_END = '/* ---------- /Logistics Time Management ---------- */';
   const JS_END2 = NL + JS_MARK2_END + NL;
   const js20 = html.indexOf(NL + JS_MARK2);
   if (js20 >= 0) { const je2 = html.indexOf(JS_END2, js20); if (je2 < 0) throw new Error('logistics time JS end not found'); html = html.slice(0, js20) + html.slice(je2 + JS_END2.length); }
+
+  const PAGE_START3 = NL + '<div class="page" data-page="logisticsmonthly" id="page-logisticsmonthly">';
+  const ps3 = html.indexOf(PAGE_START3);
+  if (ps3 >= 0) { const pe3 = html.indexOf(PAGE_END, ps3); if (pe3 < 0) throw new Error('page-logisticsmonthly end not found'); html = html.slice(0, ps3) + html.slice(pe3 + PAGE_END.length); }
+  const JS_END3 = NL + JS_MARK3_END + NL;
+  const js30 = html.indexOf(NL + JS_MARK3);
+  if (js30 >= 0) { const je3 = html.indexOf(JS_END3, js30); if (je3 < 0) throw new Error('logistics monthly JS end not found'); html = html.slice(0, js30) + html.slice(je3 + JS_END3.length); }
 }
 if (!html.includes('id="page-logistics"')) {
   const page = `
@@ -430,9 +479,23 @@ if (!html.includes('id="page-logistics"')) {
 </div>
 </div>
 `;
+  const page3 = `
+<div class="page" data-page="logisticsmonthly" id="page-logisticsmonthly">
+<div class="wrap">
+  <p class="section-title">Logistics Monthly &mdash; Sales Amount and Orders by Month</p>
+  <div class="banner" id="logiMonthlyBanner"></div>
+  <div class="report-card">
+    <div class="report-scroll">
+      <table class="logi-table" id="logiMonthlyTable"><tbody></tbody></table>
+    </div>
+  </div>
+  <p class="note"><b>From September 2026</b> (the CRM logistics module went live on September 2): the CRM&rsquo;s own shipments definition &mdash; order lines whose logistics started in the month (<code>crm_line_fulfillment.created_at</code>) and that reached <b>ready to ship / delivered / returned</b> (line status 50 / 80 / 90), whatever the order&rsquo;s status is now; <b>sales amount</b> = the line&rsquo;s sale price (<code>order_items.base_price</code> &times; quantity); <b>orders</b> = orders with at least one such line in the month. <b>January &ndash; August 2026</b> there is no logistics data, so these months show the <b>orders sold</b> in the month (by sale date, installment and single payment) and their sale amount &mdash; the same source as Sales Analyze &gt; Sales Monthly (old database until August 30, VoltaStoreDB from August 31; 11 August orders that are in both databases are counted once here). Both at the sale price, without the installment markup. An order counted in two months (e.g. sold in August, shipped in September) is in both, the Total counts it once. Through yesterday.</p>
+</div>
+</div>
+`;
   const page1EndAnchor = page.slice(page.lastIndexOf('<p class="note">City ='));
   must(page1EndAnchor, 'logistics daily page end (for logisticstime insertion)');
-  html = html.replace(page1EndAnchor, page1EndAnchor + page2);
+  html = html.replace(page1EndAnchor, page1EndAnchor + page2 + page3);
 }
 
 const dataLine = 'const LOGI_JSON = ' + JSON.stringify(payload) + ';';
@@ -670,6 +733,33 @@ window.__registerPage(['logisticstime'], function () {
   applyFilters();
 });
 ${JS_MARK2_END}
+
+${JS_MARK3}
+window.__registerPage(['logisticsmonthly'], function () {
+  const M = LOGI_JSON.monthly;
+  const table = document.getElementById('logiMonthlyTable');
+  if (!table) return;
+  const MN = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const longDate = d => { const p = d.split('-').map(Number); return p[2] + ' ' + MN[p[1] - 1] + ' ' + p[0]; };
+  const money = v => v.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  if (!M || !M.months.length) { table.querySelector('tbody').innerHTML = '<tr><td>No data yet.</td></tr>'; return; }
+  const cur = M.through ? M.through.slice(0, 7) : null;
+  const mLabel = m => { const p = m.split('-').map(Number); return MN[p[1] - 1] + ' ' + p[0] + (m === cur ? ' (MTD)' : ''); };
+  let h = '<tr class="logi-title"><td colspan="3">Sales Amount and Orders by Month, 2026</td></tr>';
+  h += '<tr class="logi-head"><td>Month</td><td>Orders</td><td>Sales amount (&#8382;)</td></tr>';
+  // a sub-heading row wherever the basis changes: sold orders by sale month before the module, logistics start after
+  const BASIS = { sales: 'January &ndash; August: orders sold in the month (no logistics data yet; as Sales Monthly)', logistics: 'From September: orders that entered logistics in the month (CRM logistics module)' };
+  let prevBasis = null, k = 0;
+  M.months.forEach(r => {
+    const b = r.basis || 'logistics';
+    if (b !== prevBasis) { h += '<tr class="logi-sub"><td colspan="3">' + BASIS[b] + '</td></tr>'; prevBasis = b; k = 0; }
+    h += '<tr class="' + (k++ % 2 ? 'logi-light' : 'logi-white') + '"><td>' + mLabel(r.m) + '</td><td>' + fmt(r.orders) + '</td><td>' + money(r.sales) + '</td></tr>';
+  });
+  h += '<tr class="logi-total"><td>Total</td><td>' + fmt(M.total.orders) + '</td><td>' + money(M.total.sales) + '</td></tr>';
+  table.querySelector('tbody').innerHTML = h;
+  document.getElementById('logiMonthlyBanner').innerHTML = '<b>Period:</b> ' + mLabel(M.months[0].m).replace(' (MTD)', '') + ' &ndash; ' + (M.through ? longDate(M.through) : mLabel(M.months[M.months.length - 1].m)) + ' &middot; source: Jan &ndash; Aug sales (as Sales Monthly), from September the CRM logistics module (<code>crm_line_fulfillment</code>)';
+});
+${JS_MARK3_END}
 `;
   must('// ---- top-level page nav (grows as more reports get added) ----', 'nav handler');
   html = html.replace('// ---- top-level page nav (grows as more reports get added) ----', js + '// ---- top-level page nav (grows as more reports get added) ----');
