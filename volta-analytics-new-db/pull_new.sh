@@ -574,10 +574,12 @@ Q "SELECT DATE(c.created_at) d, CONCAT('call_', c.outcome) metric, COUNT(*) n, 0
 
 # ---- Collections Monthly sub-tab: per-loan schedules, payments and loan facts for the payment-vs-schedule waterfall
 # (overdue stage at each payment, month-start portfolio) that build_logistics.js collMonthly() runs; PHP twin NewDbColl::monthly()
-Q "SELECT installment_id, schedule_date, schedule_amount FROM crm_installment_schedules ORDER BY installment_id, schedule_date, month;" > "$S/collm_sched.tsv"
+# month = the instalment number (0 = the down-payment row) — used by Customers' "payments before the first delinquency" (2026-11-16)
+Q "SELECT installment_id, schedule_date, schedule_amount, month FROM crm_installment_schedules ORDER BY installment_id, schedule_date, month;" > "$S/collm_sched.tsv"
 Q "SELECT p.installment_id, p.payment_date, p.amount, COALESCE(p.principal_part,0) pr, COALESCE(p.penalty_part,0) pen, COALESCE(p.advance,0) adv, COALESCE(p.payment_source,'') src
    FROM crm_payments p WHERE $COLL_PAYOK AND p.payment_date <= '$TODAY' ORDER BY p.installment_id, p.payment_date, p.id;" > "$S/collm_pays.tsv"
-Q "SELECT id, COALESCE(customer_id,0) cid, crm_order_status st, crm_active act, DATE(crm_close_date) cd, base_grand_total price, DATE(COALESCE(crm_creator_date, created_at)) issued FROM orders ORDER BY id;" > "$S/collm_orders.tsv"
+# ct = crm_close_type (1 paid in full, 2 written off, 4 cancelled) — Customers' "months until closing" (2026-11-16)
+Q "SELECT id, COALESCE(customer_id,0) cid, crm_order_status st, crm_active act, DATE(crm_close_date) cd, base_grand_total price, DATE(COALESCE(crm_creator_date, created_at)) issued, crm_close_type ct FROM orders ORDER BY id;" > "$S/collm_orders.tsv"
 
 # ---- Restructured Loans sub-tab (2026-11-16, user: "რესტრუქტურიზებული სესხების დაიდენტიფიცირება ... ახალი გრაფიკი").
 # From 2026-09-01 every restructuring is a CRM request (crm_restructure_requests, approved), with the schedule it replaced

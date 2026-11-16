@@ -1625,6 +1625,34 @@ ${dimBlocks}
     </div>
     <p class="note" id="custPayNote"></p>
   </div>
+  <div class="logi-group">
+    <div class="logi-group-title">Payments before the first delinquency &mdash; by the month it happened (2026)</div>
+    <div class="page-nav" id="custLifeDefMode" style="margin:4px 0 8px"><button type="button" data-v="cnt" class="active">Count</button><button type="button" data-v="amt">Amount (GEL)</button></div>
+    <div class="report-card">
+      <div class="report-scroll-top" id="custLifeDefTop"><div></div></div>
+      <div class="report-scroll" id="custLifeDefBody"><table class="logi-table" id="custLifeDefTable"><tbody></tbody></table></div>
+    </div>
+    <p class="note" id="custLifeDefNote"></p>
+  </div>
+  <div class="logi-group">
+    <div class="logi-group-title">Months until the installment closed &mdash; by the month it closed (2026) and closing reason</div>
+    <div class="page-nav" id="custLifeCloseMode" style="margin:4px 0 6px"><button type="button" data-v="cnt" class="active">Count</button><button type="button" data-v="amt">Amount (GEL)</button></div>
+    <div class="page-nav" id="custLifeCloseReason" style="margin:0 0 8px"><button type="button" data-v="all" class="active">All reasons</button><button type="button" data-v="0">Paid in full</button><button type="button" data-v="1">Paid in full after a restructuring</button><button type="button" data-v="2">Written off</button><button type="button" data-v="3">Cancelled</button></div>
+    <div class="report-card">
+      <div class="report-scroll-top" id="custLifeCloseTop"><div></div></div>
+      <div class="report-scroll" id="custLifeCloseBody"><table class="logi-table" id="custLifeCloseTable"><tbody></tbody></table></div>
+    </div>
+    <p class="note" id="custLifeCloseNote"></p>
+  </div>
+  <div class="logi-group">
+    <div class="logi-group-title">Installments behind the numbers &mdash; click any number in the two tables above</div>
+    <div class="lt-filters"><label>Case #<input type="search" id="custLifeSearch" placeholder="e.g. 45922"></label><span id="custLifeDrill"></span><span class="lt-filter-count" id="custLifeCount"></span></div>
+    <div class="report-card">
+      <div class="report-scroll-top" id="custLifeListTop"><div></div></div>
+      <div class="report-scroll" id="custLifeListBody"><table class="logi-table" id="custLifeListTable"><tbody></tbody></table></div>
+    </div>
+    <div id="custLifeMore" style="text-align:center;margin:8px 0 16px"></div>
+  </div>
 </div>
 </div>
 ${PAGE_END}`;
@@ -1726,9 +1754,120 @@ window.__registerPage(['customers'], function () {
   renderPay('custPayOntime', PS.ontime, 'On-time payment rate (settled instalments)', 'On-time rate');
   document.getElementById('custPayNote').innerHTML = '<b>Coverage:</b> <code>crm_customer_payment_stats</code> is a per-customer cache the new CRM computes when it opens a customer (computed ' + PS.coverage.from + ' to ' + PS.coverage.to + '), so it holds ' + fmt(PS.coverage.rows) + ' customers &mdash; ' + fmt(PS.coverage.activeWithStats) + ' of the ' + fmt(PS.coverage.activeByAccount) + ' active-loan customers with an account (' + pct(PS.coverage.activeWithStats / PS.coverage.activeByAccount) + '), and it is not a random sample (customers staff looked at). Read it as a distribution of the computed part, not of the whole book. Worst bucket = the CRM\\'s <code>worst_bucket</code> code 1&ndash;6, decoded from the <code>max_days_late</code> ranges found in each bucket (assumption: the code names the band of the worst lateness). Days past due = <code>current_dpd</code> where <code>currently_overdue = 1</code>. On-time rate = <code>on_time_rate</code>, only meaningful where at least one instalment has been settled (<code>settled_count &gt; 0</code>).';
 
-  window.custScrollUpdaters = [setupTopScrollSync('custNrMonthTop', 'custNrMonthBody'), setupTopScrollSync('custNrDayTop', 'custNrDayBody')]
+  // ---- loan life (COLL_JSON.life, 2026-11-16): rows = the month of the EVENT in 2026 — the month an installment issued at any time fell
+  // 3+ days overdue for the first time (table 1) / closed (table 2); columns = instalments paid before it / months from issue to closing
+  const LF = (typeof COLL_JSON !== 'undefined' && COLL_JSON && COLL_JSON.life) || null;
+  if (LF && LF.loans.dm) {
+    const LL = LF.loans, MN = MONTH_NAMES, D2 = '&ndash;';
+    const mLab = m => MN[Number(m.slice(5, 7)) - 1] + ' ' + m.slice(0, 4) + (m === LF.today.slice(0, 7) ? ' (MTD)' : '');
+    const dLab = d => { const x = d.split('-'); return x[2] + '.' + x[1] + '.' + x[0]; };
+    const RS = ['Paid in full', 'Paid in full after a restructuring', 'Written off', 'Cancelled'];
+    const st = window.__custLifeState || (window.__custLifeState = { defMode: 'cnt', closeMode: 'cnt', reason: 'all', drill: null });
+    let maxNp = 0, maxCm = 0;
+    LL.id.forEach((_, j) => { if (LL.dm[j] !== null && LL.np[j] > maxNp) maxNp = LL.np[j]; if (LL.clm[j] !== null && LL.cm[j] !== null && LL.cm[j] > maxCm) maxCm = LL.cm[j]; });
+    const fmtV = (v, mode) => v ? (mode === 'amt' ? fmt(Math.round(v)) : fmt(v)) : D2;
+    const cellL = (v, t, m, c, mode) => v ? '<td class="custl-dc" data-t="' + t + '" data-m="' + m + '" data-c="' + c + '" title="Click to list these installments">' + fmtV(v, mode) + '</td>' : '<td>' + D2 + '</td>';
+    const rowOf = (j, t) => t === 'def' ? LL.dm[j] : LL.clm[j];
+    // which installments a cell holds: t = def | close; m = event-month index (-1 = all months); c = column (instalments paid / months)
+    const inCell = (j, t, m, c, reason) => {
+      const r = rowOf(j, t);
+      if (r === null || (m >= 0 && r !== m)) return false;
+      if (t === 'def') return LL.np[j] === +c;
+      return LL.cm[j] === +c && (reason === 'all' || LL.cr[j] === +reason);
+    };
+    const renderLifeTable = (t) => {
+      const isDef = t === 'def', mode = isDef ? st.defMode : st.closeMode, reason = isDef ? 'all' : st.reason;
+      const cols = Array.from({ length: (isDef ? maxNp : maxCm) + 1 }, (_, i) => String(i));
+      const acc = {};
+      LL.id.forEach((_, j) => {
+        const r = rowOf(j, t); if (r === null) return;
+        const c = String(isDef ? LL.np[j] : LL.cm[j]);
+        if (!isDef && (LL.cm[j] === null || (reason !== 'all' && LL.cr[j] !== +reason))) return;
+        for (const m of [r, -1]) { const k = m + '|' + c; const a = acc[k] || (acc[k] = [0, 0]); a[0]++; a[1] += LL.amt[j]; }
+      });
+      const g = (m, c) => { const a = acc[m + '|' + c]; return a ? (mode === 'amt' ? a[1] : a[0]) : 0; };
+      let h = '<tr class="logi-title"><td colspan="' + (cols.length + 1) + '">' + (isDef ? 'Installments that fell 3+ days overdue for the first time in the month, by how many instalments they had paid' : 'Installments that closed in the month, by how many months after the issue' + (reason === 'all' ? '' : ' &mdash; ' + RS[+reason])) + ' (' + (mode === 'amt' ? 'loan amount, GEL' : 'count') + ')</td></tr>';
+      h += '<tr class="logi-sub"><td></td><td colspan="' + cols.length + '">' + (isDef ? 'Instalments paid before the first delinquency' : 'Months from the issue to the closing') + '</td></tr>';
+      h += '<tr class="logi-head"><td>' + (isDef ? 'Fell overdue in' : 'Closed in') + '</td>' + cols.map(c => '<td>' + c + '</td>').join('') + '</tr>';
+      LF.months.forEach((m, i) => { h += '<tr class="' + (i % 2 ? 'logi-light' : 'logi-white') + '"><td>' + mLab(m) + '</td>' + cols.map(c => cellL(g(i, c), t, i, c, mode)).join('') + '</tr>'; });
+      h += '<tr class="logi-total"><td>Total</td>' + cols.map(c => cellL(g(-1, c), t, -1, c, mode)).join('') + '</tr>';
+      document.getElementById(isDef ? 'custLifeDefTable' : 'custLifeCloseTable').querySelector('tbody').innerHTML = h;
+    };
+    document.getElementById('custLifeDefNote').innerHTML = '<b>How it is counted.</b> Each row is a month of 2026 and holds every installment &mdash; <b>whenever it was issued</b> &mdash; that fell <b>3+ days overdue for the first time</b> in that month. Payments cover the <b>regular instalments</b> in date order (the same waterfall as Collections Monthly: the principal part of each payment, reversed payments excluded). <b>The down payment is not counted</b> &mdash; neither its schedule row (month 0, or the first row when it equals the advance) nor the advance payment itself. 1&ndash;2 days late is a buffer (payments posted late), as in the overdue-bucket entries. The column is how many instalments it had paid before that: <b>0</b> = it missed its first regular instalment. Amount = the loan amount. Click any number for the installments behind it.';
+    document.getElementById('custLifeCloseNote').innerHTML = '<b>How it is counted.</b> Each row is a month of 2026 and holds every installment &mdash; <b>whenever it was issued</b> &mdash; that closed in that month (paid off, written off or cancelled); the column is the whole calendar months from its issue day to the closing day (<b>0</b> = closed within its first month). Closing day = the CRM&rsquo;s close date, or the last payment day where the migration left the date empty. <b>Reasons:</b> paid in full; <b>paid in full after a restructuring</b> (restructured before it was paid off &mdash; a restructuring itself never closes an installment, it keeps the same case with a new schedule); written off (closed with debt left); cancelled after signing. Amount = the loan amount. Click any number for the installments behind it.';
+    renderLifeTable('def'); renderLifeTable('close');
+
+    // ---- the list behind any number: oldest event first
+    let rows = [], shown = 300;
+    const paintL = () => {
+      let t = '<tr class="logi-title"><td colspan="11">Installments behind the selected number &mdash; oldest first</td></tr><tr class="logi-head"><td>Case #</td><td>Issued</td><td>Loan amount &#8382;</td><td>Term (instalments)</td><td>Paid before 1st delinquency</td><td>First delinquency (3rd day)</td><td>Overdue then &#8382;</td><td>Closed on</td><td>Months to close</td><td>Closing reason</td><td>Status</td></tr>';
+      rows.slice(0, shown).forEach((j, k) => {
+        const np = LL.np[j], cr = LL.cr[j];
+        t += '<tr class="' + (k % 2 ? 'logi-light' : 'logi-white') + '"><td>' + LL.id[j] + '</td><td>' + dLab(LL.is[j]) + '</td><td>' + (LL.amt[j] ? fmt(LL.amt[j]) : D2) + '</td><td>' + (LL.term[j] || D2) + '</td>'
+          + '<td>' + (np === null ? D2 : np === -1 ? 'not delinquent' : fmt(np)) + '</td><td>' + (LL.dd[j] ? dLab(LL.dd[j]) : D2) + '</td><td>' + (LL.dod[j] ? fmt(LL.dod[j]) : D2) + '</td>'
+          + '<td>' + (LL.cd[j] ? dLab(LL.cd[j]) : D2) + '</td><td>' + (LL.cm[j] === null ? D2 : fmt(LL.cm[j])) + '</td><td>' + (cr >= 0 ? RS[cr] : D2) + '</td><td>' + (cr >= 0 ? 'Closed' : 'Open') + '</td></tr>';
+      });
+      document.getElementById('custLifeListTable').querySelector('tbody').innerHTML = t;
+      const left = rows.length - shown;
+      document.getElementById('custLifeMore').innerHTML = left > 0 ? '<button type="button" style="padding:6px 14px;border:1px solid var(--border);border-radius:8px;background:var(--page);color:var(--text-primary);cursor:pointer">Show ' + fmt(Math.min(left, 900)) + ' more (' + fmt(left) + ' not shown)</button>' : '';
+      document.getElementById('custLifeCount').textContent = st.drill ? fmt(rows.length) + ' installments' : 'click a number above';
+    };
+    const applyL = () => {
+      const D = st.drill, q = document.getElementById('custLifeSearch').value.trim();
+      if (D) {
+        const key = D.t === 'def' ? LL.dd : LL.cd;
+        rows = LL.id.map((_, j) => j).filter(j => inCell(j, D.t, D.m, D.c, D.r) && (!q || String(LL.id[j]).indexOf(q) >= 0))
+          // oldest first (user, 2026-11-16: 'თარიღის ზრდის მიხედვით, ჯერ ძველები შემდეგ ახლები'): event date, then issue date, then case number
+          .sort((a, b) => (key[a] < key[b] ? -1 : key[a] > key[b] ? 1 : LL.is[a] < LL.is[b] ? -1 : LL.is[a] > LL.is[b] ? 1 : LL.id[a] - LL.id[b]));
+      } else rows = q ? LL.id.map((_, j) => j).filter(j => String(LL.id[j]).indexOf(q) >= 0) : [];
+      const colName = D ? (D.t === 'def' ? 'fell overdue after ' + D.c + ' paid instalments' : 'closed after ' + D.c + ' months' + (D.r === 'all' ? '' : ' &middot; ' + RS[+D.r])) : '';
+      document.getElementById('custLifeDrill').innerHTML = D ? '<span class="collr-drill">' + (D.m >= 0 ? mLab(LF.months[D.m]) : 'All months of 2026') + ' &middot; ' + colName + ' <button type="button" title="Clear">&times;</button></span>' : '';
+      shown = 300; paintL();
+    };
+    window.__custLifeApply = applyL;
+    window.__custLifeRender = renderLifeTable;
+    window.__custLifeMore = () => { shown += 900; paintL(); };
+    const grp = document.getElementById('custLifeDefTable').closest('.page');
+    if (!grp.__lifeWired) {
+      grp.__lifeWired = true;
+      grp.addEventListener('click', e => {
+        const td = e.target.closest('td.custl-dc');
+        if (td) {
+          const S = window.__custLifeState;
+          S.drill = { t: td.getAttribute('data-t'), m: +td.getAttribute('data-m'), c: td.getAttribute('data-c'), r: td.getAttribute('data-t') === 'close' ? S.reason : 'all' };
+          window.__custLifeApply();
+          const f = document.getElementById('custLifeSearch').closest('.lt-filters'); if (f) f.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          return;
+        }
+        const b = e.target.closest('#custLifeDefMode button, #custLifeCloseMode button, #custLifeCloseReason button');
+        if (b) {
+          const S = window.__custLifeState, nav = b.parentElement, v = b.getAttribute('data-v');
+          nav.querySelectorAll('button').forEach(x => x.classList.toggle('active', x === b));
+          if (nav.id === 'custLifeDefMode') { S.defMode = v; window.__custLifeRender('def'); }
+          else if (nav.id === 'custLifeCloseMode') { S.closeMode = v; window.__custLifeRender('close'); }
+          else { S.reason = v; window.__custLifeRender('close'); }
+          return;
+        }
+        if (e.target.closest('#custLifeDrill button')) { window.__custLifeState.drill = null; window.__custLifeApply(); return; }
+        if (e.target.closest('#custLifeMore button') && window.__custLifeMore) window.__custLifeMore();
+      });
+      document.getElementById('custLifeSearch').addEventListener('input', () => window.__custLifeApply && window.__custLifeApply());
+    }
+    applyL();
+  }
+
+  window.custScrollUpdaters = [setupTopScrollSync('custNrMonthTop', 'custNrMonthBody'), setupTopScrollSync('custNrDayTop', 'custNrDayBody'),
+    setupTopScrollSync('custLifeDefTop', 'custLifeDefBody'), setupTopScrollSync('custLifeCloseTop', 'custLifeCloseBody'), setupTopScrollSync('custLifeListTop', 'custLifeListBody')]
     .concat(C.dims.filter(d => d.monthly).map(d => setupTopScrollSync('custMonth_' + d.key + '_Top', 'custMonth_' + d.key + '_Body')));
 });
+// the loan-life tables read COLL_JSON: on the live page re-render Customers once the Collections data has streamed in
+(function () {
+  const prev = window.__onLiveSection;
+  if (typeof prev !== 'function' || prev.__custLife) return;
+  const f = function (key) { prev(key); if (key === 'coll' && window.__forceRenderPage) window.__forceRenderPage('customers'); };
+  f.__custLife = true;
+  window.__onLiveSection = f;
+})();
 ${JS_END}`;
 must('// ---- top-level page nav (grows as more reports get added) ----', 'nav handler');
 html = html.replace('// ---- top-level page nav (grows as more reports get added) ----', js.replace(/^\n/, '') + NL + '// ---- top-level page nav (grows as more reports get added) ----');
@@ -2062,8 +2201,97 @@ const restr = fs.existsSync(path.join(__dirname, 'coll_restr_new.tsv'))
   ? collRestructured(parseTsv('coll_restr_legacy.tsv'), parseTsv('coll_restr_new.tsv'), parseTsv('coll_restr_state.tsv'), process.env.COLLM_TODAY || today) : null;
 if (restr) console.log('restructured:', restr.total.events, 'restructurings of', restr.total.loans, 'loans | today: active', restr.snap.by.slice(1, 5).reduce((a, b) => a + b, 0), '30+ late', restr.snap.by[3] + restr.snap.by[4]);
 
+// ---- Loan life (2026-11-16, user, Customers Analyze > 6. Risk and payment behaviour): "რამდენი გადახდის შემდეგ ჯდება ვადაგადაცილებაში
+// განვადება ... რამდენი თვის შემდეგ იხურება განვადება ... ჩაშლილი ... რაოდენობრივად და თანხობრივად". Per installment issued at any time:
+//  * first delinquency — the Collections Monthly waterfall over the REGULAR instalments (month > 0, no down-payment row; advance payments
+//    excluded — 2026-11-16 fix) in date order, coverage = principal part,
+//    or the amount when the payment carries neither principal nor penalty; reversed payments excluded): the first instalment still not
+//    covered 3 days after its due date (1-2 days late = buffer, as in the overdue-bucket entries). np = how many instalments (month > 0)
+//    came before it, i.e. were paid; -1 = not delinquent so far; null = cancelled (18) or no schedule. Only instalments whose 3rd day
+//    has passed are judged.
+//  * closing — closed = cancelled (18) or no longer active; date = crm_close_date, or, where the migration left it empty / impossible
+//    (none, 1970, before the issue day), the last payment day; reason 0 paid in full (close type 1 or none), 1 paid in full after a
+//    restructuring (one before the close day, old-system comment or CRM request — see Restructured Installments), 2 written off (type
+//    2), 3 cancelled (18); -1 still open. cm = whole calendar months from the issue day to the close day.
+// Amount = the loan amount (base_grand_total). PHP twin: NewDbColl::loanLife().
+function loanLife(schedRows, payRows, orderRows, restrRows, todayStr, firstMonth) {
+  const DAY = 864e5, dn = s => Math.round(Date.parse(s + 'T00:00:00Z') / DAY), ds = d => new Date(d * DAY).toISOString().slice(0, 10), today = dn(todayStr);
+  const r2 = v => Math.round(v * 100) / 100;
+  const months = [];
+  for (let m = firstMonth; m <= todayStr.slice(0, 7); ) { months.push(m); let [y, mo] = m.split('-').map(Number); mo++; if (mo > 12) { mo = 1; y++; } m = y + '-' + String(mo).padStart(2, '0'); }
+  const mI = Object.fromEntries(months.map((m, i) => [m, i]));
+  const sched = new Map();
+  // the down payment is NOT a payment here (user, 2026-11-16: 'ავანსი გადახდების რაოდენობად ხომ არ ჩათვალე'): the schedule is the regular
+  // instalments only and advance payments (same rule as collMonthly) do not cover them. The down-payment row is the month-0 row — or, on
+  // loans that have none (5.2K, mostly migrated), the FIRST row when its amount equals the loan's advance payment (2.75K: e.g. 20 GEL, then
+  // 45 a month). Otherwise an unpaid down-payment row read as a first-instalment default, and the advance paid instalment 1.
+  const isAdvPay = r => r.src === 'advance' || (+r.adv > 0 && Math.abs(+r.adv - +r.amount) < 0.01);
+  const advAmts = new Map();
+  for (const r of payRows) if (isAdvPay(r)) { const a = advAmts.get(r.installment_id) || []; a.push(+r.amount); advAmts.set(r.installment_id, a); }
+  const raw = new Map();
+  for (const r of schedRows) { let a = raw.get(r.installment_id); if (!a) raw.set(r.installment_id, a = []); a.push(r); }
+  for (const [id, rows] of raw) {
+    const hasM0 = rows.some(r => +r.month <= 0), adv = advAmts.get(id) || [];
+    rows.forEach((r, k) => {
+      if (+r.month <= 0) return;
+      if (!hasM0 && k === 0 && adv.some(a => Math.abs(a - +r.schedule_amount) < 0.01)) return;
+      let s = sched.get(id); if (!s) sched.set(id, s = { due: [], req: [], mon: [], run: 0 });
+      s.run += +r.schedule_amount; s.due.push(dn(r.schedule_date)); s.req.push(s.run); s.mon.push(+r.month);
+    });
+  }
+  const hist = new Map();
+  { let cur = null, h = null, paid = 0, lastDay = null;
+    for (const r of payRows) {
+      if (r.installment_id !== cur) { cur = r.installment_id; h = { d: [], c: [] }; hist.set(cur, h); paid = 0; lastDay = null; }
+      const amt = +r.amount, pr = +r.pr, pen = +r.pen;
+      if (!isAdvPay(r)) paid += pr > 0 ? pr : (pen > 0 ? 0 : amt);
+      const d = dn(r.payment_date);
+      if (d === lastDay) h.c[h.c.length - 1] = paid; else { h.d.push(d); h.c.push(paid); lastDay = d; }
+    } }
+  const paidBy = (h, x) => { if (!h) return 0; let lo = 0, hi = h.d.length; while (lo < hi) { const m = (lo + hi) >> 1; if (h.d[m] <= x) lo = m + 1; else hi = m; } return lo > 0 ? h.c[lo - 1] : 0; };
+  const restrFirst = new Map();
+  for (const r of restrRows) { const id = String(+r.id), d = dn(r.d); if (!restrFirst.has(id) || d < restrFirst.get(id)) restrFirst.set(id, d); }
+  const monthsBetween = (a, b) => { const [ya, ma, da] = a.split('-').map(Number), [yb, mb, db] = b.split('-').map(Number); return Math.max(0, (yb - ya) * 12 + (mb - ma) - (db < da ? 1 : 0)); };
+  // rows = the month of the EVENT (user, 2026-11-16: "ნებისმიერ პერიოდში გაცემული განვადება, რომელიც იმ კონკრეტულ თვეში დაიხურა ... იგივე
+  // პრინციპი მეორე დეშბორდზეც"): dm = the month an installment issued at ANY time first fell 3+ days overdue, clm = the month it closed;
+  // only installments with either event in the months shown are kept
+  const L = { id: [], is: [], dm: [], clm: [], amt: [], term: [], np: [], dd: [], dod: [], cr: [], cm: [], cd: [] };
+  for (const o of orderRows) {
+    if (!['1', '5', '11', '18'].includes(o.st) || !o.issued || o.issued === 'NULL') continue;
+    const s = sched.get(o.id), h = hist.get(o.id);
+    let np = null, dd = null, dod = null;
+    if (o.st !== '18' && s) {
+      np = -1;
+      let paidRows = 0;
+      for (let k = 0; k < s.due.length; k++) {
+        if (s.due[k] + 3 >= today) break;
+        const cov = paidBy(h, s.due[k] + 3);
+        if (cov < s.req[k] - 0.01) { np = paidRows; dd = ds(s.due[k] + 3); dod = r2(s.req[k] - cov); break; }
+        paidRows++;
+      }
+    }
+    let cr = -1, cm = null, cd = null;
+    if (o.st === '18' || o.act === '0') {
+      const okCd = o.cd && o.cd !== 'NULL' && o.cd >= o.issued && o.cd >= '2019-01-01' ? o.cd : null;
+      cd = o.st === '18' ? (o.cd && o.cd !== 'NULL' ? o.cd : null) : (okCd || (h && h.d.length ? ds(h.d[h.d.length - 1]) : null));
+      if (o.st === '18') cr = 3; else if (o.ct === '2') cr = 2; else { const rf = restrFirst.get(o.id); cr = (rf !== undefined && cd && rf <= dn(cd)) ? 1 : 0; }
+      cm = cd ? monthsBetween(o.issued, cd) : null;
+    }
+    const dm = dd ? mI[dd.slice(0, 7)] : undefined, clm = cd ? mI[cd.slice(0, 7)] : undefined;
+    if (dm === undefined && clm === undefined) continue;
+    L.id.push(+o.id); L.is.push(o.issued); L.dm.push(dm === undefined ? null : dm); L.clm.push(clm === undefined ? null : clm); L.amt.push(r2(+o.price || 0)); L.term.push(s ? s.mon.length : null);
+    L.np.push(np); L.dd.push(dd); L.dod.push(dod); L.cr.push(cr); L.cm.push(cm); L.cd.push(cd);
+  }
+  return { from: firstMonth, today: todayStr, months, loans: L };
+}
+const life = loanLife(parseTsv('collm_sched.tsv'), parseTsv('collm_pays.tsv'), parseTsv('collm_orders.tsv'),
+  [...(fs.existsSync(path.join(__dirname, 'coll_restr_legacy.tsv')) ? parseTsv('coll_restr_legacy.tsv').map(r => ({ id: r.case_id, d: r.d })) : []),
+   ...(fs.existsSync(path.join(__dirname, 'coll_restr_new.tsv')) ? parseTsv('coll_restr_new.tsv').map(r => ({ id: r.installment_id, d: r.d })) : [])],
+  process.env.COLLM_TODAY || today, '2026-01');   // 2026 only (user, 2026-11-16: 'მხოლოდ 2026 წელი დატოვე თვეებად')
+console.log('loan life:', life.loans.id.length, 'installments with an event from', life.from, '| ever delinquent:', life.loans.np.filter(v => v !== null && v >= 0).length, '| closed:', life.loans.cr.filter(v => v >= 0).length);
+
 const payload = { cutover: CUTOVER, mstart: MSTART, today, days, months, od, odNew, payDay, payMonth, dueDay, dueMonth, perfMonths, perfMonth, reversed, activity, pm, status, cps, meta,
-  monthly: collm, restr, generatedAt: new Date().toISOString().slice(0, 16).replace('T', ' ') + ' UTC' };
+  monthly: collm, restr, life, generatedAt: new Date().toISOString().slice(0, 16).replace('T', ' ') + ' UTC' };
 fs.writeFileSync(path.join(__dirname, 'coll_data.json'), JSON.stringify(payload));
 console.log('days:', days.length, days[0], '->', today, '| months:', months.length, '| overdue today: rows', od.rows.at(-1), 'amt', od.amt.at(-1), 'loans', od.loans.at(-1),
   '| collected today', payDay.amt.at(-1), '| month cols', months.at(-1), payMonth.amt.at(-1), '| activity metrics', Object.keys(activity.metrics).length, '| pm', pm.length, 'status', status.length, 'cps', cps.length);
@@ -2106,6 +2334,8 @@ ${CSS_MARK}
 #page-collections .coll-top { float: right; color: var(--text-muted); background: transparent; font-size: 11px; font-weight: 600; text-decoration: none; cursor: pointer; }
 #page-collections .coll-sub-title[id^="collSec"] { scroll-margin-top: 12px; }
 #collrMainTable td.collr-dc, #collOdNewDayTable td.colln-dc, #collOdNewMonthTable td.colln-dc { cursor: pointer; }
+#custLifeDefTable td.custl-dc, #custLifeCloseTable td.custl-dc { cursor: pointer; }
+#custLifeDefTable td.custl-dc:hover, #custLifeCloseTable td.custl-dc:hover { text-decoration: underline dotted; text-underline-offset: 3px; box-shadow: inset 0 0 0 2px var(--series-a-soft); }
 #collOdNewMonthTable .colln-pct { color: var(--rpt-muted); font-style: italic; font-weight: 400; font-size: 11px; }
 #collOdNewDayTable td.colln-dc:hover, #collOdNewMonthTable td.colln-dc:hover { text-decoration: underline dotted; text-underline-offset: 3px; box-shadow: inset 0 0 0 2px var(--series-a-soft); }
 #collrMainTable td.collr-dc:hover { text-decoration: underline dotted; text-underline-offset: 3px; box-shadow: inset 0 0 0 2px var(--series-a-soft); }
@@ -3353,7 +3583,7 @@ ${JS_MARK}
       ['Who they are', 'Gender, age and city of applicants and borrowers.', [['Gender', 'h:Gender'], ['Age', 'h:Age'], ['City', 'h:Geography']]],
       ['Work and income', 'Employment and social status, declared monthly income, job title.', [['Employment', 'h:Employment status'], ['Social status', 'h:Social status'], ['Income', 'h:Monthly income'], ['Job title', 'h:Job title']]],
       ['How they found Volta', 'The source the customer named on the application form.', [['Source', 'h:How the customer heard']]],
-      ['Risk and payment behaviour', 'The CRM&rsquo;s risk status and customer rating, and payment statistics.', [['Risk status', 'h:Risk status'], ['Rating', 'h:Customer rating'], ['Payment behaviour', 'h:Payment behaviour']]],
+      ['Risk and payment behaviour', 'The CRM&rsquo;s risk status and customer rating, payment statistics; after how many payments installments first fall overdue and how many months until they close &mdash; with the installments behind every number.', [['Risk status', 'h:Risk status'], ['Rating', 'h:Customer rating'], ['Payment behaviour', 'h:Payment behaviour'], ['Payments before 1st delinquency', 'h:Payments before the first delinquency'], ['Months until closed', 'h:Months until the installment closed']]],
     ],
     collmonthly: [
       ['Collections by month', 'Monthly collections by component (principal, penalty, advance&hellip;) and by how overdue the loan was when it paid.', [['Table', 'h:Collections by month']]],

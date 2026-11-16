@@ -2738,6 +2738,8 @@ SQL;
 
     /** @var array<string,float> seconds per query, in execution order (filled by build()) */
     private array $timings = [];
+    /** loanLife() result, filled by monthly() from its own streams (Customers > loan life tables, COLL_JSON.life) */
+    private ?array $life = null;
 
     public function __construct(private readonly PDO $pdo, private readonly string $dir, private readonly string $mappingPath)
     {
@@ -2946,6 +2948,7 @@ SQL;
             'reversed' => $reversed, 'activity' => $activity, 'pm' => $pm, 'status' => $status, 'cps' => $cps, 'meta' => $meta,
             'monthly' => $this->monthly($todayD, '2026-01'),
             'restr' => $this->restructured($loanState, $todayD, $tok),
+            'life' => $this->life,
             'generatedAt' => gmdate('Y-m-d H:i') . ' UTC'];
         $payload = self::normalize($payload);
         // keyed-by-id maps must encode as JSON objects even when their keys happen to be 0..n-1 (or empty)
@@ -2992,15 +2995,17 @@ SQL;
         $tokens = ['E' => $today];
 
         $orders = [];   // id => [cid, st, act, cd, price, issued]
-        $this->stream('collm_orders', 'SELECT id, COALESCE(customer_id,0), crm_order_status, crm_active, DATE(crm_close_date), base_grand_total, DATE(COALESCE(crm_creator_date, created_at)) FROM orders', [],
-            static function (array $r) use (&$orders): void { $orders[(int) $r[0]] = [(string) $r[1], (string) $r[2], (string) $r[3], $r[4], $r[5] === null ? 0.0 : (float) $r[5], $r[6]]; });
-        $due = $req = [];
-        $this->stream('collm_sched', 'SELECT installment_id, schedule_date, schedule_amount FROM crm_installment_schedules ORDER BY installment_id, schedule_date, month', [],
-            static function (array $r) use (&$due, &$req, $day): void {
+        $this->stream('collm_orders', 'SELECT id, COALESCE(customer_id,0), crm_order_status, crm_active, DATE(crm_close_date), base_grand_total, DATE(COALESCE(crm_creator_date, created_at)), crm_close_type FROM orders', [],
+            static function (array $r) use (&$orders): void { $orders[(int) $r[0]] = [(string) $r[1], (string) $r[2], (string) $r[3], $r[4], $r[5] === null ? 0.0 : (float) $r[5], $r[6], $r[7] === null ? '' : (string) $r[7]]; });
+        $due = $req = $mon = $amtS = [];
+        $this->stream('collm_sched', 'SELECT installment_id, schedule_date, schedule_amount, month FROM crm_installment_schedules ORDER BY installment_id, schedule_date, month', [],
+            static function (array $r) use (&$due, &$req, &$mon, &$amtS, $day): void {
                 $id = (int) $r[0];
                 $run = isset($req[$id]) ? end($req[$id]) : 0.0;
                 $due[$id][] = $day((string) $r[1]);
                 $req[$id][] = $run + (float) $r[2];
+                $mon[$id][] = (int) $r[3];
+                $amtS[$id][] = (float) $r[2];
             });
         $ratio = static function (int $id) use (&$req, &$orders): float {
             $tot = isset($req[$id]) ? end($req[$id]) : 0.0;
@@ -3014,10 +3019,10 @@ SQL;
         $M['cPri'] = $z;
         $payers = array_fill(0, $n, []);
         $payersOd = array_fill(0, $n, []);
-        $histD = $histC = [];   // loan => payment days / cumulative coverage after each day
+        $histD = $histC = $histN = $advA = [];   // loan => payment days / cumulative coverage after each day (histN: without the down payment, for loanLife)
         // per loan: running coverage and the payments of the day being read; a day is closed when the date or loan changes
-        $cur = ['id' => null, 'paid' => 0.0, 'day' => null, 'rows' => []];
-        $flushDay = function () use (&$cur, &$M, &$payers, &$payersOd, &$histD, &$histC, &$due, &$req, &$orders, $mI, $lowerBound, $bucket, $day, $ratio): void {
+        $cur = ['id' => null, 'paid' => 0.0, 'paidN' => 0.0, 'day' => null, 'rows' => []];
+        $flushDay = function () use (&$cur, &$M, &$payers, &$payersOd, &$histD, &$histC, &$histN, &$advA, &$due, &$req, &$orders, $mI, $lowerBound, $bucket, $day, $ratio): void {
             if ($cur['day'] === null) { return; }
             $id = $cur['id'];
             $d = $day($cur['day']);
@@ -3047,9 +3052,11 @@ SQL;
                     }
                 }
                 $cur['paid'] += $pr > 0 ? $pr : ($pen > 0 ? 0.0 : $amt);
+                if (!$isAdv) { $cur['paidN'] += $pr > 0 ? $pr : ($pen > 0 ? 0.0 : $amt); } else { $advA[$id][] = $amt; }
             }
             $histD[$id][] = $d;
             $histC[$id][] = $cur['paid'];
+            $histN[$id][] = $cur['paidN'];
             $cur['day'] = null;
             $cur['rows'] = [];
         };
@@ -3058,7 +3065,7 @@ SQL;
             static function (array $r) use (&$cur, $flushDay): void {
                 $id = (int) $r[0];
                 $d = (string) $r[1];
-                if ($id !== $cur['id']) { $flushDay(); $cur = ['id' => $id, 'paid' => 0.0, 'day' => null, 'rows' => []]; }
+                if ($id !== $cur['id']) { $flushDay(); $cur = ['id' => $id, 'paid' => 0.0, 'paidN' => 0.0, 'day' => null, 'rows' => []]; }
                 elseif ($d !== $cur['day']) { $flushDay(); }
                 $cur['day'] = $d;
                 $cur['rows'][] = [(float) $r[2], (float) $r[3], (float) $r[4], (float) $r[5], (string) $r[6]];
@@ -3107,7 +3114,100 @@ SQL;
         $out['payers'] = array_map('count', $payers);
         $out['payersOd'] = array_map('count', $payersOd);
         foreach ($P as $k => $arr) { $out['p_' . $k] = array_map([self::class, 'r2'], $arr); }
+        $this->life = $this->loanLife($due, $amtS, $mon, $histD, $histN, $advA, $orders, $today, '2026-01');   // 2026 only (user, 2026-11-16)
         return $out;
+    }
+
+    /**
+     * Customers Analyze > "Payments before the first delinquency" / "Months until the installment closed" — build_logistics.js
+     * loanLife() (same rules, same output): per installment issued from $firstMonth, the waterfall's first instalment still not
+     * covered 3 days after its due date (np = instalments paid before it; -1 none so far; null cancelled / no schedule), and the
+     * closing (reason 0 paid in full, 1 paid in full after a restructuring, 2 written off, 3 cancelled; -1 open; cm = months).
+     */
+    private function loanLife(array $due, array $amtS, array $mon, array $histD, array $histC, array $advA, array $orders, string $today, string $firstMonth): array
+    {
+        $dn = static fn (string $x): int => intdiv((int) gmmktime(0, 0, 0, (int) substr($x, 5, 2), (int) substr($x, 8, 2), (int) substr($x, 0, 4)), 86400);
+        $ds = static fn (int $d): string => gmdate('Y-m-d', $d * 86400);
+        $tday = $dn($today);
+        $months = [];
+        for ($m = $firstMonth; strcmp($m, substr($today, 0, 7)) <= 0;) {
+            $months[] = $m;
+            [$y, $mo] = array_map('intval', explode('-', $m));
+            $mo++;
+            if ($mo > 12) { $mo = 1; $y++; }
+            $m = sprintf('%04d-%02d', $y, $mo);
+        }
+        $mI = array_flip($months);
+        $restrFirst = [];
+        foreach ($this->readTsv('coll_restr_legacy.tsv') as $r) { $id = (int) $r['case_id']; $d = $dn($r['d']); if (!isset($restrFirst[$id]) || $d < $restrFirst[$id]) { $restrFirst[$id] = $d; } }
+        foreach ($this->run('life_restr', self::SQL_RESTR_NEW, ['E' => $today]) as $r) { $id = (int) $r['installment_id']; $d = $dn((string) $r['d']); if (!isset($restrFirst[$id]) || $d < $restrFirst[$id]) { $restrFirst[$id] = $d; } }
+        $paidBy = static function (array $hd, array $hc, int $x): float {
+            $lo = 0;
+            $hi = count($hd);
+            while ($lo < $hi) { $mid = ($lo + $hi) >> 1; if ($hd[$mid] <= $x) { $lo = $mid + 1; } else { $hi = $mid; } }
+            return $lo > 0 ? (float) $hc[$lo - 1] : 0.0;
+        };
+        $monthsBetween = static function (string $a, string $b): int {
+            [$ya, $ma, $da] = array_map('intval', explode('-', $a));
+            [$yb, $mb, $db] = array_map('intval', explode('-', $b));
+            return max(0, ($yb - $ya) * 12 + ($mb - $ma) - ($db < $da ? 1 : 0));
+        };
+        // rows = the month of the event (first delinquency dm / closing clm), whatever the issue month — as build_logistics.js
+        $L = ['id' => [], 'is' => [], 'dm' => [], 'clm' => [], 'amt' => [], 'term' => [], 'np' => [], 'dd' => [], 'dod' => [], 'cr' => [], 'cm' => [], 'cd' => []];
+        $ids = array_keys($orders);
+        sort($ids);
+        foreach ($ids as $id) {
+            [, $st, $act, $cdRaw, $price, $issued, $ct] = $orders[$id];
+            if (!in_array($st, ['1', '5', '11', '18'], true) || $issued === null || $issued === '') { continue; }
+            $issued = (string) $issued;
+            $hd = $histD[$id] ?? [];
+            $hc = $histC[$id] ?? [];
+            $np = $dd = $dod = null;
+            // regular instalments only (month > 0): the down-payment row is no instalment and advance payments are not in hc (= histN)
+            // the down-payment row: month 0, or (none) the first row when it equals one of the loan's advance payments
+            $rd = $rq = [];
+            $run = 0.0;
+            $hasM0 = isset($mon[$id]) && min($mon[$id]) <= 0;
+            foreach ($due[$id] ?? [] as $k => $du) {
+                if ($mon[$id][$k] <= 0) { continue; }
+                if (!$hasM0 && $k === 0) {
+                    $isDp = false;
+                    foreach ($advA[$id] ?? [] as $a) { if (abs($a - $amtS[$id][$k]) < 0.01) { $isDp = true; break; } }
+                    if ($isDp) { continue; }
+                }
+                $run += $amtS[$id][$k];
+                $rd[] = $du;
+                $rq[] = $run;
+            }
+            if ($st !== '18' && $rd) {
+                $np = -1;
+                $paidRows = 0;
+                foreach ($rd as $k => $du) {
+                    if ($du + 3 >= $tday) { break; }
+                    $cov = $paidBy($hd, $hc, $du + 3);
+                    if ($cov < $rq[$k] - 0.01) { $np = $paidRows; $dd = $ds($du + 3); $dod = self::jsR2($rq[$k] - $cov); break; }
+                    $paidRows++;
+                }
+            }
+            $cr = -1;
+            $cm = $cd = null;
+            $cdRaw = $cdRaw === null ? null : (string) $cdRaw;
+            if ($st === '18' || $act === '0') {
+                $okCd = ($cdRaw !== null && strcmp($cdRaw, $issued) >= 0 && strcmp($cdRaw, '2019-01-01') >= 0) ? $cdRaw : null;
+                $cd = $st === '18' ? $cdRaw : ($okCd ?? ($hd ? $ds((int) end($hd)) : null));
+                if ($st === '18') { $cr = 3; }
+                elseif ($ct === '2') { $cr = 2; }
+                else { $rf = $restrFirst[$id] ?? null; $cr = ($rf !== null && $cd !== null && $rf <= $dn($cd)) ? 1 : 0; }
+                $cm = $cd !== null ? $monthsBetween($issued, $cd) : null;
+            }
+            $dm = $dd !== null ? ($mI[substr($dd, 0, 7)] ?? null) : null;
+            $clm = $cd !== null ? ($mI[substr($cd, 0, 7)] ?? null) : null;
+            if ($dm === null && $clm === null) { continue; }
+            $L['id'][] = $id; $L['is'][] = $issued; $L['dm'][] = $dm; $L['clm'][] = $clm; $L['amt'][] = self::jsR2((float) $price);
+            $L['term'][] = $rd ? count($rd) : null;
+            $L['np'][] = $np; $L['dd'][] = $dd; $L['dod'][] = $dod; $L['cr'][] = $cr; $L['cm'][] = $cm; $L['cd'][] = $cd;
+        }
+        return ['from' => $firstMonth, 'today' => $today, 'months' => $months, 'loans' => $L];
     }
 
     // ------------------------------------------------------------------ helpers
