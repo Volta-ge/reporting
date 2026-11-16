@@ -1315,6 +1315,17 @@ else { must('const generatedAt = REPORT_JSON.generatedAt;', 'report consts'); ht
 
 // render IIFE (no backticks / ${ inside: it lives in a template literal)
 const JS_MARK = '/* ---------- ops ---------- */', JS_END = '/* ---------- /ops ---------- */';
+// cleanup (2026-11-16): the tab-contents block, until it was fixed, took the newline in front of this block when it removed itself, so a
+// copy of this block got glued to the text before it ("…*//* ---------- ops ---------- */"), was no longer found below and was inserted
+// again on every build (3 copies in f2dd179..3eb1d98). Drop every copy that does not start a line; the normal removal takes the rest.
+for (let p = html.indexOf(JS_MARK); p >= 0; ) {
+  if (p > 0 && html[p - 1] !== NL) {
+    const e2 = html.indexOf(JS_END, p);
+    if (e2 < 0) break;
+    html = html.slice(0, p) + html.slice(e2 + JS_END.length);
+    p = html.indexOf(JS_MARK);
+  } else p = html.indexOf(JS_MARK, p + 1);
+}
 removeBlock(JS_MARK, JS_END, true);
 const js = `
 ${JS_MARK}
@@ -3536,7 +3547,9 @@ a.tab-top { float: right; color: var(--text-muted); background: transparent; fon
 ` + CSS_END);
 
 const JS_MARK = '/* ---------- tab contents ---------- */', JS_END = '/* ---------- /tab contents ---------- */';
-removeBetween(NL + JS_MARK, JS_END + NL);
+// same convention as the other blocks before the nav anchor: remove "newline + mark … end" and keep the newline after it — taking that newline too
+// glued the NEXT block's marker to this one's predecessor and broke its own removal (found 2026-11-16 when the search block was added)
+removeBetween(NL + JS_MARK, JS_END);
 const js = `
 ${JS_MARK}
 (function () {
@@ -3657,4 +3670,167 @@ html = html.replace('// ---- top-level page nav (grows as more reports get added
 if (__hadCRLF) html = html.replace(/\n/g, '\r\n');
 fs.writeFileSync(htmlPath, html);
 console.log('tab contents: injected for', 9, 'tabs into', htmlPath);
+})();
+
+// ================ Dashboard search (2026-11-16) ================
+// User: "დასაწყისში, სანამ ტაბები და ქვეტაბები დაიწყება, ჩასვი საძიებო ველი მთელს სიგანეზე, სადაც შესაძლებელი იქნება დეშბორდების, ტაბების და
+// ქვეტაბების მოძებნა დასახელებებით. ჩაწერას რომ დაიწყებს, თანდათან იფილტრებოდეს და სთავაზობდეს შეთავაზებებს." A full-width box above the
+// nav groups; the index is read from the page itself at load (nav groups = tabs, their buttons = sub-tabs, their links, and every report
+// heading inside each sub-tab's page), so it never goes stale as reports are added. Georgian words are mapped to the English names.
+// Picking a result opens the tab and scrolls to the report. Idempotent (own markers).
+(function () {
+const fs = require('fs');
+const path = require('path');
+const htmlPath = process.env.DASH_HTML ? path.resolve(process.env.DASH_HTML) : path.join(__dirname, 'deals_amount_migration.html');
+let html = fs.readFileSync(htmlPath, 'utf8');
+const __hadCRLF = html.includes('\r\n'); if (__hadCRLF) html = html.replace(/\r\n/g, '\n');
+const NL = String.fromCharCode(10);
+const must = (n, what) => { if (!html.includes(n)) throw new Error('anchor not found: ' + what); };
+function removeBetween(a, b) { const s = html.indexOf(a); if (s < 0) return; const e = html.indexOf(b, s); if (e < 0) throw new Error('dash-search end marker not found'); html = html.slice(0, s) + html.slice(e + b.length); }
+
+const CSS_MARK = '/* --- dash-search --- */', CSS_END = '/* --- /dash-search --- */';
+removeBetween(NL + CSS_MARK, CSS_END);
+must('.report-scroll-top > div { height: 1px; }', 'css anchor');
+html = html.replace('.report-scroll-top > div { height: 1px; }', () => '.report-scroll-top > div { height: 1px; }' + NL + CSS_MARK + `
+.dash-search { position: relative; margin: 8px 0 12px; }
+.dash-search-icon { position: absolute; left: 13px; top: 50%; transform: translateY(-50%); width: 17px; height: 17px; color: var(--text-muted); pointer-events: none; }
+.dash-search input { width: 100%; box-sizing: border-box; padding: 11px 14px 11px 40px; font-size: 14px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface-1); color: var(--text-primary); }
+.dash-search input::placeholder { color: var(--text-muted); }
+.dash-search input:focus { outline: 2px solid var(--series-a-soft); border-color: var(--series-a); }
+.dash-search-list { position: absolute; left: 0; right: 0; top: calc(100% + 4px); background: var(--surface-1); color: var(--text-primary); border: 1px solid var(--border); border-radius: 10px; box-shadow: 0 10px 30px rgba(0,0,0,.18); z-index: 1500; max-height: 62vh; overflow: auto; padding: 4px; }
+.dash-search-item { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; padding: 8px 10px; border-radius: 8px; cursor: pointer; background: transparent; color: var(--text-primary); }
+.dash-search-item.on, .dash-search-item:hover { background: var(--page); }
+.dash-search-kind { flex: none; width: 64px; font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--text-muted); }
+.dash-search-name { color: var(--text-primary); font-weight: 600; font-size: 13px; }
+.dash-search-name mark { background: #c2ff00; color: #1a1a34; border-radius: 3px; padding: 0 1px; }
+.dash-search-path { margin-left: auto; color: var(--text-secondary); font-size: 11.5px; text-align: right; }
+.dash-search-foot, .dash-search-empty { padding: 8px 10px; color: var(--text-muted); font-size: 12px; }
+@media (max-width: 600px) { .dash-search-path { margin-left: 74px; text-align: left; flex-basis: 100%; } }
+.dash-flash { animation: dashFlash 1.8s ease-out; }
+@keyframes dashFlash { 0% { box-shadow: 0 0 0 3px #c2ff00; } 100% { box-shadow: 0 0 0 3px transparent; } }
+` + CSS_END);
+
+const JS_MARK = '/* ---------- dashboard search ---------- */', JS_END = '/* ---------- /dashboard search ---------- */';
+removeBetween(NL + JS_MARK, JS_END);   // keeps the newline after the block, like every other block before the nav anchor
+const js = `
+${JS_MARK}
+(function () {
+  const nav = document.getElementById('pageNav');
+  if (!nav || document.getElementById('dashSearch')) return;
+  const box = document.createElement('div');
+  box.className = 'dash-search'; box.id = 'dashSearch';
+  box.innerHTML = '<svg class="dash-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>'
+    + '<input type="search" id="dashSearchInput" autocomplete="off" spellcheck="false" aria-label="Search dashboards" placeholder="Search dashboards, tabs and reports &mdash; e.g. overdue, restructured, funnel, vintage, ვადაგადაცილება">'
+    + '<div class="dash-search-list" id="dashSearchList" role="listbox" hidden></div>';
+  nav.parentNode.insertBefore(box, nav);
+
+  // ---- the index, read from the page
+  const clean = t => String(t || '').replace(/[↑]\\s*Contents/g, '').replace(/[↗]/g, '').replace(/\\s+/g, ' ').trim();
+  const HEADS = '.section-title, .coll-sub-title, .pf-title, .logi-open-title, .logi-group-title';
+  const idx = [], seen = {};
+  const add = it => { const k = it.kind + '|' + it.name + '|' + it.path; if (seen[k] || !it.name) return; seen[k] = 1; it.hay = (it.name + ' ' + it.path).toLowerCase(); it.low = it.name.toLowerCase(); idx.push(it); };
+  nav.querySelectorAll('.nav-group').forEach(g => {
+    const tEl = g.querySelector('.nav-group-title');
+    const gt = clean(tEl && tEl.childNodes.length ? tEl.childNodes[0].textContent : (tEl ? tEl.textContent : ''));
+    const items = Array.from(g.querySelectorAll('.nav-group-items button[data-page], .nav-group-items a'));
+    const firstBtn = items.find(x => x.tagName === 'BUTTON');
+    if (firstBtn || items.length) add({ kind: 'Tab', name: gt, path: items.length + ' sub-tab' + (items.length === 1 ? '' : 's'), el: firstBtn || items[0] });
+    items.forEach(it => {
+      const name = clean(it.textContent);
+      if (it.tagName === 'A') { add({ kind: 'Link', name: name, path: gt + ' (opens separately)', el: it }); return; }
+      add({ kind: 'Sub-tab', name: name, path: gt, el: it });
+      const page = document.getElementById('page-' + it.dataset.page) || document.querySelector('.page[data-page="' + it.dataset.page + '"]');
+      if (!page) return;
+      page.querySelectorAll(HEADS).forEach(h => {
+        const hn = clean(h.textContent);
+        if (!hn || hn.toLowerCase() === name.toLowerCase()) return;
+        add({ kind: 'Report', name: hn, path: gt + ' › ' + name, el: it, target: h });
+      });
+    });
+  });
+
+  // ---- Georgian search words -> the English names (the dashboard is in English)
+  const KA = [['ვადაგადაც', 'overdue'], ['ვადაგადაცილ', 'delinquen'], ['რესტრუქტ', 'restructur'], ['ძაბრ', 'funnel'], ['ფანელ', 'funnel'], ['გაყიდვ', 'sales'],
+    ['ლოჯისტ', 'logistics'], ['მიწოდ', 'delivery'], ['კლიენტ', 'customer'], ['მომხმარებ', 'customer'], ['პორტფელ', 'portfolio'], ['ქოლექშ', 'collection'],
+    ['ამოღებ', 'collect'], ['ლიდ', 'lead'], ['ბრენდ', 'brand'], ['კატეგორ', 'category'], ['ქვეკატეგორ', 'subcategory'], ['მარჟ', 'margin'], ['მოგებ', 'margin'],
+    ['განაცხად', 'application'], ['კომიტეტ', 'committee'], ['დახურ', 'closed'], ['გადახდ', 'payment'], ['შენატან', 'instalment'], ['განვადებ', 'installment'],
+    ['კალათ', 'bucket'], ['ჩავარდ', 'entries'], ['ვინტაჟ', 'vintage'], ['ყოველდღიურ', 'daily'], ['დღიურ', 'daily'], ['თვიურ', 'monthly'], ['ფინანს', 'finance'],
+    ['ბუღალტ', 'accounting'], ['მარკეტინგ', 'marketing'], ['ოპერაცი', 'operations'], ['სტატუს', 'status'], ['მენეჯერ', 'manager'], ['ქალაქ', 'city'],
+    ['ვენდორ', 'vendor'], ['პროდუქტ', 'product'], ['რეპორტ', 'report'], ['ანალიზ', 'analy'], ['გაცემ', 'disburs'], ['დაგვიანებ', 'late'], ['ჩამოწერ', 'written off']];
+  const toTerms = q => q.toLowerCase().split(/\\s+/).filter(Boolean).map(w => { if (!/[ა-ჿ]/.test(w)) return [w]; const hit = KA.filter(([k]) => w.indexOf(k) === 0 || k.indexOf(w) === 0); return hit.length ? hit.map(x => x[1]) : [w]; });
+  const KIND = { Tab: 0, 'Sub-tab': 1, Report: 2, Link: 3 };
+  const search = q => {
+    const terms = toTerms(q);
+    if (!terms.length) return [];
+    const out = [];
+    for (const it of idx) {
+      let score = 0, ok = true;
+      for (const alts of terms) {
+        let best = 9;
+        for (const t of alts) {
+          if (it.low.indexOf(t) === 0) best = Math.min(best, 0);
+          else if (new RegExp('(^|[^a-z0-9])' + t.replace(/[^a-z0-9 ]/g, ''), 'i').test(it.low)) best = Math.min(best, 0);   // any word start = top match, so the kind decides (sub-tab before report)
+          else if (it.low.indexOf(t) >= 0) best = Math.min(best, 2);
+          else if (it.hay.indexOf(t) >= 0) best = Math.min(best, 4);
+        }
+        if (best === 9) { ok = false; break; }
+        score += best;
+      }
+      if (ok) out.push([score * 10 + KIND[it.kind], it]);
+    }
+    out.sort((a, b) => a[0] - b[0] || a[1].name.length - b[1].name.length);
+    return out.map(x => x[1]);
+  };
+  const esc = s => String(s).replace(/[&<>"]/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[ch]);
+  const mark = (name, q) => {
+    const terms = [].concat.apply([], toTerms(q)).filter(t => t.length > 1 || toTerms(q).length === 1);
+    let h = esc(name);
+    terms.forEach(t => { const i = h.toLowerCase().indexOf(esc(t).toLowerCase()); if (i >= 0 && h.slice(0, i).lastIndexOf('<') <= h.slice(0, i).lastIndexOf('>')) h = h.slice(0, i) + '<mark>' + h.slice(i, i + esc(t).length) + '</mark>' + h.slice(i + esc(t).length); });
+    return h;
+  };
+
+  // ---- the dropdown
+  const input = document.getElementById('dashSearchInput'), list = document.getElementById('dashSearchList');
+  const MAX = 14;
+  let res = [], on = 0;
+  const paint = () => {
+    const q = input.value.trim();
+    if (!q) { list.hidden = true; return; }
+    res = search(q);
+    on = 0;
+    if (!res.length) { list.innerHTML = '<div class="dash-search-empty">Nothing found for &ldquo;' + esc(q) + '&rdquo; &mdash; try another word (tab, report or table name).</div>'; list.hidden = false; return; }
+    list.innerHTML = res.slice(0, MAX).map((it, i) => '<div class="dash-search-item' + (i === on ? ' on' : '') + '" role="option" data-i="' + i + '"><span class="dash-search-kind">' + it.kind + '</span><span class="dash-search-name">' + mark(it.name, q) + '</span><span class="dash-search-path">' + esc(it.path) + '</span></div>').join('')
+      + (res.length > MAX ? '<div class="dash-search-foot">' + (res.length - MAX) + ' more &mdash; type more to narrow it down</div>' : '');
+    list.hidden = false;
+  };
+  const setOn = i => { const els = list.querySelectorAll('.dash-search-item'); if (!els.length) return; on = (i + els.length) % els.length; els.forEach((e, k) => e.classList.toggle('on', k === on)); els[on].scrollIntoView({ block: 'nearest' }); };
+  const go = it => {
+    list.hidden = true; input.value = ''; input.blur();
+    if (it.kind === 'Link') { it.el.click(); return; }
+    it.el.click();
+    if (it.target) {
+      const t = it.target;
+      setTimeout(() => { t.scrollIntoView({ behavior: 'smooth', block: 'start' }); t.classList.remove('dash-flash'); void t.offsetWidth; t.classList.add('dash-flash'); }, 120);
+    } else window.scrollTo({ top: Math.max(0, nav.getBoundingClientRect().top + window.scrollY - 10), behavior: 'smooth' });
+  };
+  input.addEventListener('input', paint);
+  input.addEventListener('focus', () => { if (input.value.trim()) paint(); });
+  input.addEventListener('keydown', e => {
+    if (list.hidden) return;
+    if (e.key === 'ArrowDown') { e.preventDefault(); setOn(on + 1); }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); setOn(on - 1); }
+    else if (e.key === 'Enter') { e.preventDefault(); if (res[on]) go(res[on]); }
+    else if (e.key === 'Escape') { list.hidden = true; }
+  });
+  list.addEventListener('mousedown', e => { const el = e.target.closest('.dash-search-item'); if (el) { e.preventDefault(); go(res[+el.getAttribute('data-i')]); } });
+  document.addEventListener('click', e => { if (!box.contains(e.target)) list.hidden = true; });
+})();
+${JS_END}
+`;
+must('// ---- top-level page nav (grows as more reports get added) ----', 'nav handler');
+html = html.replace('// ---- top-level page nav (grows as more reports get added) ----', () => js.replace(/^\n/, '') + '// ---- top-level page nav (grows as more reports get added) ----');
+
+if (__hadCRLF) html = html.replace(/\n/g, '\r\n');
+fs.writeFileSync(htmlPath, html);
+console.log('dashboard search: injected into', htmlPath);
 })();
