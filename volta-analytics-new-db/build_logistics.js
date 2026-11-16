@@ -2424,7 +2424,7 @@ ${card('collOdNewDay')}
   <p class="coll-sub-title" id="collSecNewMonth">New Entries into Overdue Buckets &mdash; by month</p>
 ${card('collOdNewMonth')}
   <p class="note" id="collOdNewNote"></p>
-  <p class="coll-sub-title" id="collSecNewList">Loans that fell into a bucket &mdash; one row per entry, newest first</p>
+  <p class="coll-sub-title" id="collSecNewList">Loans that fell into a bucket &mdash; one row per entry, oldest first</p>
   <div class="lt-filters"><label>Case # / name / phone<input type="search" id="collnSearch" placeholder="e.g. 45922"></label><label>Bucket entered<select id="collnBucket"></select></label><span id="collnDrill"></span><span class="lt-filter-count" id="collnCount"></span></div>
 ${card('collOdNewList')}
   <div id="collnMore" style="text-align:center;margin:8px 0 16px"></div>
@@ -2477,7 +2477,7 @@ ${card('collmKpi')}
   <p class="coll-sub-title">Restructurings by month &mdash; and where those loans stand today</p>
 ${card('collrMain')}
   <p class="note" id="collrMainNote"></p>
-  <p class="coll-sub-title">Restructured installments &mdash; one row per restructuring, newest first</p>
+  <p class="coll-sub-title">Restructured installments &mdash; one row per restructuring, oldest first</p>
   <div class="lt-filters"><label>Case #<input type="search" id="collrSearch" placeholder="e.g. 45922"></label><label>Status today<select id="collrStatus"></select></label><span id="collrDrill"></span><span class="lt-filter-count" id="collrCount"></span></div>
 ${card('collrList')}
   <div id="collrMore" style="text-align:center;margin:8px 0 16px"></div>
@@ -2663,12 +2663,12 @@ window.__registerPage(['collections'], function () {
     // ---- the case list
     const sel = document.getElementById('collnBucket');
     if (!sel.options.length) sel.innerHTML = '<option value="all">All</option>' + NB.map((b, x) => '<option value="' + x + '">' + b + '</option>').join('');
-    const order = L.id.map((_, j) => j).reverse();
+    const order = L.id.map((_, j) => j);   // oldest first (user, 2026-11-16): the list is built in day order
     let rows = order, shown = 300;
     const money2 = v => (v === null || v === undefined) ? DASH : (v ? fmt(v) : DASH);
     const paint = () => {
       const pcols = LP ? '<td>Name</td><td>Phone</td><td>Personal number</td>' : '';
-      let t = '<tr class="logi-title"><td colspan="' + (LP ? 18 : 15) + '">Loans that fell into a bucket &mdash; one row per entry, newest first</td></tr>'
+      let t = '<tr class="logi-title"><td colspan="' + (LP ? 18 : 15) + '">Loans that fell into a bucket &mdash; one row per entry, oldest first</td></tr>'
         + '<tr class="logi-head"><td>Case #</td><td>Fell into</td><td>On</td><td>Days past due then</td><td>Overdue then &#8382;</td>' + pcols
         + '<td>Issued</td><td>Loan &#8382;</td><td>Term (months)</td><td>Avg. instalment &#8382;</td><td>Items</td><td>Portfolio manager</td><td>Today</td><td>Days late today</td><td>Overdue today &#8382;</td><td>Outstanding today &#8382;</td></tr>';
       rows.slice(0, shown).forEach((j, k) => {
@@ -2973,7 +2973,7 @@ window.__registerPage(['collrestr'], function () {
   const L = R.list, SRC = ['Old system: new schedule', 'Old system: status &ldquo;New schedule&rdquo;', 'CRM request'];
   const sel = document.getElementById('collrStatus');
   if (!sel.options.length) sel.innerHTML = '<option value="all">All</option>' + BL.map((b, i) => '<option value="' + i + '">' + b + '</option>').join('') + '<option value="late30">30+ days late</option>';
-  const order = L.id.map((_, j) => j).reverse();
+  const order = L.id.map((_, j) => j);   // oldest first (user, 2026-11-16): the restructurings are in date order
   let rows = order, shown = 300;
   const ord = n => n + (n % 10 === 1 && n % 100 !== 11 ? 'st' : n % 10 === 2 && n % 100 !== 12 ? 'nd' : n % 10 === 3 && n % 100 !== 13 ? 'rd' : 'th');
   const SIGL = ['', 'overdue-reminder SMS', 'collection status (negotiating / payment promise)', 'penalty mentioned in a comment'];
@@ -2987,7 +2987,7 @@ window.__registerPage(['collrestr'], function () {
     return s;
   };
   const paint = () => {
-    let t = '<tr class="logi-title"><td colspan="12">Restructured installments &mdash; one row per restructuring, newest first</td></tr>'
+    let t = '<tr class="logi-title"><td colspan="12">Restructured installments &mdash; one row per restructuring, oldest first</td></tr>'
       + '<tr class="logi-head"><td>Case #</td><td>No. on this loan</td><td>Restructured</td><td>Source</td><td>In arrears then</td><td>Arrears &#8382;</td><td>New term (months)</td><td>Outstanding then &#8382;</td><td>Today</td><td>Days late today</td><td>Outstanding today &#8382;</td><td>Identified by</td></tr>';
     rows.slice(0, shown).forEach((j, k) => {
       const b = L.b[j];

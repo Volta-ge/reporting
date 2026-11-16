@@ -594,7 +594,7 @@ window.__funnelBuild = function (F) {
       if (m && D.dates[j].slice(0, 7) !== m) continue;
       out.push(j);
     }
-    out.sort((a, b) => (D.dates[b] < D.dates[a] ? -1 : D.dates[b] > D.dates[a] ? 1 : D.ids[b] - D.ids[a]));
+    out.sort((a, b) => (D.dates[a] < D.dates[b] ? -1 : D.dates[a] > D.dates[b] ? 1 : D.ids[a] - D.ids[b]));   // oldest first (user, 2026-11-16)
     return out;
   };
   let ov = null, cur = [], shown = 0, filtered = [];
@@ -717,7 +717,7 @@ window.__funnelBuild = function (F) {
     ctx = { label, stage, period: mi >= 0 ? mLabel(F.months[mi]) : 'All months, ' + mLabel(F.months[0]).replace(' (MTD)', '') + ' - ' + mLabel(F.months[n - 1]) };
     const tot = cur.reduce((a, j) => a + DD.amt[j], 0);
     ov.querySelector('.fn-drill-title').textContent = label;
-    ov.querySelector('.fn-drill-sub').innerHTML = (stage ? esc(stage) + '<br>' : '') + (mi >= 0 ? mLabel(F.months[mi]) : 'All months, ' + mLabel(F.months[0]).replace(' (MTD)', '') + ' &ndash; ' + mLabel(F.months[n - 1])) + ' &middot; <b>' + cur.length.toLocaleString('en-US') + '</b> application' + (cur.length === 1 ? '' : 's') + ' &middot; &#8382;' + tot.toLocaleString('en-US') + ' in total &middot; newest first';
+    ov.querySelector('.fn-drill-sub').innerHTML = (stage ? esc(stage) + '<br>' : '') + (mi >= 0 ? mLabel(F.months[mi]) : 'All months, ' + mLabel(F.months[0]).replace(' (MTD)', '') + ' &ndash; ' + mLabel(F.months[n - 1])) + ' &middot; <b>' + cur.length.toLocaleString('en-US') + '</b> application' + (cur.length === 1 ? '' : 's') + ' &middot; &#8382;' + tot.toLocaleString('en-US') + ' in total &middot; oldest first';
     // the mix behind a combined row: by status, then the busiest sales managers
     const byS = {}, byM = {};
     cur.forEach(j => { const k = SN[DD.st[j]] || ('Status ' + DD.st[j]); byS[k] = (byS[k] || 0) + 1; const g = DD.mgrs[DD.mg[j]] || 'No sales manager'; byM[g] = (byM[g] || 0) + 1; });
