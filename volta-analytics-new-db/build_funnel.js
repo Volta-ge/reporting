@@ -829,6 +829,16 @@ function loanPii(page) {
   return out;
 }
 
+// Logistics Daily "Open Cases" (2026-11-16): the customer of each open order, by order number, from logi_open.tsv — the committed
+// page leaves the names out (public GitHub Pages); private copy only.
+function openCasesPii() {
+  const rows = parseTsv(path.join(dir, 'logi_open.tsv'));
+  if (!rows) return null;
+  const out = {};
+  for (const r of rows) { const nm = String(r.customer || '').trim(); if (nm && nm !== 'NULL') out[+r.order_id] = nm; }
+  return out;
+}
+
 // the PRIVATE copy for the claude.ai Artifact: the same page plus `const FUNNEL_PII` (see funnelPii above) right after
 // the FUNNEL_JSON line. Gitignored — never commit it, never copy it to docs/ (GitHub Pages is public).
 {
@@ -838,8 +848,8 @@ function loanPii(page) {
     const a = html.indexOf('const FUNNEL_JSON = ');
     if (a < 0) throw new Error('FUNNEL_JSON line not found');
     const e = html.indexOf('\n', a);
-    const lp = loanPii(html), eol = __hadCRLF ? '\r\n' : '\n';
-    fs.writeFileSync(privPath, html.slice(0, e + 1) + 'const FUNNEL_PII = ' + JSON.stringify(pii) + ';' + eol + (lp ? 'var LOAN_PII = ' + JSON.stringify(lp) + ';' + eol : '') + html.slice(e + 1));
+    const lp = loanPii(html), op = openCasesPii(), eol = __hadCRLF ? '\r\n' : '\n';
+    fs.writeFileSync(privPath, html.slice(0, e + 1) + 'const FUNNEL_PII = ' + JSON.stringify(pii) + ';' + eol + (lp ? 'var LOAN_PII = ' + JSON.stringify(lp) + ';' + eol : '') + (op ? 'var LOGI_OPEN_PII = ' + JSON.stringify(op) + ';' + eol : '') + html.slice(e + 1));
     console.log('wrote the PRIVATE copy with customer data (never commit, never Pages): ' + privPath);
   } else if (fs.existsSync(privPath)) {
     fs.unlinkSync(privPath);   // no PII extract this run: drop a stale private copy rather than publish old customer data

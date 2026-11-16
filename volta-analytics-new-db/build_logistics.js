@@ -113,8 +113,11 @@ for (const [key, sec] of Object.entries(STATUS_SECTIONS)) {
 }
 // memo row for the orders table: module orders not yet activated (status 11) at the end of each day
 { const m = {}; for (const r of parseTsv('logi_not_activated.tsv')) m[r.d] = +r.n; statusByDay.notActivated = statusDates.map(d => m[d] || 0); }
+// customer = '' here (2026-11-16, user: "კი, გააკეთე"): this page is committed and copied to the PUBLIC GitHub Pages, so the
+// open cases carry no customer names; the private Artifact copy gets them from var LOGI_OPEN_PII (build_funnel.js, from the
+// same logi_open.tsv) and the password-protected live page from NewDbReport::logistics(), which fills them from the database.
 const openCases = parseTsv('logi_open.tsv').map(r => ({
-  customer: r.customer, waitingFrom: r.waiting_from,
+  customer: '', waitingFrom: r.waiting_from,
   status: (r.logistics_status === '' || r.logistics_status === 'NULL') ? 'Not started' : (STATUS_LABEL[r.logistics_status] || ('Status ' + r.logistics_status)),
   city: r.city || '–', orderNum: +r.order_id,
 }));
@@ -545,9 +548,14 @@ window.__registerPage(['logistics'], function () {
     document.getElementById('logisticsTable').querySelector('tbody').innerHTML = html;
   }
   function renderOpen() {
-    let html = '<tr class="logi-open-head"><td>Customer</td><td>Waiting from</td><td>Status</td><td>City</td><td>Order #</td></tr>';
-    if (!L.openCases.length) html += '<tr><td colspan="5">No open cases.</td></tr>';
-    L.openCases.forEach(c => { html += '<tr><td>' + c.customer + '</td><td>' + dayLabelL(c.waitingFrom) + '</td><td>' + c.status + '</td><td>' + c.city + '</td><td>' + c.orderNum + '</td></tr>'; });
+    // customer names: the live page's data (password-protected site) or the private Artifact's LOGI_OPEN_PII; the public copy
+    // has neither, so the Customer column is left out there
+    const OP = window.LOGI_OPEN_PII || {};
+    const nameOf = c => OP[c.orderNum] || c.customer || '';
+    const withNames = L.openCases.some(c => nameOf(c));
+    let html = '<tr class="logi-open-head">' + (withNames ? '<td>Customer</td>' : '') + '<td>Waiting from</td><td>Status</td><td>City</td><td>Order #</td></tr>';
+    if (!L.openCases.length) html += '<tr><td colspan="' + (withNames ? 5 : 4) + '">No open cases.</td></tr>';
+    L.openCases.forEach(c => { html += '<tr>' + (withNames ? '<td>' + (nameOf(c) || '&ndash;') + '</td>' : '') + '<td>' + dayLabelL(c.waitingFrom) + '</td><td>' + c.status + '</td><td>' + c.city + '</td><td>' + c.orderNum + '</td></tr>'; });
     document.getElementById('logisticsOpenCasesTable').querySelector('tbody').innerHTML = html;
   }
   function renderStatus(tableId, sec) {
