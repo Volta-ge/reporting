@@ -2760,7 +2760,7 @@ SQL;
         $odR = $this->run('od_r', self::SQL_OD_R, $tok);
         $odEv = $this->run('od_ev', self::SQL_OD_EV, $tok);
         $t = microtime(true);
-        [$odRows, $odLoans] = self::reconstructOverdue($odR, $odEv, self::CUTOVER, $today);
+        [$odRows, $odLoans, $odNewRows] = self::reconstructOverdue($odR, $odEv, self::CUTOVER, $today);
         $this->timings['od_php'] = microtime(true) - $t;
         unset($odR, $odEv);
         $payDayRows = $this->run('pay_day', 'SELECT p.payment_date d, ' . self::PAYSEL . ' FROM crm_payments p WHERE ' . self::PAYOK . ' AND p.payment_date BETWEEN {C} AND {E} GROUP BY d ORDER BY d', $tok);
@@ -2936,10 +2936,16 @@ SQL;
         $meta = [];
         foreach ($metaRows as $r) { $meta[(string) $r['t']] = self::jn($r['n']); }
 
-        $payload = ['cutover' => self::CUTOVER, 'mstart' => self::MSTART, 'today' => $todayD, 'days' => $days, 'months' => $months, 'od' => $od,
+        // per-loan facts and today's position for the two case lists (new bucket entries, restructured installments)
+        $loanState = [];
+        foreach ($this->run('loan_state', self::SQL_LOAN_STATE, $tok) as $r) { $loanState[(string) (int) $r['id']] = $r; }
+        $odNewOut = $this->odNew($odNewRows, $loanState, $days, $todayD);
+        unset($odNewRows);
+        $payload = ['cutover' => self::CUTOVER, 'mstart' => self::MSTART, 'today' => $todayD, 'days' => $days, 'months' => $months, 'od' => $od, 'odNew' => $odNewOut,
             'payDay' => $payDay, 'payMonth' => $payMonth, 'dueDay' => $dueDay, 'dueMonth' => $dueMonth, 'perfMonths' => $perfMonths, 'perfMonth' => $perfMonth,
             'reversed' => $reversed, 'activity' => $activity, 'pm' => $pm, 'status' => $status, 'cps' => $cps, 'meta' => $meta,
             'monthly' => $this->monthly($todayD, '2026-01'),
+            'restr' => $this->restructured($loanState, $todayD, $tok),
             'generatedAt' => gmdate('Y-m-d H:i') . ' UTC'];
         $payload = self::normalize($payload);
         // keyed-by-id maps must encode as JSON objects even when their keys happen to be 0..n-1 (or empty)
@@ -3147,6 +3153,12 @@ SQL;
         return $dpd <= 3 ? 1 : ($dpd <= 10 ? 2 : ($dpd <= 30 ? 3 : ($dpd <= 60 ? 4 : ($dpd <= 90 ? 5 : 6))));
     }
 
+    /** buckets of the NEW-entries report: 1-2 days late is a buffer (0); 1 = exactly 3 days, then 4-10 … 90+ as bucketOf() */
+    private static function newBucketOf(int $dpd): int
+    {
+        return $dpd <= 2 ? 0 : ($dpd === 3 ? 1 : self::bucketOf($dpd));
+    }
+
     /** Exact integer cents of a DECIMAL(…,2) string ("-27.00" -> -2700); NULL -> 0 (what COALESCE(SUM(),0) gives) */
     private static function cents(mixed $s): int
     {
@@ -3167,6 +3179,174 @@ SQL;
     {
         static $cache = [];
         return $cache[$d] ??= intdiv((new \DateTimeImmutable($d . ' 00:00:00', new \DateTimeZone('UTC')))->getTimestamp(), 86400);
+    }
+
+    /** every issued loan's position today on its CURRENT schedule — pull_new.sh coll_restr_state.tsv (LEFT JOIN: closed loans have no active rows) */
+    private const SQL_LOAN_STATE = <<<'SQL'
+SELECT o.id, o.crm_active act, o.crm_order_status st, u.first_unpaid, u.od_amt, u.outstanding
+   FROM orders o LEFT JOIN (SELECT s.installment_id, MIN(CASE WHEN s.schedule_date < {E} AND s.paid_amount < s.schedule_amount - 0.005 THEN s.schedule_date END) first_unpaid,
+                ROUND(SUM(CASE WHEN s.schedule_date < {E} THEN GREATEST(s.schedule_amount - s.paid_amount, 0) ELSE 0 END),2) od_amt,
+                ROUND(SUM(GREATEST(s.schedule_amount - s.paid_amount, 0)),2) outstanding
+              FROM crm_installment_schedules s WHERE s.active=1 GROUP BY s.installment_id) u ON u.installment_id=o.id
+   WHERE o.crm_order_status IN (1,5,11,18) ORDER BY o.id
+SQL;
+
+    /** per issued loan: issue day, amount, term / average instalment of the current schedule, items, portfolio manager — pull_new.sh coll_loan_info.tsv */
+    private const SQL_LOAN_INFO = <<<'SQL'
+SELECT o.id, DATE(COALESCE(o.crm_creator_date,o.created_at)) issued, ROUND(COALESCE(o.base_grand_total,0)) amount, sc.term, sc.inst,
+     TRIM(CONCAT(COALESCE(u.first_name,''),' ',COALESCE(u.last_name,''))) pm_name, it.items
+   FROM orders o
+   LEFT JOIN (SELECT installment_id, COUNT(*) term, ROUND(AVG(schedule_amount)) inst FROM crm_installment_schedules WHERE active=1 AND month>0 GROUP BY installment_id) sc ON sc.installment_id=o.id
+   LEFT JOIN crm_users u ON u.id=o.crm_portfolio_manager_id
+   LEFT JOIN (SELECT order_id, GROUP_CONCAT(TRIM(REPLACE(REPLACE(REPLACE(name, CHAR(9),' '), CHAR(10),' '), CHAR(13),' ')) ORDER BY id SEPARATOR ' | ') items FROM order_items WHERE parent_id IS NULL GROUP BY order_id) it ON it.order_id=o.id
+   WHERE o.crm_order_status IN (1,5,11,18) ORDER BY o.id
+SQL;
+
+    /** approved CRM restructuring requests, arrears = the replaced schedule's rows due before the request day — pull_new.sh coll_restr_new.tsv */
+    private const SQL_RESTR_NEW = <<<'SQL'
+SELECT r.id, r.installment_id, DATE(r.created_at) req_d, DATE(COALESCE(r.decided_at, r.created_at)) d, r.months, ROUND(COALESCE(r.outstanding_amount,0),2) outstanding, ROUND(COALESCE(a.arrears_amt,0),2) arrears_amt
+   FROM crm_restructure_requests r
+   LEFT JOIN (SELECT r2.id, SUM(CASE WHEN j.dt < DATE(r2.created_at) THEN j.amt ELSE 0 END) arrears_amt
+              FROM crm_restructure_requests r2 JOIN JSON_TABLE(r2.previous_schedule, '$[*]' COLUMNS(dt DATE PATH '$.schedule_date', amt DECIMAL(12,2) PATH '$.schedule_amount')) j
+              WHERE r2.status='approved' GROUP BY r2.id) a ON a.id=r.id
+   WHERE r.status='approved' AND DATE(COALESCE(r.decided_at, r.created_at)) <= {E} ORDER BY r.id
+SQL;
+
+    /** Math.round(v * 100) / 100, as the Node build rounds (half up) */
+    private static function jsR2(float $v): float
+    {
+        return floor($v * 100 + 0.5) / 100;
+    }
+
+    /** a committed TSV next to the extracts (header row, tab-separated) */
+    private function readTsv(string $file): array
+    {
+        $path = $this->dir . '/' . $file;
+        if (!is_file($path)) { return []; }
+        $lines = preg_split('/\r?\n/', (string) file_get_contents($path));
+        $head = explode("\t", (string) array_shift($lines));
+        $out = [];
+        foreach ($lines as $l) { if ($l === '') { continue; } $c = explode("\t", $l); $row = []; foreach ($head as $i => $h) { $row[$h] = $c[$i] ?? ''; } $out[] = $row; }
+        return $out;
+    }
+
+    /** a loan's position today: [bucket 0 closed / 1 on time / 2 1-29 / 3 30-89 / 4 90+ / 5 cancelled / 6 unknown, days late, overdue, outstanding] */
+    private static function loanNow(?array $s, int $today): array
+    {
+        if ($s === null) { return [6, null, null, null]; }
+        if ((int) $s['st'] === 18) { return [5, null, 0, 0]; }
+        if ((int) $s['act'] !== 1) { return [0, null, 0, 0]; }
+        $dpd = $s['first_unpaid'] === null ? 0 : max(0, $today - self::dayNum((string) $s['first_unpaid']));
+        return [$dpd === 0 ? 1 : ($dpd < 30 ? 2 : ($dpd < 90 ? 3 : 4)), $dpd, self::jsR2((float) ($s['od_amt'] ?? 0)), self::jsR2((float) ($s['outstanding'] ?? 0))];
+    }
+
+    /** New entries into the overdue buckets — build_logistics.js odNew (same counts, amounts, list and dictionaries) */
+    private function odNew(array $entries, array $state, array $days, string $today): array
+    {
+        $NEWB = ['3 days (newly delinquent)', '4–10 days', '11–30 days', '31–60 days', '61–90 days', '90+ days'];
+        $info = [];
+        foreach ($this->run('loan_info', self::SQL_LOAN_INFO, []) as $r) { $info[(string) (int) $r['id']] = $r; }
+        $tday = self::dayNum($today);
+        $dIdx = array_flip($days);
+        $mList = [];
+        for ($m = substr($days[1] ?? $today, 0, 7); strcmp($m, substr($today, 0, 7)) <= 0;) {
+            $mList[] = $m;
+            [$y, $mo] = array_map('intval', explode('-', $m));
+            $mo++;
+            if ($mo > 12) { $mo = 1; $y++; }
+            $m = $y . '-' . str_pad((string) $mo, 2, '0', STR_PAD_LEFT);
+        }
+        $mI = array_flip($mList);
+        $z = static fn (int $n): array => array_fill(0, $n, 0);
+        $day = ['cnt' => array_map(fn () => $z(count($days)), $NEWB), 'amt' => array_map(fn () => $z(count($days)), $NEWB)];
+        $month = ['cnt' => array_map(fn () => $z(count($mList)), $NEWB), 'amt' => array_map(fn () => $z(count($mList)), $NEWB)];
+        $items = $pms = $itI = $pmI = [];
+        $L = ['id' => [], 'd' => [], 'b' => [], 'dpd' => [], 'amt' => [], 'issued' => [], 'loan' => [], 'term' => [], 'inst' => [], 'it' => [], 'pm' => [], 'nb' => [], 'ndpd' => [], 'nod' => [], 'nout' => []];
+        $v = static fn ($x) => ($x === null || $x === '') ? null : (float) $x;
+        foreach ($entries as $e) {
+            $i = $dIdx[$e['d']] ?? null;
+            $b = (int) $e['b'] - 1;
+            if ($i === null || $b < 0) { continue; }
+            $c = (int) $e['cents'];
+            $mi = $mI[substr($e['d'], 0, 7)];
+            $day['cnt'][$b][$i]++; $day['amt'][$b][$i] += $c; $month['cnt'][$b][$mi]++; $month['amt'][$b][$mi] += $c;
+            $id = (string) (int) $e['installment_id'];
+            $f = $info[$id] ?? [];
+            [$nb, $ndpd, $nod, $nout] = self::loanNow($state[$id] ?? null, $tday);
+            $it = (string) ($f['items'] ?? '');
+            $pm = trim((string) ($f['pm_name'] ?? ''));
+            if (!isset($itI[$it])) { $itI[$it] = count($items); $items[] = $it; }
+            if (!isset($pmI[$pm])) { $pmI[$pm] = count($pms); $pms[] = $pm; }
+            $L['id'][] = (int) $id; $L['d'][] = $e['d']; $L['b'][] = $b; $L['dpd'][] = (int) $e['dpd']; $L['amt'][] = $c / 100;
+            $L['issued'][] = ($f['issued'] ?? null) === null ? null : (string) $f['issued'];
+            $L['loan'][] = $v($f['amount'] ?? null); $L['term'][] = $v($f['term'] ?? null); $L['inst'][] = $v($f['inst'] ?? null);
+            $L['it'][] = $itI[$it]; $L['pm'][] = $pmI[$pm];
+            $L['nb'][] = $nb; $L['ndpd'][] = $ndpd; $L['nod'][] = $nod; $L['nout'][] = $nout;
+        }
+        foreach ([&$day, &$month] as &$g) { $g['amt'] = array_map(static fn ($a) => array_map(static fn ($c) => $c / 100, $a), $g['amt']); }
+        unset($g);
+        return ['buckets' => $NEWB, 'months' => $mList, 'day' => $day, 'month' => $month, 'items' => $items, 'pms' => $pms, 'list' => $L];
+    }
+
+    /** Restructured Installments — build_logistics.js collRestructured() (frozen old-system events + approved CRM requests) */
+    private function restructured(array $state, string $today, array $tok): array
+    {
+        $tday = self::dayNum($today);
+        $SIG = ['sms' => 1, 'status' => 2, 'penalty' => 3];
+        $nz = static fn ($x) => ($x === null || $x === '') ? null : (string) $x;
+        $ev = [];
+        foreach ($this->readTsv('coll_restr_legacy.tsv') as $r) {
+            $ev[] = ['id' => (string) (int) $r['case_id'], 'd' => $r['d'], 'src' => $r['src'] === 'status' ? 1 : 0, 'arr' => ((int) $r['arrears']) ? 1 : 0, 'arrAmt' => null, 'months' => null, 'outAt' => null,
+                'at' => $nz($r['at'] ?? null), 'fd' => $nz($r['first_d'] ?? null), 'sk' => $SIG[$r['sig'] ?? ''] ?? 0, 'sd' => $nz($r['sig_d'] ?? null), 'rq' => null, 'rd' => null];
+        }
+        foreach ($this->run('restr_new', self::SQL_RESTR_NEW, $tok) as $r) {
+            $ev[] = ['id' => (string) (int) $r['installment_id'], 'd' => (string) $r['d'], 'src' => 2, 'arr' => (float) $r['arrears_amt'] > 0 ? 1 : 0, 'arrAmt' => self::jsR2((float) $r['arrears_amt']),
+                'months' => ((int) $r['months']) ?: null, 'outAt' => self::jsR2((float) $r['outstanding']), 'at' => null, 'fd' => null, 'sk' => 0, 'sd' => null, 'rq' => (int) $r['id'], 'rd' => (string) $r['req_d']];
+        }
+        usort($ev, static fn ($a, $b) => strcmp($a['d'], $b['d']) ?: ((int) $a['id'] <=> (int) $b['id']));
+        $nth = [];
+        foreach ($ev as &$e) { $nth[$e['id']] = ($nth[$e['id']] ?? 0) + 1; $e['n'] = $nth[$e['id']]; }
+        unset($e);
+        $periods = [];
+        $firstYear = $ev ? (int) substr($ev[0]['d'], 0, 4) : 2025;
+        for ($y = $firstYear; $y < 2025; $y++) { $periods[] = (string) $y; }
+        $endYm = (int) substr($today, 0, 4) * 100 + (int) substr($today, 5, 2);
+        for ($y = 2025, $m = 1; $y * 100 + $m <= $endYm;) { $periods[] = $y . '-' . str_pad((string) $m, 2, '0', STR_PAD_LEFT); if ($m === 12) { $y++; $m = 1; } else { $m++; } }
+        $pIdx = array_flip($periods);
+        $np = count($periods);
+        $P = ['events' => array_fill(0, $np, 0), 'rep' => array_fill(0, $np, 0), 'arr' => array_fill(0, $np, 0), 'arrAmt' => array_fill(0, $np, 0), 'outAt' => array_fill(0, $np, 0), 'crm' => array_fill(0, $np, 0), 'loans' => array_fill(0, $np, 0)];
+        $now = array_fill(0, 7, array_fill(0, $np, 0));
+        $loanSets = array_fill(0, $np, []);
+        $list = ['id' => [], 'n' => [], 'd' => [], 'src' => [], 'arr' => [], 'arrAmt' => [], 'months' => [], 'outAt' => [], 'b' => [], 'dpd' => [], 'out' => [], 'at' => [], 'fd' => [], 'sk' => [], 'sd' => [], 'rq' => [], 'rd' => []];
+        foreach ($ev as $e) {
+            $key = strcmp($e['d'], '2025-01') < 0 ? substr($e['d'], 0, 4) : substr($e['d'], 0, 7);
+            if (!isset($pIdx[$key])) { continue; }
+            $i = $pIdx[$key];
+            [$nb, $ndpd, $nod, $nout] = self::loanNow($state[$e['id']] ?? null, $tday);
+            $P['events'][$i]++; if ($e['n'] > 1) { $P['rep'][$i]++; } $P['arr'][$i] += $e['arr']; $loanSets[$i][$e['id']] = true;
+            if ($e['src'] === 2) { $P['crm'][$i]++; $P['arrAmt'][$i] += $e['arrAmt']; $P['outAt'][$i] += $e['outAt']; }
+            $now[$nb][$i]++;
+            $list['id'][] = (int) $e['id']; $list['n'][] = $e['n']; $list['d'][] = $e['d']; $list['src'][] = $e['src']; $list['arr'][] = $e['arr']; $list['arrAmt'][] = $e['arrAmt']; $list['months'][] = $e['months'];
+            $list['outAt'][] = $e['outAt']; $list['b'][] = $nb; $list['dpd'][] = $ndpd; $list['out'][] = $nout;
+            $list['at'][] = $e['at']; $list['fd'][] = $e['fd']; $list['sk'][] = $e['sk']; $list['sd'][] = $e['sd']; $list['rq'][] = $e['rq']; $list['rd'][] = $e['rd'];
+        }
+        $P['loans'] = array_map('count', $loanSets);
+        $P['arrAmt'] = array_map(static fn ($x) => self::jsR2((float) $x), $P['arrAmt']);
+        $P['outAt'] = array_map(static fn ($x) => self::jsR2((float) $x), $P['outAt']);
+        $loans = [];
+        $cnt = [];
+        foreach ($ev as $e) { $loans[$e['id']] = true; $cnt[$e['id']] = ($cnt[$e['id']] ?? 0) + 1; }
+        $snap = ['loans' => count($loans), 'multi' => 0, 'by' => array_fill(0, 7, 0), 'od' => 0, 'outActive' => 0];
+        foreach (array_keys($loans) as $id) {
+            if ($cnt[$id] > 1) { $snap['multi']++; }
+            [$nb, , $nod, $nout] = self::loanNow($state[(string) $id] ?? null, $tday);
+            $snap['by'][$nb]++;
+            if ($nb >= 1 && $nb <= 4) { $snap['outActive'] += $nout; $snap['od'] += $nod; }
+        }
+        $snap['outActive'] = self::jsR2((float) $snap['outActive']);
+        $snap['od'] = self::jsR2((float) $snap['od']);
+        return ['today' => $today, 'crmFrom' => '2026-09-01', 'buckets' => ['closed', 'ontime', 'd1_29', 'd30_89', 'd90', 'cancelled', 'other'], 'periods' => $periods]
+            + $P + ['now' => $now, 'total' => ['events' => count($ev), 'loans' => count($loans)], 'snap' => $snap, 'list' => $list];
     }
 
     /**
@@ -3242,7 +3422,28 @@ SQL;
                 }
             }
         }
-        return [$odRows, $odLoans];
+        // NEW entries into the overdue buckets (2026-11-16; coll_od_new.tsv in the Node pipeline): a loan falls into a bucket on the
+        // day its days past due (oldest overdue row = the max dpd above) reach a higher bucket than the day before; 1-2 days late is a
+        // buffer (= 0), so the first bucket is exactly 3 days. The cutover day has no day before it and gives no entries.
+        $odNew = [];
+        $prev = [];
+        $prevDay = null;
+        foreach ($loans as $d => $byAct) {   // ksorted above: ascending days
+            $cur = [];
+            foreach ($byAct as $byPm) { foreach ($byPm as $byInst) { foreach ($byInst as $inst => $v) { $cur[$inst] = $v; } } }
+            ksort($cur);
+            $ds = gmdate('Y-m-d', $d * 86400);
+            $bk = [];
+            foreach ($cur as $inst => [$dpd, $c]) {
+                $b = self::newBucketOf($dpd);
+                $bk[$inst] = $b;
+                $pb = ($prevDay === $d - 1) ? ($prev[$inst] ?? 0) : 0;
+                if ($d > $d0 && $b > $pb) { $odNew[] = ['d' => $ds, 'installment_id' => $inst, 'dpd' => $dpd, 'cents' => $c, 'b' => $b]; }
+            }
+            $prev = $bk;
+            $prevDay = $d;
+        }
+        return [$odRows, $odLoans, $odNew];
     }
 
     /** Node's `+x` on a TSV cell: a number, or NaN for a SQL NULL (which JSON.stringify emits as null — see normalize()). */

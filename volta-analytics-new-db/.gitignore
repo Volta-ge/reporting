@@ -28,3 +28,11 @@ funnel_pii.tsv
 funnel_pii_gdpr.tsv
 funnel_pii_active.tsv
 deals_amount_migration_private.html
+coll_restr_new.tsv
+coll_restr_state.tsv
+coll_od_new.tsv
+coll_loan_info.tsv
+loan_pii.tsv
+logi_monthly.tsv
+logi_monthly_meta.tsv
+logi_monthly_pre.tsv

@@ -1790,6 +1790,55 @@ const monthEnds = []; const seen = {};
 for (let i = days.length - 1; i >= 0; i--) { const m = days[i].slice(0, 7); if (!seen[m]) { seen[m] = true; monthEnds.unshift({ m, d: days[i], i }); } }
 od.monthEnds = monthEnds;
 
+// ---- New entries into the overdue buckets (2026-11-16, user: "ვადაგადაცილების კალათებში ახალ ჩავარდნილების რაოდენობა და თანხა.
+// ბუფერულ ზონად აიღე ორი დღის ვადაგადაცილება, რადგან ეს ბუღალტრული გატარებების დაგვიანებით შეიძლება იყოს გამოწვეული. დანარჩენი ყველა
+// შეიყვანე განვადების და მსესხებლის მონაცემებით"). coll_od_new.tsv: one row per loan x day it fell into a bucket (1-2 days late =
+// buffer, so the first bucket is exactly 3 days = newly delinquent); amount = the loan's overdue amount that day. Counted by day and
+// by month, plus a case list with the loan's facts (coll_loan_info.tsv) and where it stands today (coll_restr_state.tsv, as in
+// Restructured Installments). Borrower data is NOT here: the private Artifact copy adds var LOAN_PII (build_funnel.js).
+// Kept identical to NewDbColl's odNew (PHP twin, from its reconstructOverdue()).
+const NEWB = ['3 days (newly delinquent)', '4–10 days', '11–30 days', '31–60 days', '61–90 days', '90+ days'];
+const odNew = (() => {
+  if (!fs.existsSync(path.join(__dirname, 'coll_od_new.tsv'))) return null;
+  const ent = parseTsv('coll_od_new.tsv');
+  const rd = f => fs.existsSync(path.join(__dirname, f)) ? parseTsv(f) : [];
+  const info = new Map(rd('coll_loan_info.tsv').map(r => [String(+r.id), r]));
+  const state = new Map(rd('coll_restr_state.tsv').map(r => [String(+r.id), r]));
+  const DAY = 864e5, dn = s => Math.round(Date.parse(s + 'T00:00:00Z') / DAY), tday = dn(today);
+  const nowOf = id => {   // 0 closed, 1 on time, 2 1-29, 3 30-89, 4 90+, 5 cancelled, 6 unknown (same rule as Restructured Installments)
+    const s = state.get(id);
+    if (!s) return { b: 6, dpd: null, od: null, out: null };
+    if (+s.st === 18) return { b: 5, dpd: null, od: 0, out: 0 };
+    if (s.act !== '1') return { b: 0, dpd: null, od: 0, out: 0 };
+    const fu = (s.first_unpaid && s.first_unpaid !== 'NULL') ? dn(s.first_unpaid) : null, dpd = fu === null ? 0 : Math.max(0, tday - fu);
+    return { b: dpd === 0 ? 1 : dpd < 30 ? 2 : dpd < 90 ? 3 : 4, dpd, od: r2(+s.od_amt || 0), out: r2(+s.outstanding || 0) };
+  };
+  const mList = [];
+  // from the month of the first possible entry (the cutover day has no day before it, so entries start the day after)
+  for (let m = (days[1] || today).slice(0, 7); m <= today.slice(0, 7); ) { mList.push(m); let [y, mo] = m.split('-').map(Number); mo++; if (mo > 12) { mo = 1; y++; } m = y + '-' + String(mo).padStart(2, '0'); }
+  const mI = Object.fromEntries(mList.map((m, i) => [m, i]));
+  const day = { cnt: NEWB.map(() => zeros(days.length)), amt: NEWB.map(() => zeros(days.length)) };
+  const month = { cnt: NEWB.map(() => zeros(mList.length)), amt: NEWB.map(() => zeros(mList.length)) };
+  const items = [], itI = {}, pms = [], pmI = {};
+  const intern = (arr, idx, v) => (idx[v] !== undefined ? idx[v] : (idx[v] = arr.push(v) - 1));
+  const list = { id: [], d: [], b: [], dpd: [], amt: [], issued: [], loan: [], term: [], inst: [], it: [], pm: [], nb: [], ndpd: [], nod: [], nout: [] };
+  for (const r of ent) {
+    const i = dIdx[r.d], b = +r.b - 1; if (i === undefined || b < 0) continue;
+    const cents = Math.round(+r.amt * 100), mi = mI[r.d.slice(0, 7)];
+    day.cnt[b][i]++; day.amt[b][i] += cents; month.cnt[b][mi]++; month.amt[b][mi] += cents;
+    const id = String(+r.installment_id), f = info.get(id) || {}, st = nowOf(id);
+    const v = x => (x === undefined || x === null || x === 'NULL' || x === '') ? null : +x;
+    list.id.push(+id); list.d.push(r.d); list.b.push(b); list.dpd.push(+r.dpd); list.amt.push(cents / 100);
+    list.issued.push(f.issued && f.issued !== 'NULL' ? f.issued : null); list.loan.push(v(f.amount)); list.term.push(v(f.term)); list.inst.push(v(f.inst));
+    list.it.push(intern(items, itI, (f.items && f.items !== 'NULL') ? String(f.items).replace(/\\\\/g, '\\') : ''));
+    list.pm.push(intern(pms, pmI, (f.pm_name && f.pm_name !== 'NULL') ? f.pm_name.trim() : ''));
+    list.nb.push(st.b); list.ndpd.push(st.dpd); list.nod.push(st.od); list.nout.push(st.out);
+  }
+  for (const g of [day, month]) g.amt = g.amt.map(a => a.map(c => c / 100));
+  return { buckets: NEWB, months: mList, day, month, items, pms, list };
+})();
+if (odNew) console.log('new overdue entries:', odNew.list.id.length, '| newly delinquent (3 days):', odNew.day.cnt[0].reduce((a, b) => a + b, 0));
+
 // ---- cash collected (flow) by payment date, day + month, with scheduled dues on the same key
 const PAYK = ['n', 'loans', 'amt', 'prin', 'pen', 'adv', 'bog', 'tbc', 'tbcpay', 'other'];
 function paySeries(rows, keys, idx) {
@@ -1920,8 +1969,93 @@ function collMonthly(schedRows, payRows, orderRows, todayStr, firstMonth) {
 const collm = collMonthly(parseTsv('collm_sched.tsv'), parseTsv('collm_pays.tsv'), parseTsv('collm_orders.tsv'), process.env.COLLM_TODAY || today, '2026-01');   // COLLM_TODAY: test hook for a build on older extracts
 console.log('collections monthly:', collm.months[0], '->', collm.months.at(-1), '| collections', collm.months.map((m, i) => Math.round(collm.total[i] - collm.adv[i])).join(','));
 
-const payload = { cutover: CUTOVER, mstart: MSTART, today, days, months, od, payDay, payMonth, dueDay, dueMonth, perfMonths, perfMonth, reversed, activity, pm, status, cps, meta,
-  monthly: collm, generatedAt: new Date().toISOString().slice(0, 16).replace('T', ' ') + ' UTC' };
+// ---- Restructured Installments (sub-tab "collrestr", 2026-11-16, user: "რესტრუქტურიზებული სესხების დაიდენტიფიცირება — ისეთების,
+// რომლებიც ვერ იხდიდნენ და ახალი გრაფიკი გაუკეთდათ"; "კომენტარში ... 'ახალი გრაფიკი' ... მიანიშნებს რესტრუქტურიზაციაზე").
+// Two sources, joined at the CRM switch (legacy comments end 2026-08-31 21:54, the first CRM request is 2026-09-01 09:14):
+//  * 2026-09-01 on — crm_restructure_requests, status approved (coll_restr_new.tsv): month = the approval day; "in arrears" =
+//    the schedule it replaced still had instalments due before the request day (arrears_amt > 0) — 62% of them; the rest are
+//    mostly payment-date moves the customer asked for (salary day changed), which the CRM files the same way.
+//  * before — coll_restr_legacy.tsv, FROZEN (committed, built once on 2026-11-16 from crm_activity_log legacy.comment): the old
+//    system wrote "განვადების ახალი გრაფიკი" each time it generated a schedule. The first one sits at disbursement (within 3 days
+//    of the sale on 13,054 of 14,939 cases), so only a LATER one (> 7 days after the case's first) is a rebuilt schedule, plus
+//    the old status "სტატუსის შეცვლა :ახალი გრაფიკი" (src status). Rebuilds of the same case within 7 days = one restructuring.
+//    "In arrears" (arrears = 1) = an overdue-reminder SMS ("გიფიქსირდებათ"), a collection status (negotiating / payment promise)
+//    or a penalty mentioned in that case's comments in the 30 days before — 36% / 48% before a rebuild vs 0-1% before the
+//    disbursement schedule, which is what makes the rebuild a restructuring signal. Kept only for issued loans (1/5/11/18) and
+//    more than 7 days after the sale (earlier ones were quote re-dos, not restructurings): 2,865 restructurings of 1,431 loans.
+//    The file also keeps the evidence shown in the list's "Identified by" column: the comment's exact time (at), the date of the
+//    case's first "ახალი გრაფიკი" comment (first_d, the sale), and the latest arrears signal before it (sig sms/status/penalty, sig_d).
+//  * Position today (coll_restr_state.tsv): the loan's CURRENT schedule — closed / cancelled (18) / days late = today - its
+//    oldest unpaid due row (0 = on time). Each restructuring is counted in its month, so a loan restructured twice is in two
+//    rows; the "loans" counts and the snapshot count each loan once. Kept identical to NewDbColl::restructured() (PHP twin).
+function collRestructured(legacyRows, newRows, stateRows, todayStr) {
+  const DAY = 864e5, dn = s => Math.round(Date.parse(s + 'T00:00:00Z') / DAY), today = dn(todayStr);
+  const r2 = v => Math.round(v * 100) / 100;
+  const state = new Map();
+  for (const r of stateRows) state.set(String(+r.id), r);
+  const BUCKETS = ['closed', 'ontime', 'd1_29', 'd30_89', 'd90', 'cancelled', 'other'];
+  const nowOf = id => {
+    const s = state.get(id);
+    if (!s) return { b: 6, dpd: null, out: null, od: null };
+    const out = r2(+s.outstanding || 0), od = r2(+s.od_amt || 0);
+    if (+s.st === 18) return { b: 5, dpd: null, out: 0, od: 0 };
+    if (s.act !== '1') return { b: 0, dpd: null, out: 0, od: 0 };
+    const fu = (s.first_unpaid && s.first_unpaid !== 'NULL') ? dn(s.first_unpaid) : null;
+    const dpd = fu === null ? 0 : Math.max(0, today - fu);
+    return { b: dpd === 0 ? 1 : dpd < 30 ? 2 : dpd < 90 ? 3 : 4, dpd, out, od };
+  };
+  const ev = [];
+  const SIG = { sms: 1, status: 2, penalty: 3 };
+  for (const r of legacyRows) ev.push({ id: String(+r.case_id), d: r.d, src: r.src === 'status' ? 1 : 0, arr: +r.arrears ? 1 : 0, arrAmt: null, months: null, outAt: null,
+    at: r.at || null, fd: r.first_d || null, sk: SIG[r.sig] || 0, sd: r.sig_d || null, rq: null, rd: null });
+  for (const r of newRows) ev.push({ id: String(+r.installment_id), d: r.d, src: 2, arr: +r.arrears_amt > 0 ? 1 : 0, arrAmt: r2(+r.arrears_amt || 0), months: +r.months || null, outAt: r2(+r.outstanding || 0),
+    at: null, fd: null, sk: 0, sd: null, rq: +r.id, rd: r.req_d });
+  ev.sort((a, b) => (a.d < b.d ? -1 : a.d > b.d ? 1 : (+a.id) - (+b.id)));
+  // the how-many-th restructuring of its loan (user, 2026-11-16: "ერთზე მეტჯერ ... ცალკე სვეტად"): 2+ = a repeat
+  const nth = {};
+  for (const e of ev) e.n = nth[e.id] = (nth[e.id] || 0) + 1;
+  // periods: whole years before 2025, then every month from 2025-01 to today's month
+  const periods = [];
+  const firstYear = ev.length ? +ev[0].d.slice(0, 4) : 2025;
+  for (let y = firstYear; y < 2025; y++) periods.push(String(y));
+  for (let y = 2025, m = 1; y * 100 + m <= +todayStr.slice(0, 4) * 100 + +todayStr.slice(5, 7); m === 12 ? (y++, m = 1) : m++) periods.push(y + '-' + String(m).padStart(2, '0'));
+  const pIdx = Object.fromEntries(periods.map((p, i) => [p, i]));
+  const periodOf = d => (d < '2025-01' ? d.slice(0, 4) : d.slice(0, 7));
+  const P = { events: [], rep: [], arr: [], arrAmt: [], outAt: [], crm: [], loans: [] };
+  for (const k of Object.keys(P)) P[k] = periods.map(() => 0);
+  const now = BUCKETS.map(() => periods.map(() => 0));
+  const loanSets = periods.map(() => new Set());
+  const list = { id: [], n: [], d: [], src: [], arr: [], arrAmt: [], months: [], outAt: [], b: [], dpd: [], out: [], at: [], fd: [], sk: [], sd: [], rq: [], rd: [] };
+  for (const e of ev) {
+    const i = pIdx[periodOf(e.d)]; if (i === undefined) continue;
+    const st = nowOf(e.id);
+    P.events[i]++; if (e.n > 1) P.rep[i]++; P.arr[i] += e.arr; loanSets[i].add(e.id);
+    if (e.src === 2) { P.crm[i]++; P.arrAmt[i] += e.arrAmt; P.outAt[i] += e.outAt; }
+    now[st.b][i]++;
+    list.id.push(+e.id); list.n.push(e.n); list.d.push(e.d); list.src.push(e.src); list.arr.push(e.arr); list.arrAmt.push(e.arrAmt); list.months.push(e.months);
+    list.outAt.push(e.outAt); list.b.push(st.b); list.dpd.push(st.dpd); list.out.push(st.out);
+    list.at.push(e.at); list.fd.push(e.fd); list.sk.push(e.sk); list.sd.push(e.sd); list.rq.push(e.rq); list.rd.push(e.rd);
+  }
+  P.loans = loanSets.map(s => s.size);
+  P.arrAmt = P.arrAmt.map(r2); P.outAt = P.outAt.map(r2);
+  // today's snapshot: every loan ever restructured, once, at its current position
+  const loans = [...new Set(ev.map(e => e.id))];
+  const snap = { loans: loans.length, multi: 0, by: BUCKETS.map(() => 0), out: 0, od: 0, outActive: 0 };
+  const cnt = {}; for (const e of ev) cnt[e.id] = (cnt[e.id] || 0) + 1;
+  for (const id of loans) {
+    if (cnt[id] > 1) snap.multi++;
+    const st = nowOf(id); snap.by[st.b]++;
+    if (st.b >= 1 && st.b <= 4) { snap.outActive += st.out; snap.od += st.od; }
+  }
+  snap.outActive = r2(snap.outActive); snap.od = r2(snap.od); delete snap.out;
+  return { today: todayStr, crmFrom: '2026-09-01', buckets: BUCKETS, periods, ...P, now, total: { events: ev.length, loans: loans.length }, snap, list };
+}
+const restr = fs.existsSync(path.join(__dirname, 'coll_restr_new.tsv'))
+  ? collRestructured(parseTsv('coll_restr_legacy.tsv'), parseTsv('coll_restr_new.tsv'), parseTsv('coll_restr_state.tsv'), process.env.COLLM_TODAY || today) : null;
+if (restr) console.log('restructured:', restr.total.events, 'restructurings of', restr.total.loans, 'loans | today: active', restr.snap.by.slice(1, 5).reduce((a, b) => a + b, 0), '30+ late', restr.snap.by[3] + restr.snap.by[4]);
+
+const payload = { cutover: CUTOVER, mstart: MSTART, today, days, months, od, odNew, payDay, payMonth, dueDay, dueMonth, perfMonths, perfMonth, reversed, activity, pm, status, cps, meta,
+  monthly: collm, restr, generatedAt: new Date().toISOString().slice(0, 16).replace('T', ' ') + ' UTC' };
 fs.writeFileSync(path.join(__dirname, 'coll_data.json'), JSON.stringify(payload));
 console.log('days:', days.length, days[0], '->', today, '| months:', months.length, '| overdue today: rows', od.rows.at(-1), 'amt', od.amt.at(-1), 'loans', od.loans.at(-1),
   '| collected today', payDay.amt.at(-1), '| month cols', months.at(-1), payMonth.amt.at(-1), '| activity metrics', Object.keys(activity.metrics).length, '| pm', pm.length, 'status', status.length, 'cps', cps.length);
@@ -1954,6 +2088,21 @@ ${CSS_MARK}
 .coll-mini-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
 @media (max-width: 900px) { .coll-mini-row { grid-template-columns: 1fr; } }
 .coll-sub-title { color: var(--text-primary); font-weight: 700; font-size: 13px; margin: 10px 0 -4px; }
+#collToc { background: var(--surface-1); color: var(--text-primary); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; margin: 4px 0 18px; }
+#collToc .coll-toc-head { color: var(--text-primary); font-weight: 700; font-size: 13px; margin-bottom: 8px; }
+#collToc .coll-toc-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px; }
+#collToc .coll-toc-card { background: var(--page); color: var(--text-primary); border: 1px solid var(--border); border-radius: 8px; padding: 9px 11px; }
+#collToc .coll-toc-title { color: var(--text-primary); font-weight: 700; font-size: 12.5px; }
+#collToc .coll-toc-desc { color: var(--text-secondary); font-size: 11.5px; line-height: 1.45; margin: 3px 0 7px; }
+#collToc .coll-toc-links a { color: var(--text-primary); background: transparent; font-size: 12px; font-weight: 600; margin-right: 12px; text-decoration: underline dotted; text-underline-offset: 3px; cursor: pointer; white-space: nowrap; }
+#page-collections .coll-top { float: right; color: var(--text-muted); background: transparent; font-size: 11px; font-weight: 600; text-decoration: none; cursor: pointer; }
+#page-collections .coll-sub-title[id^="collSec"] { scroll-margin-top: 12px; }
+#collrMainTable td.collr-dc, #collOdNewDayTable td.colln-dc, #collOdNewMonthTable td.colln-dc { cursor: pointer; }
+#collOdNewMonthTable .colln-pct { color: var(--rpt-muted); font-style: italic; font-weight: 400; font-size: 11px; }
+#collOdNewDayTable td.colln-dc:hover, #collOdNewMonthTable td.colln-dc:hover { text-decoration: underline dotted; text-underline-offset: 3px; box-shadow: inset 0 0 0 2px var(--series-a-soft); }
+#collrMainTable td.collr-dc:hover { text-decoration: underline dotted; text-underline-offset: 3px; box-shadow: inset 0 0 0 2px var(--series-a-soft); }
+.collr-drill { display: inline-flex; align-items: center; gap: 8px; background: #1a1a34; color: #c2ff00; border-radius: 999px; padding: 4px 5px 4px 12px; font-size: 12px; font-weight: 600; }
+.collr-drill button { border: 0; background: #c2ff00; color: #1a1a34; border-radius: 50%; width: 20px; height: 20px; cursor: pointer; font-weight: 700; line-height: 20px; padding: 0; }
 ${CSS_END}`;
 removeBetween(CSS_MARK, CSS_END, 'coll css');
 must('.report-scroll-top > div { height: 1px; }', 'css anchor');
@@ -1983,6 +2132,14 @@ if (!html.includes('<button data-page="collmonthly">')) {
   html = html.replace(btn, btn + '        <button data-page="collmonthly">Collections Monthly</button>' + NL);
 }
 
+// the Restructured Installments button (2026-11-16; renamed from Restructured Loans the same day, user): after Collections Monthly, added once
+if (!html.includes('<button data-page="collrestr">')) {
+  const btn = '        <button data-page="collmonthly">Collections Monthly</button>' + NL;
+  must(btn, 'Collections Monthly nav button');
+  html = html.replace(btn, btn + '        <button data-page="collrestr">Restructured Installments</button>' + NL);
+}
+html = html.replace('<button data-page="collrestr">Restructured Loans</button>', () => '<button data-page="collrestr">Restructured Installments</button>');   // a page built before the rename
+
 // page
 const PAGE_START = '<!-- coll-page-start -->', PAGE_END = '<!-- coll-page-end -->';
 removeBetween(PAGE_START, PAGE_END, 'coll page');
@@ -1998,36 +2155,59 @@ ${PAGE_START}
   <p class="section-title">Collections Analyze &mdash; Payments, Overdue Portfolio &amp; Collection Activity</p>
   <div class="banner" id="collBanner"></div>
   <div class="coll-kpis" id="collKpis"></div>
+  <div class="coll-toc" id="collToc">
+    <div class="coll-toc-head">What&rsquo;s on this tab &mdash; click a link to jump to the report</div>
+    <div class="coll-toc-grid">
+      <div class="coll-toc-card"><div class="coll-toc-title">1. Cash Collected</div><div class="coll-toc-desc">How much customers paid: total, principal, advance and penalty, by bank / channel &mdash; next to what was due.</div><div class="coll-toc-links"><a href="#" data-go="collSecPayDay">By day</a><a href="#" data-go="collSecPayMonth">By month</a></div></div>
+      <div class="coll-toc-card"><div class="coll-toc-title">2. Overdue Portfolio</div><div class="coll-toc-desc">How much is overdue at the end of each day / month, split by days past due (1&ndash;3, 4&ndash;10 &hellip; 90+); amounts, schedule rows and loans.</div><div class="coll-toc-links"><a href="#" data-go="collSecOdDay">By day</a><a href="#" data-go="collSecOdMonth">By month</a></div></div>
+      <div class="coll-toc-card"><div class="coll-toc-title">3. New Entries into Overdue Buckets</div><div class="coll-toc-desc">Loans that newly fell into each overdue bucket (1&ndash;2 days late is a buffer), count and amount &mdash; click any number for the loans and borrowers behind it.</div><div class="coll-toc-links"><a href="#" data-go="collSecNewDay">By day</a><a href="#" data-go="collSecNewMonth">By month</a><a href="#" data-go="collSecNewList">Case list</a></div></div>
+      <div class="coll-toc-card"><div class="coll-toc-title">4. Overdue by Portfolio Manager</div><div class="coll-toc-desc">Each portfolio manager&rsquo;s overdue amount and 90+ days part, day by day.</div><div class="coll-toc-links"><a href="#" data-go="collSecPm">By day</a></div></div>
+      <div class="coll-toc-card"><div class="coll-toc-title">5. Due-Date Performance</div><div class="coll-toc-desc">Of the instalments due on a day / in a month: paid on time, paid late, still unpaid; on-time rate.</div><div class="coll-toc-links"><a href="#" data-go="collSecDueDay">By due date</a><a href="#" data-go="collSecDueMonth">By due month</a></div></div>
+      <div class="coll-toc-card"><div class="coll-toc-title">6. Collection Activity</div><div class="coll-toc-desc">What the collections team did: customer contacts, promises to pay (made / kept / broken), status changes, assignments.</div><div class="coll-toc-links"><a href="#" data-go="collSecActDay">By day</a><a href="#" data-go="collSecActMonth">By month</a></div></div>
+      <div class="coll-toc-card"><div class="coll-toc-title">7. Today&rsquo;s Snapshots</div><div class="coll-toc-desc">Right now: loans per portfolio manager, loans by CRM status, the CRM&rsquo;s payment statistics.</div><div class="coll-toc-links"><a href="#" data-go="collSecSnap">Snapshots</a></div></div>
+      <div class="coll-toc-card"><div class="coll-toc-title">8. Also in Collections</div><div class="coll-toc-desc">Separate tabs of this group: monthly collections by component and portfolio KPIs; restructured installments and how they pay.</div><div class="coll-toc-links"><a href="#" data-nav="collmonthly">Collections Monthly</a><a href="#" data-nav="collrestr">Restructured Installments</a></div></div>
+    </div>
+  </div>
 
-  <p class="coll-sub-title">Cash Collected &mdash; by day (flow, by payment date)</p>
+  <p class="coll-sub-title" id="collSecPayDay">Cash Collected &mdash; by day (flow, by payment date)</p>
 ${card('collPayDay')}
-  <p class="coll-sub-title">Cash Collected &mdash; by month</p>
+  <p class="coll-sub-title" id="collSecPayMonth">Cash Collected &mdash; by month</p>
 ${card('collPayMonth')}
   <p class="note" id="collPayNote"></p>
 
-  <p class="coll-sub-title">Overdue Portfolio &mdash; by day (stock, end of day)</p>
+  <p class="coll-sub-title" id="collSecOdDay">Overdue Portfolio &mdash; by day (stock, end of day)</p>
 ${card('collOdDay')}
-  <p class="coll-sub-title">Overdue Portfolio &mdash; by month (stock, month end)</p>
+  <p class="coll-sub-title" id="collSecOdMonth">Overdue Portfolio &mdash; by month (stock, month end)</p>
 ${card('collOdMonth')}
   <p class="note" id="collOdNote"></p>
 
-  <p class="coll-sub-title">Overdue Loans &mdash; by portfolio manager (stock, end of day)</p>
+  <p class="coll-sub-title" id="collSecNewDay">New Entries into Overdue Buckets &mdash; by day (flow; 1&ndash;2 days late is a buffer and not counted)</p>
+${card('collOdNewDay')}
+  <p class="coll-sub-title" id="collSecNewMonth">New Entries into Overdue Buckets &mdash; by month</p>
+${card('collOdNewMonth')}
+  <p class="note" id="collOdNewNote"></p>
+  <p class="coll-sub-title" id="collSecNewList">Loans that fell into a bucket &mdash; one row per entry, newest first</p>
+  <div class="lt-filters"><label>Case # / name / phone<input type="search" id="collnSearch" placeholder="e.g. 45922"></label><label>Bucket entered<select id="collnBucket"></select></label><span id="collnDrill"></span><span class="lt-filter-count" id="collnCount"></span></div>
+${card('collOdNewList')}
+  <div id="collnMore" style="text-align:center;margin:8px 0 16px"></div>
+
+  <p class="coll-sub-title" id="collSecPm">Overdue Loans &mdash; by portfolio manager (stock, end of day)</p>
 ${card('collPmDay')}
   <p class="note" id="collPmNote"></p>
 
-  <p class="coll-sub-title">Due-Date Performance &mdash; by due date (schedule rows due that day)</p>
+  <p class="coll-sub-title" id="collSecDueDay">Due-Date Performance &mdash; by due date (schedule rows due that day)</p>
 ${card('collDueDay')}
-  <p class="coll-sub-title">Due-Date Performance &mdash; by due month</p>
+  <p class="coll-sub-title" id="collSecDueMonth">Due-Date Performance &mdash; by due month</p>
 ${card('collDueMonth')}
   <p class="note" id="collDueNote"></p>
 
-  <p class="coll-sub-title">Collection Activity &mdash; by day (flow)</p>
+  <p class="coll-sub-title" id="collSecActDay">Collection Activity &mdash; by day (flow)</p>
 ${card('collActDay')}
-  <p class="coll-sub-title">Collection Activity &mdash; by month</p>
+  <p class="coll-sub-title" id="collSecActMonth">Collection Activity &mdash; by month</p>
 ${card('collActMonth')}
   <p class="note" id="collActNote"></p>
 
-  <p class="coll-sub-title">Today's snapshots</p>
+  <p class="coll-sub-title" id="collSecSnap">Today's snapshots</p>
   <div class="coll-mini-row">
     <div class="table-card"><table class="logi-mini" id="collPmTable"><colgroup><col class="logi-mini-name"></colgroup><tbody></tbody></table></div>
     <div class="table-card"><table class="logi-mini" id="collStatusTable"><colgroup><col class="logi-mini-name"></colgroup><tbody></tbody></table></div>
@@ -2050,6 +2230,19 @@ ${card('collmMain')}
   <p class="coll-sub-title">KPIs against the portfolio &mdash; month-start portfolio vs collections in the month</p>
 ${card('collmKpi')}
   <p class="note" id="collmKpiNote"></p>
+</div>
+</div>
+<div class="page" data-page="collrestr" id="page-collrestr">
+<div class="wrap">
+  <p class="section-title">Restructured Installments &mdash; by Month, and How They Pay on the New Schedule</p>
+  <div class="banner" id="collrBanner"></div>
+  <p class="coll-sub-title">Restructurings by month &mdash; and where those loans stand today</p>
+${card('collrMain')}
+  <p class="note" id="collrMainNote"></p>
+  <p class="coll-sub-title">Restructured installments &mdash; one row per restructuring, newest first</p>
+  <div class="lt-filters"><label>Case #<input type="search" id="collrSearch" placeholder="e.g. 45922"></label><label>Status today<select id="collrStatus"></select></label><span id="collrDrill"></span><span class="lt-filter-count" id="collrCount"></span></div>
+${card('collrList')}
+  <div id="collrMore" style="text-align:center;margin:8px 0 16px"></div>
 </div>
 </div>
 ${PAGE_END}
@@ -2110,6 +2303,21 @@ window.__registerPage(['collections'], function () {
     ['Collected ' + monthLabel(C.months[C.months.length - 1]) + ' (MTD)', fmt(C.payMonth.amt.at(-1)) + ' GEL', 'due ' + fmt(C.dueMonth.amt.at(-1)) + ' GEL'],
     ['On-time rate since cutover', pct(sum(C.perfMonth.ontime_rows) / Math.max(1, sum(C.perfMonth.rows_due))), 'of schedule rows due since ' + dayLabel(C.cutover)],
   ];
+  {
+    const pageEl = document.getElementById('page-collections');
+    pageEl.querySelectorAll('.coll-sub-title[id^="collSec"]').forEach(p => { if (!p.querySelector('.coll-top')) p.insertAdjacentHTML('beforeend', '<a href="#" class="coll-top" data-go="collToc">&uarr; Contents</a>'); });
+    if (!pageEl.__tocWired) {
+      pageEl.__tocWired = true;
+      pageEl.addEventListener('click', e => {
+        const a = e.target.closest('a[data-go], a[data-nav]');
+        if (!a) return;
+        e.preventDefault();
+        if (a.hasAttribute('data-nav')) { const b = document.querySelector('.nav-group button[data-page="' + a.getAttribute('data-nav') + '"]'); if (b) { b.click(); window.scrollTo({ top: 0, behavior: 'smooth' }); } return; }
+        const el = document.getElementById(a.getAttribute('data-go'));
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+    }
+  }
   document.getElementById('collKpis').innerHTML = kpis.map(k => '<div class="coll-kpi"><div class="coll-kpi-label">' + k[0] + '</div><div class="coll-kpi-value">' + k[1] + '</div><div class="coll-kpi-sub">' + k[2] + '</div></div>').join('');
 
   // ---- cash collected
@@ -2180,6 +2388,103 @@ window.__registerPage(['collections'], function () {
   const me = O.monthEnds;
   renderOd('collOdMonth', 'OVERDUE PORTFOLIO &mdash; month end', 'Days past due', me.map((m, i) => monthLabel(m.m) + (i === me.length - 1 ? ' (MTD, ' + dayLabel(m.d) + ')' : ' (' + dayLabel(m.d) + ')')), me.map(m => m.i), 'Share ' + monthLabel(me.at(-1).m));
   document.getElementById('collOdNote').innerHTML = 'Stock at the end of each day. A schedule row (<code>crm_installment_schedules</code>) is overdue on day D when <code>schedule_date &lt; D</code> (days past due = D &minus; schedule_date, so a row due yesterday is 1 day overdue today) and it had not been settled by the end of D: rows still open at the last refresh (<code>active = 1</code>, i.e. <code>paid_amount &lt; schedule_amount</code>) were open on every earlier day of the window; rows settled since the cutover carry a <code>crm_payment_events.schedule_settled</code> event and count as open on the days before it; rows settled before the cutover (no event) are never overdue in this window. Amount = <code>schedule_amount &minus; paid_amount</code> as of D (partial payments posted after D are added back from the <code>schedule_partial</code> events). Today\\'s column is therefore exactly the live "<code>active = 1 AND schedule_date &lt; today</code>" figure (a settle event dated after the refresh day &mdash; the CRM holds one payment post-dated to 18 Sep 2026 &mdash; counts as settled on the refresh day, so the row leaves the stock here the same day it is gone live). Buckets are the CRM\\'s own DPD buckets (<code>dpd_bucket</code> 1&ndash;6 in <code>crm_payment_events</code>, boundaries verified against its <code>days_late</code>): 1&ndash;3 / 4&ndash;10 / 11&ndash;30 / 31&ndash;60 / 61&ndash;90 / 91+ days (labelled 90+ like the CRM); add them up for 1&ndash;30 / 31&ndash;60 / 61&ndash;90 / 90+. Overdue loans = distinct <code>installment_id</code> (= <code>orders.id</code>), each loan placed in the bucket of its oldest overdue row. "No longer active in the CRM" = the loan\\'s <code>orders.crm_active &ne; 1</code> (closed or legacy-status loans that still have unpaid schedule rows &mdash; mostly old 90+ cases); the CRM-active split is what the collectors work. The 22 payment reversals since the cutover are not unwound day by day (a reversed row simply counts as open on all days). Month view = the same stock on the last day of each month in the window (' + dayLabel(C.cutover) + ' = the cutover snapshot); no earlier month-end can be reconstructed, because the migrated schedule does not record when a row was paid.';
+
+  // ---- new entries into the overdue buckets (flow) + the case list behind every count (2026-11-16)
+  if (C.odNew) {
+    const N = C.odNew, L = N.list, NB = N.buckets;
+    const LP = window.LOAN_PII || null;   // borrower data: only in the private Artifact copy
+    const lpI = {}; if (LP) LP.id.forEach((id, k) => { lpI[id] = k; });
+    const NOW = ['Closed', 'On time', '1&ndash;29 days late', '30&ndash;89 days late', '90+ days late', 'Cancelled', 'Unknown'];
+    const esc = v => String(v).replace(/[&<>"]/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[ch]);
+    const dLab = d => { const x = d.split('-'); return x[2] + '.' + x[1] + '.' + x[0]; };
+    const SUMA = a => a.reduce((t, v) => t + (v || 0), 0);
+    // share = the bucket's part of the column's "All entries" (user, 2026-11-16: "პროცენტობაც მიამატე თვეების მიხედვით"), monthly table only
+    const dcn = (v, g, i, b, share) => v ? '<td class="colln-dc" data-g="' + g + '" data-i="' + i + '" data-b="' + b + '" title="Click to list these loans">' + fmt(v)
+      + (share !== undefined && share !== null ? ' <span class="colln-pct">(' + pct(share) + ')</span>' : '') + '</td>' : '<td>' + DASH + '</td>';
+    const newTable = (id, title, cols, G, g, withPct) => {
+      const sh = (v, base) => (withPct && base) ? v / base : null;
+      const k = cols.length;
+      let h = '<tr class="logi-title"><td colspan="' + (k + 2) + '">' + title + '</td></tr>';
+      h += '<tr class="logi-head"><td>Bucket entered</td>' + cols.map(c => '<td>' + c + '</td>').join('') + '<td>Total</td></tr>';
+      h += '<tr class="logi-sub"><td colspan="' + (k + 2) + '">Loans that fell into the bucket (count)</td></tr>';
+      const allC = cols.map((_, i) => SUMA(G.cnt.map(a => a[i])));
+      h += '<tr class="logi-total"><td>All entries</td>' + allC.map((v, i) => dcn(v, g, i, -1)).join('') + dcn(SUMA(allC), g, -1, -1) + '</tr>';
+      NB.forEach((b, x) => { h += '<tr class="' + alt(x) + '"><td>' + b + '</td>' + G.cnt[x].map((v, i) => dcn(v, g, i, x, sh(v, allC[i]))).join('') + dcn(SUMA(G.cnt[x]), g, -1, x, sh(SUMA(G.cnt[x]), SUMA(allC))) + '</tr>'; });
+      h += '<tr class="logi-sub"><td colspan="' + (k + 2) + '">Overdue amount when they fell in (GEL)</td></tr>';
+      const allA = cols.map((_, i) => SUMA(G.amt.map(a => a[i])));
+      h += '<tr class="logi-total"><td>All entries</td>' + allA.map((v, i) => dcn(v, g, i, -1)).join('') + dcn(SUMA(allA), g, -1, -1) + '</tr>';
+      NB.forEach((b, x) => { h += '<tr class="' + alt(x) + '"><td>' + b + '</td>' + G.amt[x].map((v, i) => dcn(v, g, i, x, sh(v, allA[i]))).join('') + dcn(SUMA(G.amt[x]), g, -1, x, sh(SUMA(G.amt[x]), SUMA(allA))) + '</tr>'; });
+      document.getElementById(id + 'Table').querySelector('tbody').innerHTML = h;
+    };
+    newTable('collOdNewDay', 'NEW ENTRIES INTO OVERDUE BUCKETS &mdash; by day', dayCols, N.day, 'd');
+    newTable('collOdNewMonth', 'NEW ENTRIES INTO OVERDUE BUCKETS &mdash; by month', N.months.map((m, i) => monthLabel(m) + (i === N.months.length - 1 ? ' (MTD)' : '')), N.month, 'm', true);
+    document.getElementById('collOdNewNote').innerHTML = 'Flow. A loan <b>falls into</b> a bucket on the day its days past due (counted from its oldest overdue schedule row, as in the overdue portfolio above) first reach that bucket, coming from a lower bucket the day before. '
+      + '<b>Buffer:</b> 1&ndash;2 days late is not counted as overdue (payments can be posted a day or two late), so the first bucket is <b>3 days</b> &mdash; a loan entering it is <b>newly delinquent</b>; the later buckets are loans rolling further. A loan rolling from 3 days to 90+ appears once in each bucket on the day it reaches it; one that pays its oldest instalment and falls behind again later counts again. '
+      + '<b>Amount</b> = the loan&rsquo;s overdue amount on that day. In the monthly table the percentage next to each number is that bucket&rsquo;s share of the month&rsquo;s entries (count or amount). Click any number to list its loans below. From ' + dayLabel(C.days[1]) + ' (the first day with a day before it in the CRM).';
+
+    // ---- the case list
+    const sel = document.getElementById('collnBucket');
+    if (!sel.options.length) sel.innerHTML = '<option value="all">All</option>' + NB.map((b, x) => '<option value="' + x + '">' + b + '</option>').join('');
+    const order = L.id.map((_, j) => j).reverse();
+    let rows = order, shown = 300;
+    const money2 = v => (v === null || v === undefined) ? DASH : (v ? fmt(v) : DASH);
+    const paint = () => {
+      const pcols = LP ? '<td>Name</td><td>Phone</td><td>Personal number</td>' : '';
+      let t = '<tr class="logi-title"><td colspan="' + (LP ? 18 : 15) + '">Loans that fell into a bucket &mdash; one row per entry, newest first</td></tr>'
+        + '<tr class="logi-head"><td>Case #</td><td>Fell into</td><td>On</td><td>Days past due then</td><td>Overdue then &#8382;</td>' + pcols
+        + '<td>Issued</td><td>Loan &#8382;</td><td>Term (months)</td><td>Avg. instalment &#8382;</td><td>Items</td><td>Portfolio manager</td><td>Today</td><td>Days late today</td><td>Overdue today &#8382;</td><td>Outstanding today &#8382;</td></tr>';
+      rows.slice(0, shown).forEach((j, k) => {
+        const p = LP ? lpI[L.id[j]] : undefined, nb = L.nb[j];
+        const pc = LP ? '<td style="white-space:nowrap">' + (p !== undefined ? esc(LP.nm[p]) || DASH : DASH) + '</td><td>' + (p !== undefined && LP.ph[p] ? LP.ph[p] : DASH) + '</td><td>' + (p !== undefined && LP.pid[p] ? LP.pid[p] : DASH) + '</td>' : '';
+        t += '<tr class="' + (k % 2 ? 'logi-light' : 'logi-white') + '"><td>' + L.id[j] + '</td><td>' + NB[L.b[j]] + '</td><td>' + dLab(L.d[j]) + '</td><td>' + fmt(L.dpd[j]) + '</td><td>' + money2(L.amt[j]) + '</td>' + pc
+          + '<td>' + (L.issued[j] ? dLab(L.issued[j]) : DASH) + '</td><td>' + money2(L.loan[j]) + '</td><td>' + (L.term[j] || DASH) + '</td><td>' + money2(L.inst[j]) + '</td>'
+          + '<td style="white-space:normal;min-width:240px;text-align:left">' + (esc(N.items[L.it[j]]) || DASH) + '</td><td style="white-space:nowrap">' + (esc(N.pms[L.pm[j]]) || DASH) + '</td>'
+          + '<td>' + NOW[nb] + '</td><td>' + (L.ndpd[j] === null ? DASH : fmt(L.ndpd[j])) + '</td><td>' + (nb >= 1 && nb <= 4 ? money2(L.nod[j]) : DASH) + '</td><td>' + (nb >= 1 && nb <= 4 ? money2(L.nout[j]) : DASH) + '</td></tr>';
+      });
+      document.getElementById('collOdNewListTable').querySelector('tbody').innerHTML = t;
+      const left = rows.length - shown;
+      document.getElementById('collnMore').innerHTML = left > 0 ? '<button type="button" style="padding:6px 14px;border:1px solid var(--border);border-radius:8px;background:var(--page);color:var(--text-primary);cursor:pointer">Show ' + fmt(Math.min(left, 900)) + ' more (' + fmt(left) + ' not shown)</button>' : '';
+      document.getElementById('collnCount').textContent = fmt(rows.length) + ' entries';
+    };
+    const drillOk = j => {
+      const D = window.__collnDrill;
+      if (!D) return true;
+      if (D.b >= 0 && L.b[j] !== D.b) return false;
+      if (D.i >= 0) { if (D.g === 'd' ? L.d[j] !== C.days[D.i] : L.d[j].slice(0, 7) !== N.months[D.i]) return false; }
+      return true;
+    };
+    const apply = () => {
+      const q = document.getElementById('collnSearch').value.trim().toLowerCase(), v = sel.value, D = window.__collnDrill;
+      rows = order.filter(j => {
+        if (v !== 'all' && L.b[j] !== +v) return false;
+        if (!drillOk(j)) return false;
+        if (!q) return true;
+        if (String(L.id[j]).indexOf(q) >= 0) return true;
+        const p = LP ? lpI[L.id[j]] : undefined;
+        return p !== undefined && ((LP.nm[p] || '').toLowerCase().indexOf(q) >= 0 || (LP.ph[p] || '').indexOf(q) >= 0 || (LP.pid[p] || '').indexOf(q) >= 0);
+      });
+      document.getElementById('collnDrill').innerHTML = D ? '<span class="collr-drill">' + (D.i < 0 ? 'All days' : D.g === 'd' ? dayLabel(C.days[D.i]) : monthLabel(N.months[D.i])) + ' &middot; ' + (D.b < 0 ? 'all buckets' : NB[D.b]) + ' <button type="button" title="Show all again">&times;</button></span>' : '';
+      shown = 300; paint();
+    };
+    window.__collnApply = apply;
+    const more = document.getElementById('collnMore');
+    if (!more.__wired) {
+      more.__wired = true;
+      more.addEventListener('click', e => { if (e.target.closest('button')) { shown += 900; paint(); } });
+      document.getElementById('collnSearch').addEventListener('input', () => window.__collnApply && window.__collnApply());
+      sel.addEventListener('change', () => window.__collnApply && window.__collnApply());
+      ['collOdNewDayTable', 'collOdNewMonthTable'].forEach(tid => document.getElementById(tid).addEventListener('click', e => {
+        const td = e.target.closest('td.colln-dc');
+        if (!td) return;
+        window.__collnDrill = { g: td.getAttribute('data-g'), i: +td.getAttribute('data-i'), b: +td.getAttribute('data-b') };
+        if (window.__collnApply) window.__collnApply();
+        const f = document.getElementById('collnSearch').closest('.lt-filters');
+        if (f) f.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }));
+      document.getElementById('collnDrill').addEventListener('click', e => { if (e.target.closest('button')) { window.__collnDrill = null; if (window.__collnApply) window.__collnApply(); } });
+    }
+    apply();
+  }
 
   // ---- overdue by portfolio manager (day series)
   {
@@ -2291,7 +2596,7 @@ window.__registerPage(['collections'], function () {
     document.getElementById('collSnapNote').innerHTML = 'Portfolio managers: Active loans = <code>orders.crm_active = 1</code> per <code>crm_portfolio_manager_id</code>; Loans with open rows / Outstanding schedule = loans with at least one unpaid schedule row and the sum of their unpaid remainders (all future and past dues); Overdue = today\\'s column of the tables above. CRM status = <code>orders.crm_status_id</code> &rarr; <code>crm_installment_statuses</code> for loans that still have open schedule rows &mdash; "Promised" is the value most migrated loans carry, so treat it as the default rather than a real promise; the collectors\\' changes since the cutover are in the activity table. Customer payment-stats cache = the CRM\\'s own per-customer scoring (on-time rate, worst DPD bucket 1&ndash;6 as above, promises); it is computed only for customers the CRM has touched since the cutover (' + fmt(kt('customers')) + ' of ~29k customers), so it is a sample of the currently worked cases, not the whole book. Tables with 0 rows were empty at the last refresh (' + C.generatedAt + '); <code>crm_collection_items</code> / <code>crm_collection_statuses</code> belong to the logistics module (vendor collections), not to debt collection.';
   }
 
-  const ids = ['collPayDay', 'collPayMonth', 'collOdDay', 'collOdMonth', 'collPmDay', 'collDueDay', 'collDueMonth', 'collActDay', 'collActMonth'];
+  const ids = ['collPayDay', 'collPayMonth', 'collOdDay', 'collOdMonth', 'collOdNewDay', 'collOdNewMonth', 'collOdNewList', 'collPmDay', 'collDueDay', 'collDueMonth', 'collActDay', 'collActMonth'];
   window.collScrollUpdaters = ids.map(id => setupTopScrollSync(id + 'ScrollTop', id + 'ScrollBody'));
 });
 // ---- Collections Monthly: COLL_JSON.monthly (collMonthly() in build_logistics.js / NewDbColl::monthly() live)
@@ -2387,12 +2692,129 @@ window.__registerPage(['collmonthly'], function () {
   f.__collm = true;
   window.__onLiveSection = f;
 })();
+// ---- Restructured Installments: COLL_JSON.restr (collRestructured() in build_logistics.js / NewDbColl::restructured() live)
+window.__registerPage(['collrestr'], function () {
+  const R = COLL_JSON.restr, DASH = '&ndash;';
+  const banner = document.getElementById('collrBanner');
+  if (!R || !R.periods || !R.periods.length) { banner.innerHTML = 'No restructuring data yet.'; return; }
+  const MN = MONTH_NAMES;
+  const pLabel = p => p.length === 4 ? p + ' (whole year)' : MN[Number(p.slice(5, 7)) - 1] + ' ' + p.slice(0, 4) + (p === R.today.slice(0, 7) ? ' (MTD)' : '');
+  const dLabel = d => { const x = d.split('-'); return x[2] + '.' + x[1] + '.' + x[0]; };
+  const num = v => (v ? fmt(v) : DASH);
+  const money = v => (v === null || v === undefined) ? DASH : (v ? fmt(v) : DASH);
+  const pc = (a, b) => b ? Math.round(a / b * 100) + '%' : DASH;
+  const SUM = a => a.reduce((t, v) => t + (v || 0), 0);
+  const BL = ['Closed', 'On time', '1&ndash;29 days late', '30&ndash;89 days late', '90+ days late', 'Cancelled', 'Unknown'];
+  // drill-down (user, 2026-11-16: "ციფრებს ... ჩაშლა ... რომ დავაწვები ვნახო რა ქეისზეა საუბარი"): a count cell filters the list
+  // below to the restructurings behind it — p = period index (-1 = all, the Total row), k = all / arr / b<bucket>
+  const dc = (v, i, k) => v ? '<td class="collr-dc" data-p="' + i + '" data-k="' + k + '" title="Click to list these cases">' + fmt(v) + '</td>' : '<td>' + DASH + '</td>';
+  const S = R.snap, active = S.by[1] + S.by[2] + S.by[3] + S.by[4];
+  banner.innerHTML = '<b>' + fmt(R.total.events) + '</b> restructurings of <b>' + fmt(R.total.loans) + '</b> loans since ' + R.periods[0] + ' (' + fmt(S.multi) + ' loans restructured more than once). '
+    + '<b>Today</b> ' + fmt(active) + ' of these loans are still open: <b>' + fmt(S.by[1]) + '</b> on time, ' + fmt(S.by[2]) + ' 1&ndash;29 days late, <b>' + fmt(S.by[3] + S.by[4]) + '</b> 30+ days late (' + pc(S.by[3] + S.by[4], active) + ') &middot; outstanding &#8382;' + fmt(S.outActive) + ', of which overdue &#8382;' + fmt(S.od) + ' &middot; ' + fmt(S.by[0]) + ' closed, ' + fmt(S.by[5]) + ' cancelled. Position as of ' + dLabel(R.today) + '.';
+
+  // ---- table 1: by period
+  const head = '<tr class="logi-head"><td rowspan="2">Period</td><td rowspan="2">Restructurings</td><td rowspan="2">Loans</td><td rowspan="2">Repeat<br><small>loan&rsquo;s 2nd+ time</small></td><td colspan="2">In arrears when restructured</td><td colspan="2">CRM requests (from Sep 2026)</td><td colspan="7">Those loans today (on their new schedule)</td></tr>'
+    + '<tr class="logi-head"><td>Count</td><td>Share</td><td>Arrears &#8382;</td><td>Outstanding &#8382;</td>' + BL.slice(0, 6).map(b => '<td>' + b + '</td>').join('') + '<td>30+ late share</td></tr>';
+  let h = '<tr class="logi-title"><td colspan="15">Restructurings by month &mdash; old system (comments) until Aug 31, 2026, CRM requests from Sep 1, 2026</td></tr>' + head;
+  R.periods.forEach((p, i) => {
+    if (p === '2026-09') h += '<tr class="logi-sub"><td colspan="15">From September 1, 2026: approved CRM restructuring requests</td></tr>';
+    const late30 = R.now[3][i] + R.now[4][i];
+    h += '<tr class="' + (i % 2 ? 'logi-light' : 'logi-white') + '"><td>' + pLabel(p) + '</td>' + dc(R.events[i], i, 'all') + dc(R.loans[i], i, 'all') + dc(R.rep[i], i, 'rep') + dc(R.arr[i], i, 'arr') + '<td>' + (R.events[i] ? pc(R.arr[i], R.events[i]) : DASH) + '</td>'
+      + '<td>' + (R.crm[i] ? money(R.arrAmt[i]) : DASH) + '</td><td>' + (R.crm[i] ? money(R.outAt[i]) : DASH) + '</td>'
+      + [0, 1, 2, 3, 4, 5].map(b => dc(R.now[b][i], i, 'b' + b)).join('') + '<td>' + (R.events[i] ? pc(late30, R.events[i]) : DASH) + '</td></tr>';
+  });
+  const tLate = SUM(R.now[3]) + SUM(R.now[4]);
+  h += '<tr class="logi-total"><td>Total</td>' + dc(R.total.events, -1, 'all') + dc(R.total.loans, -1, 'all') + dc(SUM(R.rep), -1, 'rep') + dc(SUM(R.arr), -1, 'arr') + '<td>' + pc(SUM(R.arr), R.total.events) + '</td><td>' + money(SUM(R.arrAmt)) + '</td><td>' + money(SUM(R.outAt)) + '</td>'
+    + [0, 1, 2, 3, 4, 5].map(b => dc(SUM(R.now[b]), -1, 'b' + b)).join('') + '<td>' + pc(tLate, R.total.events) + '</td></tr>';
+  document.getElementById('collrMainTable').querySelector('tbody').innerHTML = h;
+  document.getElementById('collrMainNote').innerHTML = '<b>How a restructuring is identified.</b> <b>From September 1, 2026</b>: every approved restructuring request in the CRM (Collections); <b>in arrears</b> = the schedule it replaced still had instalments due before the request day (<b>Arrears &#8382;</b> = their amount; <b>Outstanding &#8382;</b> = the balance restructured). The rest are mostly payment-date moves the customer asked for, which the CRM records the same way. '
+    + '<b>Until August 31, 2026</b> (old system): the old system wrote &ldquo;განვადების ახალი გრაფიკი&rdquo; every time it generated a schedule &mdash; the first one at the sale, so only a <b>later</b> one (more than 7 days after the first) counts, plus the old status &ldquo;ახალი გრაფიკი&rdquo;; rebuilds of the same loan within 7 days count once. <b>In arrears</b> there = an overdue-reminder SMS, a collection status (negotiating, payment promise) or a penalty in the loan&rsquo;s comments during the 30 days before (36&ndash;48% before a rebuilt schedule vs 0&ndash;1% before the original one). No amounts are recorded for those. '
+    + '<b>Today</b> = where the loan stands now on its current schedule: days late = from its oldest unpaid instalment. A loan restructured twice is counted in both months; <b>Loans</b> and the banner count it once. <b>Repeat</b> = restructurings that were not the loan&rsquo;s first (its 2nd, 3rd&hellip; time, across both systems). Click any count to list its cases below. Before 2025 the rows are whole years.';
+
+  // ---- table 2: list
+  const L = R.list, SRC = ['Old system: new schedule', 'Old system: status &ldquo;New schedule&rdquo;', 'CRM request'];
+  const sel = document.getElementById('collrStatus');
+  if (!sel.options.length) sel.innerHTML = '<option value="all">All</option>' + BL.map((b, i) => '<option value="' + i + '">' + b + '</option>').join('') + '<option value="late30">30+ days late</option>';
+  const order = L.id.map((_, j) => j).reverse();
+  let rows = order, shown = 300;
+  const ord = n => n + (n % 10 === 1 && n % 100 !== 11 ? 'st' : n % 10 === 2 && n % 100 !== 12 ? 'nd' : n % 10 === 3 && n % 100 !== 13 ? 'rd' : 'th');
+  const SIGL = ['', 'overdue-reminder SMS', 'collection status (negotiating / payment promise)', 'penalty mentioned in a comment'];
+  // what identified the restructuring (user, 2026-11-16: "სვეტი ... რის მიხედვითაც განასხვავე")
+  const evid = j => {
+    if (L.src[j] === 2) return 'CRM restructuring request #' + L.rq[j] + ', requested ' + dLabel(L.rd[j]) + ', approved ' + dLabel(L.d[j]);
+    const at = L.at[j] ? dLabel(L.at[j].slice(0, 10)) + ' ' + L.at[j].slice(11, 16) : dLabel(L.d[j]);
+    let s = L.src[j] === 1 ? 'Old system status &ldquo;სტატუსის შეცვლა: ახალი გრაფიკი&rdquo;, ' + at
+      : 'Old system comment &ldquo;განვადების ახალი გრაფიკი&rdquo;, ' + at + (L.fd[j] ? ' (the first one, at the sale: ' + dLabel(L.fd[j]) + ')' : '');
+    if (L.sk[j]) s += '; before it: ' + SIGL[L.sk[j]] + ' ' + dLabel(L.sd[j]);
+    return s;
+  };
+  const paint = () => {
+    let t = '<tr class="logi-title"><td colspan="12">Restructured installments &mdash; one row per restructuring, newest first</td></tr>'
+      + '<tr class="logi-head"><td>Case #</td><td>No. on this loan</td><td>Restructured</td><td>Source</td><td>In arrears then</td><td>Arrears &#8382;</td><td>New term (months)</td><td>Outstanding then &#8382;</td><td>Today</td><td>Days late today</td><td>Outstanding today &#8382;</td><td>Identified by</td></tr>';
+    rows.slice(0, shown).forEach((j, k) => {
+      const b = L.b[j];
+      t += '<tr class="' + (k % 2 ? 'logi-light' : 'logi-white') + '"><td>' + L.id[j] + '</td><td>' + ord(L.n[j]) + '</td><td>' + dLabel(L.d[j]) + '</td><td>' + SRC[L.src[j]] + '</td><td>' + (L.arr[j] ? 'Yes' : 'No') + '</td>'
+        + '<td>' + (L.src[j] === 2 ? money(L.arrAmt[j]) : DASH) + '</td><td>' + (L.months[j] || DASH) + '</td><td>' + (L.src[j] === 2 ? money(L.outAt[j]) : DASH) + '</td>'
+        + '<td>' + BL[b] + '</td><td>' + (L.dpd[j] === null ? DASH : fmt(L.dpd[j])) + '</td><td>' + (b >= 1 && b <= 4 ? money(L.out[j]) : DASH) + '</td><td style="white-space:normal;min-width:360px;text-align:left">' + evid(j) + '</td></tr>';
+    });
+    document.getElementById('collrListTable').querySelector('tbody').innerHTML = t;
+    const left = rows.length - shown;
+    document.getElementById('collrMore').innerHTML = left > 0 ? '<button type="button" class="page-nav-btn" style="padding:6px 14px;border:1px solid var(--border);border-radius:8px;background:var(--page);color:var(--text-primary);cursor:pointer">Show ' + fmt(Math.min(left, 900)) + ' more (' + fmt(left) + ' not shown)</button>' : '';
+    document.getElementById('collrCount').textContent = fmt(rows.length) + ' restructurings';
+    if (window.collrScrollUpdaters) window.collrScrollUpdaters.forEach(f => f());
+  };
+  const periodOfD = d => (d < '2025-01' ? d.slice(0, 4) : d.slice(0, 7));
+  const drillOk = j => {
+    const D = window.__collrDrill;
+    if (!D) return true;
+    if (D.p >= 0 && periodOfD(L.d[j]) !== R.periods[D.p]) return false;
+    if (D.k === 'arr') return L.arr[j] === 1;
+    if (D.k === 'rep') return L.n[j] > 1;
+    if (D.k.charAt(0) === 'b') return L.b[j] === +D.k.slice(1);
+    return true;
+  };
+  const apply = () => {
+    const q = document.getElementById('collrSearch').value.trim(), v = sel.value, D = window.__collrDrill;
+    rows = order.filter(j => (!q || String(L.id[j]).indexOf(q) >= 0) && (v === 'all' || (v === 'late30' ? L.b[j] === 3 || L.b[j] === 4 : L.b[j] === +v)) && drillOk(j));
+    document.getElementById('collrDrill').innerHTML = D ? '<span class="collr-drill">' + (D.p >= 0 ? pLabel(R.periods[D.p]) : 'All periods') + ' &middot; '
+      + (D.k === 'all' ? 'all restructurings' : D.k === 'rep' ? 'repeat restructurings (loan&rsquo;s 2nd+ time)' : D.k === 'arr' ? 'in arrears when restructured' : 'today: ' + BL[+D.k.slice(1)]) + ' <button type="button" title="Show all again">&times;</button></span>' : '';
+    shown = 300; paint();
+  };
+  const more = document.getElementById('collrMore');
+  if (!more.__wired) {
+    more.__wired = true;
+    more.addEventListener('click', e => { if (e.target.closest('button')) { shown += 900; paint(); } });
+    document.getElementById('collrSearch').addEventListener('input', () => window.__collrApply && window.__collrApply());
+    sel.addEventListener('change', () => window.__collrApply && window.__collrApply());
+    document.getElementById('collrMainTable').addEventListener('click', e => {
+      const td = e.target.closest('td.collr-dc');
+      if (!td) return;
+      window.__collrDrill = { p: +td.getAttribute('data-p'), k: td.getAttribute('data-k') };
+      if (window.__collrApply) window.__collrApply();
+      const f = document.getElementById('collrSearch').closest('.lt-filters');
+      if (f) f.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+    document.getElementById('collrDrill').addEventListener('click', e => { if (e.target.closest('button')) { window.__collrDrill = null; if (window.__collrApply) window.__collrApply(); } });
+  }
+  window.__collrApply = apply;
+  window.collrScrollUpdaters = ['collrMain', 'collrList'].map(id => setupTopScrollSync(id + 'ScrollTop', id + 'ScrollBody'));
+  apply();
+});
+// live page: re-render this sub-tab too when COLL_JSON is streamed in
+(function () {
+  const prev = window.__onLiveSection;
+  if (typeof prev !== 'function' || prev.__collr) return;
+  const f = function (key) { prev(key); if (key === 'coll' && window.__forceRenderPage) window.__forceRenderPage('collrestr'); };
+  f.__collr = true;
+  window.__onLiveSection = f;
+})();
 ${JS_END}
 `;
 must('// ---- top-level page nav (grows as more reports get added) ----', 'nav handler');
 html = html.replace('// ---- top-level page nav (grows as more reports get added) ----', () => js.replace(/^\n/, '') + '// ---- top-level page nav (grows as more reports get added) ----');
 must("  if (btn.dataset.page === 'subcategoryanalyze') subcategoryScrollUpdate();", 'nav updaters');
 if (!html.includes("btn.dataset.page === 'collections'")) html = html.replace("  if (btn.dataset.page === 'subcategoryanalyze') subcategoryScrollUpdate();", "  if (btn.dataset.page === 'subcategoryanalyze') subcategoryScrollUpdate();" + NL + "  if (btn.dataset.page === 'collections' && window.collScrollUpdaters) window.collScrollUpdaters.forEach(f => f());");
+if (!html.includes("btn.dataset.page === 'collrestr'")) html = html.replace("  if (btn.dataset.page === 'subcategoryanalyze') subcategoryScrollUpdate();", "  if (btn.dataset.page === 'subcategoryanalyze') subcategoryScrollUpdate();" + NL + "  if (btn.dataset.page === 'collrestr' && window.collrScrollUpdaters) window.collrScrollUpdaters.forEach(f => f());");
 if (!html.includes("btn.dataset.page === 'collmonthly'")) html = html.replace("  if (btn.dataset.page === 'subcategoryanalyze') subcategoryScrollUpdate();", "  if (btn.dataset.page === 'subcategoryanalyze') subcategoryScrollUpdate();" + NL + "  if (btn.dataset.page === 'collmonthly' && window.collmScrollUpdaters) window.collmScrollUpdaters.forEach(f => f());");
 
 if (__hadCRLF) html = html.replace(/\n/g, '\r\n');
@@ -2840,4 +3262,161 @@ ${JS_END}
 if (__hadCRLF) html = html.replace(/\n/g, '\r\n');
 fs.writeFileSync(htmlPath, html);
 console.log('html:', htmlPath, 'bytes:', html.length);
+})();
+
+// ================ Tab contents (2026-11-16) ================
+// User: "მსგავსი სარჩევი შეგიძლია Volta_Analytics_New DB-ის ყველა ტაბს გაუკეთო?" — after the Collections Analyze contents (#collToc,
+// built into that page): every tab with more than one report gets the same block at the top — numbered cards, a line on what each
+// report shows, links that scroll to it, and "↑ Contents" back-links on the report headings. Tabs with a single table (the Daily
+// Mail and Sales Analyze tabs, Logistics Monthly, Profit Margins) get none — there is nothing to jump to. One runtime module for
+// all of them: links point at existing table ids ("id:") or heading text ("h:", matched on the start of the heading), so no page's
+// own markup changes; a target that is not found just loses its link. Idempotent (own markers), like every block above.
+(function () {
+const fs = require('fs');
+const path = require('path');
+const htmlPath = process.env.DASH_HTML ? path.resolve(process.env.DASH_HTML) : path.join(__dirname, 'deals_amount_migration.html');
+let html = fs.readFileSync(htmlPath, 'utf8');
+const __hadCRLF = html.includes('\r\n'); if (__hadCRLF) html = html.replace(/\r\n/g, '\n');
+const NL = String.fromCharCode(10);
+const must = (n, what) => { if (!html.includes(n)) throw new Error('anchor not found: ' + what); };
+function removeBetween(a, b) { const s = html.indexOf(a); if (s < 0) return; const e = html.indexOf(b, s); if (e < 0) throw new Error('tab-toc end marker not found'); html = html.slice(0, s) + html.slice(e + b.length); }
+
+const CSS_MARK = '/* --- tab-toc --- */', CSS_END = '/* --- /tab-toc --- */';
+removeBetween(NL + CSS_MARK, CSS_END);
+must('.report-scroll-top > div { height: 1px; }', 'css anchor');
+html = html.replace('.report-scroll-top > div { height: 1px; }', () => '.report-scroll-top > div { height: 1px; }' + NL + CSS_MARK + `
+.tab-toc { background: var(--surface-1); color: var(--text-primary); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; margin: 4px 0 18px; }
+.tab-toc .tab-toc-head { color: var(--text-primary); font-weight: 700; font-size: 13px; margin-bottom: 8px; }
+.tab-toc .tab-toc-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px; }
+.tab-toc .tab-toc-card { background: var(--page); color: var(--text-primary); border: 1px solid var(--border); border-radius: 8px; padding: 9px 11px; }
+.tab-toc .tab-toc-title { color: var(--text-primary); font-weight: 700; font-size: 12.5px; }
+.tab-toc .tab-toc-desc { color: var(--text-secondary); font-size: 11.5px; line-height: 1.45; margin: 3px 0 7px; }
+.tab-toc .tab-toc-links a { color: var(--text-primary); background: transparent; font-size: 12px; font-weight: 600; margin-right: 12px; text-decoration: underline dotted; text-underline-offset: 3px; cursor: pointer; white-space: nowrap; display: inline-block; }
+a.tab-top { float: right; color: var(--text-muted); background: transparent; font-size: 11px; font-weight: 600; text-decoration: none; cursor: pointer; margin-left: 10px; }
+.tab-top-row { text-align: right; margin: 0 0 2px; }
+.tab-toc-target { scroll-margin-top: 12px; }
+` + CSS_END);
+
+const JS_MARK = '/* ---------- tab contents ---------- */', JS_END = '/* ---------- /tab contents ---------- */';
+removeBetween(NL + JS_MARK, JS_END + NL);
+const js = `
+${JS_MARK}
+(function () {
+  // page id -> cards: [title, what it shows, [[link label, target]]]; target = 'id:<table id>' | 'h:<heading text start>' | 'nav:<page id>'
+  const TOC = {
+    logistics: [
+      ['Sales &mdash; Pending Status', 'Loan applications waiting at the sales stage each day, by how long they have waited (up to 1 day, 1&ndash;5 days, over 5 days).', [['By day', 'id:logisticsSalesTable']]],
+      ['Logistics &mdash; Delivery Status', 'Orders waiting for delivery each day by how long they have waited, orders delivered and the average delivery time.', [['By day', 'id:logisticsTable']]],
+      ['Open Cases', 'Today: every order still waiting for delivery &mdash; since when, its status and city.', [['List', 'h:Open Cases']]],
+      ['CRM Logistics &mdash; Status by Day', 'Orders, order lines and vendor collections by their logistics status, day by day.', [['Orders', 'id:logisticsStatusOrdersTable'], ['Order lines', 'id:logisticsStatusLinesTable'], ['Vendor collections', 'id:logisticsStatusCollTable']]],
+      ['Orders by City', 'The same orders split by the delivery city.', [['By city', 'h:Orders by City']]],
+      ['Orders by Goods Type', 'The same orders split by the type of goods.', [['By goods type', 'h:Orders by Goods Type']]],
+      ['Also in Logistics', 'Separate tabs of this group: time in each logistics status; sales amount and orders by month.', [['Logistics Time Management', 'nav:logisticstime'], ['Logistics Monthly', 'nav:logisticsmonthly']]],
+    ],
+    logisticstime: [
+      ['Status Statistics', 'Average or median time orders spend in each logistics status, or how many orders are in each status now &mdash; by month, city or vendor (filters above apply).', [['Table', 'h:Status Statistics']]],
+      ['Order by Order', 'Every order since September 1 with the time it spent in each status, from signing to delivery.', [['Table', 'h:Order by Order']]],
+      ['Also in Logistics', 'Separate tabs of this group: the daily logistics report; sales amount and orders by month.', [['Logistics Daily', 'nav:logistics'], ['Logistics Monthly', 'nav:logisticsmonthly']]],
+    ],
+    leads: [
+      ['Leads by status', 'New leads by the status they are in, by day and by month.', [['By day', 'id:mktStatusDayTable'], ['By month', 'id:mktStatusMonthTable']]],
+      ['Leads by form step', 'How far the leads got in the application form.', [['By day', 'id:mktStepDayTable'], ['By month', 'id:mktStepMonthTable']]],
+      ['Leads by city', 'Leads by the customer&rsquo;s city.', [['By day', 'id:mktCityDayTable'], ['By month', 'id:mktCityMonthTable']]],
+      ['Lead &rarr; application conversion', 'How many leads turned into applications.', [['By day', 'id:mktConvDayTable'], ['By month', 'id:mktConvMonthTable']]],
+    ],
+    opsapplications: [
+      ['Applications by current status', 'Applications by the status they are in now.', [['By day', 'id:opsAppsStatusDay'], ['By month', 'id:opsAppsStatusMonth']]],
+      ['Status changes', 'How many applications entered each status (flow).', [['By day', 'id:opsFlowDay'], ['By month', 'id:opsFlowMonth']]],
+      ['Funnel by application date', 'The applications of each day / month and where they stand today.', [['By day', 'id:opsFunnelDay'], ['By month', 'id:opsFunnelMonth']]],
+      ['Status codes', 'What each CRM status code means and how it was verified.', [['Legend', 'id:opsLegend']]],
+      ['Also in Operations', 'The committee&rsquo;s decisions, underwriters and rejection reasons.', [['Committee', 'nav:opscommittee']]],
+    ],
+    opscommittee: [
+      ['Committee decisions', 'Decisions the committee made each day / month (by decision date).', [['By day', 'id:opsDecisionsDay'], ['By month', 'id:opsDecisionsMonth']]],
+      ['Underwriting outcome', 'For the applications of each day / month: how underwriting decided (by application date).', [['By day', 'id:opsUwOutcomeDay'], ['By month', 'id:opsUwOutcomeMonth']]],
+      ['Decisions per underwriter', 'Each underwriter&rsquo;s decisions.', [['By day', 'id:opsPerUwDay'], ['By month', 'id:opsPerUwMonth']]],
+      ['Committee rejection reasons', 'Why the committee rejected.', [['By day', 'id:opsReasonsDay'], ['By month', 'id:opsReasonsMonth']]],
+      ['All rejections by stage', 'Rejections at every stage, sales and committee together.', [['By day', 'id:opsStagesDay'], ['By month', 'id:opsStagesMonth']]],
+      ['Also in Operations', 'Applications by status, status changes and the funnel by application date.', [['Applications', 'nav:opsapplications']]],
+    ],
+    customers: [
+      ['New vs returning applicants', 'First-time and returning customers among the applicants.', [['By month', 'id:custNrMonthTable'], ['By day', 'id:custNrDayTable']]],
+      ['Applications and loans per customer', 'How many applications and loans each customer has.', [['Applications', 'id:custHistApps'], ['Loans', 'id:custHistLoans']]],
+      ['Who they are', 'Gender, age and city of applicants and borrowers.', [['Gender', 'h:Gender'], ['Age', 'h:Age'], ['City', 'h:Geography']]],
+      ['Work and income', 'Employment and social status, declared monthly income, job title.', [['Employment', 'h:Employment status'], ['Social status', 'h:Social status'], ['Income', 'h:Monthly income'], ['Job title', 'h:Job title']]],
+      ['How they found Volta', 'The source the customer named on the application form.', [['Source', 'h:How the customer heard']]],
+      ['Risk and payment behaviour', 'The CRM&rsquo;s risk status and customer rating, and payment statistics.', [['Risk status', 'h:Risk status'], ['Rating', 'h:Customer rating'], ['Payment behaviour', 'h:Payment behaviour']]],
+    ],
+    collmonthly: [
+      ['Collections by month', 'Monthly collections by component (principal, penalty, advance&hellip;) and by how overdue the loan was when it paid.', [['Table', 'h:Collections by month']]],
+      ['KPIs against the portfolio', 'Collections compared with the portfolio at the start of each month: collection and recovery rates.', [['Table', 'h:KPIs against the portfolio']]],
+      ['Also in Collections', 'Payments, overdue portfolio and collection activity; restructured installments.', [['Collections Analyze', 'nav:collections'], ['Restructured Installments', 'nav:collrestr']]],
+    ],
+    collrestr: [
+      ['Restructurings by month', 'Restructurings per month, repeats, how many were in arrears, and where those loans stand today &mdash; click any number for its cases.', [['Table', 'h:Restructurings by month']]],
+      ['Case list', 'Every restructuring with its date, arrears, today&rsquo;s position and what identified it.', [['List', 'h:Restructured installments — one row']]],
+      ['Also in Collections', 'Payments, overdue portfolio and collection activity; monthly collections and KPIs.', [['Collections Analyze', 'nav:collections'], ['Collections Monthly', 'nav:collmonthly']]],
+    ],
+    portfolio: [
+      ['Portfolio size', 'The loan book &mdash; loans and outstanding amount &mdash; at the end of each day / month.', [['By day', 'h:Portfolio size — end-of-day'], ['By month', 'h:Portfolio size — month-end']]],
+      ['Portfolio flows', 'What came in and went out of the book: disbursements, payments, closings.', [['By day', 'h:Portfolio flows — by day'], ['By month', 'h:Portfolio flows — by month']]],
+      ['Structure of disbursed loans', 'The loans disbursed each month by term, contract amount, segment, goods type, city and risk.', [['Term', 'id:pfStructTermTable'], ['Amount', 'id:pfStructAmtTable'], ['Segment', 'id:pfStructSegTable'], ['Goods', 'id:pfStructGoodsTable'], ['City', 'id:pfStructCityTable'], ['Risk', 'id:pfStructRiskTable']]],
+      ['Vintage', 'How the loans of each disbursement month stand today.', [['Table', 'h:Vintage']]],
+      ['The active book today', 'Today&rsquo;s active loans by remaining months, age, risk, term, amount, segment, city and goods.', [['Tables', 'h:The active book today']]],
+      ['Data notes', 'What the data covers and its known gaps.', [['Notes', 'h:Data notes']]],
+    ],
+  };
+  const HEADS = '.section-title, .coll-sub-title, .pf-title, .logi-open-title, .logi-group-title';
+  const norm = t => String(t || '').replace(/[↑]\\s*Contents/g, '').replace(/\\s+/g, ' ').trim().toLowerCase();
+  function findTarget(page, t) {
+    if (t.indexOf('id:') === 0) { const el = document.getElementById(t.slice(3)); return el && page.contains(el) ? { el: el.closest('.report-card, .table-card') || el, kind: 'id' } : null; }
+    if (t.indexOf('h:') === 0) { const want = norm(t.slice(2)); const el = Array.from(page.querySelectorAll(HEADS)).find(h => norm(h.textContent).indexOf(want) === 0); return el ? { el, kind: 'h' } : null; }
+    return null;
+  }
+  Object.keys(TOC).forEach(pid => {
+    const page = document.getElementById('page-' + pid);
+    if (!page || page.querySelector('.tab-toc')) return;
+    const tocId = 'tabToc-' + pid;
+    let n = 0, k = 0, cards = '';
+    TOC[pid].forEach(([title, desc, links]) => {
+      const ls = links.map(([label, t]) => {
+        if (t.indexOf('nav:') === 0) return document.querySelector('.nav-group button[data-page="' + t.slice(4) + '"]') ? '<a href="#" data-tnav="' + t.slice(4) + '">' + label + '</a>' : '';
+        const f = findTarget(page, t);
+        if (!f) return '';
+        if (!f.el.id) f.el.id = 'tabTgt-' + pid + '-' + (++n);
+        f.el.classList.add('tab-toc-target');
+        // the way back: on a heading, a link inside it; above a table, a small row before its card
+        if (f.kind === 'h') { if (!f.el.querySelector('a.tab-top')) f.el.insertAdjacentHTML('beforeend', '<a href="#" class="tab-top" data-tgo="' + tocId + '">&uarr; Contents</a>'); }
+        else if (!(f.el.previousElementSibling && f.el.previousElementSibling.classList.contains('tab-top-row'))) f.el.insertAdjacentHTML('beforebegin', '<div class="tab-top-row"><a href="#" class="tab-top" style="float:none" data-tgo="' + tocId + '">&uarr; Contents</a></div>');
+        return '<a href="#" data-tgo="' + f.el.id + '">' + label + '</a>';
+      }).join('');
+      if (!ls) return;
+      cards += '<div class="tab-toc-card"><div class="tab-toc-title">' + (++k) + '. ' + title + '</div><div class="tab-toc-desc">' + desc + '</div><div class="tab-toc-links">' + ls + '</div></div>';
+    });
+    if (!cards) return;
+    const box = document.createElement('div');
+    box.className = 'tab-toc'; box.id = tocId;
+    box.innerHTML = '<div class="tab-toc-head">What&rsquo;s on this tab &mdash; click a link to jump to the report</div><div class="tab-toc-grid">' + cards + '</div>';
+    const wrap = page.querySelector('.wrap') || page, title = wrap.querySelector('.section-title');
+    let at = title;
+    if (at && at.nextElementSibling && at.nextElementSibling.classList.contains('banner')) at = at.nextElementSibling;
+    if (at) at.insertAdjacentElement('afterend', box); else wrap.insertAdjacentElement('afterbegin', box);
+  });
+  document.addEventListener('click', e => {
+    const a = e.target.closest && e.target.closest('a[data-tgo], a[data-tnav]');
+    if (!a) return;
+    e.preventDefault();
+    if (a.hasAttribute('data-tnav')) { const b = document.querySelector('.nav-group button[data-page="' + a.getAttribute('data-tnav') + '"]'); if (b) { b.click(); window.scrollTo({ top: 0, behavior: 'smooth' }); } return; }
+    const el = document.getElementById(a.getAttribute('data-tgo'));
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+})();
+${JS_END}
+`;
+must('// ---- top-level page nav (grows as more reports get added) ----', 'nav handler');
+html = html.replace('// ---- top-level page nav (grows as more reports get added) ----', () => js.replace(/^\n/, '') + '// ---- top-level page nav (grows as more reports get added) ----');
+
+if (__hadCRLF) html = html.replace(/\n/g, '\r\n');
+fs.writeFileSync(htmlPath, html);
+console.log('tab contents: injected for', 9, 'tabs into', htmlPath);
 })();

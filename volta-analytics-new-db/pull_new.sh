@@ -476,6 +476,8 @@ COLL_MSTART='2023-01-01'       # month series start: crm_installment_schedules c
 # the old DB's payments table), reversed payments are excluded from "collected", and one payment is dated in the future.
 COLL_PAYOK="p.amount < 100000 AND p.reversed_at IS NULL"
 # DPD buckets = the CRM's own dpd_bucket codes (crm_payment_events: 1 = 1-3 days, 2 = 4-10, 3 = 11-30, 4 = 31-60, 5 = 61-90, 6 = 90+)
+# buckets for NEW entries (2026-11-16): 1-2 days late is a buffer (posting delays) = 0, so the first bucket is exactly 3 days
+COLL_NEWB() { echo "CASE WHEN $1 IS NULL OR $1 <= 2 THEN 0 WHEN $1 = 3 THEN 1 WHEN $1 <= 10 THEN 2 WHEN $1 <= 30 THEN 3 WHEN $1 <= 60 THEN 4 WHEN $1 <= 90 THEN 5 ELSE 6 END"; }
 COLL_BUCKET() { echo "CASE WHEN $1 <= 3 THEN 1 WHEN $1 <= 10 THEN 2 WHEN $1 <= 30 THEN 3 WHEN $1 <= 60 THEN 4 WHEN $1 <= 90 THEN 5 ELSE 6 END"; }
 
 # ---- overdue portfolio at the end of each day (stock), reconstructed from the schedule + the post-cutover settlement events.
@@ -501,6 +503,33 @@ Q "$COLL_OD_CTE SELECT d, act, $(COLL_BUCKET dpd) b, COUNT(*) rows_od, ROUND(SUM
 # loan level: each overdue loan once, in the bucket of its oldest overdue row, with its total overdue amount; by portfolio manager
 Q "$COLL_OD_CTE, ln AS (SELECT d, act, pm, installment_id, MAX(dpd) dpd, SUM(outstanding) amt FROM od GROUP BY d, act, pm, installment_id)
    SELECT d, act, pm, $(COLL_BUCKET dpd) wb, COUNT(*) loans, ROUND(SUM(amt),2) amt FROM ln GROUP BY d, act, pm, wb ORDER BY d, act, pm, wb;" > "$S/coll_od_loans.tsv"
+# NEW entries into the overdue buckets (2026-11-16, user: "ვადაგადაცილების კალათებში ახალ ჩავარდნილების რაოდენობა და თანხა ...
+# ბუფერულ ზონად აიღე ორი დღის ვადაგადაცილება"): a loan falls into a bucket on the day its days past due (its oldest overdue row,
+# as in coll_od_loans) first reach it, from a lower bucket the day before (none = not overdue or only 1-2 days late). Days past due
+# grow by exactly one a day, so only the buckets' first days (3, 4, 11, 31, 61, 91) can be entries — same result as a LAG over every
+# day, checked 2026-11-16 (7,671 entries). Overdue amount = the loan's overdue amount that day. PHP twin: reconstructOverdue().
+Q "$COLL_OD_CTE, ln AS (SELECT d, act, pm, installment_id, MAX(dpd) dpd, SUM(outstanding) amt FROM od GROUP BY d, act, pm, installment_id)
+   SELECT c.d, c.installment_id, c.dpd, ROUND(c.amt,2) amt, $(COLL_NEWB c.dpd) b, $(COLL_NEWB p.dpd) prev_b
+   FROM ln c LEFT JOIN ln p ON p.installment_id=c.installment_id AND p.d = c.d - INTERVAL 1 DAY
+   WHERE c.d > DATE('$CUTOVER') AND c.dpd IN (3,4,11,31,61,91) AND $(COLL_NEWB p.dpd) < $(COLL_NEWB c.dpd)
+   ORDER BY c.d, c.installment_id;" > "$S/coll_od_new.tsv"
+# per issued loan: the facts the case lists show (issue day, amount, term and average instalment of the current schedule, items,
+# portfolio manager) — no customer data
+Q "SELECT o.id, DATE(COALESCE(o.crm_creator_date,o.created_at)) issued, ROUND(COALESCE(o.base_grand_total,0)) amount, sc.term, sc.inst,
+     TRIM(CONCAT(COALESCE(u.first_name,''),' ',COALESCE(u.last_name,''))) pm_name, it.items
+   FROM orders o
+   LEFT JOIN (SELECT installment_id, COUNT(*) term, ROUND(AVG(schedule_amount)) inst FROM crm_installment_schedules WHERE active=1 AND month>0 GROUP BY installment_id) sc ON sc.installment_id=o.id
+   LEFT JOIN crm_users u ON u.id=o.crm_portfolio_manager_id
+   LEFT JOIN (SELECT order_id, GROUP_CONCAT(TRIM(REPLACE(REPLACE(REPLACE(name, CHAR(9),' '), CHAR(10),' '), CHAR(13),' ')) ORDER BY id SEPARATOR ' | ') items FROM order_items WHERE parent_id IS NULL GROUP BY order_id) it ON it.order_id=o.id
+   WHERE o.crm_order_status IN (1,5,11,18) ORDER BY o.id;" > "$S/coll_loan_info.tsv"
+# PRIVATE — the borrower of every issued loan (name, phones, personal number; same fallbacks as funnel_pii.tsv). Only
+# build_funnel.js's gitignored deals_amount_migration_private.html carries it (var LOAN_PII), for the private Artifact.
+Q "SELECT o.id, TRIM(CONCAT(COALESCE(o.customer_first_name,''),' ',COALESCE(o.customer_last_name,''))) oname,
+     TRIM(CONCAT(COALESCE(cu.first_name,''),' ',COALESCE(cu.last_name,''))) cname, cu.id_number cpid, cu.phone cphone, o.crm_contact_phone p1, bl.phone bphone, pf.v fpid
+   FROM orders o LEFT JOIN customers cu ON cu.id=o.customer_id
+   LEFT JOIN (SELECT order_id, MIN(phone) phone FROM addresses WHERE address_type='order_billing' GROUP BY order_id) bl ON bl.order_id=o.id
+   LEFT JOIN (SELECT order_id, MAX(field_value) v FROM volta_application_data WHERE field_code='personal_ID' GROUP BY order_id) pf ON pf.order_id=o.id
+   WHERE o.crm_order_status IN (1,5,11,18) ORDER BY o.id;" > "$S/loan_pii.tsv"
 
 # ---- cash collected (flow) by payment_date: count, paying loans, amount and its parts (principal net of advance / advance /
 # penalty; advance is a part of principal_part, so the three add up to amount) and by bank (crm_banks: 2 BOG, 1 TBC, 6 TBCPay)
@@ -549,6 +578,26 @@ Q "SELECT installment_id, schedule_date, schedule_amount FROM crm_installment_sc
 Q "SELECT p.installment_id, p.payment_date, p.amount, COALESCE(p.principal_part,0) pr, COALESCE(p.penalty_part,0) pen, COALESCE(p.advance,0) adv, COALESCE(p.payment_source,'') src
    FROM crm_payments p WHERE $COLL_PAYOK AND p.payment_date <= '$TODAY' ORDER BY p.installment_id, p.payment_date, p.id;" > "$S/collm_pays.tsv"
 Q "SELECT id, COALESCE(customer_id,0) cid, crm_order_status st, crm_active act, DATE(crm_close_date) cd, base_grand_total price, DATE(COALESCE(crm_creator_date, created_at)) issued FROM orders ORDER BY id;" > "$S/collm_orders.tsv"
+
+# ---- Restructured Loans sub-tab (2026-11-16, user: "რესტრუქტურიზებული სესხების დაიდენტიფიცირება ... ახალი გრაფიკი").
+# From 2026-09-01 every restructuring is a CRM request (crm_restructure_requests, approved), with the schedule it replaced
+# (previous_schedule JSON): arrears at restructuring = the replaced rows already due before the request day (JSON_TABLE,
+# non-correlated). Before that the old system left only comments: the frozen, committed coll_restr_legacy.tsv (built once
+# 2026-11-16, see build_logistics.js collRestructured()). coll_restr_state = every issued loan's position today on its
+# CURRENT schedule (oldest unpaid due row -> days late, overdue and outstanding amounts; LEFT JOIN: a closed loan has no active
+# schedule rows left). PHP twin: NewDbColl::restructured().
+Q "SELECT r.id, r.installment_id, DATE(r.created_at) req_d, DATE(COALESCE(r.decided_at, r.created_at)) d, r.months, ROUND(COALESCE(r.outstanding_amount,0),2) outstanding, ROUND(COALESCE(a.arrears_amt,0),2) arrears_amt
+   FROM crm_restructure_requests r
+   LEFT JOIN (SELECT r2.id, SUM(CASE WHEN j.dt < DATE(r2.created_at) THEN j.amt ELSE 0 END) arrears_amt
+              FROM crm_restructure_requests r2 JOIN JSON_TABLE(r2.previous_schedule, '\$[*]' COLUMNS(dt DATE PATH '\$.schedule_date', amt DECIMAL(12,2) PATH '\$.schedule_amount')) j
+              WHERE r2.status='approved' GROUP BY r2.id) a ON a.id=r.id
+   WHERE r.status='approved' AND DATE(COALESCE(r.decided_at, r.created_at)) <= '$TODAY' ORDER BY r.id;" > "$S/coll_restr_new.tsv"
+Q "SELECT o.id, o.crm_active act, o.crm_order_status st, u.first_unpaid, u.od_amt, u.outstanding
+   FROM orders o LEFT JOIN (SELECT s.installment_id, MIN(CASE WHEN s.schedule_date < '$TODAY' AND s.paid_amount < s.schedule_amount - 0.005 THEN s.schedule_date END) first_unpaid,
+                ROUND(SUM(CASE WHEN s.schedule_date < '$TODAY' THEN GREATEST(s.schedule_amount - s.paid_amount, 0) ELSE 0 END),2) od_amt,
+                ROUND(SUM(GREATEST(s.schedule_amount - s.paid_amount, 0)),2) outstanding
+              FROM crm_installment_schedules s WHERE s.active=1 GROUP BY s.installment_id) u ON u.installment_id=o.id
+   WHERE o.crm_order_status IN (1,5,11,18) ORDER BY o.id;" > "$S/coll_restr_state.tsv"
 
 # ---- today's snapshots: portfolio managers, CRM loan status, the CRM's customer payment-stats cache
 Q "SELECT COALESCE(o.crm_portfolio_manager_id,0) pm, COALESCE(CONCAT(u.first_name,' ',u.last_name),'Unassigned') name, SUM(o.crm_active=1) active_loans,

@@ -805,6 +805,30 @@ if (__hadCRLF) html = html.replace(/\n/g, '\r\n');
 fs.writeFileSync(htmlPath, html);
 console.log('injected Full Sales Funnel into ' + htmlPath);
 
+// Collections' case lists (2026-11-16): the borrower of every issued loan, from the gitignored loan_pii.tsv — same name / phone
+// / personal number fallbacks as funnelPii(). Parallel arrays by loan id; private copy only. Only the loans that appear in the
+// Collections lists (COLL_JSON odNew / restr) are kept — ~3.5K of ~16.5K loans, so the private page stays well under the
+// Artifact's 16 MB limit.
+function loanPii(page) {
+  const rows = parseTsv(path.join(dir, 'loan_pii.tsv'));
+  if (!rows) return null;
+  let keep = null;
+  const cl = page.split(/\r?\n/).find(l => l.startsWith('var COLL_JSON = '));
+  if (cl) {
+    const C = JSON.parse(cl.slice(16).replace(/;\s*$/, ''));
+    keep = new Set([...((C.odNew && C.odNew.list.id) || []), ...((C.restr && C.restr.list.id) || [])]);
+  }
+  const nn = v => (v === undefined || v === null || v === 'NULL') ? '' : String(v).replace(/\\\\/g, '\\').trim();
+  const digits = v => nn(v).replace(/\D/g, '');
+  const p9 = v => { let d = digits(v); if (d.startsWith('995')) d = d.slice(3); return d.length === 9 && d[0] === '5' ? d : ''; };
+  const out = { id: [], nm: [], ph: [], pid: [] };
+  for (const r of rows) {
+    if (keep && !keep.has(+r.id)) continue;
+    out.id.push(+r.id); out.nm.push(nn(r.oname) || nn(r.cname)); out.ph.push(p9(r.p1) || p9(r.bphone) || p9(r.cphone)); out.pid.push(digits(r.fpid) || digits(r.cpid));
+  }
+  return out;
+}
+
 // the PRIVATE copy for the claude.ai Artifact: the same page plus `const FUNNEL_PII` (see funnelPii above) right after
 // the FUNNEL_JSON line. Gitignored — never commit it, never copy it to docs/ (GitHub Pages is public).
 {
@@ -814,7 +838,8 @@ console.log('injected Full Sales Funnel into ' + htmlPath);
     const a = html.indexOf('const FUNNEL_JSON = ');
     if (a < 0) throw new Error('FUNNEL_JSON line not found');
     const e = html.indexOf('\n', a);
-    fs.writeFileSync(privPath, html.slice(0, e + 1) + 'const FUNNEL_PII = ' + JSON.stringify(pii) + ';' + (__hadCRLF ? '\r\n' : '\n') + html.slice(e + 1));
+    const lp = loanPii(html), eol = __hadCRLF ? '\r\n' : '\n';
+    fs.writeFileSync(privPath, html.slice(0, e + 1) + 'const FUNNEL_PII = ' + JSON.stringify(pii) + ';' + eol + (lp ? 'var LOAN_PII = ' + JSON.stringify(lp) + ';' + eol : '') + html.slice(e + 1));
     console.log('wrote the PRIVATE copy with customer data (never commit, never Pages): ' + privPath);
   } else if (fs.existsSync(privPath)) {
     fs.unlinkSync(privPath);   // no PII extract this run: drop a stale private copy rather than publish old customer data
