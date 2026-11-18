@@ -213,6 +213,28 @@ Q "SELECT DATE_FORMAT(lf.created_at,'%Y-%m') m, oi.order_id, ROUND(SUM(oi.base_p
    WHERE lf.status IN (50,80,90) AND DATE(lf.created_at) <= '$END'
    GROUP BY m, oi.order_id ORDER BY m, oi.order_id;" > "$S/logi_monthly.tsv"
 printf 'through\n%s\n' "$END" > "$S/logi_monthly_meta.tsv"
+# Logistics > Purchases (user 2026-11-18: "წამოიღე ინფორმაცია შესყიდვების შესახებ მოდელების და თვეების მიხედვით. დაალაგე ყველაზე გაყიდვადი
+# მოდელები ზემოდან ქვემოთ"): order lines ordered from a vendor (every logistics status but 20 not yet ordered / 22 vendor out of stock /
+# 99 cancelled; lines served from own stock left out), by purchase month (crm_line_fulfillment.created_at — the CRM's own purchase date)
+# and product x vendor (user, same day: "დაამატე მომწოდებელი"); purchase price = the developer's 3-source cost rule (line vendor_price ->
+# the vendor's price list -> the catalogue 'cost'), here as joins on pre-grouped tables; sale price = order_items.base_price (what the
+# customer paid, on-site discount included — the CRM shipments definition), also summed over the lines with a known cost so the margin
+# compares like with like. Through END. PHP twin: NewDbReport::logisticsPurchases().
+Q "SELECT DATE_FORMAT(lf.created_at,'%Y-%m') m, oi.product_id, lf.vendor_id, COALESCE(MAX(v.name),'') vendor, COALESCE(MAX(pf.name), MAX(oi.name)) name, COALESCE(MAX(ao.admin_name),'') brand,
+     SUM(oi.qty_ordered) qty, SUM(CASE WHEN c.cost IS NOT NULL THEN oi.qty_ordered ELSE 0 END) qty_cost, ROUND(SUM(COALESCE(c.cost,0) * oi.qty_ordered) * 100) tetri,
+     ROUND(SUM(oi.base_price * oi.qty_ordered) * 100) sale_tetri, ROUND(SUM(CASE WHEN c.cost IS NOT NULL THEN oi.base_price * oi.qty_ordered ELSE 0 END) * 100) sale_cost_tetri
+   FROM crm_line_fulfillment lf
+   JOIN order_items oi ON oi.id=lf.order_item_id
+   JOIN (SELECT lf2.id, COALESCE(CASE WHEN lf2.vendor_price>0 AND lf2.vendor_price<>oi2.order_id AND lf2.vendor_price<>oi2.id THEN lf2.vendor_price END, pv.p, ac.c) cost
+         FROM crm_line_fulfillment lf2 JOIN order_items oi2 ON oi2.id=lf2.order_item_id
+         LEFT JOIN (SELECT product_id, vendor_id, MAX(price) p FROM crm_product_vendors WHERE price>0 GROUP BY product_id, vendor_id) pv ON pv.product_id=oi2.product_id AND pv.vendor_id=lf2.vendor_id
+         LEFT JOIN (SELECT product_id, MAX(float_value) c FROM product_attribute_values WHERE attribute_id=(SELECT id FROM attributes WHERE code='cost') AND float_value>0 GROUP BY product_id) ac ON ac.product_id=oi2.product_id) c ON c.id=lf.id
+   LEFT JOIN crm_vendors v ON v.id=lf.vendor_id
+   LEFT JOIN product_flat pf ON pf.product_id=oi.product_id AND pf.locale='ka_GE'
+   LEFT JOIN product_attribute_values pb ON pb.product_id=oi.product_id AND pb.attribute_id=25
+   LEFT JOIN attribute_options ao ON ao.id=pb.integer_value
+   WHERE lf.status NOT IN (20,22,99) AND lf.from_stock=0 AND DATE(lf.created_at) <= '$END'
+   GROUP BY m, oi.product_id, lf.vendor_id ORDER BY m, oi.product_id, lf.vendor_id;" > "$S/logi_purchases.tsv"
 # ... and the months BEFORE the logistics module (user 2026-11-13: "მთელ 2026 წლის თვეების მიხედვით"): Jan-Aug are sold
 # orders by sale month, exactly Sales Monthly's figures — the frozen old-DB old_sales_cases.tsv (committed) up to the
 # cutover, plus this: the new DB's sold orders (5/99) from the cutover day (2026-08-31) to the module start.
