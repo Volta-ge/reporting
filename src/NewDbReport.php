@@ -376,7 +376,81 @@ final class NewDbReport
 
         $timeManagement = ['orders' => $this->logisticsTimeOrders()];
 
-        return ['pending' => $pending, 'delivery' => $delivery, 'byCity' => $byCity, 'byGoods' => $byGoods, 'openCases' => $openCases, 'statusByDay' => $statusByDay, 'timeManagement' => $timeManagement, 'monthly' => $this->logisticsMonthly()];
+        return ['pending' => $pending, 'delivery' => $delivery, 'byCity' => $byCity, 'byGoods' => $byGoods, 'openCases' => $openCases, 'statusByDay' => $statusByDay, 'timeManagement' => $timeManagement, 'monthly' => $this->logisticsMonthly(), 'purchases' => $this->logisticsPurchases()];
+    }
+
+    /**
+     * Logistics > Purchases (2026-11-18) — build_logistics.js purchases: units, purchase and sale amounts by product x vendor and purchase
+     * month, most units first. Same SQL as pull_new.sh's logi_purchases.tsv (non-correlated; the 3-source cost rule as joins on
+     * pre-grouped tables; sale = base_price x qty, also over the priced units only for the margin).
+     */
+    private function logisticsPurchases(): array
+    {
+        $through = (new \DateTimeImmutable('yesterday'))->format('Y-m-d');
+        $stmt = $this->pdo->prepare("SELECT /*+ MAX_EXECUTION_TIME(30000) */ DATE_FORMAT(lf.created_at,'%Y-%m') m, oi.product_id, lf.vendor_id, COALESCE(MAX(v.name),'') vendor, COALESCE(MAX(pf.name), MAX(oi.name)) name, COALESCE(MAX(ao.admin_name),'') brand,
+     SUM(oi.qty_ordered) qty, SUM(CASE WHEN c.cost IS NOT NULL THEN oi.qty_ordered ELSE 0 END) qty_cost, ROUND(SUM(COALESCE(c.cost,0) * oi.qty_ordered) * 100) tetri,
+     ROUND(SUM(oi.base_price * oi.qty_ordered) * 100) sale_tetri, ROUND(SUM(CASE WHEN c.cost IS NOT NULL THEN oi.base_price * oi.qty_ordered ELSE 0 END) * 100) sale_cost_tetri
+   FROM crm_line_fulfillment lf
+   JOIN order_items oi ON oi.id=lf.order_item_id
+   JOIN (SELECT lf2.id, COALESCE(CASE WHEN lf2.vendor_price>0 AND lf2.vendor_price<>oi2.order_id AND lf2.vendor_price<>oi2.id THEN lf2.vendor_price END, pv.p, ac.c) cost
+         FROM crm_line_fulfillment lf2 JOIN order_items oi2 ON oi2.id=lf2.order_item_id
+         LEFT JOIN (SELECT product_id, vendor_id, MAX(price) p FROM crm_product_vendors WHERE price>0 GROUP BY product_id, vendor_id) pv ON pv.product_id=oi2.product_id AND pv.vendor_id=lf2.vendor_id
+         LEFT JOIN (SELECT product_id, MAX(float_value) c FROM product_attribute_values WHERE attribute_id=(SELECT id FROM attributes WHERE code='cost') AND float_value>0 GROUP BY product_id) ac ON ac.product_id=oi2.product_id) c ON c.id=lf.id
+   LEFT JOIN crm_vendors v ON v.id=lf.vendor_id
+   LEFT JOIN product_flat pf ON pf.product_id=oi.product_id AND pf.locale='ka_GE'
+   LEFT JOIN product_attribute_values pb ON pb.product_id=oi.product_id AND pb.attribute_id=25
+   LEFT JOIN attribute_options ao ON ao.id=pb.integer_value
+   WHERE lf.status NOT IN (20,22,99) AND lf.from_stock=0 AND DATE(lf.created_at) <= :end
+   GROUP BY m, oi.product_id, lf.vendor_id ORDER BY m, oi.product_id, lf.vendor_id");
+        $stmt->execute(['end' => $through]);
+        $months = [];
+        for ($m = '2026-09'; strcmp($m, substr($through, 0, 7)) <= 0;) {
+            $months[] = $m;
+            [$y, $mo] = array_map('intval', explode('-', $m));
+            $mo++;
+            if ($mo > 12) { $mo = 1; $y++; }
+            $m = sprintf('%04d-%02d', $y, $mo);
+        }
+        $mI = array_flip($months);
+        $z = array_fill(0, count($months), 0);
+        $str = static fn ($v) => trim((string) ($v ?? ''));
+        $by = [];
+        $vq = [];
+        $tq = $z;
+        $tt = $z;
+        $noCost = 0;
+        foreach ($stmt->fetchAll() as $r) {
+            $i = $mI[(string) $r['m']] ?? null;
+            if ($i === null) { continue; }
+            $pid = (int) $r['product_id'];
+            if (!isset($by[$pid])) { $by[$pid] = ['id' => $pid, 'name' => $str($r['name']), 'brand' => $str($r['brand']), 'parts' => []]; }
+            $vn = $str($r['vendor']);
+            if ($vn === '') { $vn = '(no vendor)'; }
+            if (!isset($by[$pid]['parts'][$vn])) { $by[$pid]['parts'][$vn] = ['v' => $vn, 'q' => $z, 'cq' => $z, 'c' => $z, 's' => $z, 'sc' => $z]; }
+            $q = (int) round((float) $r['qty']);
+            $cq = (int) round((float) $r['qty_cost']);
+            $c = (int) round((float) $r['tetri']);
+            $pt = &$by[$pid]['parts'][$vn];
+            $pt['q'][$i] += $q; $pt['cq'][$i] += $cq; $pt['c'][$i] += $c;
+            $pt['s'][$i] += (int) round((float) $r['sale_tetri']); $pt['sc'][$i] += (int) round((float) $r['sale_cost_tetri']);
+            unset($pt);
+            $tq[$i] += $q; $tt[$i] += $c; $noCost += $q - $cq;
+            $vq[$vn] = ($vq[$vn] ?? 0) + $q;
+        }
+        $gel = static fn (array $a) => array_map(static fn ($x) => $x / 100, $a);
+        $out = [];
+        foreach ($by as $p) {
+            $parts = array_values($p['parts']);
+            usort($parts, static fn ($a, $b) => (array_sum($b['q']) <=> array_sum($a['q'])) ?: strcmp($a['v'], $b['v']));
+            $tqp = 0; $tap = 0;
+            foreach ($parts as $x) { $tqp += array_sum($x['q']); $tap += array_sum($x['c']); }
+            $out[] = ['id' => $p['id'], 'name' => $p['name'], 'brand' => $p['brand'], 'tq' => $tqp, 'ta' => $tap / 100,
+                'parts' => array_map(static fn ($x) => ['v' => $x['v'], 'q' => $x['q'], 'cq' => $x['cq'], 'c' => $gel($x['c']), 's' => $gel($x['s']), 'sc' => $gel($x['sc'])], $parts)];
+        }
+        usort($out, static fn ($a, $b) => ($b['tq'] <=> $a['tq']) ?: (($b['ta'] <=> $a['ta']) ?: ($a['id'] <=> $b['id'])));
+        $vk = array_map('strval', array_keys($vq));
+        usort($vk, static fn ($a, $b) => ($vq[$b] <=> $vq[$a]) ?: strcmp($a, $b));
+        return ['through' => $through, 'months' => $months, 'vendors' => $vk, 'rows' => $out, 'total' => ['qty' => $tq, 'amt' => $gel($tt)], 'noCost' => $noCost];
     }
 
     /**

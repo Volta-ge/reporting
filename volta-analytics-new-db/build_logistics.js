@@ -215,7 +215,47 @@ const monthly = (() => {
     .map(a => ({ m: a.m, orders: a.orders.size, sales: a.tetri / 100, basis: a.m < LOGI_MODULE_MONTH ? 'sales' : 'logistics' }));
   return { through: (meta[0] && meta[0].through) || null, moduleMonth: LOGI_MODULE_MONTH, months, total: { orders: all.size, sales: totalTetri / 100 } };
 })();
-const payload = { pending, delivery, byCity, byGoods, openCases, statusByDay, timeManagement, monthly, cutover: CUTOVER, generatedAt: new Date().toISOString().slice(0, 16).replace('T', ' ') + ' UTC' };
+// Logistics > Purchases (2026-11-18): purchases by model (product) and purchase month, most purchased first (logi_purchases.tsv, see
+// pull_new.sh). One part per product x vendor, summed in the page (the vendor filter picks parts). Per month: q = units ordered from
+// vendors; cq = units whose purchase price is known; c = purchase price x qty (GEL); s = sale price (base_price) x qty over all units;
+// sc = the same over the cq units only (margin = sc - c, so unpriced units never count as pure margin). Products sorted by total units,
+// then purchase amount, then id; parts by units, then vendor name. Identical to logisticsPurchases() (PHP).
+const purchases = (() => {
+  if (!fs.existsSync(path.join(__dirname, 'logi_purchases.tsv'))) return null;
+  const rows = parseTsv('logi_purchases.tsv');
+  const meta = fs.existsSync(path.join(__dirname, 'logi_monthly_meta.tsv')) ? parseTsv('logi_monthly_meta.tsv') : [];
+  const through = (meta[0] && meta[0].through) || null;
+  const months = [];
+  const last = through ? through.slice(0, 7) : rows.reduce((a, r) => (r.m > a ? r.m : a), '2026-09');
+  for (let m = '2026-09'; m <= last; ) { months.push(m); let [y, mo] = m.split('-').map(Number); mo++; if (mo > 12) { mo = 1; y++; } m = y + '-' + String(mo).padStart(2, '0'); }
+  const mI = Object.fromEntries(months.map((m, i) => [m, i]));
+  const z = () => months.map(() => 0);
+  const str = v => (v && v !== 'NULL' ? String(v) : '').trim();
+  const by = new Map(), vq = new Map();
+  const tq = z(), tt = z();
+  let noCost = 0;
+  for (const r of rows) {
+    const i = mI[r.m]; if (i === undefined) continue;
+    let p = by.get(r.product_id);
+    if (!p) by.set(r.product_id, p = { id: +r.product_id, name: str(r.name), brand: str(r.brand), parts: new Map() });
+    const vn = str(r.vendor) || '(no vendor)';
+    let pt = p.parts.get(vn);
+    if (!pt) p.parts.set(vn, pt = { v: vn, q: z(), cq: z(), c: z(), s: z(), sc: z() });
+    const q = +r.qty, cq = +r.qty_cost, c = Math.round(+r.tetri), s = Math.round(+r.sale_tetri), sc = Math.round(+r.sale_cost_tetri);
+    pt.q[i] += q; pt.cq[i] += cq; pt.c[i] += c; pt.s[i] += s; pt.sc[i] += sc;
+    tq[i] += q; tt[i] += c; noCost += q - cq; vq.set(vn, (vq.get(vn) || 0) + q);
+  }
+  const sum = a => a.reduce((x, y) => x + y, 0), gel = a => a.map(t => t / 100);
+  const out = [...by.values()].map(p => {
+    const parts = [...p.parts.values()].sort((a, b) => sum(b.q) - sum(a.q) || (a.v < b.v ? -1 : a.v > b.v ? 1 : 0));
+    return { id: p.id, name: p.name, brand: p.brand, tq: sum(parts.map(x => sum(x.q))), ta: sum(parts.map(x => sum(x.c))) / 100,
+      parts: parts.map(x => ({ v: x.v, q: x.q, cq: x.cq, c: gel(x.c), s: gel(x.s), sc: gel(x.sc) })) };
+  });
+  out.sort((a, b) => b.tq - a.tq || b.ta - a.ta || a.id - b.id);
+  const vendors = [...vq.entries()].sort((a, b) => b[1] - a[1] || (a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0)).map(e => e[0]);
+  return { through, months, vendors, rows: out, total: { qty: tq, amt: gel(tt) }, noCost };
+})();
+const payload = { pending, delivery, byCity, byGoods, openCases, statusByDay, timeManagement, monthly, purchases, cutover: CUTOVER, generatedAt: new Date().toISOString().slice(0, 16).replace('T', ' ') + ' UTC' };
 fs.writeFileSync(path.join(__dirname, 'logistics_data.json'), JSON.stringify(payload));
 console.log('pending days:', pending.dates.length, '| delivery days:', delivery.dates.length, '| last pending:', pending.upTo1.at(-1), pending.oneTo5.at(-1), pending.over5.at(-1), '| city ND/all today:', byCity.daily[0].total.at(-1), byCity.daily[1].total.at(-1), '| goods rows:', byGoods.daily[0].rows.length, '| open cases:', openCases.length, '| status days:', statusDates.length, 'orders/lines/collections rows:', statusByDay.orders.rows.length, statusByDay.lines.rows.length, statusByDay.collections.rows.length);
 
@@ -313,6 +353,9 @@ if (!html.includes('data-page="logisticstime"')) {
   html = html.replace(navAnchor2, '        <button data-page="logistics">Logistics Daily</button>\n        <button data-page="logisticstime">Logistics Time Management</button>\n      </div>');
 }
 
+if (!html.includes('data-page="logisticspurchases"') && html.includes('        <button data-page="logisticsmonthly">Logistics Monthly</button>\n')) {
+  html = html.replace('        <button data-page="logisticsmonthly">Logistics Monthly</button>\n', '        <button data-page="logisticsmonthly">Logistics Monthly</button>\n        <button data-page="logisticspurchases">Purchases</button>\n');
+}
 if (!html.includes('data-page="logisticsmonthly"') && html.includes('        <button data-page="logisticstime">Logistics Time Management</button>\n')) {
   html = html.replace('        <button data-page="logisticstime">Logistics Time Management</button>\n', '        <button data-page="logisticstime">Logistics Time Management</button>\n        <button data-page="logisticsmonthly">Logistics Monthly</button>\n');
 }
@@ -332,6 +375,9 @@ const JS_MARK2_END = '/* ---------- /Logistics Time Management ---------- */';
 // Logistics Monthly sub-tab (2026-11-13) — same idempotent removal, own marker pair
 const JS_MARK3 = '/* ---------- Logistics Monthly ---------- */';
 const JS_MARK3_END = '/* ---------- /Logistics Monthly ---------- */';
+// Purchases sub-tab (2026-11-18) — same idempotent removal, own marker pair
+const JS_MARK4 = '/* ---------- Logistics Purchases ---------- */';
+const JS_MARK4_END = '/* ---------- /Logistics Purchases ---------- */';
 {
   const NL = String.fromCharCode(10);
   const PAGE_START = NL + '<div class="page" data-page="logistics" id="page-logistics">', PAGE_END = NL + '</div>' + NL + '</div>' + NL;
@@ -354,6 +400,13 @@ const JS_MARK3_END = '/* ---------- /Logistics Monthly ---------- */';
   const JS_END3 = NL + JS_MARK3_END + NL;
   const js30 = html.indexOf(NL + JS_MARK3);
   if (js30 >= 0) { const je3 = html.indexOf(JS_END3, js30); if (je3 < 0) throw new Error('logistics monthly JS end not found'); html = html.slice(0, js30) + html.slice(je3 + JS_END3.length); }
+
+  const PAGE_START4 = NL + '<div class="page" data-page="logisticspurchases" id="page-logisticspurchases">';
+  const ps4 = html.indexOf(PAGE_START4);
+  if (ps4 >= 0) { const pe4 = html.indexOf(PAGE_END, ps4); if (pe4 < 0) throw new Error('page-logisticspurchases end not found'); html = html.slice(0, ps4) + html.slice(pe4 + PAGE_END.length); }
+  const JS_END4 = NL + JS_MARK4_END + NL;
+  const js40 = html.indexOf(NL + JS_MARK4);
+  if (js40 >= 0) { const je4 = html.indexOf(JS_END4, js40); if (je4 < 0) throw new Error('logistics purchases JS end not found'); html = html.slice(0, js40) + html.slice(je4 + JS_END4.length); }
 }
 if (!html.includes('id="page-logistics"')) {
   const page = `
@@ -498,7 +551,29 @@ if (!html.includes('id="page-logistics"')) {
 `;
   const page1EndAnchor = page.slice(page.lastIndexOf('<p class="note">City ='));
   must(page1EndAnchor, 'logistics daily page end (for logisticstime insertion)');
-  html = html.replace(page1EndAnchor, page1EndAnchor + page2 + page3);
+  const page4 = `
+<div class="page" data-page="logisticspurchases" id="page-logisticspurchases">
+<div class="wrap">
+  <style>#logiPurchTable td.lp-gap{border-right:2px solid var(--border)} #logiPurchScrollBody{max-height:75vh;overflow:auto}</style>
+  <p class="section-title">Purchases &mdash; by Model and Month</p>
+  <div class="banner" id="logiPurchBanner"></div>
+  <div class="lt-filters">
+    <label>Model / brand / vendor<input type="search" id="lpSearch" placeholder="e.g. Samsung, MIDEA, ლამინატი"></label>
+    <label>Vendor<select id="lpVendor"></select></label>
+    <div class="page-nav" id="lpMode"><button type="button" data-v="qty" class="active">Units</button><button type="button" data-v="amt">Purchase amount (GEL)</button><button type="button" data-v="price">Unit prices &amp; margin</button></div>
+    <div class="page-nav" id="lpSort"><button type="button" data-v="qty" class="active">Most purchased first</button><button type="button" data-v="amt">Highest amount first</button></div>
+    <span class="lt-filter-count" id="lpCount"></span>
+  </div>
+  <div class="report-card">
+    <div class="report-scroll-top" id="logiPurchScrollTop"><div></div></div>
+    <div class="report-scroll" id="logiPurchScrollBody"><table class="logi-table" id="logiPurchTable"><tbody></tbody></table></div>
+  </div>
+  <div id="lpMore" style="text-align:center;margin:8px 0 16px"></div>
+  <p class="note" id="logiPurchNote"></p>
+</div>
+</div>
+`;
+  html = html.replace(page1EndAnchor, page1EndAnchor + page2 + page3 + page4);
 }
 
 const dataLine = 'const LOGI_JSON = ' + JSON.stringify(payload) + ';';
@@ -768,6 +843,135 @@ window.__registerPage(['logisticsmonthly'], function () {
   document.getElementById('logiMonthlyBanner').innerHTML = '<b>Period:</b> ' + mLabel(M.months[0].m).replace(' (MTD)', '') + ' &ndash; ' + (M.through ? longDate(M.through) : mLabel(M.months[M.months.length - 1].m)) + ' &middot; source: Jan &ndash; Aug sales (as Sales Monthly), from September the CRM logistics module (<code>crm_line_fulfillment</code>)';
 });
 ${JS_MARK3_END}
+
+${JS_MARK4}
+window.__registerPage(['logisticspurchases'], function () {
+  const P = LOGI_JSON.purchases;
+  const table = document.getElementById('logiPurchTable');
+  if (!table) return;
+  if (!P || !P.rows.length) { table.querySelector('tbody').innerHTML = '<tr><td>No purchases yet.</td></tr>'; return; }
+  const MN = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const cur = P.through ? P.through.slice(0, 7) : null;
+  const mLabel = m => { const p = m.split('-').map(Number); return MN[p[1] - 1] + ' ' + p[0] + (m === cur ? ' (MTD)' : ''); };
+  const longDate = d => { const p = d.split('-').map(Number); return p[2] + ' ' + MN[p[1] - 1] + ' ' + p[0]; };
+  const esc = s => String(s).replace(/[&<>"]/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[ch]);
+  const D = '&ndash;';
+  const n = P.months.length;
+  const S = window.__lpState || (window.__lpState = { mode: 'qty', sort: 'qty', vendor: '', shown: 100 });
+  const vSel = document.getElementById('lpVendor');
+  if (vSel && !vSel.options.length) vSel.innerHTML = '<option value="">All vendors (' + fmt(P.vendors.length) + ')</option>' + P.vendors.map(v => '<option value="' + esc(v) + '">' + esc(v) + '</option>').join('');
+  const add = (a, b) => { for (let i = 0; i < a.length; i++) a[i] += b[i]; };
+  const z = () => P.months.map(() => 0);
+  const sum = a => a.reduce((x, y) => x + y, 0);
+  // one model's figures, summed over its vendors (or the one picked in the filter); i = month index, -1 = all months
+  const agg = (r, vendor) => {
+    const o = { q: z(), cq: z(), c: z(), s: z(), sc: z(), vs: [] };
+    r.parts.forEach(pt => { if (vendor && pt.v !== vendor) return; o.vs.push(pt.v); add(o.q, pt.q); add(o.cq, pt.cq); add(o.c, pt.c); add(o.s, pt.s); add(o.sc, pt.sc); });
+    o.tq = sum(o.q); o.ta = sum(o.c); o.tcq = sum(o.cq); o.ts = sum(o.s); o.tsc = sum(o.sc);
+    return o;
+  };
+  const at = (o, k, i) => (i < 0 ? sum(o[k]) : o[k][i]);
+  const fmtV = v => v ? (S.mode === 'amt' ? fmt(Math.round(v)) : fmt(v)) : D;
+  const money = v => fmt(Math.round(v));
+  const red = (v, txt) => v < 0 ? '<span style="color:#c62828">' + txt + '</span>' : txt;
+  // unit prices and margin of a cell: purchase = c / cq; sale = sc / cq (the same units), or s / q when no unit has a price;
+  // margin = (sc - c) / cq per unit, and (sc - c) / sc in %
+  const priceCells = (o, i, bold) => {
+    const q = at(o, 'q', i), cq = at(o, 'cq', i), c = at(o, 'c', i), s = at(o, 's', i), sc = at(o, 'sc', i);
+    const B = x => bold ? '<b>' + x + '</b>' : x;
+    if (!q) return '<td>' + D + '</td><td>' + D + '</td><td>' + D + '</td><td class="lp-gap">' + D + '</td>';
+    if (!cq) return '<td>' + D + '</td><td>' + B(money(s / q)) + '</td><td>' + D + '</td><td class="lp-gap">' + D + '</td>';
+    const mu = (sc - c) / cq, mp = sc ? (sc - c) / sc * 100 : null;
+    return '<td>' + B(money(c / cq)) + '</td><td>' + B(money(sc / cq)) + '</td><td>' + B(red(mu, money(mu))) + '</td><td class="lp-gap">' + (mp === null ? D : B(red(mp, mp.toFixed(1) + '%'))) + '</td>';
+  };
+  const marginPct = (sc, c) => sc ? red(sc - c, ((sc - c) / sc * 100).toFixed(1) + '%') : D;
+  const vendorCell = vs => vs.length ? (vs.length > 2 ? '<span title="' + esc(vs.join(', ')) + '">' + esc(vs.slice(0, 2).join(', ')) + ' +' + (vs.length - 2) + '</span>' : esc(vs.join(', '))) : D;
+  // frozen panes (user 2026-11-18: "მოდელები და სათაურები დაფრიზე"): #, Model, Brand, Vendor stick to the left and the title, header
+  // and total rows to the top of the scroll box; offsets measured from the rendered cells (re-measured whenever the table resizes,
+  // e.g. when the tab first becomes visible)
+  function freeze() {
+    const trs = Array.prototype.slice.call(table.rows);
+    const dr = trs.find(r => r.classList.contains('logi-white'));
+    if (!dr || dr.cells.length < 4) return;
+    const off = [0];
+    for (let k = 0; k < 3; k++) off.push(off[k] + dr.cells[k].getBoundingClientRect().width);
+    if (!off[3]) return;
+    let top = 0;
+    trs.forEach(r => {
+      const head = r.classList.contains('logi-title') || r.classList.contains('logi-head') || r.classList.contains('logi-total');
+      let col = 0;
+      Array.prototype.forEach.call(r.cells, c => {
+        const span = c.colSpan || 1;
+        c.style.position = ''; c.style.left = ''; c.style.top = ''; c.style.zIndex = ''; c.style.boxShadow = '';
+        if (col < 4 && col + span <= 4) { c.style.position = 'sticky'; c.style.left = off[col] + 'px'; c.style.zIndex = head ? '5' : '2'; if (col + span === 4) c.style.boxShadow = '2px 0 0 #9a9ab0'; }
+        if (head) { c.style.position = 'sticky'; c.style.top = top + 'px'; if (!c.style.zIndex) c.style.zIndex = '4'; }
+        col += span;
+      });
+      if (head) top += r.getBoundingClientRect().height;
+    });
+  }
+  if (window.ResizeObserver && !table.__lpRO) { table.__lpRO = new ResizeObserver(() => { if (window.__lpFreeze) window.__lpFreeze(); }); table.__lpRO.observe(table); }
+  window.__lpFreeze = freeze;
+  function paint() {
+    const q = document.getElementById('lpSearch').value.trim().toLowerCase();
+    const V = S.vendor;
+    let rows = [];
+    P.rows.forEach(r => {
+      if (V && !r.parts.some(pt => pt.v === V)) return;
+      if (q && !(r.name.toLowerCase().indexOf(q) >= 0 || r.brand.toLowerCase().indexOf(q) >= 0 || String(r.id) === q || r.parts.some(pt => pt.v.toLowerCase().indexOf(q) >= 0))) return;
+      rows.push({ r: r, a: agg(r, V) });
+    });
+    if (S.sort === 'amt') rows.sort((x, y) => y.a.ta - x.a.ta || y.a.tq - x.a.tq || x.r.id - y.r.id);
+    else rows.sort((x, y) => y.a.tq - x.a.tq || y.a.ta - x.a.ta || x.r.id - y.r.id);
+    const T = { q: z(), cq: z(), c: z(), s: z(), sc: z() };
+    rows.forEach(x => { add(T.q, x.a.q); add(T.cq, x.a.cq); add(T.c, x.a.c); add(T.s, x.a.s); add(T.sc, x.a.sc); });
+    const isP = S.mode === 'price';
+    const lead = '<td>#</td><td>Model</td><td>Brand</td><td>Vendor</td>';
+    const what = isP ? 'average unit purchase and sale price, margin per unit (GEL) and margin %' : S.mode === 'amt' ? 'purchase amount (GEL)' : 'units';
+    let h = '<tr class="logi-title"><td colspan="' + (4 + (isP ? 4 : 1) * (n + 1)) + '"><span style="position:sticky;left:8px">Purchases by model &mdash; ' + what + ', ' + (S.sort === 'amt' ? 'highest amount first' : 'most purchased first') + (V ? ' &middot; vendor: ' + esc(V) : '') + '</span></td></tr>';
+    const label = 'All ' + (q || V ? 'matching ' : '') + 'models (' + fmt(rows.length) + ')';
+    if (isP) {
+      h += '<tr class="logi-head"><td colspan="4"></td>' + P.months.map(m => '<td colspan="4" class="lp-gap">' + mLabel(m) + '</td>').join('') + '<td colspan="4" class="lp-gap">Total</td></tr>';
+      h += '<tr class="logi-head">' + lead + P.months.concat(['t']).map(() => '<td>Purchase price</td><td>Sale price</td><td>Margin &#8382;</td><td class="lp-gap">Margin %</td>').join('') + '</tr>';
+      const tc = (i) => { const sc = i < 0 ? sum(T.sc) : T.sc[i], c = i < 0 ? sum(T.c) : T.c[i]; return '<td>' + D + '</td><td>' + D + '</td><td>' + D + '</td><td class="lp-gap">' + marginPct(sc, c) + '</td>'; };
+      h += '<tr class="logi-total"><td></td><td>' + label + '</td><td></td><td></td>' + P.months.map((_, i) => tc(i)).join('') + tc(-1) + '</tr>';
+    } else {
+      const key = S.mode === 'amt' ? 'c' : 'q';
+      h += '<tr class="logi-head">' + lead + P.months.map(m => '<td>' + mLabel(m) + '</td>').join('') + '<td>Total</td></tr>';
+      h += '<tr class="logi-total"><td></td><td>' + label + '</td><td></td><td></td>' + T[key].map(v => '<td>' + fmtV(v) + '</td>').join('') + '<td>' + fmtV(sum(T[key])) + '</td></tr>';
+    }
+    rows.slice(0, S.shown).forEach((x, k) => {
+      const r = x.r, a = x.a;
+      h += '<tr class="' + (k % 2 ? 'logi-light' : 'logi-white') + '"><td>' + (k + 1) + '</td><td style="text-align:left;white-space:normal;min-width:200px;max-width:280px">' + (esc(r.name) || ('Product ' + r.id)) + '</td><td style="text-align:left;white-space:normal;max-width:110px">' + (esc(r.brand) || D) + '</td><td style="text-align:left;white-space:normal;min-width:80px;max-width:150px">' + vendorCell(a.vs) + '</td>';
+      if (isP) h += P.months.map((_, i) => priceCells(a, i, false)).join('') + priceCells(a, -1, true) + '</tr>';
+      else { const key = S.mode === 'amt' ? 'c' : 'q'; h += a[key].map(v => '<td>' + fmtV(v) + '</td>').join('') + '<td><b>' + fmtV(S.mode === 'amt' ? a.ta : a.tq) + '</b></td></tr>'; }
+    });
+    table.querySelector('tbody').innerHTML = h;
+    freeze();
+    const left = rows.length - S.shown;
+    document.getElementById('lpMore').innerHTML = left > 0 ? '<button type="button" style="padding:6px 14px;border:1px solid var(--border);border-radius:8px;background:var(--page);color:var(--text-primary);cursor:pointer">Show ' + fmt(Math.min(left, 200)) + ' more (' + fmt(left) + ' not shown)</button>' : '';
+    document.getElementById('lpCount').textContent = fmt(rows.length) + ' models';
+    if (window.logiPurchScrollUpdaters) window.logiPurchScrollUpdaters.forEach(f => f());
+  }
+  window.__lpPaint = paint;
+  const pg = document.getElementById('page-logisticspurchases');
+  if (!pg.__wired) {
+    pg.__wired = true;
+    pg.addEventListener('click', e => {
+      const b = e.target.closest('#lpMode button, #lpSort button');
+      if (b) { b.parentElement.querySelectorAll('button').forEach(x => x.classList.toggle('active', x === b)); if (b.parentElement.id === 'lpMode') window.__lpState.mode = b.getAttribute('data-v'); else window.__lpState.sort = b.getAttribute('data-v'); window.__lpState.shown = 100; window.__lpPaint(); return; }
+      if (e.target.closest('#lpMore button')) { window.__lpState.shown += 200; window.__lpPaint(); }
+    });
+    document.getElementById('lpSearch').addEventListener('input', () => { window.__lpState.shown = 100; window.__lpPaint(); });
+    vSel.addEventListener('change', () => { window.__lpState.vendor = vSel.value; window.__lpState.shown = 100; window.__lpPaint(); });
+  }
+  const totQ = sum(P.total.qty), totA = sum(P.total.amt);
+  document.getElementById('logiPurchBanner').innerHTML = '<b>' + fmt(P.rows.length) + '</b> models from <b>' + fmt(P.vendors.length) + '</b> vendors purchased from ' + mLabel(P.months[0]).replace(' (MTD)', '') + ' to ' + (P.through ? longDate(P.through) : mLabel(P.months[n - 1])) + ' &middot; <b>' + fmt(totQ) + '</b> units &middot; &#8382;<b>' + fmt(Math.round(totA)) + '</b> at purchase price &middot; source: VoltaStoreDB, CRM logistics module';
+  document.getElementById('logiPurchNote').innerHTML = '<b>What is counted.</b> Every order line that was <b>ordered from a vendor</b> (any logistics status except &ldquo;not yet ordered&rdquo;, &ldquo;vendor out of stock&rdquo; and &ldquo;cancelled&rdquo;; lines served from Volta&rsquo;s own stock are left out), in the month of its purchase date (<code>crm_line_fulfillment.created_at</code> &mdash; the CRM&rsquo;s own purchase date), by product; <b>vendor</b> = the vendor the line was ordered from (a model bought from several vendors lists them all, most units first; the vendor filter keeps only that vendor&rsquo;s purchases). <b>Units</b> = quantity ordered; <b>purchase amount</b> = the purchase price &times; quantity, the price taken in this order: the price typed on the line in Logistics, the vendor&rsquo;s price list, the product&rsquo;s cost in the catalogue (the same rule as the COGS in Sales Analyze)' + (P.noCost ? '; <b>' + fmt(P.noCost) + '</b> units have no price in any of the three yet and are counted in units only' : '') + '. <b>Unit prices &amp; margin</b>: average purchase price = purchase amount &divide; units; average sale price = what the customers paid for the same units (the order line&rsquo;s price, on-site discount included) &divide; units; margin &#8382; = sale price &minus; purchase price per unit; margin % = margin &divide; sale price. Units without a purchase price are left out of all three (only their sale price is shown when no unit of the month has a price); the total row shows the overall margin %, as unit prices of different models are not comparable. Negative margins are in red. The logistics module started on September 2, 2026, so the report starts in September. Through yesterday. Default order: most units first.';
+  window.logiPurchScrollUpdaters = [setupTopScrollSync('logiPurchScrollTop', 'logiPurchScrollBody')];
+  paint();
+});
+${JS_MARK4_END}
 `;
   must('// ---- top-level page nav (grows as more reports get added) ----', 'nav handler');
   html = html.replace('// ---- top-level page nav (grows as more reports get added) ----', js + '// ---- top-level page nav (grows as more reports get added) ----');
@@ -3562,12 +3766,12 @@ ${JS_MARK}
       ['CRM Logistics &mdash; Status by Day', 'Orders, order lines and vendor collections by their logistics status, day by day.', [['Orders', 'id:logisticsStatusOrdersTable'], ['Order lines', 'id:logisticsStatusLinesTable'], ['Vendor collections', 'id:logisticsStatusCollTable']]],
       ['Orders by City', 'The same orders split by the delivery city.', [['By city', 'h:Orders by City']]],
       ['Orders by Goods Type', 'The same orders split by the type of goods.', [['By goods type', 'h:Orders by Goods Type']]],
-      ['Also in Logistics', 'Separate tabs of this group: time in each logistics status; sales amount and orders by month.', [['Logistics Time Management', 'nav:logisticstime'], ['Logistics Monthly', 'nav:logisticsmonthly']]],
+      ['Also in Logistics', 'Separate tabs of this group: time in each logistics status; sales amount and orders by month; purchases by model and month.', [['Logistics Time Management', 'nav:logisticstime'], ['Logistics Monthly', 'nav:logisticsmonthly'], ['Purchases', 'nav:logisticspurchases']]],
     ],
     logisticstime: [
       ['Status Statistics', 'Average or median time orders spend in each logistics status, or how many orders are in each status now &mdash; by month, city or vendor (filters above apply).', [['Table', 'h:Status Statistics']]],
       ['Order by Order', 'Every order since September 1 with the time it spent in each status, from signing to delivery.', [['Table', 'h:Order by Order']]],
-      ['Also in Logistics', 'Separate tabs of this group: the daily logistics report; sales amount and orders by month.', [['Logistics Daily', 'nav:logistics'], ['Logistics Monthly', 'nav:logisticsmonthly']]],
+      ['Also in Logistics', 'Separate tabs of this group: the daily logistics report; sales amount and orders by month; purchases by model and month.', [['Logistics Daily', 'nav:logistics'], ['Logistics Monthly', 'nav:logisticsmonthly'], ['Purchases', 'nav:logisticspurchases']]],
     ],
     leads: [
       ['Leads by status', 'New leads by the status they are in, by day and by month.', [['By day', 'id:mktStatusDayTable'], ['By month', 'id:mktStatusMonthTable']]],
